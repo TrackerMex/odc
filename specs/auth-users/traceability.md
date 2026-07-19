@@ -10,7 +10,7 @@ tags: [harness, spec]
 |---|---|---|
 | R1 | `backend/src/modules/users/domain/entities/user.entity.spec.ts::R1: pure User domain entity with restricted role` | `8aa3630` feat(auth-users): add pure User domain entity with restricted role (R1) |
 | R2 | `backend/src/modules/users/infrastructure/entities/user.orm-entity.spec.ts::R2: ORM entity mapped onto the users table`; `backend/src/modules/users/infrastructure/repositories/user.typeorm.repository.spec.ts::R2: UserTypeOrmRepository implements the domain UserRepository`; `backend/src/modules/users/users.module.spec.ts::R2: UsersModule registers the repository under the 'UserRepository' token` | `f92c1c0` feat(auth-users): add users persistence with UserRepository and ORM entity (R2) |
-| R3 | pendiente | pendiente |
+| R3 | `backend/src/modules/users/application/use-cases/seed-users.usecase.spec.ts::R3: seed creates the 3 users hashed with bcrypt` | `d2900e5` feat(auth-users): add seed use-case and pnpm seed script (R3) |
 | R4 | pendiente | pendiente |
 | R5 | pendiente | pendiente |
 | R6 | pendiente | pendiente |
