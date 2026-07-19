@@ -28,6 +28,11 @@ export class UserTypeOrmRepository implements UserRepository {
     return row ? toDomain(row) : null;
   }
 
+  async findById(id: string): Promise<User | null> {
+    const row = await this.ormRepository.findOne({ where: { id } });
+    return row ? toDomain(row) : null;
+  }
+
   async create(user: User): Promise<User> {
     const row = this.ormRepository.create({
       email: user.email,

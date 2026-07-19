@@ -91,3 +91,33 @@ describe('R2: UserTypeOrmRepository implements the domain UserRepository', () =>
     expect(saved.id).toBe('a3d1c9a2-0000-4000-8000-000000000001');
   });
 });
+
+describe('R10: findById resolves the user behind a session sub', () => {
+  it('returns the domain user mapped from the ORM row', async () => {
+    const ormRepository = createOrmRepositoryMock();
+    ormRepository.findOne.mockResolvedValue(createOrmRow());
+    const repository = new UserTypeOrmRepository(
+      ormRepository as unknown as Repository<UserOrmEntity>,
+    );
+
+    const user = await repository.findById(
+      'a3d1c9a2-0000-4000-8000-000000000001',
+    );
+
+    expect(ormRepository.findOne).toHaveBeenCalledWith({
+      where: { id: 'a3d1c9a2-0000-4000-8000-000000000001' },
+    });
+    expect(user).toBeInstanceOf(User);
+    expect(user?.email).toBe('ops@odc.local');
+  });
+
+  it('returns null when no row matches', async () => {
+    const ormRepository = createOrmRepositoryMock();
+    ormRepository.findOne.mockResolvedValue(null);
+    const repository = new UserTypeOrmRepository(
+      ormRepository as unknown as Repository<UserOrmEntity>,
+    );
+
+    await expect(repository.findById('ghost-id')).resolves.toBeNull();
+  });
+});
