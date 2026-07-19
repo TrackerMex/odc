@@ -1,6 +1,6 @@
 ---
 feature: "auth-users"
-status: draft        # draft | approved
+status: approved     # draft | approved
 tags: [harness, spec]
 ---
 
@@ -134,4 +134,4 @@ tags: [harness, spec]
 
 ## Aprobación
 
-- [ ] Aprobado por humano (fecha: ____) ← gate obligatorio antes de implementar
+- [x] Aprobado por humano (fecha: 2026-07-19) ← gate obligatorio antes de implementar
