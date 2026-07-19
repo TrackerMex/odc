@@ -1,7 +1,13 @@
 import { Module } from '@nestjs/common';
-import { ConfigModule, ConfigModuleOptions } from '@nestjs/config';
+import {
+  ConfigModule,
+  ConfigModuleOptions,
+  ConfigService,
+} from '@nestjs/config';
+import { TypeOrmModule } from '@nestjs/typeorm';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
+import { typeOrmModuleOptionsFactory } from './config/typeorm.config';
 
 export const configModuleOptions: ConfigModuleOptions = {
   isGlobal: true,
@@ -9,7 +15,13 @@ export const configModuleOptions: ConfigModuleOptions = {
 };
 
 @Module({
-  imports: [ConfigModule.forRoot(configModuleOptions)],
+  imports: [
+    ConfigModule.forRoot(configModuleOptions),
+    TypeOrmModule.forRootAsync({
+      inject: [ConfigService],
+      useFactory: typeOrmModuleOptionsFactory,
+    }),
+  ],
   controllers: [AppController],
   providers: [AppService],
 })
