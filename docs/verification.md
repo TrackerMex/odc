@@ -43,8 +43,8 @@ Esta es la regla central de verificación de este harness, no una sugerencia:
    refactor manteniendo los tests en verde. Esto es exactamente el checklist
    de `specs/<feature>/tasks.md`.
 2. **Cada test nombra su requisito.** Convención: `describe('R1: ...', ...)`
-   o el equivalente idiomático del framework de test de `por definir`
-   (documentado en `docs/conventions.md`).
+   en Jest (backend) y Vitest (frontend), documentado en
+   `docs/conventions.md`.
 3. **El reviewer verifica en el diff/historia** que los tests existen y
    nombran los R-ids correctos — no le basta con que "algo" tenga cobertura.
    Si una feature no tiene tests que nombren sus requisitos, el reviewer

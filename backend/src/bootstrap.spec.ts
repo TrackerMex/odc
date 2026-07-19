@@ -1,0 +1,65 @@
+import { INestApplication, ValidationPipe } from '@nestjs/common';
+import { configureApp, resolvePort } from './bootstrap';
+
+interface AppMock {
+  setGlobalPrefix: jest.Mock;
+  useGlobalPipes: jest.Mock;
+  use: jest.Mock;
+}
+
+function createAppMock(): AppMock {
+  return {
+    setGlobalPrefix: jest.fn(),
+    useGlobalPipes: jest.fn(),
+    use: jest.fn(),
+  };
+}
+
+describe('R4: global ValidationPipe with whitelist enabled', () => {
+  it('registers a ValidationPipe built with whitelist true', () => {
+    const appMock = createAppMock();
+
+    configureApp(appMock as unknown as INestApplication);
+
+    expect(appMock.useGlobalPipes).toHaveBeenCalledTimes(1);
+    const [pipe] = appMock.useGlobalPipes.mock.calls[0] as [ValidationPipe];
+    expect(pipe).toBeInstanceOf(ValidationPipe);
+    const pipeInternals = pipe as unknown as {
+      validatorOptions: { whitelist?: boolean };
+    };
+    expect(pipeInternals.validatorOptions.whitelist).toBe(true);
+  });
+});
+
+describe("R5: global route prefix 'api'", () => {
+  it("sets the global prefix to 'api'", () => {
+    const appMock = createAppMock();
+
+    configureApp(appMock as unknown as INestApplication);
+
+    expect(appMock.setGlobalPrefix).toHaveBeenCalledWith('api');
+  });
+});
+
+describe('R8 (auth-users): cookie-parser registered so guards can read request.cookies', () => {
+  it('registers the cookie-parser middleware', () => {
+    const appMock = createAppMock();
+
+    configureApp(appMock as unknown as INestApplication);
+
+    expect(appMock.use).toHaveBeenCalledTimes(1);
+    const [middleware] = appMock.use.mock.calls[0] as [unknown];
+    expect(typeof middleware).toBe('function');
+    expect((middleware as { name: string }).name).toBe('cookieParser');
+  });
+});
+
+describe('R6: HTTP port from PORT with default 3001', () => {
+  it('uses the port from the PORT environment variable when defined', () => {
+    expect(resolvePort({ PORT: '8080' })).toBe(8080);
+  });
+
+  it('defaults to 3001 when PORT is not defined', () => {
+    expect(resolvePort({})).toBe(3001);
+  });
+});

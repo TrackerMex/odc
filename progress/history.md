@@ -31,3 +31,21 @@ Formato de cada entrada de `history.md` (una por sesión cerrada):
 ---
 
 _El historial comenzará aquí cuando se complete la primera sesión._
+
+## Sesión 2026-07-18/19 — backend-foundation (id: 1)
+
+- **Feature:** fundación del backend NestJS: ConfigModule global (.env raíz), TypeORM/Postgres vía factory, ValidationPipe whitelist, prefijo /api, puerto PORT|3001, GET /api/health, scaffold getHello eliminado
+- **Spec:** [[specs/backend-foundation/requirements|spec]] (R1–R8, aprobada por humano 2026-07-18)
+- **Acciones:** Fase 0 del plan maestro (stack, harness, backlog de 13 features) + spec_author + implementer (TDD, 1 corte por límite de sesión, reanudado) + reviewer
+- **Resultado:** ./init.sh exit 0; 15 tests backend en verde; review APROBADO (C1–C6) → progress/review_backend-foundation.md
+- **Commits:** 7187c59 harness, 16cc1f9 spec, b8d25eb..0699abd implementación por requisito (feat+docs por R-id)
+- **Estado final:** done
+
+## Sesión 2026-07-19 — auth-users (id: 2)
+
+- **Feature:** módulos users + auth: entidad User pura, ORM entity + UserRepository (token string), seed idempotente de 3 usuarios (bcrypt, pnpm seed), login/logout/me con JWT 8h {sub, role} en cookie httpOnly odc_session, JwtAuthGuard global con @Public() (login/health), RolesGuard + @Roles()
+- **Spec:** [[specs/auth-users/requirements|spec]] (R1–R11, aprobada por humano 2026-07-19)
+- **Acciones:** spec_author → aprobación humana → implementer (TDD por requisito) → reviewer
+- **Resultado:** ./init.sh en verde (15 suites, 63 tests, build + lint); review APROBADO (0 críticos, 0 mayores, 3 menores) → progress/review_auth-users.md; traceability 11/11 completa
+- **Commits:** c2f934b spec, 7380749 deps, 8aa3630..5866e61 implementación por R-id, b55b768 lint, 5424c18 reporte
+- **Estado final:** done

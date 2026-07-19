@@ -1,0 +1,26 @@
+---
+feature: "auth-users"
+status: draft        # draft | approved
+tags: [harness, spec]
+---
+
+# Trazabilidad — [[auth-users]]
+
+| Requisito | Test (archivo::nombre) | Commit (hash + mensaje) |
+|---|---|---|
+| R1 | `backend/src/modules/users/domain/entities/user.entity.spec.ts::R1: pure User domain entity with restricted role` | `8aa3630` feat(auth-users): add pure User domain entity with restricted role (R1) |
+| R2 | `backend/src/modules/users/infrastructure/entities/user.orm-entity.spec.ts::R2: ORM entity mapped onto the users table`; `backend/src/modules/users/infrastructure/repositories/user.typeorm.repository.spec.ts::R2: UserTypeOrmRepository implements the domain UserRepository`; `backend/src/modules/users/users.module.spec.ts::R2: UsersModule registers the repository under the 'UserRepository' token` | `f92c1c0` feat(auth-users): add users persistence with UserRepository and ORM entity (R2) |
+| R3 | `backend/src/modules/users/application/use-cases/seed-users.usecase.spec.ts::R3: seed creates the 3 users hashed with bcrypt` | `d2900e5` feat(auth-users): add seed use-case and pnpm seed script (R3) |
+| R4 | `backend/src/modules/users/application/use-cases/seed-users.usecase.spec.ts::R4: seed is idempotent when users already exist` | `ed7108a` feat(auth-users): make seed idempotent on existing users (R4) |
+| R5 | `backend/src/modules/auth/application/use-cases/login.usecase.spec.ts::R5: login with valid credentials returns the user and a session token`; `backend/src/modules/auth/infrastructure/controller/auth.controller.spec.ts::R5: POST /api/auth/login responds { user } and sets the session cookie` | `539c04b` feat(auth-users): add login use-case and endpoint with session cookie (R5) |
+| R6 | `backend/src/modules/auth/jwt.config.spec.ts::R6: session JWT signed with JWT_SECRET, 8h expiration and { sub, role } payload` | `98fd244` feat(auth-users): sign session JWT with JWT_SECRET, 8h and sub/role payload (R6) |
+| R7 | `backend/src/modules/auth/application/use-cases/login.usecase.spec.ts::R7: login failure raises the same generic domain error`; `backend/src/modules/auth/infrastructure/controller/auth.controller.spec.ts::R7: failed login responds 401 without setting any cookie` | `5740f33` feat(auth-users): reject invalid login with generic 401 and no cookie (R7) |
+| R8 | `backend/src/modules/auth/infrastructure/guards/jwt-auth.guard.spec.ts::R8: JwtAuthGuard rejects requests without a valid session JWT` + `::R8: login and health are the only public endpoints`; `backend/src/bootstrap.spec.ts::R8 (auth-users): cookie-parser registered so guards can read request.cookies` | `da061e9` feat(auth-users): add global JwtAuthGuard with @Public exceptions (R8); `1a16e20` fix(auth-users): use import type for types in decorated signatures (R2,R3,R5,R8) |
+| R9 | `backend/src/modules/auth/infrastructure/guards/roles.guard.spec.ts::R9: RolesGuard enforces @Roles(...) metadata` | `404c99d` feat(auth-users): add RolesGuard and @Roles decorator (R9) |
+| R10 | `backend/src/modules/auth/application/use-cases/get-me.usecase.spec.ts::R10: get me resolves the session user without passwordHash`; `backend/src/modules/auth/infrastructure/controller/auth.controller.spec.ts::R10: GET /api/auth/me returns the session user`; `backend/src/modules/users/infrastructure/repositories/user.typeorm.repository.spec.ts::R10: findById resolves the user behind a session sub` | `2758f4c` feat(auth-users): add GET /api/auth/me resolving the session user (R10) |
+| R11 | `backend/src/modules/auth/infrastructure/controller/auth.controller.spec.ts::R11: POST /api/auth/logout clears the session cookie` | `5866e61` feat(auth-users): add POST /api/auth/logout clearing the session cookie (R11) |
+
+Regla: el reviewer no aprueba si alguna fila queda "pendiente".
+Convención de commit: `feat(<scope>): <desc> (R1,R2)`.
+El implementer actualiza esta tabla tras cada commit; el reviewer la valida
+al aprobar (ver [[../../docs/specs|specs]] y [[../../CHECKPOINTS|CHECKPOINTS]] C5).
