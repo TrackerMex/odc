@@ -7,6 +7,8 @@ import {
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { typeOrmModuleOptionsFactory } from './config/typeorm.config';
 import { HealthController } from './health.controller';
+import { AuthModule } from './modules/auth/auth.module';
+import { UsersModule } from './modules/users/users.module';
 
 export const configModuleOptions: ConfigModuleOptions = {
   isGlobal: true,
@@ -20,6 +22,8 @@ export const configModuleOptions: ConfigModuleOptions = {
       inject: [ConfigService],
       useFactory: typeOrmModuleOptionsFactory,
     }),
+    UsersModule,
+    AuthModule,
   ],
   controllers: [HealthController],
   providers: [],
