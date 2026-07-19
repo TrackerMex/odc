@@ -10,6 +10,7 @@ import { typeOrmModuleOptionsFactory } from './config/typeorm.config';
 import { HealthController } from './health.controller';
 import { AuthModule } from './modules/auth/auth.module';
 import { JwtAuthGuard } from './modules/auth/infrastructure/guards/jwt-auth.guard';
+import { RolesGuard } from './modules/auth/infrastructure/guards/roles.guard';
 import { UsersModule } from './modules/users/users.module';
 
 export const configModuleOptions: ConfigModuleOptions = {
@@ -28,6 +29,10 @@ export const configModuleOptions: ConfigModuleOptions = {
     AuthModule,
   ],
   controllers: [HealthController],
-  providers: [{ provide: APP_GUARD, useClass: JwtAuthGuard }],
+  providers: [
+    // Order matters: authentication first, then role authorization (R8, R9)
+    { provide: APP_GUARD, useClass: JwtAuthGuard },
+    { provide: APP_GUARD, useClass: RolesGuard },
+  ],
 })
 export class AppModule {}
