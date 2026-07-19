@@ -5,8 +5,6 @@ import {
   ConfigService,
 } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
 import { typeOrmModuleOptionsFactory } from './config/typeorm.config';
 import { HealthController } from './health.controller';
 
@@ -23,7 +21,7 @@ export const configModuleOptions: ConfigModuleOptions = {
       useFactory: typeOrmModuleOptionsFactory,
     }),
   ],
-  controllers: [AppController, HealthController],
-  providers: [AppService],
+  controllers: [HealthController],
+  providers: [],
 })
 export class AppModule {}

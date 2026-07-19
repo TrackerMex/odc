@@ -1,3 +1,5 @@
+import { existsSync } from 'fs';
+import { join } from 'path';
 import { DynamicModule } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { AppModule, configModuleOptions } from './app.module';
@@ -24,4 +26,13 @@ describe('R1: global ConfigModule loading the repo root .env', () => {
     expect(configModuleImport).toBeDefined();
     expect(configModuleImport?.global).toBe(true);
   });
+});
+
+describe('R8: scaffold getHello endpoint removed', () => {
+  it.each(['app.controller.ts', 'app.service.ts', 'app.controller.spec.ts'])(
+    'scaffold file %s no longer exists',
+    (scaffoldFile) => {
+      expect(existsSync(join(__dirname, scaffoldFile))).toBe(false);
+    },
+  );
 });
