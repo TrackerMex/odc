@@ -13,7 +13,7 @@ tags: [harness, spec]
 | R3 | `backend/src/modules/users/application/use-cases/seed-users.usecase.spec.ts::R3: seed creates the 3 users hashed with bcrypt` | `d2900e5` feat(auth-users): add seed use-case and pnpm seed script (R3) |
 | R4 | `backend/src/modules/users/application/use-cases/seed-users.usecase.spec.ts::R4: seed is idempotent when users already exist` | `ed7108a` feat(auth-users): make seed idempotent on existing users (R4) |
 | R5 | `backend/src/modules/auth/application/use-cases/login.usecase.spec.ts::R5: login with valid credentials returns the user and a session token`; `backend/src/modules/auth/infrastructure/controller/auth.controller.spec.ts::R5: POST /api/auth/login responds { user } and sets the session cookie` | `539c04b` feat(auth-users): add login use-case and endpoint with session cookie (R5) |
-| R6 | pendiente | pendiente |
+| R6 | `backend/src/modules/auth/jwt.config.spec.ts::R6: session JWT signed with JWT_SECRET, 8h expiration and { sub, role } payload` | `98fd244` feat(auth-users): sign session JWT with JWT_SECRET, 8h and sub/role payload (R6) |
 | R7 | pendiente | pendiente |
 | R8 | pendiente | pendiente |
 | R9 | pendiente | pendiente |
