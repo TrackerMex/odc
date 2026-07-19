@@ -11,8 +11,8 @@ tags: [harness, spec]
 | R1 | `backend/src/app.module.spec.ts::R1: global ConfigModule loading the repo root .env` | `c96671e` feat(backend-foundation): register global ConfigModule loading root .env (R1) |
 | R2 | `backend/src/config/typeorm.config.spec.ts::R2: TypeORM options built from DATABASE_URL` | `7e0c964` feat(backend-foundation): add typeorm options factory wired via forRootAsync (R2,R3) |
 | R3 | `backend/src/config/typeorm.config.spec.ts::R3: synchronize disabled only in production` | `7e0c964` feat(backend-foundation): add typeorm options factory wired via forRootAsync (R2,R3) |
-| R4 | pendiente | pendiente |
-| R5 | pendiente | pendiente |
+| R4 | `backend/src/bootstrap.spec.ts::R4: global ValidationPipe with whitelist enabled` | `def07ce` feat(backend-foundation): add app setup helper with global pipe and api prefix (R4,R5) |
+| R5 | `backend/src/bootstrap.spec.ts::R5: global route prefix 'api'` | `def07ce` feat(backend-foundation): add app setup helper with global pipe and api prefix (R4,R5) |
 | R6 | pendiente | pendiente |
 | R7 | pendiente | pendiente |
 | R8 | pendiente | pendiente |
