@@ -150,3 +150,31 @@ describe('R10: GET /api/auth/me returns the session user', () => {
     ).rejects.toBeInstanceOf(UnauthorizedException);
   });
 });
+
+describe('R11: POST /api/auth/logout clears the session cookie', () => {
+  it("exposes the handler as POST on route 'logout' with HTTP 200", () => {
+    const handler = AuthController.prototype.logout;
+    expect(Reflect.getMetadata('path', handler)).toBe('logout');
+    expect(Reflect.getMetadata('method', handler)).toBe(RequestMethod.POST);
+    expect(Reflect.getMetadata('__httpCode__', handler)).toBe(200);
+  });
+
+  it('clears the odc_session cookie on the response', () => {
+    const controller = createController();
+    const response = createResponseMock();
+
+    controller.logout(response as unknown as Response);
+
+    expect(response.clearCookie).toHaveBeenCalledTimes(1);
+    const [cookieName, cookieOptions] = response.clearCookie.mock.calls[0] as [
+      string,
+      Record<string, unknown>,
+    ];
+    expect(cookieName).toBe(SESSION_COOKIE_NAME);
+    expect(cookieOptions).toMatchObject({
+      httpOnly: true,
+      sameSite: 'lax',
+    });
+    expect(response.cookie).not.toHaveBeenCalled();
+  });
+});

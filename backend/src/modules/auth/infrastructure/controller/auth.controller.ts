@@ -49,6 +49,15 @@ export class AuthController {
     return { user: result.user };
   }
 
+  @Post('logout')
+  @HttpCode(200)
+  logout(@Res({ passthrough: true }) response: Response): { success: true } {
+    // Same attributes as when the cookie was set, so the browser drops it;
+    // the 8h JWT expiration bounds any token that was already captured (R11).
+    response.clearCookie(SESSION_COOKIE_NAME, sessionCookieOptions());
+    return { success: true };
+  }
+
   @Get('me')
   async me(
     @Req() request: { user: SessionTokenPayload },
