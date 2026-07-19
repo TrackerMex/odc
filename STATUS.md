@@ -1,8 +1,8 @@
 # ODC — Status
 
-**Última actualización**: 2026-07-18
-**Features completadas**: 0/13 (`feature_list.json`)
-**Pendientes**: 13 (todas `pending`, sin spec aún)
+**Última actualización**: 2026-07-19
+**Features completadas**: 1/13 (`feature_list.json`)
+**Pendientes**: 12 (`pending`, sin spec aún)
 **En producción**: no
 
 ---
@@ -32,28 +32,29 @@ Requiere `.env` en la raíz (plantilla en `.env.example`): `DATABASE_URL`,
 ## Estado actual
 
 - Fase 0 completada: stack decidido (NestJS 11 + TypeORM + PostgreSQL /
-  TanStack Start + React 19 + Tailwind 4), harness configurado
-  (`init.config.sh`, `docs/conventions.md`, `docs/architecture.md`),
+  TanStack Start + React 19 + Tailwind 4), harness configurado,
   backlog de 13 features en `feature_list.json`.
-- Backend y frontend son scaffolds sin lógica de negocio todavía.
-- Siguiente: spec de `backend-foundation` (feature #1) vía `spec_author` +
+- **#1 `backend-foundation` done** (review APROBADO): ConfigModule global,
+  TypeORM desde `DATABASE_URL`, ValidationPipe whitelist, prefijo `/api`,
+  `GET /api/health`, scaffold eliminado. 15 tests unitarios sin DB.
+- Deuda anotada: `synchronize: true` solo dev (migraciones antes de prod);
+  `backend/test/app.e2e-spec.ts` scaffold desactualizado (fuera de TEST_CMD).
+- Frontend sigue siendo scaffold.
+- Siguiente: spec de `auth-users` (feature #2) vía `spec_author` +
   aprobación humana.
 
 ---
 
 ## Última sesión
 
-**2026-07-18** — Proyecto subido a `github.com/TrackerMex/odc` (monorepo,
-`.git` anidados de scaffolds eliminados). Plan maestro escrito
-(`plans/001-odc-purchase-system.md`) con decisiones de stack tomadas con el
-humano: PostgreSQL + TypeORM, presupuesto solo validación manual, rechazo
-editable con motivo, auth email/password + JWT. Fase 0 ejecutada:
-`docker-compose.yml`, `.env.example`, `.gitignore`, `init.config.sh`,
-`docs/` rellenados, `feature_list.json` poblado con 13 features.
+**2026-07-19** — Feature #1 `backend-foundation` completada vía pipeline SDD
+completo (spec_author → aprobación humana → implementer TDD → reviewer
+APROBADO C1–C6). Detalle en `progress/history.md` y
+`progress/review_backend-foundation.md`. `./init.sh` en verde (1/13).
 
 Próximos pasos:
-1. Lanzar `spec_author` para `backend-foundation` → STOP hasta aprobación humana
-2. Implementar features 1→13 en orden vía pipeline SDD
+1. Lanzar `spec_author` para `auth-users` → STOP hasta aprobación humana
+2. Continuar features 2→13 en orden vía pipeline SDD
 
 ---
 

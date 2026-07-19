@@ -5,20 +5,29 @@
 
 ---
 
+## Plantilla (sesión sin iniciar)
+
 ```
-feature: — (Fase 0 del plan maestro, no es una feature del backlog)
-id: —
-inicio: 2026-07-18
+feature: —
+inicio: —
+agentes lanzados: —
+estado: sin sesión activa
+```
+
+---
+
+_Cuando inicies una sesión, reemplaza la plantilla con:_
+
+```
+feature: <nombre de la feature>
+id: <id en feature_list.json>
+inicio: <fecha y hora>
 plan:
-  - Escribir plans/001-odc-purchase-system.md (hecho)
-  - Fase 0: docker-compose, .env.example, .gitignore, init.config.sh,
-    docs/conventions.md, docs/architecture.md, docs/verification.md,
-    STATUS.md, feature_list.json con 13 features (hecho)
-  - Verificar ./init.sh en verde
-  - Commit chore(harness)
-estado: backend-foundation en spec_ready — esperando aprobación humana
-bloqueos: gate humano (specs/backend-foundation/requirements.md § Aprobación)
-spec_author: done (backend-foundation, R1–R8)
-implementer: pendiente (bloqueado por gate)
-reviewer: pendiente
+  - <paso 1>
+  - <paso 2>
+estado: pending / spec_ready / in_progress / done
+bloqueos: —
+spec_author: pendiente / en curso / done
+implementer: pendiente / en curso / done
+reviewer: pendiente / en curso / aprobado / rechazado
 ```

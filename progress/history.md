@@ -31,3 +31,12 @@ Formato de cada entrada de `history.md` (una por sesión cerrada):
 ---
 
 _El historial comenzará aquí cuando se complete la primera sesión._
+
+## Sesión 2026-07-18/19 — backend-foundation (id: 1)
+
+- **Feature:** fundación del backend NestJS: ConfigModule global (.env raíz), TypeORM/Postgres vía factory, ValidationPipe whitelist, prefijo /api, puerto PORT|3001, GET /api/health, scaffold getHello eliminado
+- **Spec:** [[specs/backend-foundation/requirements|spec]] (R1–R8, aprobada por humano 2026-07-18)
+- **Acciones:** Fase 0 del plan maestro (stack, harness, backlog de 13 features) + spec_author + implementer (TDD, 1 corte por límite de sesión, reanudado) + reviewer
+- **Resultado:** ./init.sh exit 0; 15 tests backend en verde; review APROBADO (C1–C6) → progress/review_backend-foundation.md
+- **Commits:** 7187c59 harness, 16cc1f9 spec, b8d25eb..0699abd implementación por requisito (feat+docs por R-id)
+- **Estado final:** done
