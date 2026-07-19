@@ -5,7 +5,7 @@
     "status": "done",
     "priority": "P1"
   },
-  { "id": 2, "name": "auth-users", "status": "spec_ready", "priority": "P1" },
+  { "id": 2, "name": "auth-users", "status": "done", "priority": "P1" },
   {
     "id": 3,
     "name": "odc-create-draft",

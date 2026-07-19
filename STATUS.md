@@ -1,8 +1,8 @@
 # ODC — Status
 
 **Última actualización**: 2026-07-19
-**Features completadas**: 1/13 (`feature_list.json`)
-**Pendientes**: 12 (`pending`, sin spec aún)
+**Features completadas**: 2/13 (`feature_list.json`)
+**Pendientes**: 11 (`pending`, sin spec aún)
 **En producción**: no
 
 ---
@@ -37,24 +37,30 @@ Requiere `.env` en la raíz (plantilla en `.env.example`): `DATABASE_URL`,
 - **#1 `backend-foundation` done** (review APROBADO): ConfigModule global,
   TypeORM desde `DATABASE_URL`, ValidationPipe whitelist, prefijo `/api`,
   `GET /api/health`, scaffold eliminado. 15 tests unitarios sin DB.
+- **#2 `auth-users` done** (review APROBADO): módulos `users` + `auth` en
+  Clean Architecture. Seed idempotente de 3 usuarios (`pnpm seed`, bcrypt,
+  `SEED_PASSWORD` o default dev), login/logout/me, JWT 8h `{sub, role}` en
+  cookie httpOnly `odc_session`, `JwtAuthGuard` global con `@Public()`
+  (login/health) y `RolesGuard` + `@Roles()`. 63 tests unitarios sin DB.
 - Deuda anotada: `synchronize: true` solo dev (migraciones antes de prod);
-  `backend/test/app.e2e-spec.ts` scaffold desactualizado (fuera de TEST_CMD).
+  `backend/test/app.e2e-spec.ts` scaffold desactualizado (fuera de TEST_CMD);
+  sin fail-fast si falta `JWT_SECRET` al arrancar (menor M2 del review).
 - Frontend sigue siendo scaffold.
-- Siguiente: spec de `auth-users` (feature #2) vía `spec_author` +
+- Siguiente: spec de `odc-create-draft` (feature #3) vía `spec_author` +
   aprobación humana.
 
 ---
 
 ## Última sesión
 
-**2026-07-19** — Feature #1 `backend-foundation` completada vía pipeline SDD
-completo (spec_author → aprobación humana → implementer TDD → reviewer
-APROBADO C1–C6). Detalle en `progress/history.md` y
-`progress/review_backend-foundation.md`. `./init.sh` en verde (1/13).
+**2026-07-19** — Feature #2 `auth-users` completada vía pipeline SDD completo
+(spec_author → aprobación humana → implementer TDD R1–R11 → reviewer APROBADO,
+0 críticos / 0 mayores / 3 menores). Detalle en `progress/history.md` y
+`progress/review_auth-users.md`. `./init.sh` en verde (2/13, 63 tests).
 
 Próximos pasos:
-1. Lanzar `spec_author` para `auth-users` → STOP hasta aprobación humana
-2. Continuar features 2→13 en orden vía pipeline SDD
+1. Lanzar `spec_author` para `odc-create-draft` (#3) → STOP hasta aprobación humana
+2. Continuar features 3→13 en orden vía pipeline SDD
 
 ---
 

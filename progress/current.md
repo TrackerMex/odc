@@ -5,20 +5,13 @@
 
 ---
 
-## Sesión en curso
+## Plantilla (sesión sin iniciar)
 
 ```
-feature: auth-users
-id: 2
-inicio: 2026-07-19
-plan:
-  - spec_author escribe specs/auth-users/requirements.md (EARS)
-  - PARA hasta aprobación humana (checkbox en requirements.md)
-estado: spec_ready
-bloqueos: gate humano — falta [x] Aprobado por humano en specs/auth-users/requirements.md
-spec_author: done
-implementer: pendiente
-reviewer: pendiente
+feature: —
+inicio: —
+agentes lanzados: —
+estado: sin sesión activa
 ```
 
 ---
