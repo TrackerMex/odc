@@ -8,7 +8,7 @@ tags: [harness, spec]
 
 | Requisito | Test (archivo::nombre) | Commit (hash + mensaje) |
 |---|---|---|
-| R1 | pendiente | pendiente |
+| R1 | `backend/src/modules/users/domain/entities/user.entity.spec.ts::R1: pure User domain entity with restricted role` | `8aa3630` feat(auth-users): add pure User domain entity with restricted role (R1) |
 | R2 | pendiente | pendiente |
 | R3 | pendiente | pendiente |
 | R4 | pendiente | pendiente |
