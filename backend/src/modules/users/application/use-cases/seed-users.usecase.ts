@@ -44,6 +44,11 @@ export class SeedUsersUseCase {
     const skipped: string[] = [];
 
     for (const seed of SEED_USERS) {
+      const existing = await this.userRepository.findByEmail(seed.email);
+      if (existing) {
+        skipped.push(seed.email);
+        continue;
+      }
       await this.userRepository.create(
         new User(null, seed.email, passwordHash, seed.fullName, seed.role, null),
       );

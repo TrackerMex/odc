@@ -77,3 +77,49 @@ describe('R3: seed creates the 3 users hashed with bcrypt', () => {
     ).resolves.toBe(true);
   });
 });
+
+describe('R4: seed is idempotent when users already exist', () => {
+  it('skips every existing user without creating duplicates and without failing', async () => {
+    const repository = createUserRepositoryMock();
+    repository.findByEmail.mockImplementation((email: string) =>
+      Promise.resolve(
+        new User('existing-id', email, '$2b$10$hash', 'Existing', 'DIRECTOR_OPS', null),
+      ),
+    );
+    const useCase = new SeedUsersUseCase(
+      repository,
+      createConfigServiceMock({}),
+    );
+
+    const result = await useCase.execute();
+
+    expect(repository.create).not.toHaveBeenCalled();
+    expect(result.created).toEqual([]);
+    expect(result.skipped).toEqual([
+      'ops@odc.local',
+      'admin@odc.local',
+      'dg@odc.local',
+    ]);
+  });
+
+  it('creates only the missing users when some already exist', async () => {
+    const repository = createUserRepositoryMock();
+    repository.findByEmail.mockImplementation((email: string) =>
+      email === 'ops@odc.local'
+        ? Promise.resolve(
+            new User('existing-id', email, '$2b$10$hash', 'Existing', 'DIRECTOR_OPS', null),
+          )
+        : Promise.resolve(null),
+    );
+    const useCase = new SeedUsersUseCase(
+      repository,
+      createConfigServiceMock({}),
+    );
+
+    const result = await useCase.execute();
+
+    expect(repository.create).toHaveBeenCalledTimes(2);
+    expect(result.created).toEqual(['admin@odc.local', 'dg@odc.local']);
+    expect(result.skipped).toEqual(['ops@odc.local']);
+  });
+});
