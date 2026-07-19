@@ -1,5 +1,5 @@
 import { INestApplication, ValidationPipe } from '@nestjs/common';
-import { configureApp } from './bootstrap';
+import { configureApp, resolvePort } from './bootstrap';
 
 interface AppMock {
   setGlobalPrefix: jest.Mock;
@@ -36,5 +36,15 @@ describe("R5: global route prefix 'api'", () => {
     configureApp(appMock as unknown as INestApplication);
 
     expect(appMock.setGlobalPrefix).toHaveBeenCalledWith('api');
+  });
+});
+
+describe('R6: HTTP port from PORT with default 3001', () => {
+  it('uses the port from the PORT environment variable when defined', () => {
+    expect(resolvePort({ PORT: '8080' })).toBe(8080);
+  });
+
+  it('defaults to 3001 when PORT is not defined', () => {
+    expect(resolvePort({})).toBe(3001);
   });
 });
