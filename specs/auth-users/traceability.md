@@ -15,7 +15,7 @@ tags: [harness, spec]
 | R5 | `backend/src/modules/auth/application/use-cases/login.usecase.spec.ts::R5: login with valid credentials returns the user and a session token`; `backend/src/modules/auth/infrastructure/controller/auth.controller.spec.ts::R5: POST /api/auth/login responds { user } and sets the session cookie` | `539c04b` feat(auth-users): add login use-case and endpoint with session cookie (R5) |
 | R6 | `backend/src/modules/auth/jwt.config.spec.ts::R6: session JWT signed with JWT_SECRET, 8h expiration and { sub, role } payload` | `98fd244` feat(auth-users): sign session JWT with JWT_SECRET, 8h and sub/role payload (R6) |
 | R7 | `backend/src/modules/auth/application/use-cases/login.usecase.spec.ts::R7: login failure raises the same generic domain error`; `backend/src/modules/auth/infrastructure/controller/auth.controller.spec.ts::R7: failed login responds 401 without setting any cookie` | `5740f33` feat(auth-users): reject invalid login with generic 401 and no cookie (R7) |
-| R8 | pendiente | pendiente |
+| R8 | `backend/src/modules/auth/infrastructure/guards/jwt-auth.guard.spec.ts::R8: JwtAuthGuard rejects requests without a valid session JWT` + `::R8: login and health are the only public endpoints`; `backend/src/bootstrap.spec.ts::R8 (auth-users): cookie-parser registered so guards can read request.cookies` | `da061e9` feat(auth-users): add global JwtAuthGuard with @Public exceptions (R8); `1a16e20` fix(auth-users): use import type for types in decorated signatures (R2,R3,R5,R8) |
 | R9 | pendiente | pendiente |
 | R10 | pendiente | pendiente |
 | R11 | pendiente | pendiente |
