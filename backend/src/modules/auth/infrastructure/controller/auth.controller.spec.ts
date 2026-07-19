@@ -1,6 +1,7 @@
-import { RequestMethod } from '@nestjs/common';
+import { RequestMethod, UnauthorizedException } from '@nestjs/common';
 import { Response } from 'express';
 import { LoginUseCase } from '../../application/use-cases/login.usecase';
+import { InvalidCredentialsError } from '../../domain/errors/invalid-credentials.error';
 import { SESSION_COOKIE_NAME } from '../session-cookie';
 import { AuthController } from './auth.controller';
 
@@ -79,5 +80,25 @@ describe('R5: POST /api/auth/login responds { user } and sets the session cookie
       httpOnly: true,
       sameSite: 'lax',
     });
+  });
+});
+
+describe('R7: failed login responds 401 without setting any cookie', () => {
+  it('translates InvalidCredentialsError into UnauthorizedException and sets no cookie', async () => {
+    const controller = createController({
+      loginUseCase: {
+        execute: jest.fn().mockRejectedValue(new InvalidCredentialsError()),
+      },
+    });
+    const response = createResponseMock();
+
+    await expect(
+      controller.login(
+        { email: 'nobody@odc.local', password: 'wrong' },
+        response as unknown as Response,
+      ),
+    ).rejects.toBeInstanceOf(UnauthorizedException);
+
+    expect(response.cookie).not.toHaveBeenCalled();
   });
 });

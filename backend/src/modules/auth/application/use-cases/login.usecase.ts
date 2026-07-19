@@ -3,6 +3,7 @@ import { Inject, Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { UserRole } from '../../../users/domain/entities/user.entity';
 import { UserRepository } from '../../../users/domain/repositories/user.repository';
+import { InvalidCredentialsError } from '../../domain/errors/invalid-credentials.error';
 
 export interface AuthenticatedUser {
   id: string;
@@ -27,11 +28,11 @@ export class LoginUseCase {
   async execute(email: string, password: string): Promise<LoginResult> {
     const user = await this.userRepository.findByEmail(email);
     if (!user || user.id === null) {
-      throw new Error('login failed');
+      throw new InvalidCredentialsError();
     }
     const passwordMatches = await bcrypt.compare(password, user.passwordHash);
     if (!passwordMatches) {
-      throw new Error('login failed');
+      throw new InvalidCredentialsError();
     }
     const token = await this.jwtService.signAsync({
       sub: user.id,

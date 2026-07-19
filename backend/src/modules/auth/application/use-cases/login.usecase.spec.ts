@@ -1,6 +1,7 @@
 import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
 import { User } from '../../../users/domain/entities/user.entity';
+import { InvalidCredentialsError } from '../../domain/errors/invalid-credentials.error';
 import { LoginUseCase } from './login.usecase';
 
 interface UserRepositoryMock {
@@ -42,5 +43,64 @@ describe('R5: login with valid credentials returns the user and a session token'
       role: 'DIRECTOR_OPS',
     });
     expect(result.user).not.toHaveProperty('passwordHash');
+  });
+});
+
+describe('R7: login failure raises the same generic domain error', () => {
+  const jwtService = {
+    signAsync: jest.fn(),
+  } as unknown as JwtService;
+
+  it('rejects with InvalidCredentialsError when the email does not exist', async () => {
+    const repository: UserRepositoryMock = {
+      findByEmail: jest.fn().mockResolvedValue(null),
+      create: jest.fn(),
+    };
+    const useCase = new LoginUseCase(repository, jwtService);
+
+    await expect(
+      useCase.execute('nobody@odc.local', 'whatever'),
+    ).rejects.toBeInstanceOf(InvalidCredentialsError);
+  });
+
+  it('rejects with InvalidCredentialsError when the password does not match', async () => {
+    const storedUser = await createStoredUser('right-password');
+    const repository: UserRepositoryMock = {
+      findByEmail: jest.fn().mockResolvedValue(storedUser),
+      create: jest.fn(),
+    };
+    const useCase = new LoginUseCase(repository, jwtService);
+
+    await expect(
+      useCase.execute('ops@odc.local', 'wrong-password'),
+    ).rejects.toBeInstanceOf(InvalidCredentialsError);
+  });
+
+  it('uses the same generic message in both cases without revealing which failed', async () => {
+    const storedUser = await createStoredUser('right-password');
+    const emptyRepository: UserRepositoryMock = {
+      findByEmail: jest.fn().mockResolvedValue(null),
+      create: jest.fn(),
+    };
+    const populatedRepository: UserRepositoryMock = {
+      findByEmail: jest.fn().mockResolvedValue(storedUser),
+      create: jest.fn(),
+    };
+
+    const unknownEmailError = await new LoginUseCase(emptyRepository, jwtService)
+      .execute('nobody@odc.local', 'whatever')
+      .catch((error: Error) => error);
+    const wrongPasswordError = await new LoginUseCase(
+      populatedRepository,
+      jwtService,
+    )
+      .execute('ops@odc.local', 'wrong-password')
+      .catch((error: Error) => error);
+
+    expect(unknownEmailError).toBeInstanceOf(InvalidCredentialsError);
+    expect(wrongPasswordError).toBeInstanceOf(InvalidCredentialsError);
+    expect((unknownEmailError as Error).message).toBe(
+      (wrongPasswordError as Error).message,
+    );
   });
 });
