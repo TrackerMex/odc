@@ -4,7 +4,7 @@ import {
   Entity,
   PrimaryGeneratedColumn,
 } from 'typeorm';
-import { UserRole } from '../../domain/entities/user.entity';
+import type { UserRole } from '../../domain/entities/user.entity';
 
 @Entity('users')
 export class UserOrmEntity {

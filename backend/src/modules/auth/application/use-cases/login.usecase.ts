@@ -1,8 +1,8 @@
 import * as bcrypt from 'bcrypt';
 import { Inject, Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { UserRole } from '../../../users/domain/entities/user.entity';
-import { UserRepository } from '../../../users/domain/repositories/user.repository';
+import type { UserRole } from '../../../users/domain/entities/user.entity';
+import type { UserRepository } from '../../../users/domain/repositories/user.repository';
 import { InvalidCredentialsError } from '../../domain/errors/invalid-credentials.error';
 
 export interface AuthenticatedUser {

@@ -6,7 +6,7 @@ import {
   Res,
   UnauthorizedException,
 } from '@nestjs/common';
-import { Response } from 'express';
+import type { Response } from 'express';
 import { LoginDto } from '../../application/dto/login.dto';
 import {
   AuthenticatedUser,

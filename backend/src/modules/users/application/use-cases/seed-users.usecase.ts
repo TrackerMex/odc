@@ -1,8 +1,9 @@
 import * as bcrypt from 'bcrypt';
 import { Inject, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { User, UserRole } from '../../domain/entities/user.entity';
-import { UserRepository } from '../../domain/repositories/user.repository';
+import { User } from '../../domain/entities/user.entity';
+import type { UserRole } from '../../domain/entities/user.entity';
+import type { UserRepository } from '../../domain/repositories/user.repository';
 
 // Dev-only fallback, documented in specs/auth-users/design.md (R3)
 export const DEFAULT_SEED_PASSWORD = 'odc-dev-password';

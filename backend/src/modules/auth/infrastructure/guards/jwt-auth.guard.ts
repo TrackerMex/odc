@@ -6,7 +6,7 @@ import {
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { JwtService } from '@nestjs/jwt';
-import { UserRole } from '../../../users/domain/entities/user.entity';
+import type { UserRole } from '../../../users/domain/entities/user.entity';
 import { IS_PUBLIC_KEY } from '../decorators/public.decorator';
 import { SESSION_COOKIE_NAME } from '../session-cookie';
 
