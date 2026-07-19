@@ -1,5 +1,5 @@
 [
-  { "id": 1,  "name": "backend-foundation",         "status": "pending", "priority": "P1" },
+  { "id": 1,  "name": "backend-foundation",         "status": "spec_ready", "priority": "P1" },
   { "id": 2,  "name": "auth-users",                 "status": "pending", "priority": "P1" },
   { "id": 3,  "name": "odc-create-draft",           "status": "pending", "priority": "P1" },
   { "id": 4,  "name": "odc-budget-validation",      "status": "pending", "priority": "P1" },

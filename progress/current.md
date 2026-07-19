@@ -16,9 +16,9 @@ plan:
     STATUS.md, feature_list.json con 13 features (hecho)
   - Verificar ./init.sh en verde
   - Commit chore(harness)
-estado: Fase 0 en verificación
-bloqueos: —
-spec_author: pendiente (siguiente: backend-foundation)
-implementer: pendiente
+estado: backend-foundation en spec_ready — esperando aprobación humana
+bloqueos: gate humano (specs/backend-foundation/requirements.md § Aprobación)
+spec_author: done (backend-foundation, R1–R8)
+implementer: pendiente (bloqueado por gate)
 reviewer: pendiente
 ```
