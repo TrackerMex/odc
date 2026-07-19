@@ -8,7 +8,7 @@ tags: [harness, spec]
 
 | Requisito | Test (archivo::nombre) | Commit (hash + mensaje) |
 |---|---|---|
-| R1 | pendiente | pendiente |
+| R1 | `backend/src/app.module.spec.ts::R1: global ConfigModule loading the repo root .env` | `c96671e` feat(backend-foundation): register global ConfigModule loading root .env (R1) |
 | R2 | pendiente | pendiente |
 | R3 | pendiente | pendiente |
 | R4 | pendiente | pendiente |
