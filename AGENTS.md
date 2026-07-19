@@ -45,6 +45,7 @@ duplica.
 | `docs/obsidian.md` | Cómo usar este proyecto como vault de Obsidian | Si usas Obsidian para navegar el proyecto |
 | `CHECKPOINTS.md` | Criterios objetivos de "estado final correcto" (C1..C6) | Para auto-evaluarte |
 | `.claude/agents/` | Definiciones de subagentes (leader, spec_author, explorer, implementer, reviewer) | Si orquestas trabajo |
+| `.claude/skills/nestjs-best-practices/` | Skill externa (Kadajett/agent-nestjs-skills): 40 reglas NestJS (arch, DI, error handling, security, perf, testing, db, api, micro, devops) | Referencia de buenas prácticas al escribir specs/código backend — **excepto** `rules/security-auth-jwt.md`: propone Passport + Bearer + refresh tokens, contradice la decisión ya tomada (JWT en cookie httpOnly, sin Passport, sin refresh — ver tabla de decisiones en `plans/001-odc-purchase-system.md` y `specs/auth-users/`). Ignorar esa regla puntual. |
 | `init.config.sh` | Comandos de build/test/lint específicos de este proyecto | Antes de correr `init.sh` por primera vez |
 | ver `docs/architecture.md` | Dónde vive el código de la aplicación y cómo se organiza | Para implementar |
 
