@@ -29,25 +29,27 @@ las capas externas.
 
 ---
 
-## Estructura de módulo en por definir
+## Estructura de módulo en NestJS
 
-<!-- Rellenar con la convención de carpetas/archivos real de este proyecto,
-     análoga a la de la sección "Estructura de módulo" del framework elegido.
-     Ejemplo de estructura genérica esperada por capa: -->
+Stack decidido (2026-07-18): **NestJS 11 + TypeORM + PostgreSQL**. Cada
+feature es un módulo en `backend/src/modules/<nombre>/`:
 
 ```
-<module>/
+backend/src/modules/<nombre>/
 ├── domain/
-│   ├── entities/
+│   ├── entities/           ← clases puras, sin framework ni ORM
 │   └── repositories/       ← interfaces, sin implementación
 ├── application/
 │   ├── dto/
 │   └── use-cases/
 └── infrastructure/
-    ├── entities/           ← modelos del ORM/DB concreto
+    ├── entities/           ← @Entity de TypeORM
     ├── repositories/       ← implementación de las interfaces de domain
-    └── controller/ o handlers/
+    └── controller/
 ```
+
+El apéndice al final de este documento muestra esta estructura con código —
+**es la estructura oficial del proyecto**.
 
 ---
 
@@ -68,10 +70,9 @@ Cada caso de uso hace una sola cosa. Es más testeable y más fácil de razonar.
 
 ## Apéndice ilustrativo: ejemplo NestJS + TypeORM
 
-> Esta sección es un ejemplo concreto de cómo se ve la Clean Architecture
-> anterior aplicada a NestJS + TypeORM. Se conserva como referencia
-> ilustrativa — **no** es la estructura de este proyecto salvo que el stack
-> elegido sea efectivamente NestJS.
+> Esta sección muestra la Clean Architecture anterior aplicada a
+> NestJS + TypeORM — el stack de este proyecto. Es la **estructura oficial**:
+> todo módulo nuevo la sigue.
 
 ```
 src/modules/<nombre>/

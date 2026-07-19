@@ -8,7 +8,7 @@ de STOP y actualiza su fila al terminar.
 
 | Plan | Título | Priority | Effort | Depends on | Status |
 |------|--------|----------|--------|------------|--------|
-| 001  | Orquestar el desarrollo completo del Sistema de Gestión de Compras (ODC) | P1 | L | — | TODO |
+| 001  | Orquestar el desarrollo completo del Sistema de Gestión de Compras (ODC) | P1 | L | — | IN PROGRESS (Fase 0 hecha 2026-07-18; F1–F13 pendientes) |
 
 Valores de Status: TODO | IN PROGRESS | DONE | BLOCKED (con motivo de una línea) | REJECTED (con justificación de una línea)
 

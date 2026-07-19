@@ -1,1 +1,15 @@
-[]
+[
+  { "id": 1,  "name": "backend-foundation",         "status": "pending", "priority": "P1" },
+  { "id": 2,  "name": "auth-users",                 "status": "pending", "priority": "P1" },
+  { "id": 3,  "name": "odc-create-draft",           "status": "pending", "priority": "P1" },
+  { "id": 4,  "name": "odc-budget-validation",      "status": "pending", "priority": "P1" },
+  { "id": 5,  "name": "odc-purchase-approval",      "status": "pending", "priority": "P1" },
+  { "id": 6,  "name": "odc-register-payment",       "status": "pending", "priority": "P1" },
+  { "id": 7,  "name": "odc-payment-evidence",       "status": "pending", "priority": "P1" },
+  { "id": 8,  "name": "odc-invoice-completion",     "status": "pending", "priority": "P1" },
+  { "id": 9,  "name": "frontend-foundation",        "status": "pending", "priority": "P1" },
+  { "id": 10, "name": "frontend-odc-form",          "status": "pending", "priority": "P1" },
+  { "id": 11, "name": "frontend-admin-flows",       "status": "pending", "priority": "P2" },
+  { "id": 12, "name": "frontend-general-approval",  "status": "pending", "priority": "P2" },
+  { "id": 13, "name": "frontend-payment-invoice",   "status": "pending", "priority": "P2" }
+]
