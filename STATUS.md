@@ -58,6 +58,14 @@ Requiere `.env` en la raíz (plantilla en `.env.example`): `DATABASE_URL`,
 0 críticos / 0 mayores / 3 menores). Detalle en `progress/history.md` y
 `progress/review_auth-users.md`. `./init.sh` en verde (2/13, 63 tests).
 
+PR #1 (`plan-01` → `main`) mergeado por el humano; repo local ahora en rama
+`main`, 1 commit local sin pushear (push pendiente, lo hace el humano
+manualmente). Instalada skill de referencia `nestjs-best-practices`
+(`.claude/skills/nestjs-best-practices/`, ver nota en `AGENTS.md`): 40 reglas
+NestJS válidas como referencia, EXCEPTO `security-auth-jwt.md`, que contradice
+la decisión ya tomada (JWT en cookie httpOnly, sin Passport, sin refresh
+tokens) — ignorar esa regla puntual.
+
 Próximos pasos:
 1. Lanzar `spec_author` para `odc-create-draft` (#3) → STOP hasta aprobación humana
 2. Continuar features 3→13 en orden vía pipeline SDD
