@@ -58,7 +58,9 @@ describe('R2: UserTypeOrmRepository implements the domain UserRepository', () =>
       ormRepository as unknown as Repository<UserOrmEntity>,
     );
 
-    await expect(repository.findByEmail('nobody@odc.local')).resolves.toBeNull();
+    await expect(
+      repository.findByEmail('nobody@odc.local'),
+    ).resolves.toBeNull();
   });
 
   it('create persists the domain user and returns the saved domain user', async () => {

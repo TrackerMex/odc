@@ -29,7 +29,11 @@ describe('R1: pure User domain entity with restricted role', () => {
       'DIRECTOR_GENERAL',
     ]);
     // Compile-time check: UserRole only admits the three literal values.
-    const roles: UserRole[] = ['DIRECTOR_OPS', 'ADMINISTRACION', 'DIRECTOR_GENERAL'];
+    const roles: UserRole[] = [
+      'DIRECTOR_OPS',
+      'ADMINISTRACION',
+      'DIRECTOR_GENERAL',
+    ];
     expect(roles).toHaveLength(3);
   });
 

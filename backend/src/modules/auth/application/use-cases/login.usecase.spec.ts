@@ -87,7 +87,10 @@ describe('R7: login failure raises the same generic domain error', () => {
       create: jest.fn(),
     };
 
-    const unknownEmailError = await new LoginUseCase(emptyRepository, jwtService)
+    const unknownEmailError = await new LoginUseCase(
+      emptyRepository,
+      jwtService,
+    )
       .execute('nobody@odc.local', 'whatever')
       .catch((error: Error) => error);
     const wrongPasswordError = await new LoginUseCase(

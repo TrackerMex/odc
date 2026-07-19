@@ -72,24 +72,25 @@ describe('R8: JwtAuthGuard rejects requests without a valid session JWT', () => 
   });
 
   it('lets a handler marked with @Public() pass without any token', async () => {
-    const jwtService = {
-      verifyAsync: jest.fn(),
-    } as unknown as JwtService;
+    const verifyAsync = jest.fn();
+    const jwtService = { verifyAsync } as unknown as JwtService;
     const reflector = createReflectorMock(true);
     const guard = new JwtAuthGuard(jwtService, reflector);
 
     await expect(
       guard.canActivate(createExecutionContext({ cookies: {} })),
     ).resolves.toBe(true);
-    expect(jwtService.verifyAsync).not.toHaveBeenCalled();
+    expect(verifyAsync).not.toHaveBeenCalled();
   });
 });
 
 describe('R8: login and health are the only public endpoints', () => {
   it('marks POST /api/auth/login with the public metadata', () => {
-    expect(
-      Reflect.getMetadata(IS_PUBLIC_KEY, AuthController.prototype.login),
-    ).toBe(true);
+    const loginHandler = Object.getOwnPropertyDescriptor(
+      AuthController.prototype,
+      'login',
+    )?.value as object;
+    expect(Reflect.getMetadata(IS_PUBLIC_KEY, loginHandler)).toBe(true);
   });
 
   it('marks GET /api/health with the public metadata', () => {

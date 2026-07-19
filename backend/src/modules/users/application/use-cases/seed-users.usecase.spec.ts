@@ -56,9 +56,9 @@ describe('R3: seed creates the 3 users hashed with bcrypt', () => {
     await useCase.execute();
 
     for (const [user] of repository.create.mock.calls as [User][]) {
-      await expect(bcrypt.compare('env-secret', user.passwordHash)).resolves.toBe(
-        true,
-      );
+      await expect(
+        bcrypt.compare('env-secret', user.passwordHash),
+      ).resolves.toBe(true);
     }
   });
 
@@ -83,7 +83,14 @@ describe('R4: seed is idempotent when users already exist', () => {
     const repository = createUserRepositoryMock();
     repository.findByEmail.mockImplementation((email: string) =>
       Promise.resolve(
-        new User('existing-id', email, '$2b$10$hash', 'Existing', 'DIRECTOR_OPS', null),
+        new User(
+          'existing-id',
+          email,
+          '$2b$10$hash',
+          'Existing',
+          'DIRECTOR_OPS',
+          null,
+        ),
       ),
     );
     const useCase = new SeedUsersUseCase(
@@ -107,7 +114,14 @@ describe('R4: seed is idempotent when users already exist', () => {
     repository.findByEmail.mockImplementation((email: string) =>
       email === 'ops@odc.local'
         ? Promise.resolve(
-            new User('existing-id', email, '$2b$10$hash', 'Existing', 'DIRECTOR_OPS', null),
+            new User(
+              'existing-id',
+              email,
+              '$2b$10$hash',
+              'Existing',
+              'DIRECTOR_OPS',
+              null,
+            ),
           )
         : Promise.resolve(null),
     );

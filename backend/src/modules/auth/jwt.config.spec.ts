@@ -27,7 +27,9 @@ describe('R6: session JWT signed with JWT_SECRET, 8h expiration and { sub, role 
 
   it('login signs a token carrying { sub, role } that expires in 8 hours', async () => {
     const jwtService = new JwtService(
-      jwtModuleOptionsFactory(createConfigServiceMock({ JWT_SECRET: 'test-secret' })),
+      jwtModuleOptionsFactory(
+        createConfigServiceMock({ JWT_SECRET: 'test-secret' }),
+      ),
     );
     const storedUser = new User(
       'a3d1c9a2-0000-4000-8000-000000000001',

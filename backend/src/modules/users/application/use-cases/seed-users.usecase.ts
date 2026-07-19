@@ -51,7 +51,14 @@ export class SeedUsersUseCase {
         continue;
       }
       await this.userRepository.create(
-        new User(null, seed.email, passwordHash, seed.fullName, seed.role, null),
+        new User(
+          null,
+          seed.email,
+          passwordHash,
+          seed.fullName,
+          seed.role,
+          null,
+        ),
       );
       created.push(seed.email);
     }

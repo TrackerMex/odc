@@ -65,7 +65,9 @@ describe('R9: RolesGuard enforces @Roles(...) metadata', () => {
       handler(): void {}
     }
 
-    expect(Reflect.getMetadata(ROLES_KEY, Dummy.prototype.handler)).toEqual([
+    const handler = Object.getOwnPropertyDescriptor(Dummy.prototype, 'handler')
+      ?.value as object;
+    expect(Reflect.getMetadata(ROLES_KEY, handler)).toEqual([
       'DIRECTOR_GENERAL',
       'ADMINISTRACION',
     ]);

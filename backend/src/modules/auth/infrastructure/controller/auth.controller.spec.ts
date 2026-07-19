@@ -12,6 +12,14 @@ interface ResponseMock {
   clearCookie: jest.Mock;
 }
 
+function getHandler(name: string): object {
+  const descriptor = Object.getOwnPropertyDescriptor(
+    AuthController.prototype,
+    name,
+  );
+  return descriptor?.value as object;
+}
+
 function createResponseMock(): ResponseMock {
   return {
     cookie: jest.fn(),
@@ -47,7 +55,7 @@ describe('R5: POST /api/auth/login responds { user } and sets the session cookie
 
   it("exposes the handler as POST on route 'login' with HTTP 200", () => {
     expect(Reflect.getMetadata('path', AuthController)).toBe('auth');
-    const handler = AuthController.prototype.login;
+    const handler = getHandler('login');
     expect(Reflect.getMetadata('path', handler)).toBe('login');
     expect(Reflect.getMetadata('method', handler)).toBe(RequestMethod.POST);
     expect(Reflect.getMetadata('__httpCode__', handler)).toBe(200);
@@ -120,7 +128,7 @@ describe('R10: GET /api/auth/me returns the session user', () => {
   };
 
   it("exposes the handler as GET on route 'me'", () => {
-    const handler = AuthController.prototype.me;
+    const handler = getHandler('me');
     expect(Reflect.getMetadata('path', handler)).toBe('me');
     expect(Reflect.getMetadata('method', handler)).toBe(RequestMethod.GET);
   });
@@ -153,7 +161,7 @@ describe('R10: GET /api/auth/me returns the session user', () => {
 
 describe('R11: POST /api/auth/logout clears the session cookie', () => {
   it("exposes the handler as POST on route 'logout' with HTTP 200", () => {
-    const handler = AuthController.prototype.logout;
+    const handler = getHandler('logout');
     expect(Reflect.getMetadata('path', handler)).toBe('logout');
     expect(Reflect.getMetadata('method', handler)).toBe(RequestMethod.POST);
     expect(Reflect.getMetadata('__httpCode__', handler)).toBe(200);
