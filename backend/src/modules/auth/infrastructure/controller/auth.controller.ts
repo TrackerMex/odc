@@ -14,12 +14,14 @@ import {
   LoginUseCase,
 } from '../../application/use-cases/login.usecase';
 import { InvalidCredentialsError } from '../../domain/errors/invalid-credentials.error';
+import { Public } from '../decorators/public.decorator';
 import { SESSION_COOKIE_NAME, sessionCookieOptions } from '../session-cookie';
 
 @Controller('auth')
 export class AuthController {
   constructor(private readonly loginUseCase: LoginUseCase) {}
 
+  @Public()
   @Post('login')
   @HttpCode(200)
   async login(

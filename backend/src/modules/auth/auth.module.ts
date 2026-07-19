@@ -16,5 +16,8 @@ import { jwtModuleOptionsFactory } from './jwt.config';
   ],
   controllers: [AuthController],
   providers: [LoginUseCase],
+  // JwtModule is exported so the APP_GUARD registered in AppModule can
+  // resolve JwtService from the root injector (R8).
+  exports: [JwtModule],
 })
 export class AuthModule {}

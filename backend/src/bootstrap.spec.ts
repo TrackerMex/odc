@@ -4,12 +4,14 @@ import { configureApp, resolvePort } from './bootstrap';
 interface AppMock {
   setGlobalPrefix: jest.Mock;
   useGlobalPipes: jest.Mock;
+  use: jest.Mock;
 }
 
 function createAppMock(): AppMock {
   return {
     setGlobalPrefix: jest.fn(),
     useGlobalPipes: jest.fn(),
+    use: jest.fn(),
   };
 }
 
@@ -36,6 +38,19 @@ describe("R5: global route prefix 'api'", () => {
     configureApp(appMock as unknown as INestApplication);
 
     expect(appMock.setGlobalPrefix).toHaveBeenCalledWith('api');
+  });
+});
+
+describe('R8 (auth-users): cookie-parser registered so guards can read request.cookies', () => {
+  it('registers the cookie-parser middleware', () => {
+    const appMock = createAppMock();
+
+    configureApp(appMock as unknown as INestApplication);
+
+    expect(appMock.use).toHaveBeenCalledTimes(1);
+    const [middleware] = appMock.use.mock.calls[0] as [unknown];
+    expect(typeof middleware).toBe('function');
+    expect((middleware as { name: string }).name).toBe('cookieParser');
   });
 });
 
