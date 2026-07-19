@@ -17,7 +17,7 @@ tags: [harness, spec]
 | R7 | `backend/src/modules/auth/application/use-cases/login.usecase.spec.ts::R7: login failure raises the same generic domain error`; `backend/src/modules/auth/infrastructure/controller/auth.controller.spec.ts::R7: failed login responds 401 without setting any cookie` | `5740f33` feat(auth-users): reject invalid login with generic 401 and no cookie (R7) |
 | R8 | `backend/src/modules/auth/infrastructure/guards/jwt-auth.guard.spec.ts::R8: JwtAuthGuard rejects requests without a valid session JWT` + `::R8: login and health are the only public endpoints`; `backend/src/bootstrap.spec.ts::R8 (auth-users): cookie-parser registered so guards can read request.cookies` | `da061e9` feat(auth-users): add global JwtAuthGuard with @Public exceptions (R8); `1a16e20` fix(auth-users): use import type for types in decorated signatures (R2,R3,R5,R8) |
 | R9 | `backend/src/modules/auth/infrastructure/guards/roles.guard.spec.ts::R9: RolesGuard enforces @Roles(...) metadata` | `404c99d` feat(auth-users): add RolesGuard and @Roles decorator (R9) |
-| R10 | pendiente | pendiente |
+| R10 | `backend/src/modules/auth/application/use-cases/get-me.usecase.spec.ts::R10: get me resolves the session user without passwordHash`; `backend/src/modules/auth/infrastructure/controller/auth.controller.spec.ts::R10: GET /api/auth/me returns the session user`; `backend/src/modules/users/infrastructure/repositories/user.typeorm.repository.spec.ts::R10: findById resolves the user behind a session sub` | `2758f4c` feat(auth-users): add GET /api/auth/me resolving the session user (R10) |
 | R11 | pendiente | pendiente |
 
 Regla: el reviewer no aprueba si alguna fila queda "pendiente".
