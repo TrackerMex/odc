@@ -15,10 +15,10 @@ plan:
   - implementer TDD por requisito
   - reviewer
 estado: in_progress
-bloqueos: —
+bloqueos: reviewer rechazo — odc.controller.spec.ts sobrescribio 2 describe blocks de R4/R5 de feature 4 (odc-budget-validation), rompiendo su traceability.md
 spec_author: done
-implementer: en curso
-reviewer: pendiente
+implementer: en curso (fix de regresion)
+reviewer: rechazado, esperando fix
 ```
 
 ---
