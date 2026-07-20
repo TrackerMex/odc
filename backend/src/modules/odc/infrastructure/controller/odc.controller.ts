@@ -137,12 +137,13 @@ export class OdcController {
     }
   }
 
-  // Restricted to ADMINISTRACION in this feature: only T4 is reachable.
-  // Feature 5 widens this to include DIRECTOR_GENERAL to also enable T6
-  // on the same route (see design.md), without touching the use-case.
+  // Shared route for T4 (ADMINISTRACION, PENDIENTE_ADMIN) and T6
+  // (DIRECTOR_GENERAL, PRESUPUESTO_APROBADO): both are the same domain
+  // action 'reject', which already resolves the applicable rule and role
+  // from the ODC's current status (see design.md).
   @Post(':id/reject')
   @HttpCode(200)
-  @Roles('ADMINISTRACION')
+  @Roles('ADMINISTRACION', 'DIRECTOR_GENERAL')
   async reject(
     @Param('id') id: string,
     @Body() dto: RejectOdcDto,

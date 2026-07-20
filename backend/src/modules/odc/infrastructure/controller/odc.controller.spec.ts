@@ -514,13 +514,22 @@ describe('R2: approve-purchase responds 404 for an unknown id and 409 outside PR
   });
 });
 
-describe('R4: POST /api/odcs/:id/reject rejects an ODC with 200 restricted to ADMINISTRACION', () => {
-  it("exposes the handler as POST on ':id/reject' with HTTP 200 restricted to ADMINISTRACION", () => {
+describe('R3: POST /api/odcs/:id/reject widens its roles metadata to ADMINISTRACION and DIRECTOR_GENERAL', () => {
+  it("declares the 'reject' handler's ROLES_KEY metadata as exactly ['ADMINISTRACION', 'DIRECTOR_GENERAL']", () => {
+    const handler = getHandler('reject');
+    expect(Reflect.getMetadata(ROLES_KEY, handler)).toEqual([
+      'ADMINISTRACION',
+      'DIRECTOR_GENERAL',
+    ]);
+  });
+});
+
+describe('R4: POST /api/odcs/:id/reject rejects an ODC with 200, now also reachable by DIRECTOR_GENERAL', () => {
+  it("exposes the handler as POST on ':id/reject' with HTTP 200", () => {
     const handler = getHandler('reject');
     expect(Reflect.getMetadata('path', handler)).toBe(':id/reject');
     expect(Reflect.getMetadata('method', handler)).toBe(RequestMethod.POST);
     expect(Reflect.getMetadata('__httpCode__', handler)).toBe(200);
-    expect(Reflect.getMetadata(ROLES_KEY, handler)).toEqual(['ADMINISTRACION']);
   });
 
   it('delegates to the reject use-case with the id, the dto and the session actor', async () => {
