@@ -31,10 +31,9 @@ describe('R1: RegisterPaymentDto requires paymentDate and paymentMethod, keeps p
   });
 
   it('rejects a payload missing paymentDate', async () => {
-    const { paymentDate: _paymentDate, ...rest } = VALID_PAYLOAD;
-    await expect(validateNestedPayload(rest)).resolves.toContain(
-      'paymentDate',
-    );
+    await expect(
+      validateNestedPayload({ paymentMethod: VALID_PAYLOAD.paymentMethod }),
+    ).resolves.toContain('paymentDate');
   });
 
   it('rejects a payload with paymentDate in a non-ISO-date format', async () => {
@@ -44,10 +43,9 @@ describe('R1: RegisterPaymentDto requires paymentDate and paymentMethod, keeps p
   });
 
   it('rejects a payload missing paymentMethod', async () => {
-    const { paymentMethod: _paymentMethod, ...rest } = VALID_PAYLOAD;
-    await expect(validateNestedPayload(rest)).resolves.toContain(
-      'paymentMethod',
-    );
+    await expect(
+      validateNestedPayload({ paymentDate: VALID_PAYLOAD.paymentDate }),
+    ).resolves.toContain('paymentMethod');
   });
 
   it('rejects a payload with an empty paymentMethod', async () => {
