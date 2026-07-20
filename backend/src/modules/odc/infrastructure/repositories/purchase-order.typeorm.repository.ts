@@ -1,7 +1,10 @@
 import { Injectable } from '@nestjs/common';
-import { DataSource, Not } from 'typeorm';
+import { DataSource, Like, Not } from 'typeorm';
 import { OdcStatusHistoryEntry } from '../../domain/entities/odc-status-history-entry.entity';
-import { PurchaseOrder } from '../../domain/entities/purchase-order.entity';
+import {
+  nextOdcNumber,
+  PurchaseOrder,
+} from '../../domain/entities/purchase-order.entity';
 import {
   OdcListFilter,
   OdcPage,
@@ -19,21 +22,42 @@ import {
 export class PurchaseOrderTypeOrmRepository implements PurchaseOrderRepository {
   constructor(private readonly dataSource: DataSource) {}
 
+  // The UNIQUE constraint on odcNumber resolves concurrent creations that
+  // computed the same number: the loser retries with the next one (R6).
   async create(
     order: PurchaseOrder,
     historyEntry: OdcStatusHistoryEntry,
   ): Promise<PurchaseOrder> {
-    return this.dataSource.transaction(async (manager) => {
-      const saved = await manager.save(
-        PurchaseOrderOrmEntity,
-        toOrmValues(order),
-      );
-      await manager.save(
-        OdcStatusHistoryOrmEntity,
-        historyToOrmValues(historyEntry, saved.id),
-      );
-      return toDomain(saved);
-    });
+    for (let attempt = 1; attempt <= CREATE_MAX_ATTEMPTS; attempt++) {
+      try {
+        return await this.dataSource.transaction(async (manager) => {
+          const year = new Date().getFullYear();
+          const [latestInYear] = await manager.find(PurchaseOrderOrmEntity, {
+            where: { odcNumber: Like(`ODC-${year}-%`) },
+            order: { odcNumber: 'DESC' },
+            take: 1,
+          });
+          order.odcNumber = nextOdcNumber(
+            year,
+            latestInYear?.odcNumber ?? null,
+          );
+          const saved = await manager.save(
+            PurchaseOrderOrmEntity,
+            toOrmValues(order),
+          );
+          await manager.save(
+            OdcStatusHistoryOrmEntity,
+            historyToOrmValues(historyEntry, saved.id),
+          );
+          return toDomain(saved);
+        });
+      } catch (error) {
+        if (attempt === CREATE_MAX_ATTEMPTS || !isUniqueViolation(error)) {
+          throw error;
+        }
+      }
+    }
+    throw new Error('ODC number assignment exhausted its retries');
   }
 
   async update(
@@ -93,6 +117,15 @@ export class PurchaseOrderTypeOrmRepository implements PurchaseOrderRepository {
       pageSize,
     };
   }
+}
+
+const CREATE_MAX_ATTEMPTS = 3;
+const POSTGRES_UNIQUE_VIOLATION = '23505';
+
+function isUniqueViolation(error: unknown): boolean {
+  const driverError = (error as { driverError?: { code?: string } })
+    ?.driverError;
+  return driverError?.code === POSTGRES_UNIQUE_VIOLATION;
 }
 
 // BORRADOR rows are only visible to their creator; every other status is

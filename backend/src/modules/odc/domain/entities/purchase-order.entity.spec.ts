@@ -5,6 +5,8 @@ import { InvalidRoleTransitionError } from '../errors/invalid-role-transition.er
 import { InvalidStatusTransitionError } from '../errors/invalid-status-transition.error';
 import { MissingTransitionDataError } from '../errors/missing-transition-data.error';
 import {
+  formatOdcNumber,
+  nextOdcNumber,
   ODC_STATUSES,
   OdcAction,
   OdcStatus,
@@ -464,4 +466,27 @@ describe('R4: invalid transitions raise typed domain errors without mutating', (
       expect(snapshot(order)).toEqual(before);
     },
   );
+});
+
+describe('R6: ODC-YYYY-NNNNN numbering with a per-year sequence', () => {
+  it.each([
+    [2026, 1, 'ODC-2026-00001'],
+    [2026, 123, 'ODC-2026-00123'],
+    [2027, 99999, 'ODC-2027-99999'],
+  ])('formats year %i and sequence %i as %s', (year, sequence, expected) => {
+    expect(formatOdcNumber(year, sequence)).toBe(expected);
+  });
+
+  it('starts the sequence at 00001 when the year has no ODCs yet', () => {
+    expect(nextOdcNumber(2026, null)).toBe('ODC-2026-00001');
+  });
+
+  it('continues with the next correlative within the same year', () => {
+    expect(nextOdcNumber(2026, 'ODC-2026-00007')).toBe('ODC-2026-00008');
+    expect(nextOdcNumber(2026, 'ODC-2026-00041')).toBe('ODC-2026-00042');
+  });
+
+  it('restarts at 00001 on a new year even if the previous year had ODCs', () => {
+    expect(nextOdcNumber(2027, null)).toBe('ODC-2027-00001');
+  });
 });

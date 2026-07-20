@@ -157,3 +157,108 @@ describe('R5: ODC update and history insert share a single transaction', () => {
     expect(updated.status).toBe('PENDIENTE_ADMIN');
   });
 });
+
+describe('R6: create assigns the next yearly number and retries on UNIQUE collision', () => {
+  const year = new Date().getFullYear();
+
+  function uniqueViolation(): Error {
+    return Object.assign(new Error('duplicate key value'), {
+      driverError: { code: '23505' },
+    });
+  }
+
+  function openingEntry(): OdcStatusHistoryEntry {
+    return new OdcStatusHistoryEntry(
+      null,
+      null,
+      null,
+      'BORRADOR',
+      OPS_ID,
+      null,
+      null,
+    );
+  }
+
+  it('assigns the next correlative of the current year inside the create transaction', async () => {
+    const manager = createManagerMock();
+    manager.find.mockResolvedValue([{ odcNumber: `ODC-${year}-00041` }]);
+    manager.save.mockImplementation((_entity: unknown, row: object) =>
+      Promise.resolve({ id: ODC_ID, ...row }),
+    );
+    const { repository, dataSource } = createRepository(manager);
+    const order = buildOrder({ id: null, odcNumber: null });
+
+    const created = await repository.create(order, openingEntry());
+
+    expect(dataSource.transaction).toHaveBeenCalledTimes(1);
+    expect(created.odcNumber).toBe(`ODC-${year}-00042`);
+    const [, orderRow] = manager.save.mock.calls[0] as [
+      unknown,
+      Record<string, unknown>,
+    ];
+    expect(orderRow.odcNumber).toBe(`ODC-${year}-00042`);
+    const [historyTarget, historyRow] = manager.save.mock.calls[1] as [
+      unknown,
+      Record<string, unknown>,
+    ];
+    expect(historyTarget).toBe(OdcStatusHistoryOrmEntity);
+    expect(historyRow).toMatchObject({
+      odcId: ODC_ID,
+      fromStatus: null,
+      toStatus: 'BORRADOR',
+      userId: OPS_ID,
+    });
+  });
+
+  it('starts at 00001 when the year has no ODCs yet', async () => {
+    const manager = createManagerMock();
+    manager.find.mockResolvedValue([]);
+    manager.save.mockImplementation((_entity: unknown, row: object) =>
+      Promise.resolve({ id: ODC_ID, ...row }),
+    );
+    const { repository } = createRepository(manager);
+
+    const created = await repository.create(
+      buildOrder({ id: null, odcNumber: null }),
+      openingEntry(),
+    );
+
+    expect(created.odcNumber).toBe(`ODC-${year}-00001`);
+  });
+
+  it('retries with the next number when the UNIQUE constraint rejects a concurrent duplicate', async () => {
+    const manager = createManagerMock();
+    manager.find
+      .mockResolvedValueOnce([{ odcNumber: `ODC-${year}-00041` }])
+      .mockResolvedValueOnce([{ odcNumber: `ODC-${year}-00042` }]);
+    manager.save
+      .mockRejectedValueOnce(uniqueViolation())
+      .mockImplementation((_entity: unknown, row: object) =>
+        Promise.resolve({ id: ODC_ID, ...row }),
+      );
+    const { repository, dataSource } = createRepository(manager);
+
+    const created = await repository.create(
+      buildOrder({ id: null, odcNumber: null }),
+      openingEntry(),
+    );
+
+    expect(dataSource.transaction).toHaveBeenCalledTimes(2);
+    expect(created.odcNumber).toBe(`ODC-${year}-00043`);
+  });
+
+  it('propagates non-UNIQUE errors without retrying', async () => {
+    const manager = createManagerMock();
+    manager.find.mockResolvedValue([]);
+    manager.save.mockRejectedValue(new Error('connection lost'));
+    const { repository, dataSource } = createRepository(manager);
+
+    await expect(
+      repository.create(
+        buildOrder({ id: null, odcNumber: null }),
+        openingEntry(),
+      ),
+    ).rejects.toThrow('connection lost');
+    expect(dataSource.transaction).toHaveBeenCalledTimes(1);
+  });
+});

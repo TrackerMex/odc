@@ -162,6 +162,22 @@ const TRANSITIONS: TransitionRule[] = [
   },
 ];
 
+// ODC-YYYY-NNNNN: 5-digit zero-padded sequence that restarts every year (R6).
+export function formatOdcNumber(year: number, sequence: number): string {
+  return `ODC-${year}-${String(sequence).padStart(5, '0')}`;
+}
+
+export function nextOdcNumber(
+  year: number,
+  lastOdcNumberInYear: string | null,
+): string {
+  if (lastOdcNumberInYear === null) {
+    return formatOdcNumber(year, 1);
+  }
+  const lastSequence = Number(lastOdcNumberInYear.slice(-5));
+  return formatOdcNumber(year, lastSequence + 1);
+}
+
 function assertRequiredData(rule: TransitionRule, data: TransitionData): void {
   const missing = rule.requiredData.filter((field) => {
     const value = data[field];
