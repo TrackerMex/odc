@@ -8,8 +8,8 @@ tags: [harness, spec]
 
 | Requisito | Test (archivo::nombre) | Commit (hash + mensaje) |
 |---|---|---|
-| R1 | pendiente | pendiente |
-| R2 | pendiente | pendiente |
+| R1 | `backend/src/modules/odc/application/use-cases/approve-budget.usecase.spec.ts::R1: approve-budget transitions PENDIENTE_ADMIN to PRESUPUESTO_APROBADO for ADMINISTRACION`; `backend/src/modules/odc/infrastructure/controller/odc.controller.spec.ts::R1: POST /api/odcs/:id/approve-budget approves the budget with 200 restricted to ADMINISTRACION` | pendiente |
+| R2 | `backend/src/modules/odc/application/use-cases/approve-budget.usecase.spec.ts::R2: approve-budget rejects unknown ids and non-PENDIENTE_ADMIN statuses`; `backend/src/modules/odc/infrastructure/controller/odc.controller.spec.ts::R2: approve-budget responds 404 for an unknown id and 409 outside PENDIENTE_ADMIN` | pendiente |
 | R3 | pendiente | pendiente |
 | R4 | pendiente | pendiente |
 | R5 | pendiente | pendiente |

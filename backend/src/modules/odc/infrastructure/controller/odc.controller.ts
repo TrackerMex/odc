@@ -18,6 +18,7 @@ import type { SessionTokenPayload } from '../../../auth/infrastructure/guards/jw
 import { CreateOdcDto } from '../../application/dto/create-odc.dto';
 import { ListOdcsQueryDto } from '../../application/dto/list-odcs.query.dto';
 import { UpdateOdcDto } from '../../application/dto/update-odc.dto';
+import { ApproveBudgetUseCase } from '../../application/use-cases/approve-budget.usecase';
 import { CreateDraftUseCase } from '../../application/use-cases/create-draft.usecase';
 import { GetOdcUseCase } from '../../application/use-cases/get-odc.usecase';
 import { ListOdcsUseCase } from '../../application/use-cases/list-odcs.usecase';
@@ -70,6 +71,7 @@ export class OdcController {
     private readonly updateDraftUseCase: UpdateDraftUseCase,
     private readonly listOdcsUseCase: ListOdcsUseCase,
     private readonly getOdcUseCase: GetOdcUseCase,
+    private readonly approveBudgetUseCase: ApproveBudgetUseCase,
   ) {}
 
   @Post()
@@ -94,6 +96,20 @@ export class OdcController {
   ): Promise<PurchaseOrder> {
     try {
       return await this.submitOdcUseCase.execute(id, actorFrom(request));
+    } catch (error) {
+      rethrowDomainError(error);
+    }
+  }
+
+  @Post(':id/approve-budget')
+  @HttpCode(200)
+  @Roles('ADMINISTRACION')
+  async approveBudget(
+    @Param('id') id: string,
+    @Req() request: RequestWithSession,
+  ): Promise<PurchaseOrder> {
+    try {
+      return await this.approveBudgetUseCase.execute(id, actorFrom(request));
     } catch (error) {
       rethrowDomainError(error);
     }

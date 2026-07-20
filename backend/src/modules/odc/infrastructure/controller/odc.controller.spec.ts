@@ -10,6 +10,7 @@ import { InvalidRoleTransitionError } from '../../domain/errors/invalid-role-tra
 import { InvalidStatusTransitionError } from '../../domain/errors/invalid-status-transition.error';
 import { OdcAccessDeniedError } from '../../domain/errors/odc-access-denied.error';
 import { OdcNotFoundError } from '../../domain/errors/odc-not-found.error';
+import { ApproveBudgetUseCase } from '../../application/use-cases/approve-budget.usecase';
 import { CreateDraftUseCase } from '../../application/use-cases/create-draft.usecase';
 import { GetOdcUseCase } from '../../application/use-cases/get-odc.usecase';
 import { ListOdcsUseCase } from '../../application/use-cases/list-odcs.usecase';
@@ -34,6 +35,7 @@ interface ControllerOverrides {
   updateDraftUseCase?: Partial<UpdateDraftUseCase>;
   listOdcsUseCase?: Partial<ListOdcsUseCase>;
   getOdcUseCase?: Partial<GetOdcUseCase>;
+  approveBudgetUseCase?: Partial<ApproveBudgetUseCase>;
 }
 
 function createController(overrides: ControllerOverrides = {}): OdcController {
@@ -52,12 +54,16 @@ function createController(overrides: ControllerOverrides = {}): OdcController {
   const getOdcUseCase = (overrides.getOdcUseCase ?? {
     execute: jest.fn(),
   }) as GetOdcUseCase;
+  const approveBudgetUseCase = (overrides.approveBudgetUseCase ?? {
+    execute: jest.fn(),
+  }) as ApproveBudgetUseCase;
   return new OdcController(
     createDraftUseCase,
     submitOdcUseCase,
     updateDraftUseCase,
     listOdcsUseCase,
     getOdcUseCase,
+    approveBudgetUseCase,
   );
 }
 
@@ -343,5 +349,80 @@ describe('R13: GET /api/odcs/:id returns the detail with history for any authent
     await expect(
       controller.detail(ODC_ID, sessionUser()),
     ).rejects.toBeInstanceOf(ForbiddenException);
+  });
+});
+
+describe('R1: POST /api/odcs/:id/approve-budget approves the budget with 200 restricted to ADMINISTRACION', () => {
+  it("exposes the handler as POST on ':id/approve-budget' with HTTP 200 restricted to ADMINISTRACION", () => {
+    const handler = getHandler('approveBudget');
+    expect(Reflect.getMetadata('path', handler)).toBe(':id/approve-budget');
+    expect(Reflect.getMetadata('method', handler)).toBe(RequestMethod.POST);
+    expect(Reflect.getMetadata('__httpCode__', handler)).toBe(200);
+    expect(Reflect.getMetadata(ROLES_KEY, handler)).toEqual([
+      'ADMINISTRACION',
+    ]);
+  });
+
+  it('delegates to the approve-budget use-case with the id and the session actor', async () => {
+    const approved = { status: 'PRESUPUESTO_APROBADO' } as PurchaseOrder;
+    const execute = jest.fn().mockResolvedValue(approved);
+    const controller = createController({ approveBudgetUseCase: { execute } });
+
+    const body = await controller.approveBudget(
+      ODC_ID,
+      sessionUser('ADMINISTRACION'),
+    );
+
+    expect(execute).toHaveBeenCalledWith(ODC_ID, {
+      userId: OPS_ID,
+      role: 'ADMINISTRACION',
+    });
+    expect(body).toBe(approved);
+  });
+
+  it('translates the role domain error into a 403 ForbiddenException', async () => {
+    const controller = createController({
+      approveBudgetUseCase: {
+        execute: jest
+          .fn()
+          .mockRejectedValue(
+            new InvalidRoleTransitionError('approve_budget', 'DIRECTOR_OPS'),
+          ),
+      },
+    });
+
+    await expect(
+      controller.approveBudget(ODC_ID, sessionUser()),
+    ).rejects.toBeInstanceOf(ForbiddenException);
+  });
+});
+
+describe('R2: approve-budget responds 404 for an unknown id and 409 outside PENDIENTE_ADMIN', () => {
+  it('translates the not-found domain error into a 404 NotFoundException', async () => {
+    const controller = createController({
+      approveBudgetUseCase: {
+        execute: jest.fn().mockRejectedValue(new OdcNotFoundError(ODC_ID)),
+      },
+    });
+
+    await expect(
+      controller.approveBudget(ODC_ID, sessionUser('ADMINISTRACION')),
+    ).rejects.toBeInstanceOf(NotFoundException);
+  });
+
+  it('translates the status domain error into a 409 ConflictException', async () => {
+    const controller = createController({
+      approveBudgetUseCase: {
+        execute: jest
+          .fn()
+          .mockRejectedValue(
+            new InvalidStatusTransitionError('approve_budget', 'BORRADOR'),
+          ),
+      },
+    });
+
+    await expect(
+      controller.approveBudget(ODC_ID, sessionUser('ADMINISTRACION')),
+    ).rejects.toBeInstanceOf(ConflictException);
   });
 });
