@@ -58,3 +58,12 @@ _El historial comenzará aquí cuando se complete la primera sesión._
 - **Resultado:** ./init.sh en verde (29 suites, 220 tests, build+lint); review APROBADO (C1–C6, 0 bloqueantes, 1 nota cosmética en frontmatter de traceability.md) → progress/review_odc-create-draft.md; traceability 13/13 completa
 - **Commits:** d25f170 spec, 76783c1..622bf4d implementación R1–R11, 7222ece..106ed32 implementación R12–R13, 401c470 reporte
 - **Estado final:** done
+
+## Sesión 2026-07-20 — odc-budget-validation (id: 4)
+
+- **Feature:** endpoints T3/T4 sobre el módulo `odc` ya existente — `POST /api/odcs/:id/approve-budget` (ADMINISTRACION, PENDIENTE_ADMIN → PRESUPUESTO_APROBADO) y `POST /api/odcs/:id/reject` (ADMINISTRACION, `rejectionReason` obligatorio, PENDIENTE_ADMIN → RECHAZADA); reusa intacta la máquina de estados de dominio de `odc-create-draft` (T4/T6 comparten acción `reject` en el dominio, `/reject` queda mecánicamente listo para T6 cuando la feature 5 amplíe roles)
+- **Spec:** [[specs/odc-budget-validation/requirements|spec]] (R1–R5, aprobada por humano 2026-07-20)
+- **Acciones:** spec_author → aprobación humana → implementer TDD por requisito (sin cortes, 1 sola tanda) → reviewer, con verificación explícita del caso 403 vs 409 en R5 (PRESUPUESTO_APROBADO + actor ADMINISTRACION = 403 por mismatch de rol de T6, no 409)
+- **Resultado:** ./init.sh en verde (32 suites, 256 tests, build+lint); review APROBADO (C1–C6, 0 observaciones) → progress/review_odc-budget-validation.md; traceability 5/5 completa; cero cambios en domain/repositorio (confirmado por diff)
+- **Commits:** d3aef28 spec, d2399ac (R1,R2), c6bfbb0 (R3), 77713de (R4,R5), 4dff284 reporte
+- **Estado final:** done

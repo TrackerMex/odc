@@ -5,20 +5,13 @@
 
 ---
 
-## Sesión en curso
+## Plantilla (sesión sin iniciar)
 
 ```
-feature: odc-budget-validation
-id: 4
-inicio: 2026-07-20
-plan:
-  - spec_author escribe specs/odc-budget-validation/ (requirements, design, tasks, traceability)
-  - PARA hasta aprobación humana de la spec
-estado: in_progress — spec aprobada por humano 2026-07-20
-bloqueos: —
-spec_author: done
-implementer: en curso
-reviewer: pendiente
+feature: —
+inicio: —
+agentes lanzados: —
+estado: sin sesión activa
 ```
 
 ---
