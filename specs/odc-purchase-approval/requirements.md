@@ -1,6 +1,6 @@
 ---
 feature: "odc-purchase-approval"
-status: draft     # draft | approved
+status: approved     # draft | approved
 tags: [harness, spec]
 ---
 
@@ -185,4 +185,4 @@ de redactar los requisitos:
 
 ## Aprobación
 
-- [ ] Aprobado por humano (fecha: ____) ← gate obligatorio antes de implementar
+- [X] Aprobado por humano (fecha: 2026-07-20) ← gate obligatorio antes de implementar

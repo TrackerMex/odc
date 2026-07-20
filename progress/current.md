@@ -14,10 +14,10 @@ plan:
   - aprobacion humana del checkbox en requirements.md
   - implementer TDD por requisito
   - reviewer
-estado: spec_ready
-bloqueos: esperando aprobacion humana del checkbox en specs/odc-purchase-approval/requirements.md
+estado: in_progress
+bloqueos: —
 spec_author: done
-implementer: pendiente
+implementer: en curso
 reviewer: pendiente
 ```
 
