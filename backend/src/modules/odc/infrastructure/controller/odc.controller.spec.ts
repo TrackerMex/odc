@@ -6,10 +6,14 @@ import {
 import { ROLES_KEY } from '../../../auth/infrastructure/decorators/roles.decorator';
 import { PurchaseOrder } from '../../domain/entities/purchase-order.entity';
 import { InvalidRoleTransitionError } from '../../domain/errors/invalid-role-transition.error';
+import { InvalidStatusTransitionError } from '../../domain/errors/invalid-status-transition.error';
+import { OdcAccessDeniedError } from '../../domain/errors/odc-access-denied.error';
 import { CreateDraftUseCase } from '../../application/use-cases/create-draft.usecase';
+import { SubmitOdcUseCase } from '../../application/use-cases/submit-odc.usecase';
 import { OdcController } from './odc.controller';
 
 const OPS_ID = 'a3d1c9a2-0000-4000-8000-000000000001';
+const ODC_ID = 'b4e2d8b3-0000-4000-8000-000000000010';
 
 function getHandler(name: string): object {
   const descriptor = Object.getOwnPropertyDescriptor(
@@ -21,13 +25,17 @@ function getHandler(name: string): object {
 
 interface ControllerOverrides {
   createDraftUseCase?: Partial<CreateDraftUseCase>;
+  submitOdcUseCase?: Partial<SubmitOdcUseCase>;
 }
 
 function createController(overrides: ControllerOverrides = {}): OdcController {
   const createDraftUseCase = (overrides.createDraftUseCase ?? {
     execute: jest.fn(),
   }) as CreateDraftUseCase;
-  return new OdcController(createDraftUseCase);
+  const submitOdcUseCase = (overrides.submitOdcUseCase ?? {
+    execute: jest.fn(),
+  }) as SubmitOdcUseCase;
+  return new OdcController(createDraftUseCase, submitOdcUseCase);
 }
 
 function sessionUser(role = 'DIRECTOR_OPS' as const) {
@@ -123,5 +131,61 @@ describe('R7: POST /api/odcs creates a draft only for DIRECTOR_OPS with 201', ()
         sessionUser(),
       ),
     ).rejects.not.toBeInstanceOf(ConflictException);
+  });
+});
+
+describe('R9: POST /api/odcs/:id/submit sends the ODC to admin review with 200', () => {
+  it("exposes the handler as POST on ':id/submit' with HTTP 200 restricted to DIRECTOR_OPS", () => {
+    const handler = getHandler('submit');
+    expect(Reflect.getMetadata('path', handler)).toBe(':id/submit');
+    expect(Reflect.getMetadata('method', handler)).toBe(RequestMethod.POST);
+    expect(Reflect.getMetadata('__httpCode__', handler)).toBe(200);
+    expect(Reflect.getMetadata(ROLES_KEY, handler)).toEqual(['DIRECTOR_OPS']);
+  });
+
+  it('delegates to the submit use-case with the id and the session actor', async () => {
+    const submitted = { status: 'PENDIENTE_ADMIN' } as PurchaseOrder;
+    const execute = jest.fn().mockResolvedValue(submitted);
+    const controller = createController({ submitOdcUseCase: { execute } });
+
+    const body = await controller.submit(ODC_ID, sessionUser());
+
+    expect(execute).toHaveBeenCalledWith(ODC_ID, {
+      userId: OPS_ID,
+      role: 'DIRECTOR_OPS',
+    });
+    expect(body).toBe(submitted);
+  });
+
+  it('translates the access-denied domain error into a 403 ForbiddenException', async () => {
+    const controller = createController({
+      submitOdcUseCase: {
+        execute: jest
+          .fn()
+          .mockRejectedValue(new OdcAccessDeniedError('not the creator')),
+      },
+    });
+
+    await expect(
+      controller.submit(ODC_ID, sessionUser()),
+    ).rejects.toBeInstanceOf(ForbiddenException);
+  });
+});
+
+describe('R10: submit from a non-submittable status responds 409', () => {
+  it('translates the status domain error into a 409 ConflictException', async () => {
+    const controller = createController({
+      submitOdcUseCase: {
+        execute: jest
+          .fn()
+          .mockRejectedValue(
+            new InvalidStatusTransitionError('submit', 'COMPLETADA'),
+          ),
+      },
+    });
+
+    await expect(
+      controller.submit(ODC_ID, sessionUser()),
+    ).rejects.toBeInstanceOf(ConflictException);
   });
 });
