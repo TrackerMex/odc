@@ -10,7 +10,7 @@ tags: [harness, spec]
 |---|---|---|
 | R1 | `approve-purchase.usecase.spec.ts::R1: approve-purchase transitions PRESUPUESTO_APROBADO to COMPRA_APROBADA for DIRECTOR_GENERAL`, `odc.controller.spec.ts::R1: POST /api/odcs/:id/approve-purchase approves the purchase with 200 restricted to DIRECTOR_GENERAL` | `92acb63` feat(odc): add POST /api/odcs/:id/approve-purchase for T5 (R1,R2) |
 | R2 | `approve-purchase.usecase.spec.ts::R2: approve-purchase rejects unknown ids and non-PRESUPUESTO_APROBADO statuses`, `odc.controller.spec.ts::R2: approve-purchase responds 404 for an unknown id and 409 outside PRESUPUESTO_APROBADO` | `92acb63` feat(odc): add POST /api/odcs/:id/approve-purchase for T5 (R1,R2) |
-| R3 | pendiente | pendiente |
+| R3 | `odc.controller.spec.ts::R3: POST /api/odcs/:id/reject widens its roles metadata to ADMINISTRACION and DIRECTOR_GENERAL` | `485cc78` feat(odc): widen POST /api/odcs/:id/reject roles to DIRECTOR_GENERAL (R3) |
 | R4 | pendiente | pendiente |
 | R5 | pendiente | pendiente |
 | R6 | pendiente | pendiente |
