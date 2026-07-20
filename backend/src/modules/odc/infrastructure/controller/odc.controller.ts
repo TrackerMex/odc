@@ -128,10 +128,7 @@ export class OdcController {
     @Req() request: RequestWithSession,
   ): Promise<PurchaseOrder> {
     try {
-      return await this.approvePurchaseUseCase.execute(
-        id,
-        actorFrom(request),
-      );
+      return await this.approvePurchaseUseCase.execute(id, actorFrom(request));
     } catch (error) {
       rethrowDomainError(error);
     }
