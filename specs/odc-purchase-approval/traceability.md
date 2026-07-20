@@ -8,8 +8,8 @@ tags: [harness, spec]
 
 | Requisito | Test (archivo::nombre) | Commit (hash + mensaje) |
 |---|---|---|
-| R1 | pendiente | pendiente |
-| R2 | pendiente | pendiente |
+| R1 | `approve-purchase.usecase.spec.ts::R1: approve-purchase transitions PRESUPUESTO_APROBADO to COMPRA_APROBADA for DIRECTOR_GENERAL`, `odc.controller.spec.ts::R1: POST /api/odcs/:id/approve-purchase approves the purchase with 200 restricted to DIRECTOR_GENERAL` | `92acb63` feat(odc): add POST /api/odcs/:id/approve-purchase for T5 (R1,R2) |
+| R2 | `approve-purchase.usecase.spec.ts::R2: approve-purchase rejects unknown ids and non-PRESUPUESTO_APROBADO statuses`, `odc.controller.spec.ts::R2: approve-purchase responds 404 for an unknown id and 409 outside PRESUPUESTO_APROBADO` | `92acb63` feat(odc): add POST /api/odcs/:id/approve-purchase for T5 (R1,R2) |
 | R3 | pendiente | pendiente |
 | R4 | pendiente | pendiente |
 | R5 | pendiente | pendiente |
