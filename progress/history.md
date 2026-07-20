@@ -67,3 +67,12 @@ _El historial comenzará aquí cuando se complete la primera sesión._
 - **Resultado:** ./init.sh en verde (32 suites, 256 tests, build+lint); review APROBADO (C1–C6, 0 observaciones) → progress/review_odc-budget-validation.md; traceability 5/5 completa; cero cambios en domain/repositorio (confirmado por diff)
 - **Commits:** d3aef28 spec, d2399ac (R1,R2), c6bfbb0 (R3), 77713de (R4,R5), 4dff284 reporte
 - **Estado final:** done
+
+## Sesión 2026-07-20 — odc-purchase-approval (id: 5)
+
+- **Feature:** endpoints T5/T6 sobre el módulo `odc` ya existente — `POST /api/odcs/:id/approve-purchase` (DIRECTOR_GENERAL, PRESUPUESTO_APROBADO → COMPRA_APROBADA, nuevo `ApprovePurchaseUseCase` calcado de `ApproveBudgetUseCase`) y ampliación de roles de `POST /api/odcs/:id/reject` a `@Roles('ADMINISTRACION', 'DIRECTOR_GENERAL')` para habilitar T6 (rechazo desde PRESUPUESTO_APROBADO); `RejectOdcUseCase`/`RejectOdcDto` sin cambios de código (ya agnósticos de rol desde la feature 4); dominio/repositorio sin diff en todo el ciclo
+- **Spec:** [[specs/odc-purchase-approval/requirements|spec]] (R1–R7, aprobada por humano 2026-07-20)
+- **Acciones:** spec_author (uso explícito de skill `nestjs-best-practices` para el diseño) → aprobación humana → implementer TDD por requisito → **reviewer RECHAZÓ en 1ra pasada**: el implementer había sobrescrito 2 describe blocks de test (R4/R5) que pertenecían a la feature 4 ya cerrada, rompiendo `specs/odc-budget-validation/traceability.md` → implementer de fix restauró ambos blocks verbatim desde el commit `8234e86`, ajustando solo la aserción `ROLES_KEY` (desactualizada por el propio R3 de esta feature) → reviewer 2da pasada: APROBADO
+- **Resultado:** ./init.sh en verde (33 suites, 291 tests, build+lint); review APROBADO en revisión 2 (0 bloqueantes, 1 nota cosmética heredada sobre título de test) → progress/review_odc-purchase-approval.md; traceability 7/7 completa; traceability de odc-budget-validation reparada; cero cambios en domain/repositorio/auth (confirmado por diff)
+- **Commits:** 30f1ce4 spec, 9be828a aprobación, 92acb63 (R1,R2), 485cc78 (R3), 13d0aa6 (R4-R7), 17ad3b5 reporte rechazo, c5632ba fix regresión traceability feature 4
+- **Estado final:** done

@@ -11,6 +11,7 @@ import { InvalidStatusTransitionError } from '../../domain/errors/invalid-status
 import { OdcAccessDeniedError } from '../../domain/errors/odc-access-denied.error';
 import { OdcNotFoundError } from '../../domain/errors/odc-not-found.error';
 import { ApproveBudgetUseCase } from '../../application/use-cases/approve-budget.usecase';
+import { ApprovePurchaseUseCase } from '../../application/use-cases/approve-purchase.usecase';
 import { CreateDraftUseCase } from '../../application/use-cases/create-draft.usecase';
 import { GetOdcUseCase } from '../../application/use-cases/get-odc.usecase';
 import { ListOdcsUseCase } from '../../application/use-cases/list-odcs.usecase';
@@ -37,6 +38,7 @@ interface ControllerOverrides {
   listOdcsUseCase?: Partial<ListOdcsUseCase>;
   getOdcUseCase?: Partial<GetOdcUseCase>;
   approveBudgetUseCase?: Partial<ApproveBudgetUseCase>;
+  approvePurchaseUseCase?: Partial<ApprovePurchaseUseCase>;
   rejectOdcUseCase?: Partial<RejectOdcUseCase>;
 }
 
@@ -59,6 +61,9 @@ function createController(overrides: ControllerOverrides = {}): OdcController {
   const approveBudgetUseCase = (overrides.approveBudgetUseCase ?? {
     execute: jest.fn(),
   }) as ApproveBudgetUseCase;
+  const approvePurchaseUseCase = (overrides.approvePurchaseUseCase ?? {
+    execute: jest.fn(),
+  }) as ApprovePurchaseUseCase;
   const rejectOdcUseCase = (overrides.rejectOdcUseCase ?? {
     execute: jest.fn(),
   }) as RejectOdcUseCase;
@@ -69,6 +74,7 @@ function createController(overrides: ControllerOverrides = {}): OdcController {
     listOdcsUseCase,
     getOdcUseCase,
     approveBudgetUseCase,
+    approvePurchaseUseCase,
     rejectOdcUseCase,
   );
 }
@@ -437,7 +443,13 @@ describe('R4: POST /api/odcs/:id/reject rejects an ODC with 200 restricted to AD
     expect(Reflect.getMetadata('path', handler)).toBe(':id/reject');
     expect(Reflect.getMetadata('method', handler)).toBe(RequestMethod.POST);
     expect(Reflect.getMetadata('__httpCode__', handler)).toBe(200);
-    expect(Reflect.getMetadata(ROLES_KEY, handler)).toEqual(['ADMINISTRACION']);
+    // ROLES_KEY updated to ['ADMINISTRACION', 'DIRECTOR_GENERAL']: R3 of
+    // odc-purchase-approval (already reviewed/approved) widened this handler's
+    // roles after this test was originally written for odc-budget-validation.
+    expect(Reflect.getMetadata(ROLES_KEY, handler)).toEqual([
+      'ADMINISTRACION',
+      'DIRECTOR_GENERAL',
+    ]);
   });
 
   it('delegates to the reject use-case with the id, the dto and the session actor', async () => {
@@ -539,5 +551,249 @@ describe('R5: reject responds 404 for an unknown id, 409 without a rejection rul
         sessionUser('ADMINISTRACION'),
       ),
     ).rejects.toBeInstanceOf(ForbiddenException);
+  });
+});
+
+describe('R1: POST /api/odcs/:id/approve-purchase approves the purchase with 200 restricted to DIRECTOR_GENERAL', () => {
+  it("exposes the handler as POST on ':id/approve-purchase' with HTTP 200 restricted to DIRECTOR_GENERAL", () => {
+    const handler = getHandler('approvePurchase');
+    expect(Reflect.getMetadata('path', handler)).toBe(':id/approve-purchase');
+    expect(Reflect.getMetadata('method', handler)).toBe(RequestMethod.POST);
+    expect(Reflect.getMetadata('__httpCode__', handler)).toBe(200);
+    expect(Reflect.getMetadata(ROLES_KEY, handler)).toEqual([
+      'DIRECTOR_GENERAL',
+    ]);
+  });
+
+  it('delegates to the approve-purchase use-case with the id and the session actor', async () => {
+    const approved = { status: 'COMPRA_APROBADA' } as PurchaseOrder;
+    const execute = jest.fn().mockResolvedValue(approved);
+    const controller = createController({
+      approvePurchaseUseCase: { execute },
+    });
+
+    const body = await controller.approvePurchase(
+      ODC_ID,
+      sessionUser('DIRECTOR_GENERAL'),
+    );
+
+    expect(execute).toHaveBeenCalledWith(ODC_ID, {
+      userId: OPS_ID,
+      role: 'DIRECTOR_GENERAL',
+    });
+    expect(body).toBe(approved);
+  });
+
+  it('translates the role domain error into a 403 ForbiddenException', async () => {
+    const controller = createController({
+      approvePurchaseUseCase: {
+        execute: jest
+          .fn()
+          .mockRejectedValue(
+            new InvalidRoleTransitionError('approve_purchase', 'DIRECTOR_OPS'),
+          ),
+      },
+    });
+
+    await expect(
+      controller.approvePurchase(ODC_ID, sessionUser()),
+    ).rejects.toBeInstanceOf(ForbiddenException);
+  });
+});
+
+describe('R2: approve-purchase responds 404 for an unknown id and 409 outside PRESUPUESTO_APROBADO', () => {
+  it('translates the not-found domain error into a 404 NotFoundException', async () => {
+    const controller = createController({
+      approvePurchaseUseCase: {
+        execute: jest.fn().mockRejectedValue(new OdcNotFoundError(ODC_ID)),
+      },
+    });
+
+    await expect(
+      controller.approvePurchase(ODC_ID, sessionUser('DIRECTOR_GENERAL')),
+    ).rejects.toBeInstanceOf(NotFoundException);
+  });
+
+  it('translates the status domain error into a 409 ConflictException', async () => {
+    const controller = createController({
+      approvePurchaseUseCase: {
+        execute: jest
+          .fn()
+          .mockRejectedValue(
+            new InvalidStatusTransitionError('approve_purchase', 'BORRADOR'),
+          ),
+      },
+    });
+
+    await expect(
+      controller.approvePurchase(ODC_ID, sessionUser('DIRECTOR_GENERAL')),
+    ).rejects.toBeInstanceOf(ConflictException);
+  });
+});
+
+describe('R3: POST /api/odcs/:id/reject widens its roles metadata to ADMINISTRACION and DIRECTOR_GENERAL', () => {
+  it("declares the 'reject' handler's ROLES_KEY metadata as exactly ['ADMINISTRACION', 'DIRECTOR_GENERAL']", () => {
+    const handler = getHandler('reject');
+    expect(Reflect.getMetadata(ROLES_KEY, handler)).toEqual([
+      'ADMINISTRACION',
+      'DIRECTOR_GENERAL',
+    ]);
+  });
+});
+
+describe('R4: POST /api/odcs/:id/reject accepts DIRECTOR_GENERAL on PRESUPUESTO_APROBADO (T6) with 200', () => {
+  it("exposes the handler as POST on ':id/reject' with HTTP 200", () => {
+    const handler = getHandler('reject');
+    expect(Reflect.getMetadata('path', handler)).toBe(':id/reject');
+    expect(Reflect.getMetadata('method', handler)).toBe(RequestMethod.POST);
+    expect(Reflect.getMetadata('__httpCode__', handler)).toBe(200);
+  });
+
+  it('delegates to the reject use-case with the id, the dto and a DIRECTOR_GENERAL session actor', async () => {
+    const rejected = {
+      status: 'RECHAZADA',
+      rejectionReason: 'Presupuesto excedido',
+    } as PurchaseOrder;
+    const execute = jest.fn().mockResolvedValue(rejected);
+    const controller = createController({ rejectOdcUseCase: { execute } });
+    const dto = { rejectionReason: 'Presupuesto excedido' };
+
+    const body = await controller.reject(
+      ODC_ID,
+      dto,
+      sessionUser('DIRECTOR_GENERAL'),
+    );
+
+    expect(execute).toHaveBeenCalledWith(
+      ODC_ID,
+      { userId: OPS_ID, role: 'DIRECTOR_GENERAL' },
+      dto,
+    );
+    expect(body).toBe(rejected);
+  });
+});
+
+describe('R5: reject regression — ADMINISTRACION on PENDIENTE_ADMIN (T4) keeps returning 200 after the R3 roles widening', () => {
+  it('delegates to the reject use-case with the id, the dto and an ADMINISTRACION session actor', async () => {
+    const rejected = {
+      status: 'RECHAZADA',
+      rejectionReason: 'Presupuesto excedido',
+    } as PurchaseOrder;
+    const execute = jest.fn().mockResolvedValue(rejected);
+    const controller = createController({ rejectOdcUseCase: { execute } });
+    const dto = { rejectionReason: 'Presupuesto excedido' };
+
+    const body = await controller.reject(
+      ODC_ID,
+      dto,
+      sessionUser('ADMINISTRACION'),
+    );
+
+    expect(execute).toHaveBeenCalledWith(
+      ODC_ID,
+      { userId: OPS_ID, role: 'ADMINISTRACION' },
+      dto,
+    );
+    expect(body).toBe(rejected);
+  });
+
+  it('still translates the role domain error into a 403 ForbiddenException for an unrelated role', async () => {
+    const controller = createController({
+      rejectOdcUseCase: {
+        execute: jest
+          .fn()
+          .mockRejectedValue(
+            new InvalidRoleTransitionError('reject', 'DIRECTOR_OPS'),
+          ),
+      },
+    });
+
+    await expect(
+      controller.reject(
+        ODC_ID,
+        { rejectionReason: 'Presupuesto excedido' },
+        sessionUser(),
+      ),
+    ).rejects.toBeInstanceOf(ForbiddenException);
+  });
+});
+
+describe('R6: reject responds 403 on role/status mismatch (DIRECTOR_GENERAL on PENDIENTE_ADMIN, ADMINISTRACION on PRESUPUESTO_APROBADO)', () => {
+  it('translates the role domain error into a 403 ForbiddenException when DIRECTOR_GENERAL targets PENDIENTE_ADMIN (T4 reserved to ADMINISTRACION)', async () => {
+    const controller = createController({
+      rejectOdcUseCase: {
+        execute: jest
+          .fn()
+          .mockRejectedValue(
+            new InvalidRoleTransitionError('reject', 'DIRECTOR_GENERAL'),
+          ),
+      },
+    });
+
+    await expect(
+      controller.reject(
+        ODC_ID,
+        { rejectionReason: 'Presupuesto excedido' },
+        sessionUser('DIRECTOR_GENERAL'),
+      ),
+    ).rejects.toBeInstanceOf(ForbiddenException);
+  });
+
+  it('translates the role domain error into a 403 ForbiddenException when ADMINISTRACION targets PRESUPUESTO_APROBADO (T6 reserved to DIRECTOR_GENERAL)', async () => {
+    const controller = createController({
+      rejectOdcUseCase: {
+        execute: jest
+          .fn()
+          .mockRejectedValue(
+            new InvalidRoleTransitionError('reject', 'ADMINISTRACION'),
+          ),
+      },
+    });
+
+    await expect(
+      controller.reject(
+        ODC_ID,
+        { rejectionReason: 'Presupuesto excedido' },
+        sessionUser('ADMINISTRACION'),
+      ),
+    ).rejects.toBeInstanceOf(ForbiddenException);
+  });
+});
+
+describe('reject: 404/409 handling is unaffected by the R3 roles widening', () => {
+  it('translates the not-found domain error into a 404 NotFoundException', async () => {
+    const controller = createController({
+      rejectOdcUseCase: {
+        execute: jest.fn().mockRejectedValue(new OdcNotFoundError(ODC_ID)),
+      },
+    });
+
+    await expect(
+      controller.reject(
+        ODC_ID,
+        { rejectionReason: 'Presupuesto excedido' },
+        sessionUser('ADMINISTRACION'),
+      ),
+    ).rejects.toBeInstanceOf(NotFoundException);
+  });
+
+  it('translates the status domain error into a 409 ConflictException', async () => {
+    const controller = createController({
+      rejectOdcUseCase: {
+        execute: jest
+          .fn()
+          .mockRejectedValue(
+            new InvalidStatusTransitionError('reject', 'BORRADOR'),
+          ),
+      },
+    });
+
+    await expect(
+      controller.reject(
+        ODC_ID,
+        { rejectionReason: 'Presupuesto excedido' },
+        sessionUser('ADMINISTRACION'),
+      ),
+    ).rejects.toBeInstanceOf(ConflictException);
   });
 });

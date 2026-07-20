@@ -20,6 +20,7 @@ import { ListOdcsQueryDto } from '../../application/dto/list-odcs.query.dto';
 import { RejectOdcDto } from '../../application/dto/reject-odc.dto';
 import { UpdateOdcDto } from '../../application/dto/update-odc.dto';
 import { ApproveBudgetUseCase } from '../../application/use-cases/approve-budget.usecase';
+import { ApprovePurchaseUseCase } from '../../application/use-cases/approve-purchase.usecase';
 import { CreateDraftUseCase } from '../../application/use-cases/create-draft.usecase';
 import { GetOdcUseCase } from '../../application/use-cases/get-odc.usecase';
 import { ListOdcsUseCase } from '../../application/use-cases/list-odcs.usecase';
@@ -74,6 +75,7 @@ export class OdcController {
     private readonly listOdcsUseCase: ListOdcsUseCase,
     private readonly getOdcUseCase: GetOdcUseCase,
     private readonly approveBudgetUseCase: ApproveBudgetUseCase,
+    private readonly approvePurchaseUseCase: ApprovePurchaseUseCase,
     private readonly rejectOdcUseCase: RejectOdcUseCase,
   ) {}
 
@@ -118,12 +120,27 @@ export class OdcController {
     }
   }
 
-  // Restricted to ADMINISTRACION in this feature: only T4 is reachable.
-  // Feature 5 widens this to include DIRECTOR_GENERAL to also enable T6
-  // on the same route (see design.md), without touching the use-case.
+  @Post(':id/approve-purchase')
+  @HttpCode(200)
+  @Roles('DIRECTOR_GENERAL')
+  async approvePurchase(
+    @Param('id') id: string,
+    @Req() request: RequestWithSession,
+  ): Promise<PurchaseOrder> {
+    try {
+      return await this.approvePurchaseUseCase.execute(id, actorFrom(request));
+    } catch (error) {
+      rethrowDomainError(error);
+    }
+  }
+
+  // Shared route for T4 (ADMINISTRACION, PENDIENTE_ADMIN) and T6
+  // (DIRECTOR_GENERAL, PRESUPUESTO_APROBADO): both are the same domain
+  // action 'reject', which already resolves the applicable rule and role
+  // from the ODC's current status (see design.md).
   @Post(':id/reject')
   @HttpCode(200)
-  @Roles('ADMINISTRACION')
+  @Roles('ADMINISTRACION', 'DIRECTOR_GENERAL')
   async reject(
     @Param('id') id: string,
     @Body() dto: RejectOdcDto,
