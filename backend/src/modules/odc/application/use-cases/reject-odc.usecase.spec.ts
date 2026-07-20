@@ -6,8 +6,9 @@ import {
 } from '../../domain/entities/purchase-order.entity';
 import { InvalidRoleTransitionError } from '../../domain/errors/invalid-role-transition.error';
 import { InvalidStatusTransitionError } from '../../domain/errors/invalid-status-transition.error';
+import { MissingTransitionDataError } from '../../domain/errors/missing-transition-data.error';
 import { OdcNotFoundError } from '../../domain/errors/odc-not-found.error';
-import { ApproveBudgetUseCase } from './approve-budget.usecase';
+import { RejectOdcUseCase } from './reject-odc.usecase';
 
 const ADMIN_ID = 'a3d1c9a2-0000-4000-8000-000000000003';
 const ODC_ID = 'b4e2d8b3-0000-4000-8000-000000000010';
@@ -61,14 +62,15 @@ function createRepositoryMock(): RepositoryMock {
   };
 }
 
-function createUseCase(repository: RepositoryMock): ApproveBudgetUseCase {
-  return new ApproveBudgetUseCase(repository);
+function createUseCase(repository: RepositoryMock): RejectOdcUseCase {
+  return new RejectOdcUseCase(repository);
 }
 
 const adminActor = { userId: ADMIN_ID, role: 'ADMINISTRACION' as const };
+const REJECTION_REASON = 'Presupuesto excedido';
 
-describe('R1: approve-budget transitions PENDIENTE_ADMIN to PRESUPUESTO_APROBADO for ADMINISTRACION', () => {
-  it('transitions the order and persists a history row with the session admin', async () => {
+describe('R4: reject transitions PENDIENTE_ADMIN to RECHAZADA for ADMINISTRACION', () => {
+  it('transitions the order, persists rejectionReason and a history row with the note', async () => {
     const repository = createRepositoryMock();
     repository.findById.mockResolvedValue(buildOrder());
     repository.update.mockImplementation((order: PurchaseOrder) =>
@@ -76,7 +78,9 @@ describe('R1: approve-budget transitions PENDIENTE_ADMIN to PRESUPUESTO_APROBADO
     );
     const useCase = createUseCase(repository);
 
-    const approved = await useCase.execute(ODC_ID, adminActor);
+    const rejected = await useCase.execute(ODC_ID, adminActor, {
+      rejectionReason: REJECTION_REASON,
+    });
 
     expect(repository.findById).toHaveBeenCalledWith(ODC_ID);
     expect(repository.update).toHaveBeenCalledTimes(1);
@@ -84,66 +88,107 @@ describe('R1: approve-budget transitions PENDIENTE_ADMIN to PRESUPUESTO_APROBADO
       PurchaseOrder,
       OdcStatusHistoryEntry,
     ];
-    expect(order.status).toBe('PRESUPUESTO_APROBADO');
+    expect(order.status).toBe('RECHAZADA');
+    expect(order.rejectionReason).toBe(REJECTION_REASON);
     expect(entry).toBeInstanceOf(OdcStatusHistoryEntry);
     expect(entry.odcId).toBe(ODC_ID);
     expect(entry.fromStatus).toBe('PENDIENTE_ADMIN');
-    expect(entry.toStatus).toBe('PRESUPUESTO_APROBADO');
+    expect(entry.toStatus).toBe('RECHAZADA');
     expect(entry.userId).toBe(ADMIN_ID);
-    expect(entry.note).toBeNull();
-    expect(approved.status).toBe('PRESUPUESTO_APROBADO');
+    expect(entry.note).toBe(REJECTION_REASON);
+    expect(rejected.status).toBe('RECHAZADA');
+    expect(rejected.rejectionReason).toBe(REJECTION_REASON);
   });
 
-  it('rejects a non-ADMINISTRACION actor with the role domain error and does not transition', async () => {
+  it('rejects a non-ADMINISTRACION actor from PENDIENTE_ADMIN with the role domain error and does not transition', async () => {
     const repository = createRepositoryMock();
     const order = buildOrder();
     repository.findById.mockResolvedValue(order);
     const useCase = createUseCase(repository);
 
     await expect(
-      useCase.execute(ODC_ID, {
-        userId: 'a3d1c9a2-0000-4000-8000-000000000004',
-        role: 'DIRECTOR_OPS',
-      }),
+      useCase.execute(
+        ODC_ID,
+        {
+          userId: 'a3d1c9a2-0000-4000-8000-000000000004',
+          role: 'DIRECTOR_OPS',
+        },
+        { rejectionReason: REJECTION_REASON },
+      ),
     ).rejects.toBeInstanceOf(InvalidRoleTransitionError);
     expect(order.status).toBe('PENDIENTE_ADMIN');
     expect(repository.update).not.toHaveBeenCalled();
   });
 });
 
-describe('R2: approve-budget rejects unknown ids and non-PENDIENTE_ADMIN statuses', () => {
+describe('R3: reject requires rejectionReason (defense in depth below the DTO)', () => {
+  it('propagates the missing-data domain error when rejectionReason is missing and does not transition', async () => {
+    const repository = createRepositoryMock();
+    const order = buildOrder();
+    repository.findById.mockResolvedValue(order);
+    const useCase = createUseCase(repository);
+
+    await expect(
+      useCase.execute(ODC_ID, adminActor, {
+        rejectionReason: undefined,
+      }),
+    ).rejects.toBeInstanceOf(MissingTransitionDataError);
+    expect(order.status).toBe('PENDIENTE_ADMIN');
+    expect(repository.update).not.toHaveBeenCalled();
+  });
+});
+
+describe('R5: reject rejects unknown ids, non-rejectable statuses and role mismatch on PRESUPUESTO_APROBADO', () => {
   it('rejects an unknown ODC with the not-found domain error', async () => {
     const repository = createRepositoryMock();
     repository.findById.mockResolvedValue(null);
     const useCase = createUseCase(repository);
 
     await expect(
-      useCase.execute('ghost-id', adminActor),
+      useCase.execute('ghost-id', adminActor, {
+        rejectionReason: REJECTION_REASON,
+      }),
     ).rejects.toBeInstanceOf(OdcNotFoundError);
     expect(repository.update).not.toHaveBeenCalled();
   });
 
   it.each([
     'BORRADOR',
-    'PRESUPUESTO_APROBADO',
     'COMPRA_APROBADA',
     'PAGO_REGISTRADO',
     'EVIDENCIA_PAGO_SUBIDA',
     'COMPLETADA',
     'RECHAZADA',
   ] as OdcStatus[])(
-    'rejects approve-budget from %s with the status domain error and does not transition',
+    'rejects reject from %s with the status domain error and does not transition',
     async (status) => {
       const repository = createRepositoryMock();
       const order = buildOrder({ status });
       repository.findById.mockResolvedValue(order);
       const useCase = createUseCase(repository);
 
-      await expect(useCase.execute(ODC_ID, adminActor)).rejects.toBeInstanceOf(
-        InvalidStatusTransitionError,
-      );
+      await expect(
+        useCase.execute(ODC_ID, adminActor, {
+          rejectionReason: REJECTION_REASON,
+        }),
+      ).rejects.toBeInstanceOf(InvalidStatusTransitionError);
       expect(order.status).toBe(status);
       expect(repository.update).not.toHaveBeenCalled();
     },
   );
+
+  it('rejects an ADMINISTRACION actor on PRESUPUESTO_APROBADO with the role domain error (T6 reserved to DIRECTOR_GENERAL)', async () => {
+    const repository = createRepositoryMock();
+    const order = buildOrder({ status: 'PRESUPUESTO_APROBADO' });
+    repository.findById.mockResolvedValue(order);
+    const useCase = createUseCase(repository);
+
+    await expect(
+      useCase.execute(ODC_ID, adminActor, {
+        rejectionReason: REJECTION_REASON,
+      }),
+    ).rejects.toBeInstanceOf(InvalidRoleTransitionError);
+    expect(order.status).toBe('PRESUPUESTO_APROBADO');
+    expect(repository.update).not.toHaveBeenCalled();
+  });
 });

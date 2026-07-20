@@ -17,11 +17,13 @@ import { Roles } from '../../../auth/infrastructure/decorators/roles.decorator';
 import type { SessionTokenPayload } from '../../../auth/infrastructure/guards/jwt-auth.guard';
 import { CreateOdcDto } from '../../application/dto/create-odc.dto';
 import { ListOdcsQueryDto } from '../../application/dto/list-odcs.query.dto';
+import { RejectOdcDto } from '../../application/dto/reject-odc.dto';
 import { UpdateOdcDto } from '../../application/dto/update-odc.dto';
 import { ApproveBudgetUseCase } from '../../application/use-cases/approve-budget.usecase';
 import { CreateDraftUseCase } from '../../application/use-cases/create-draft.usecase';
 import { GetOdcUseCase } from '../../application/use-cases/get-odc.usecase';
 import { ListOdcsUseCase } from '../../application/use-cases/list-odcs.usecase';
+import { RejectOdcUseCase } from '../../application/use-cases/reject-odc.usecase';
 import { SubmitOdcUseCase } from '../../application/use-cases/submit-odc.usecase';
 import { UpdateDraftUseCase } from '../../application/use-cases/update-draft.usecase';
 import {
@@ -72,6 +74,7 @@ export class OdcController {
     private readonly listOdcsUseCase: ListOdcsUseCase,
     private readonly getOdcUseCase: GetOdcUseCase,
     private readonly approveBudgetUseCase: ApproveBudgetUseCase,
+    private readonly rejectOdcUseCase: RejectOdcUseCase,
   ) {}
 
   @Post()
@@ -110,6 +113,24 @@ export class OdcController {
   ): Promise<PurchaseOrder> {
     try {
       return await this.approveBudgetUseCase.execute(id, actorFrom(request));
+    } catch (error) {
+      rethrowDomainError(error);
+    }
+  }
+
+  // Restricted to ADMINISTRACION in this feature: only T4 is reachable.
+  // Feature 5 widens this to include DIRECTOR_GENERAL to also enable T6
+  // on the same route (see design.md), without touching the use-case.
+  @Post(':id/reject')
+  @HttpCode(200)
+  @Roles('ADMINISTRACION')
+  async reject(
+    @Param('id') id: string,
+    @Body() dto: RejectOdcDto,
+    @Req() request: RequestWithSession,
+  ): Promise<PurchaseOrder> {
+    try {
+      return await this.rejectOdcUseCase.execute(id, actorFrom(request), dto);
     } catch (error) {
       rethrowDomainError(error);
     }
