@@ -9,7 +9,7 @@
   {
     "id": 3,
     "name": "odc-create-draft",
-    "status": "pending",
+    "status": "spec_ready",
     "priority": "P1"
   },
   {
