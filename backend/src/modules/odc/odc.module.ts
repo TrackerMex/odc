@@ -5,6 +5,7 @@ import { ApprovePurchaseUseCase } from './application/use-cases/approve-purchase
 import { CreateDraftUseCase } from './application/use-cases/create-draft.usecase';
 import { GetOdcUseCase } from './application/use-cases/get-odc.usecase';
 import { ListOdcsUseCase } from './application/use-cases/list-odcs.usecase';
+import { RegisterPaymentUseCase } from './application/use-cases/register-payment.usecase';
 import { RejectOdcUseCase } from './application/use-cases/reject-odc.usecase';
 import { SubmitOdcUseCase } from './application/use-cases/submit-odc.usecase';
 import { UpdateDraftUseCase } from './application/use-cases/update-draft.usecase';
@@ -30,6 +31,7 @@ import { PurchaseOrderTypeOrmRepository } from './infrastructure/repositories/pu
     ApproveBudgetUseCase,
     ApprovePurchaseUseCase,
     RejectOdcUseCase,
+    RegisterPaymentUseCase,
     {
       provide: 'PurchaseOrderRepository',
       useClass: PurchaseOrderTypeOrmRepository,

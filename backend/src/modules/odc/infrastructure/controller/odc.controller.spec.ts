@@ -15,6 +15,7 @@ import { ApprovePurchaseUseCase } from '../../application/use-cases/approve-purc
 import { CreateDraftUseCase } from '../../application/use-cases/create-draft.usecase';
 import { GetOdcUseCase } from '../../application/use-cases/get-odc.usecase';
 import { ListOdcsUseCase } from '../../application/use-cases/list-odcs.usecase';
+import { RegisterPaymentUseCase } from '../../application/use-cases/register-payment.usecase';
 import { RejectOdcUseCase } from '../../application/use-cases/reject-odc.usecase';
 import { SubmitOdcUseCase } from '../../application/use-cases/submit-odc.usecase';
 import { UpdateDraftUseCase } from '../../application/use-cases/update-draft.usecase';
@@ -40,6 +41,7 @@ interface ControllerOverrides {
   approveBudgetUseCase?: Partial<ApproveBudgetUseCase>;
   approvePurchaseUseCase?: Partial<ApprovePurchaseUseCase>;
   rejectOdcUseCase?: Partial<RejectOdcUseCase>;
+  registerPaymentUseCase?: Partial<RegisterPaymentUseCase>;
 }
 
 function createController(overrides: ControllerOverrides = {}): OdcController {
@@ -67,6 +69,9 @@ function createController(overrides: ControllerOverrides = {}): OdcController {
   const rejectOdcUseCase = (overrides.rejectOdcUseCase ?? {
     execute: jest.fn(),
   }) as RejectOdcUseCase;
+  const registerPaymentUseCase = (overrides.registerPaymentUseCase ?? {
+    execute: jest.fn(),
+  }) as RegisterPaymentUseCase;
   return new OdcController(
     createDraftUseCase,
     submitOdcUseCase,
@@ -76,6 +81,7 @@ function createController(overrides: ControllerOverrides = {}): OdcController {
     approveBudgetUseCase,
     approvePurchaseUseCase,
     rejectOdcUseCase,
+    registerPaymentUseCase,
   );
 }
 
@@ -793,6 +799,99 @@ describe('reject: 404/409 handling is unaffected by the R3 roles widening', () =
         ODC_ID,
         { rejectionReason: 'Presupuesto excedido' },
         sessionUser('ADMINISTRACION'),
+      ),
+    ).rejects.toBeInstanceOf(ConflictException);
+  });
+});
+
+describe('R2: POST /api/odcs/:id/payment registers the payment with 200 restricted to DIRECTOR_OPS', () => {
+  it("exposes the handler as POST on ':id/payment' with HTTP 200 restricted to DIRECTOR_OPS", () => {
+    const handler = getHandler('registerPayment');
+    expect(Reflect.getMetadata('path', handler)).toBe(':id/payment');
+    expect(Reflect.getMetadata('method', handler)).toBe(RequestMethod.POST);
+    expect(Reflect.getMetadata('__httpCode__', handler)).toBe(200);
+    expect(Reflect.getMetadata(ROLES_KEY, handler)).toEqual(['DIRECTOR_OPS']);
+  });
+
+  it('delegates to the register-payment use-case with the id, the dto and the session actor', async () => {
+    const paid = {
+      status: 'PAGO_REGISTRADO',
+      paymentDate: '2026-07-20',
+      paymentMethod: 'Transferencia',
+    } as PurchaseOrder;
+    const execute = jest.fn().mockResolvedValue(paid);
+    const controller = createController({
+      registerPaymentUseCase: { execute },
+    });
+    const dto = { paymentDate: '2026-07-20', paymentMethod: 'Transferencia' };
+
+    const body = await controller.registerPayment(ODC_ID, dto, sessionUser());
+
+    expect(execute).toHaveBeenCalledWith(
+      ODC_ID,
+      { userId: OPS_ID, role: 'DIRECTOR_OPS' },
+      dto,
+    );
+    expect(body).toBe(paid);
+  });
+
+  it('translates the role domain error into a 403 ForbiddenException', async () => {
+    const controller = createController({
+      registerPaymentUseCase: {
+        execute: jest
+          .fn()
+          .mockRejectedValue(
+            new InvalidRoleTransitionError(
+              'register_payment',
+              'ADMINISTRACION',
+            ),
+          ),
+      },
+    });
+
+    await expect(
+      controller.registerPayment(
+        ODC_ID,
+        { paymentDate: '2026-07-20', paymentMethod: 'Transferencia' },
+        sessionUser('ADMINISTRACION'),
+      ),
+    ).rejects.toBeInstanceOf(ForbiddenException);
+  });
+});
+
+describe('R3: payment responds 404 for an unknown id and 409 outside COMPRA_APROBADA', () => {
+  it('translates the not-found domain error into a 404 NotFoundException', async () => {
+    const controller = createController({
+      registerPaymentUseCase: {
+        execute: jest.fn().mockRejectedValue(new OdcNotFoundError(ODC_ID)),
+      },
+    });
+
+    await expect(
+      controller.registerPayment(
+        ODC_ID,
+        { paymentDate: '2026-07-20', paymentMethod: 'Transferencia' },
+        sessionUser(),
+      ),
+    ).rejects.toBeInstanceOf(NotFoundException);
+  });
+
+  it('translates the status domain error into a 409 ConflictException', async () => {
+    const controller = createController({
+      registerPaymentUseCase: {
+        execute: jest
+          .fn()
+          .mockRejectedValue(
+            new InvalidStatusTransitionError('register_payment', 'BORRADOR'),
+          ),
+      },
+    });
+
+    await expect(
+      controller.registerPayment(
+        ODC_ID,
+        { paymentDate: '2026-07-20', paymentMethod: 'Transferencia' },
+        sessionUser(),
       ),
     ).rejects.toBeInstanceOf(ConflictException);
   });

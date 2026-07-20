@@ -17,6 +17,7 @@ import { Roles } from '../../../auth/infrastructure/decorators/roles.decorator';
 import type { SessionTokenPayload } from '../../../auth/infrastructure/guards/jwt-auth.guard';
 import { CreateOdcDto } from '../../application/dto/create-odc.dto';
 import { ListOdcsQueryDto } from '../../application/dto/list-odcs.query.dto';
+import { RegisterPaymentDto } from '../../application/dto/register-payment.dto';
 import { RejectOdcDto } from '../../application/dto/reject-odc.dto';
 import { UpdateOdcDto } from '../../application/dto/update-odc.dto';
 import { ApproveBudgetUseCase } from '../../application/use-cases/approve-budget.usecase';
@@ -24,6 +25,7 @@ import { ApprovePurchaseUseCase } from '../../application/use-cases/approve-purc
 import { CreateDraftUseCase } from '../../application/use-cases/create-draft.usecase';
 import { GetOdcUseCase } from '../../application/use-cases/get-odc.usecase';
 import { ListOdcsUseCase } from '../../application/use-cases/list-odcs.usecase';
+import { RegisterPaymentUseCase } from '../../application/use-cases/register-payment.usecase';
 import { RejectOdcUseCase } from '../../application/use-cases/reject-odc.usecase';
 import { SubmitOdcUseCase } from '../../application/use-cases/submit-odc.usecase';
 import { UpdateDraftUseCase } from '../../application/use-cases/update-draft.usecase';
@@ -77,6 +79,7 @@ export class OdcController {
     private readonly approveBudgetUseCase: ApproveBudgetUseCase,
     private readonly approvePurchaseUseCase: ApprovePurchaseUseCase,
     private readonly rejectOdcUseCase: RejectOdcUseCase,
+    private readonly registerPaymentUseCase: RegisterPaymentUseCase,
   ) {}
 
   @Post()
@@ -148,6 +151,27 @@ export class OdcController {
   ): Promise<PurchaseOrder> {
     try {
       return await this.rejectOdcUseCase.execute(id, actorFrom(request), dto);
+    } catch (error) {
+      rethrowDomainError(error);
+    }
+  }
+
+  // T7: COMPRA_APROBADA -> PAGO_REGISTRADO. Route name fixed literally by
+  // the master plan's API surface ("payment", not "register-payment").
+  @Post(':id/payment')
+  @HttpCode(200)
+  @Roles('DIRECTOR_OPS')
+  async registerPayment(
+    @Param('id') id: string,
+    @Body() dto: RegisterPaymentDto,
+    @Req() request: RequestWithSession,
+  ): Promise<PurchaseOrder> {
+    try {
+      return await this.registerPaymentUseCase.execute(
+        id,
+        actorFrom(request),
+        dto,
+      );
     } catch (error) {
       rethrowDomainError(error);
     }
