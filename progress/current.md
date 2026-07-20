@@ -14,6 +14,7 @@ agentes lanzados: —
 estado: sin sesión activa
 ```
 
+
 ---
 
 _Cuando inicies una sesión, reemplaza la plantilla con:_

@@ -27,7 +27,7 @@
   {
     "id": 6,
     "name": "odc-register-payment",
-    "status": "pending",
+    "status": "done",
     "priority": "P1"
   },
   {

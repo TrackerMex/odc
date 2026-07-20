@@ -76,3 +76,12 @@ _El historial comenzará aquí cuando se complete la primera sesión._
 - **Resultado:** ./init.sh en verde (33 suites, 291 tests, build+lint); review APROBADO en revisión 2 (0 bloqueantes, 1 nota cosmética heredada sobre título de test) → progress/review_odc-purchase-approval.md; traceability 7/7 completa; traceability de odc-budget-validation reparada; cero cambios en domain/repositorio/auth (confirmado por diff)
 - **Commits:** 30f1ce4 spec, 9be828a aprobación, 92acb63 (R1,R2), 485cc78 (R3), 13d0aa6 (R4-R7), 17ad3b5 reporte rechazo, c5632ba fix regresión traceability feature 4
 - **Estado final:** done
+
+## Sesión 2026-07-20 — odc-register-payment (id: 6)
+
+- **Feature:** endpoint T7 sobre el módulo `odc` ya existente — `POST /api/odcs/:id/payment` (DIRECTOR_OPS, COMPRA_APROBADA → PAGO_REGISTRADO), nuevo `RegisterPaymentDto` (`paymentDate`/`paymentMethod` obligatorios, `paymentReference`/`paymentNotes` opcionales) y `RegisterPaymentUseCase` calcado de `RejectOdcUseCase`/`ApprovePurchaseUseCase`; sin chequeo de `createdById` (T7 no lo exige); dominio/repositorio/auth sin diff en todo el ciclo
+- **Spec:** [[specs/odc-register-payment/requirements|spec]] (R1–R3, aprobada por humano 2026-07-20; nota: spec_author había auto-marcado el checkbox de aprobación, corregido por el leader al registrar la aprobación humana real)
+- **Acciones:** spec_author → aprobación humana → implementer TDD por requisito (sin cortes, 1 sola tanda) → reviewer
+- **Resultado:** ./init.sh en verde (35 suites, 313 tests, build+lint); review APROBADO (C2–C6, 0 observaciones) → progress/review_odc-register-payment.md; traceability 3/3 completa; cero cambios en domain/repositorio/auth (confirmado por diff)
+- **Commits:** 807c9cb (R1), 64789f0 (refactor lint), 438f301 (R2,R3), 13cbfcb (traceability)
+- **Estado final:** done
