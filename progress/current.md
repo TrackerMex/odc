@@ -5,13 +5,20 @@
 
 ---
 
-## Plantilla (sesión sin iniciar)
-
 ```
-feature: —
-inicio: —
-agentes lanzados: —
-estado: sin sesión activa
+feature: odc-purchase-approval
+id: 5
+inicio: 2026-07-20
+plan:
+  - spec_author (R1-R7, T5 endpoint nuevo + T6 amplia roles en /reject)
+  - aprobacion humana del checkbox en requirements.md
+  - implementer TDD por requisito
+  - reviewer
+estado: spec_ready
+bloqueos: esperando aprobacion humana del checkbox en specs/odc-purchase-approval/requirements.md
+spec_author: done
+implementer: pendiente
+reviewer: pendiente
 ```
 
 ---
