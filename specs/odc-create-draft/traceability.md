@@ -10,8 +10,8 @@ tags: [harness, spec]
 |---|---|---|
 | R1 | `backend/src/modules/odc/domain/entities/purchase-order.entity.spec.ts::R1: pure PurchaseOrder domain entity with restricted status` | `76783c1` feat(odc): add pure PurchaseOrder domain entity with computed total (R1,R2) |
 | R2 | `backend/src/modules/odc/domain/entities/purchase-order.entity.spec.ts::R2: totalCents computed in the domain, never accepted from outside` | `76783c1` feat(odc): add pure PurchaseOrder domain entity with computed total (R1,R2) |
-| R3 | pendiente | pendiente |
-| R4 | pendiente | pendiente |
+| R3 | `backend/src/modules/odc/domain/entities/purchase-order.entity.spec.ts::R3: transition covers the whole T1-T10 state machine` | `77a4855` feat(odc): add domain state machine T1-T10 with typed errors (R3,R4) |
+| R4 | `backend/src/modules/odc/domain/entities/purchase-order.entity.spec.ts::R4: invalid transitions raise typed domain errors without mutating` | `77a4855` feat(odc): add domain state machine T1-T10 with typed errors (R3,R4) |
 | R5 | pendiente | pendiente |
 | R6 | pendiente | pendiente |
 | R7 | pendiente | pendiente |
