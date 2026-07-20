@@ -16,8 +16,8 @@ tags: [harness, spec]
 | R6 | `backend/src/modules/odc/domain/entities/purchase-order.entity.spec.ts::R6: ODC-YYYY-NNNNN numbering with a per-year sequence`; `backend/src/modules/odc/infrastructure/repositories/purchase-order.typeorm.repository.spec.ts::R6: create assigns the next yearly number and retries on UNIQUE collision` | `0a003e3` feat(odc): add ODC-YYYY-NNNNN numbering with yearly sequence and unique retry (R6) |
 | R7 | `backend/src/modules/odc/application/use-cases/create-draft.usecase.spec.ts::R7: create draft use-case persists a BORRADOR for its creator`; `backend/src/modules/odc/infrastructure/controller/odc.controller.spec.ts::R7: POST /api/odcs creates a draft only for DIRECTOR_OPS with 201` | `29d02bd` feat(odc): add POST /api/odcs creating a draft for DIRECTOR_OPS (R7) |
 | R8 | `backend/src/modules/odc/application/dto/create-odc.dto.spec.ts::R8: create payload validation rejects invalid T1 data with 400`; `backend/src/modules/odc/application/dto/update-odc.dto.spec.ts::R8: update payload validation accepts partial T1 fields and rejects invalid ones` | `5db0dea` feat(odc): validate create and update payloads with class-validator (R2,R8) |
-| R9 | pendiente | pendiente |
-| R10 | pendiente | pendiente |
+| R9 | `backend/src/modules/odc/application/use-cases/submit-odc.usecase.spec.ts::R9: submit sends the creator BORRADOR to PENDIENTE_ADMIN`; `backend/src/modules/odc/infrastructure/controller/odc.controller.spec.ts::R9: POST /api/odcs/:id/submit sends the ODC to admin review with 200` | `ccdb713` feat(odc): add POST /api/odcs/:id/submit for T2 and T10 transitions (R9,R10) |
+| R10 | `backend/src/modules/odc/application/use-cases/submit-odc.usecase.spec.ts::R10: submit resubmits a RECHAZADA keeping the previous history`; `backend/src/modules/odc/infrastructure/controller/odc.controller.spec.ts::R10: submit from a non-submittable status responds 409` | `ccdb713` feat(odc): add POST /api/odcs/:id/submit for T2 and T10 transitions (R9,R10) |
 | R11 | pendiente | pendiente |
 | R12 | pendiente | pendiente |
 | R13 | pendiente | pendiente |
