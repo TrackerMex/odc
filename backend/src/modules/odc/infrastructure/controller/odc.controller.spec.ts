@@ -10,6 +10,7 @@ import { InvalidStatusTransitionError } from '../../domain/errors/invalid-status
 import { OdcAccessDeniedError } from '../../domain/errors/odc-access-denied.error';
 import { CreateDraftUseCase } from '../../application/use-cases/create-draft.usecase';
 import { SubmitOdcUseCase } from '../../application/use-cases/submit-odc.usecase';
+import { UpdateDraftUseCase } from '../../application/use-cases/update-draft.usecase';
 import { OdcController } from './odc.controller';
 
 const OPS_ID = 'a3d1c9a2-0000-4000-8000-000000000001';
@@ -26,6 +27,7 @@ function getHandler(name: string): object {
 interface ControllerOverrides {
   createDraftUseCase?: Partial<CreateDraftUseCase>;
   submitOdcUseCase?: Partial<SubmitOdcUseCase>;
+  updateDraftUseCase?: Partial<UpdateDraftUseCase>;
 }
 
 function createController(overrides: ControllerOverrides = {}): OdcController {
@@ -35,7 +37,14 @@ function createController(overrides: ControllerOverrides = {}): OdcController {
   const submitOdcUseCase = (overrides.submitOdcUseCase ?? {
     execute: jest.fn(),
   }) as SubmitOdcUseCase;
-  return new OdcController(createDraftUseCase, submitOdcUseCase);
+  const updateDraftUseCase = (overrides.updateDraftUseCase ?? {
+    execute: jest.fn(),
+  }) as UpdateDraftUseCase;
+  return new OdcController(
+    createDraftUseCase,
+    submitOdcUseCase,
+    updateDraftUseCase,
+  );
 }
 
 function sessionUser(role = 'DIRECTOR_OPS' as const) {
@@ -186,6 +195,46 @@ describe('R10: submit from a non-submittable status responds 409', () => {
 
     await expect(
       controller.submit(ODC_ID, sessionUser()),
+    ).rejects.toBeInstanceOf(ConflictException);
+  });
+});
+
+describe('R11: PATCH /api/odcs/:id edits an editable ODC for its creator', () => {
+  it("exposes the handler as PATCH on ':id' restricted to DIRECTOR_OPS", () => {
+    const handler = getHandler('update');
+    expect(Reflect.getMetadata('path', handler)).toBe(':id');
+    expect(Reflect.getMetadata('method', handler)).toBe(RequestMethod.PATCH);
+    expect(Reflect.getMetadata(ROLES_KEY, handler)).toEqual(['DIRECTOR_OPS']);
+  });
+
+  it('delegates to the update use-case with the id, dto and session actor', async () => {
+    const updated = { status: 'BORRADOR', totalCents: 8000 } as PurchaseOrder;
+    const execute = jest.fn().mockResolvedValue(updated);
+    const controller = createController({ updateDraftUseCase: { execute } });
+    const dto = { quantity: 4, unitPriceCents: 2000 };
+
+    const body = await controller.update(ODC_ID, dto, sessionUser());
+
+    expect(execute).toHaveBeenCalledWith(ODC_ID, dto, {
+      userId: OPS_ID,
+      role: 'DIRECTOR_OPS',
+    });
+    expect(body).toBe(updated);
+  });
+
+  it('translates the status domain error into a 409 ConflictException', async () => {
+    const controller = createController({
+      updateDraftUseCase: {
+        execute: jest
+          .fn()
+          .mockRejectedValue(
+            new InvalidStatusTransitionError('edit', 'COMPLETADA'),
+          ),
+      },
+    });
+
+    await expect(
+      controller.update(ODC_ID, { quantity: 4 }, sessionUser()),
     ).rejects.toBeInstanceOf(ConflictException);
   });
 });

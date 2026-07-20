@@ -7,14 +7,17 @@ import {
   HttpCode,
   NotFoundException,
   Param,
+  Patch,
   Post,
   Req,
 } from '@nestjs/common';
 import { Roles } from '../../../auth/infrastructure/decorators/roles.decorator';
 import type { SessionTokenPayload } from '../../../auth/infrastructure/guards/jwt-auth.guard';
 import { CreateOdcDto } from '../../application/dto/create-odc.dto';
+import { UpdateOdcDto } from '../../application/dto/update-odc.dto';
 import { CreateDraftUseCase } from '../../application/use-cases/create-draft.usecase';
 import { SubmitOdcUseCase } from '../../application/use-cases/submit-odc.usecase';
+import { UpdateDraftUseCase } from '../../application/use-cases/update-draft.usecase';
 import {
   OdcActor,
   PurchaseOrder,
@@ -58,6 +61,7 @@ export class OdcController {
   constructor(
     private readonly createDraftUseCase: CreateDraftUseCase,
     private readonly submitOdcUseCase: SubmitOdcUseCase,
+    private readonly updateDraftUseCase: UpdateDraftUseCase,
   ) {}
 
   @Post()
@@ -82,6 +86,20 @@ export class OdcController {
   ): Promise<PurchaseOrder> {
     try {
       return await this.submitOdcUseCase.execute(id, actorFrom(request));
+    } catch (error) {
+      rethrowDomainError(error);
+    }
+  }
+
+  @Patch(':id')
+  @Roles('DIRECTOR_OPS')
+  async update(
+    @Param('id') id: string,
+    @Body() dto: UpdateOdcDto,
+    @Req() request: RequestWithSession,
+  ): Promise<PurchaseOrder> {
+    try {
+      return await this.updateDraftUseCase.execute(id, dto, actorFrom(request));
     } catch (error) {
       rethrowDomainError(error);
     }

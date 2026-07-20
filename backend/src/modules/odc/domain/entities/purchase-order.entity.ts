@@ -370,7 +370,13 @@ export class PurchaseOrder {
     if (data.observations !== undefined) this.observations = data.observations;
   }
 
+  // T1 fields are only editable while the ODC belongs to its creator's
+  // workspace: BORRADOR or RECHAZADA (R11). The status never changes here;
+  // resubmission is the submit transition (T10).
   edit(fields: EditableOdcFields): void {
+    if (this.status !== 'BORRADOR' && this.status !== 'RECHAZADA') {
+      throw new InvalidStatusTransitionError('edit', this.status);
+    }
     if (fields.description !== undefined) this.description = fields.description;
     if (fields.quantity !== undefined) this.quantity = fields.quantity;
     if (fields.unit !== undefined) this.unit = fields.unit;
