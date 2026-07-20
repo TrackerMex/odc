@@ -33,7 +33,7 @@
   {
     "id": 7,
     "name": "odc-payment-evidence",
-    "status": "pending",
+    "status": "in_progress",
     "priority": "P1"
   },
   {
