@@ -19,6 +19,7 @@ import { CreateOdcDto } from '../../application/dto/create-odc.dto';
 import { ListOdcsQueryDto } from '../../application/dto/list-odcs.query.dto';
 import { UpdateOdcDto } from '../../application/dto/update-odc.dto';
 import { CreateDraftUseCase } from '../../application/use-cases/create-draft.usecase';
+import { GetOdcUseCase } from '../../application/use-cases/get-odc.usecase';
 import { ListOdcsUseCase } from '../../application/use-cases/list-odcs.usecase';
 import { SubmitOdcUseCase } from '../../application/use-cases/submit-odc.usecase';
 import { UpdateDraftUseCase } from '../../application/use-cases/update-draft.usecase';
@@ -68,6 +69,7 @@ export class OdcController {
     private readonly submitOdcUseCase: SubmitOdcUseCase,
     private readonly updateDraftUseCase: UpdateDraftUseCase,
     private readonly listOdcsUseCase: ListOdcsUseCase,
+    private readonly getOdcUseCase: GetOdcUseCase,
   ) {}
 
   @Post()
@@ -125,5 +127,19 @@ export class OdcController {
       },
       actorFrom(request),
     );
+  }
+
+  // No @Roles: the 3 roles may view a detail; visibility of BORRADOR is
+  // enforced by the use-case (R13).
+  @Get(':id')
+  async detail(
+    @Param('id') id: string,
+    @Req() request: RequestWithSession,
+  ): Promise<PurchaseOrder> {
+    try {
+      return await this.getOdcUseCase.execute(id, actorFrom(request));
+    } catch (error) {
+      rethrowDomainError(error);
+    }
   }
 }

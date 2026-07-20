@@ -1,6 +1,7 @@
 import {
   ConflictException,
   ForbiddenException,
+  NotFoundException,
   RequestMethod,
 } from '@nestjs/common';
 import { ROLES_KEY } from '../../../auth/infrastructure/decorators/roles.decorator';
@@ -8,7 +9,9 @@ import { PurchaseOrder } from '../../domain/entities/purchase-order.entity';
 import { InvalidRoleTransitionError } from '../../domain/errors/invalid-role-transition.error';
 import { InvalidStatusTransitionError } from '../../domain/errors/invalid-status-transition.error';
 import { OdcAccessDeniedError } from '../../domain/errors/odc-access-denied.error';
+import { OdcNotFoundError } from '../../domain/errors/odc-not-found.error';
 import { CreateDraftUseCase } from '../../application/use-cases/create-draft.usecase';
+import { GetOdcUseCase } from '../../application/use-cases/get-odc.usecase';
 import { ListOdcsUseCase } from '../../application/use-cases/list-odcs.usecase';
 import { SubmitOdcUseCase } from '../../application/use-cases/submit-odc.usecase';
 import { UpdateDraftUseCase } from '../../application/use-cases/update-draft.usecase';
@@ -30,6 +33,7 @@ interface ControllerOverrides {
   submitOdcUseCase?: Partial<SubmitOdcUseCase>;
   updateDraftUseCase?: Partial<UpdateDraftUseCase>;
   listOdcsUseCase?: Partial<ListOdcsUseCase>;
+  getOdcUseCase?: Partial<GetOdcUseCase>;
 }
 
 function createController(overrides: ControllerOverrides = {}): OdcController {
@@ -45,11 +49,15 @@ function createController(overrides: ControllerOverrides = {}): OdcController {
   const listOdcsUseCase = (overrides.listOdcsUseCase ?? {
     execute: jest.fn(),
   }) as ListOdcsUseCase;
+  const getOdcUseCase = (overrides.getOdcUseCase ?? {
+    execute: jest.fn(),
+  }) as GetOdcUseCase;
   return new OdcController(
     createDraftUseCase,
     submitOdcUseCase,
     updateDraftUseCase,
     listOdcsUseCase,
+    getOdcUseCase,
   );
 }
 
@@ -283,5 +291,57 @@ describe('R12: GET /api/odcs lists ODCs for any authenticated role', () => {
       { status: undefined, page: undefined },
       { userId: OPS_ID, role: 'DIRECTOR_OPS' },
     );
+  });
+});
+
+describe('R13: GET /api/odcs/:id returns the detail with history for any authenticated role', () => {
+  it("exposes the handler as GET on ':id' without extra role restriction", () => {
+    const handler = getHandler('detail');
+    expect(Reflect.getMetadata('path', handler)).toBe(':id');
+    expect(Reflect.getMetadata('method', handler)).toBe(RequestMethod.GET);
+    // Session-only endpoint: the 3 roles may view a detail, so no @Roles.
+    expect(Reflect.getMetadata(ROLES_KEY, handler)).toBeUndefined();
+  });
+
+  it('delegates to the get-odc use-case with the id and the session actor', async () => {
+    const detail = { status: 'PENDIENTE_ADMIN' } as PurchaseOrder;
+    const execute = jest.fn().mockResolvedValue(detail);
+    const controller = createController({ getOdcUseCase: { execute } });
+
+    const body = await controller.detail(ODC_ID, sessionUser());
+
+    expect(execute).toHaveBeenCalledWith(ODC_ID, {
+      userId: OPS_ID,
+      role: 'DIRECTOR_OPS',
+    });
+    expect(body).toBe(detail);
+  });
+
+  it('translates the not-found domain error into a 404 NotFoundException', async () => {
+    const controller = createController({
+      getOdcUseCase: {
+        execute: jest.fn().mockRejectedValue(new OdcNotFoundError(ODC_ID)),
+      },
+    });
+
+    await expect(
+      controller.detail(ODC_ID, sessionUser()),
+    ).rejects.toBeInstanceOf(NotFoundException);
+  });
+
+  it('translates the access-denied domain error into a 403 ForbiddenException', async () => {
+    const controller = createController({
+      getOdcUseCase: {
+        execute: jest
+          .fn()
+          .mockRejectedValue(
+            new OdcAccessDeniedError('This ODC draft is not visible to you'),
+          ),
+      },
+    });
+
+    await expect(
+      controller.detail(ODC_ID, sessionUser()),
+    ).rejects.toBeInstanceOf(ForbiddenException);
   });
 });
