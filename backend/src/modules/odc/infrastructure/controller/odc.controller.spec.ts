@@ -10,16 +10,23 @@ import { InvalidRoleTransitionError } from '../../domain/errors/invalid-role-tra
 import { InvalidStatusTransitionError } from '../../domain/errors/invalid-status-transition.error';
 import { OdcAccessDeniedError } from '../../domain/errors/odc-access-denied.error';
 import { OdcNotFoundError } from '../../domain/errors/odc-not-found.error';
+import { PaymentEvidenceNotFoundError } from '../../domain/errors/payment-evidence-not-found.error';
 import { ApproveBudgetUseCase } from '../../application/use-cases/approve-budget.usecase';
 import { ApprovePurchaseUseCase } from '../../application/use-cases/approve-purchase.usecase';
 import { CreateDraftUseCase } from '../../application/use-cases/create-draft.usecase';
 import { GetOdcUseCase } from '../../application/use-cases/get-odc.usecase';
+import { GetPaymentEvidenceFileUseCase } from '../../application/use-cases/get-payment-evidence-file.usecase';
 import { ListOdcsUseCase } from '../../application/use-cases/list-odcs.usecase';
 import { RegisterPaymentUseCase } from '../../application/use-cases/register-payment.usecase';
 import { RejectOdcUseCase } from '../../application/use-cases/reject-odc.usecase';
 import { SubmitOdcUseCase } from '../../application/use-cases/submit-odc.usecase';
 import { UpdateDraftUseCase } from '../../application/use-cases/update-draft.usecase';
-import { OdcController } from './odc.controller';
+import { UploadPaymentEvidenceUseCase } from '../../application/use-cases/upload-payment-evidence.usecase';
+import {
+  toOdcPageResponse,
+  toOdcResponse,
+} from '../mappers/odc-response.mapper';
+import { createPaymentEvidenceFilePipe, OdcController } from './odc.controller';
 
 const OPS_ID = 'a3d1c9a2-0000-4000-8000-000000000001';
 const ODC_ID = 'b4e2d8b3-0000-4000-8000-000000000010';
@@ -42,6 +49,8 @@ interface ControllerOverrides {
   approvePurchaseUseCase?: Partial<ApprovePurchaseUseCase>;
   rejectOdcUseCase?: Partial<RejectOdcUseCase>;
   registerPaymentUseCase?: Partial<RegisterPaymentUseCase>;
+  uploadPaymentEvidenceUseCase?: Partial<UploadPaymentEvidenceUseCase>;
+  getPaymentEvidenceFileUseCase?: Partial<GetPaymentEvidenceFileUseCase>;
 }
 
 function createController(overrides: ControllerOverrides = {}): OdcController {
@@ -72,6 +81,14 @@ function createController(overrides: ControllerOverrides = {}): OdcController {
   const registerPaymentUseCase = (overrides.registerPaymentUseCase ?? {
     execute: jest.fn(),
   }) as RegisterPaymentUseCase;
+  const uploadPaymentEvidenceUseCase =
+    (overrides.uploadPaymentEvidenceUseCase ?? {
+      execute: jest.fn(),
+    }) as UploadPaymentEvidenceUseCase;
+  const getPaymentEvidenceFileUseCase =
+    (overrides.getPaymentEvidenceFileUseCase ?? {
+      execute: jest.fn(),
+    }) as GetPaymentEvidenceFileUseCase;
   return new OdcController(
     createDraftUseCase,
     submitOdcUseCase,
@@ -82,11 +99,31 @@ function createController(overrides: ControllerOverrides = {}): OdcController {
     approvePurchaseUseCase,
     rejectOdcUseCase,
     registerPaymentUseCase,
+    uploadPaymentEvidenceUseCase,
+    getPaymentEvidenceFileUseCase,
   );
 }
 
 function sessionUser(role = 'DIRECTOR_OPS' as const) {
   return { user: { sub: OPS_ID, role } };
+}
+
+function buildMulterFile(
+  overrides: Partial<Express.Multer.File> = {},
+): Express.Multer.File {
+  return {
+    fieldname: 'file',
+    originalname: 'evidence.pdf',
+    encoding: '7bit',
+    mimetype: 'application/pdf',
+    size: 2048,
+    buffer: Buffer.from('%PDF-1.4 fake evidence'),
+    stream: undefined as never,
+    destination: '',
+    filename: '',
+    path: '',
+    ...overrides,
+  };
 }
 
 describe('R7: POST /api/odcs creates a draft only for DIRECTOR_OPS with 201', () => {
@@ -101,7 +138,10 @@ describe('R7: POST /api/odcs creates a draft only for DIRECTOR_OPS with 201', ()
   });
 
   it('delegates to the use-case with the dto and the session actor and returns the created ODC', async () => {
-    const createdOrder = { status: 'BORRADOR' } as PurchaseOrder;
+    const createdOrder = {
+      status: 'BORRADOR',
+      paymentEvidenceFile: null,
+    } as PurchaseOrder;
     const execute = jest.fn().mockResolvedValue(createdOrder);
     const controller = createController({
       createDraftUseCase: { execute },
@@ -120,7 +160,7 @@ describe('R7: POST /api/odcs creates a draft only for DIRECTOR_OPS with 201', ()
       userId: OPS_ID,
       role: 'DIRECTOR_OPS',
     });
-    expect(body).toBe(createdOrder);
+    expect(body).toEqual(toOdcResponse(createdOrder));
   });
 
   it('translates the role domain error into a 403 ForbiddenException', async () => {
@@ -191,7 +231,10 @@ describe('R9: POST /api/odcs/:id/submit sends the ODC to admin review with 200',
   });
 
   it('delegates to the submit use-case with the id and the session actor', async () => {
-    const submitted = { status: 'PENDIENTE_ADMIN' } as PurchaseOrder;
+    const submitted = {
+      status: 'PENDIENTE_ADMIN',
+      paymentEvidenceFile: null,
+    } as PurchaseOrder;
     const execute = jest.fn().mockResolvedValue(submitted);
     const controller = createController({ submitOdcUseCase: { execute } });
 
@@ -201,7 +244,7 @@ describe('R9: POST /api/odcs/:id/submit sends the ODC to admin review with 200',
       userId: OPS_ID,
       role: 'DIRECTOR_OPS',
     });
-    expect(body).toBe(submitted);
+    expect(body).toEqual(toOdcResponse(submitted));
   });
 
   it('translates the access-denied domain error into a 403 ForbiddenException', async () => {
@@ -246,7 +289,11 @@ describe('R11: PATCH /api/odcs/:id edits an editable ODC for its creator', () =>
   });
 
   it('delegates to the update use-case with the id, dto and session actor', async () => {
-    const updated = { status: 'BORRADOR', totalCents: 8000 } as PurchaseOrder;
+    const updated = {
+      status: 'BORRADOR',
+      totalCents: 8000,
+      paymentEvidenceFile: null,
+    } as PurchaseOrder;
     const execute = jest.fn().mockResolvedValue(updated);
     const controller = createController({ updateDraftUseCase: { execute } });
     const dto = { quantity: 4, unitPriceCents: 2000 };
@@ -257,7 +304,7 @@ describe('R11: PATCH /api/odcs/:id edits an editable ODC for its creator', () =>
       userId: OPS_ID,
       role: 'DIRECTOR_OPS',
     });
-    expect(body).toBe(updated);
+    expect(body).toEqual(toOdcResponse(updated));
   });
 
   it('translates the status domain error into a 409 ConflictException', async () => {
@@ -300,7 +347,7 @@ describe('R12: GET /api/odcs lists ODCs for any authenticated role', () => {
       { status: 'PENDIENTE_ADMIN', page: 2 },
       { userId: OPS_ID, role: 'DIRECTOR_OPS' },
     );
-    expect(body).toBe(page);
+    expect(body).toEqual(toOdcPageResponse(page));
   });
 
   it('omits page when the query does not include it', async () => {
@@ -328,7 +375,10 @@ describe('R13: GET /api/odcs/:id returns the detail with history for any authent
   });
 
   it('delegates to the get-odc use-case with the id and the session actor', async () => {
-    const detail = { status: 'PENDIENTE_ADMIN' } as PurchaseOrder;
+    const detail = {
+      status: 'PENDIENTE_ADMIN',
+      paymentEvidenceFile: null,
+    } as PurchaseOrder;
     const execute = jest.fn().mockResolvedValue(detail);
     const controller = createController({ getOdcUseCase: { execute } });
 
@@ -338,7 +388,7 @@ describe('R13: GET /api/odcs/:id returns the detail with history for any authent
       userId: OPS_ID,
       role: 'DIRECTOR_OPS',
     });
-    expect(body).toBe(detail);
+    expect(body).toEqual(toOdcResponse(detail));
   });
 
   it('translates the not-found domain error into a 404 NotFoundException', async () => {
@@ -370,6 +420,25 @@ describe('R13: GET /api/odcs/:id returns the detail with history for any authent
   });
 });
 
+describe('R4: GET /api/odcs/:id detail never exposes the raw paymentEvidenceFile (odc-payment-evidence)', () => {
+  it('replaces paymentEvidenceFile with hasPaymentEvidence: true in the response body', async () => {
+    const detail = {
+      status: 'EVIDENCIA_PAGO_SUBIDA',
+      paymentEvidenceFile: 'odc/ODC-2026-00001/evidence/abc123',
+    } as PurchaseOrder;
+    const execute = jest.fn().mockResolvedValue(detail);
+    const controller = createController({ getOdcUseCase: { execute } });
+
+    const body = await controller.detail(ODC_ID, sessionUser());
+
+    expect(body).not.toHaveProperty('paymentEvidenceFile');
+    expect(body).toHaveProperty('hasPaymentEvidence', true);
+    expect(JSON.stringify(body)).not.toContain(
+      'odc/ODC-2026-00001/evidence/abc123',
+    );
+  });
+});
+
 describe('R1: POST /api/odcs/:id/approve-budget approves the budget with 200 restricted to ADMINISTRACION', () => {
   it("exposes the handler as POST on ':id/approve-budget' with HTTP 200 restricted to ADMINISTRACION", () => {
     const handler = getHandler('approveBudget');
@@ -380,7 +449,10 @@ describe('R1: POST /api/odcs/:id/approve-budget approves the budget with 200 res
   });
 
   it('delegates to the approve-budget use-case with the id and the session actor', async () => {
-    const approved = { status: 'PRESUPUESTO_APROBADO' } as PurchaseOrder;
+    const approved = {
+      status: 'PRESUPUESTO_APROBADO',
+      paymentEvidenceFile: null,
+    } as PurchaseOrder;
     const execute = jest.fn().mockResolvedValue(approved);
     const controller = createController({ approveBudgetUseCase: { execute } });
 
@@ -393,7 +465,7 @@ describe('R1: POST /api/odcs/:id/approve-budget approves the budget with 200 res
       userId: OPS_ID,
       role: 'ADMINISTRACION',
     });
-    expect(body).toBe(approved);
+    expect(body).toEqual(toOdcResponse(approved));
   });
 
   it('translates the role domain error into a 403 ForbiddenException', async () => {
@@ -462,6 +534,7 @@ describe('R4: POST /api/odcs/:id/reject rejects an ODC with 200 restricted to AD
     const rejected = {
       status: 'RECHAZADA',
       rejectionReason: 'Presupuesto excedido',
+      paymentEvidenceFile: null,
     } as PurchaseOrder;
     const execute = jest.fn().mockResolvedValue(rejected);
     const controller = createController({ rejectOdcUseCase: { execute } });
@@ -478,7 +551,7 @@ describe('R4: POST /api/odcs/:id/reject rejects an ODC with 200 restricted to AD
       { userId: OPS_ID, role: 'ADMINISTRACION' },
       dto,
     );
-    expect(body).toBe(rejected);
+    expect(body).toEqual(toOdcResponse(rejected));
   });
 
   it('translates the role domain error into a 403 ForbiddenException', async () => {
@@ -572,7 +645,10 @@ describe('R1: POST /api/odcs/:id/approve-purchase approves the purchase with 200
   });
 
   it('delegates to the approve-purchase use-case with the id and the session actor', async () => {
-    const approved = { status: 'COMPRA_APROBADA' } as PurchaseOrder;
+    const approved = {
+      status: 'COMPRA_APROBADA',
+      paymentEvidenceFile: null,
+    } as PurchaseOrder;
     const execute = jest.fn().mockResolvedValue(approved);
     const controller = createController({
       approvePurchaseUseCase: { execute },
@@ -587,7 +663,7 @@ describe('R1: POST /api/odcs/:id/approve-purchase approves the purchase with 200
       userId: OPS_ID,
       role: 'DIRECTOR_GENERAL',
     });
-    expect(body).toBe(approved);
+    expect(body).toEqual(toOdcResponse(approved));
   });
 
   it('translates the role domain error into a 403 ForbiddenException', async () => {
@@ -659,6 +735,7 @@ describe('R4: POST /api/odcs/:id/reject accepts DIRECTOR_GENERAL on PRESUPUESTO_
     const rejected = {
       status: 'RECHAZADA',
       rejectionReason: 'Presupuesto excedido',
+      paymentEvidenceFile: null,
     } as PurchaseOrder;
     const execute = jest.fn().mockResolvedValue(rejected);
     const controller = createController({ rejectOdcUseCase: { execute } });
@@ -675,7 +752,7 @@ describe('R4: POST /api/odcs/:id/reject accepts DIRECTOR_GENERAL on PRESUPUESTO_
       { userId: OPS_ID, role: 'DIRECTOR_GENERAL' },
       dto,
     );
-    expect(body).toBe(rejected);
+    expect(body).toEqual(toOdcResponse(rejected));
   });
 });
 
@@ -684,6 +761,7 @@ describe('R5: reject regression — ADMINISTRACION on PENDIENTE_ADMIN (T4) keeps
     const rejected = {
       status: 'RECHAZADA',
       rejectionReason: 'Presupuesto excedido',
+      paymentEvidenceFile: null,
     } as PurchaseOrder;
     const execute = jest.fn().mockResolvedValue(rejected);
     const controller = createController({ rejectOdcUseCase: { execute } });
@@ -700,7 +778,7 @@ describe('R5: reject regression — ADMINISTRACION on PENDIENTE_ADMIN (T4) keeps
       { userId: OPS_ID, role: 'ADMINISTRACION' },
       dto,
     );
-    expect(body).toBe(rejected);
+    expect(body).toEqual(toOdcResponse(rejected));
   });
 
   it('still translates the role domain error into a 403 ForbiddenException for an unrelated role', async () => {
@@ -818,6 +896,7 @@ describe('R2: POST /api/odcs/:id/payment registers the payment with 200 restrict
       status: 'PAGO_REGISTRADO',
       paymentDate: '2026-07-20',
       paymentMethod: 'Transferencia',
+      paymentEvidenceFile: null,
     } as PurchaseOrder;
     const execute = jest.fn().mockResolvedValue(paid);
     const controller = createController({
@@ -832,7 +911,7 @@ describe('R2: POST /api/odcs/:id/payment registers the payment with 200 restrict
       { userId: OPS_ID, role: 'DIRECTOR_OPS' },
       dto,
     );
-    expect(body).toBe(paid);
+    expect(body).toEqual(toOdcResponse(paid));
   });
 
   it('translates the role domain error into a 403 ForbiddenException', async () => {
@@ -894,5 +973,230 @@ describe('R3: payment responds 404 for an unknown id and 409 outside COMPRA_APRO
         sessionUser(),
       ),
     ).rejects.toBeInstanceOf(ConflictException);
+  });
+});
+
+describe('R1: payment-evidence file validation (MIME/size) before Cloudinary (odc-payment-evidence)', () => {
+  it('accepts a valid pdf/jpg/png file at or under 10MB', async () => {
+    const pipe = createPaymentEvidenceFilePipe();
+
+    await expect(pipe.transform(buildMulterFile())).resolves.toBeDefined();
+    await expect(
+      pipe.transform(buildMulterFile({ mimetype: 'image/jpeg' })),
+    ).resolves.toBeDefined();
+    await expect(
+      pipe.transform(buildMulterFile({ mimetype: 'image/png' })),
+    ).resolves.toBeDefined();
+    await expect(
+      pipe.transform(buildMulterFile({ size: 10 * 1024 * 1024 })),
+    ).resolves.toBeDefined();
+  });
+
+  it('rejects a missing file with a 400 BadRequestException', async () => {
+    const pipe = createPaymentEvidenceFilePipe();
+
+    await expect(pipe.transform(undefined)).rejects.toMatchObject({
+      status: 400,
+    });
+  });
+
+  it('rejects an unsupported MIME type (text/plain) with a 400 BadRequestException', async () => {
+    const pipe = createPaymentEvidenceFilePipe();
+
+    await expect(
+      pipe.transform(buildMulterFile({ mimetype: 'text/plain' })),
+    ).rejects.toMatchObject({ status: 400 });
+  });
+
+  it('rejects a file larger than 10MB with a 400 BadRequestException', async () => {
+    const pipe = createPaymentEvidenceFilePipe();
+
+    await expect(
+      pipe.transform(buildMulterFile({ size: 10 * 1024 * 1024 + 1 })),
+    ).rejects.toMatchObject({ status: 400 });
+  });
+});
+
+describe('R2: POST /api/odcs/:id/payment-evidence uploads to Cloudinary with 200 restricted to ADMINISTRACION', () => {
+  it("exposes the handler as POST on ':id/payment-evidence' with HTTP 200 restricted to ADMINISTRACION", () => {
+    const handler = getHandler('uploadPaymentEvidence');
+    expect(Reflect.getMetadata('path', handler)).toBe(':id/payment-evidence');
+    expect(Reflect.getMetadata('method', handler)).toBe(RequestMethod.POST);
+    expect(Reflect.getMetadata('__httpCode__', handler)).toBe(200);
+    expect(Reflect.getMetadata(ROLES_KEY, handler)).toEqual(['ADMINISTRACION']);
+  });
+
+  it('delegates to the upload-payment-evidence use-case with the buffer/mimeType/evidenceReference and returns the updated ODC', async () => {
+    const updated = {
+      status: 'EVIDENCIA_PAGO_SUBIDA',
+      paymentEvidenceFile: 'odc/ODC-2026-00001/evidence/abc123',
+    } as PurchaseOrder;
+    const execute = jest.fn().mockResolvedValue(updated);
+    const controller = createController({
+      uploadPaymentEvidenceUseCase: { execute },
+    });
+    const file = buildMulterFile();
+    const dto = { evidenceReference: 'REF-EV-001' };
+
+    const body = await controller.uploadPaymentEvidence(
+      ODC_ID,
+      file,
+      dto,
+      sessionUser('ADMINISTRACION'),
+    );
+
+    expect(execute).toHaveBeenCalledWith(
+      ODC_ID,
+      { userId: OPS_ID, role: 'ADMINISTRACION' },
+      {
+        buffer: file.buffer,
+        mimeType: file.mimetype,
+        evidenceReference: 'REF-EV-001',
+      },
+    );
+    expect(body).toEqual(toOdcResponse(updated));
+    expect(body).not.toHaveProperty('paymentEvidenceFile');
+    expect(body).toHaveProperty('hasPaymentEvidence', true);
+  });
+
+  it('translates the role domain error into a 403 ForbiddenException without needing Cloudinary', async () => {
+    const controller = createController({
+      uploadPaymentEvidenceUseCase: {
+        execute: jest
+          .fn()
+          .mockRejectedValue(
+            new InvalidRoleTransitionError(
+              'upload_payment_evidence',
+              'DIRECTOR_OPS',
+            ),
+          ),
+      },
+    });
+
+    await expect(
+      controller.uploadPaymentEvidence(
+        ODC_ID,
+        buildMulterFile(),
+        {},
+        sessionUser(),
+      ),
+    ).rejects.toBeInstanceOf(ForbiddenException);
+  });
+});
+
+describe('R3: payment-evidence responds 404 for an unknown id and 409 outside PAGO_REGISTRADO', () => {
+  it('translates the not-found domain error into a 404 NotFoundException', async () => {
+    const controller = createController({
+      uploadPaymentEvidenceUseCase: {
+        execute: jest.fn().mockRejectedValue(new OdcNotFoundError(ODC_ID)),
+      },
+    });
+
+    await expect(
+      controller.uploadPaymentEvidence(
+        ODC_ID,
+        buildMulterFile(),
+        {},
+        sessionUser('ADMINISTRACION'),
+      ),
+    ).rejects.toBeInstanceOf(NotFoundException);
+  });
+
+  it('translates the status domain error into a 409 ConflictException', async () => {
+    const controller = createController({
+      uploadPaymentEvidenceUseCase: {
+        execute: jest
+          .fn()
+          .mockRejectedValue(
+            new InvalidStatusTransitionError(
+              'upload_payment_evidence',
+              'BORRADOR',
+            ),
+          ),
+      },
+    });
+
+    await expect(
+      controller.uploadPaymentEvidence(
+        ODC_ID,
+        buildMulterFile(),
+        {},
+        sessionUser('ADMINISTRACION'),
+      ),
+    ).rejects.toBeInstanceOf(ConflictException);
+  });
+});
+
+describe('R5: GET /api/odcs/:id/files/evidence redirects (302) to a signed Cloudinary URL', () => {
+  it("exposes the handler as GET on ':id/files/evidence' with @Redirect() metadata and no @Roles restriction", () => {
+    const handler = getHandler('getPaymentEvidenceFile');
+    expect(Reflect.getMetadata('path', handler)).toBe(':id/files/evidence');
+    expect(Reflect.getMetadata('method', handler)).toBe(RequestMethod.GET);
+    expect(Reflect.getMetadata(ROLES_KEY, handler)).toBeUndefined();
+    expect(Reflect.getMetadata('__redirect__', handler)).toBeDefined();
+  });
+
+  it('delegates to the get-payment-evidence-file use-case and redirects with statusCode 302', async () => {
+    const signedUrl =
+      'https://res.cloudinary.com/odc-cloud/raw/authenticated/s--signature--/abc123';
+    const execute = jest.fn().mockResolvedValue(signedUrl);
+    const controller = createController({
+      getPaymentEvidenceFileUseCase: { execute },
+    });
+
+    const result = await controller.getPaymentEvidenceFile(
+      ODC_ID,
+      sessionUser(),
+    );
+
+    expect(execute).toHaveBeenCalledWith(ODC_ID, {
+      userId: OPS_ID,
+      role: 'DIRECTOR_OPS',
+    });
+    expect(result).toEqual({ url: signedUrl, statusCode: 302 });
+  });
+});
+
+describe('R6: files/evidence responds 404 for an unknown id, 404 without evidence yet, and 403 on a BORRADOR of another creator', () => {
+  it('translates the not-found domain error into a 404 NotFoundException', async () => {
+    const controller = createController({
+      getPaymentEvidenceFileUseCase: {
+        execute: jest.fn().mockRejectedValue(new OdcNotFoundError(ODC_ID)),
+      },
+    });
+
+    await expect(
+      controller.getPaymentEvidenceFile(ODC_ID, sessionUser()),
+    ).rejects.toBeInstanceOf(NotFoundException);
+  });
+
+  it('translates the payment-evidence-not-found domain error into a 404 NotFoundException', async () => {
+    const controller = createController({
+      getPaymentEvidenceFileUseCase: {
+        execute: jest
+          .fn()
+          .mockRejectedValue(new PaymentEvidenceNotFoundError(ODC_ID)),
+      },
+    });
+
+    await expect(
+      controller.getPaymentEvidenceFile(ODC_ID, sessionUser()),
+    ).rejects.toBeInstanceOf(NotFoundException);
+  });
+
+  it('translates the access-denied domain error into a 403 ForbiddenException', async () => {
+    const controller = createController({
+      getPaymentEvidenceFileUseCase: {
+        execute: jest
+          .fn()
+          .mockRejectedValue(
+            new OdcAccessDeniedError('This ODC draft is not visible to you'),
+          ),
+      },
+    });
+
+    await expect(
+      controller.getPaymentEvidenceFile(ODC_ID, sessionUser()),
+    ).rejects.toBeInstanceOf(ForbiddenException);
   });
 });

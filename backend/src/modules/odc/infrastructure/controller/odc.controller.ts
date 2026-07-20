@@ -3,16 +3,25 @@ import {
   Body,
   ConflictException,
   Controller,
+  FileTypeValidator,
   ForbiddenException,
   Get,
   HttpCode,
+  HttpStatus,
+  MaxFileSizeValidator,
   NotFoundException,
   Param,
+  ParseFilePipe,
   Patch,
   Post,
   Query,
+  Redirect,
   Req,
+  UploadedFile,
+  UseInterceptors,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { memoryStorage } from 'multer';
 import { Roles } from '../../../auth/infrastructure/decorators/roles.decorator';
 import type { SessionTokenPayload } from '../../../auth/infrastructure/guards/jwt-auth.guard';
 import { CreateOdcDto } from '../../application/dto/create-odc.dto';
@@ -20,25 +29,31 @@ import { ListOdcsQueryDto } from '../../application/dto/list-odcs.query.dto';
 import { RegisterPaymentDto } from '../../application/dto/register-payment.dto';
 import { RejectOdcDto } from '../../application/dto/reject-odc.dto';
 import { UpdateOdcDto } from '../../application/dto/update-odc.dto';
+import { UploadPaymentEvidenceDto } from '../../application/dto/upload-payment-evidence.dto';
 import { ApproveBudgetUseCase } from '../../application/use-cases/approve-budget.usecase';
 import { ApprovePurchaseUseCase } from '../../application/use-cases/approve-purchase.usecase';
 import { CreateDraftUseCase } from '../../application/use-cases/create-draft.usecase';
 import { GetOdcUseCase } from '../../application/use-cases/get-odc.usecase';
+import { GetPaymentEvidenceFileUseCase } from '../../application/use-cases/get-payment-evidence-file.usecase';
 import { ListOdcsUseCase } from '../../application/use-cases/list-odcs.usecase';
 import { RegisterPaymentUseCase } from '../../application/use-cases/register-payment.usecase';
 import { RejectOdcUseCase } from '../../application/use-cases/reject-odc.usecase';
 import { SubmitOdcUseCase } from '../../application/use-cases/submit-odc.usecase';
 import { UpdateDraftUseCase } from '../../application/use-cases/update-draft.usecase';
-import {
-  OdcActor,
-  PurchaseOrder,
-} from '../../domain/entities/purchase-order.entity';
+import { UploadPaymentEvidenceUseCase } from '../../application/use-cases/upload-payment-evidence.usecase';
+import { OdcActor } from '../../domain/entities/purchase-order.entity';
 import { InvalidRoleTransitionError } from '../../domain/errors/invalid-role-transition.error';
 import { InvalidStatusTransitionError } from '../../domain/errors/invalid-status-transition.error';
 import { MissingTransitionDataError } from '../../domain/errors/missing-transition-data.error';
 import { OdcAccessDeniedError } from '../../domain/errors/odc-access-denied.error';
 import { OdcNotFoundError } from '../../domain/errors/odc-not-found.error';
-import { OdcPage } from '../../domain/repositories/purchase-order.repository';
+import { PaymentEvidenceNotFoundError } from '../../domain/errors/payment-evidence-not-found.error';
+import {
+  OdcPageResponseDto,
+  OdcResponseDto,
+  toOdcPageResponse,
+  toOdcResponse,
+} from '../mappers/odc-response.mapper';
 
 interface RequestWithSession {
   user: SessionTokenPayload;
@@ -62,10 +77,40 @@ function rethrowDomainError(error: unknown): never {
   if (error instanceof MissingTransitionDataError) {
     throw new BadRequestException(error.message);
   }
-  if (error instanceof OdcNotFoundError) {
+  if (
+    error instanceof OdcNotFoundError ||
+    error instanceof PaymentEvidenceNotFoundError
+  ) {
     throw new NotFoundException(error.message);
   }
   throw error;
+}
+
+const MAX_PAYMENT_EVIDENCE_FILE_SIZE_BYTES = 10 * 1024 * 1024; // 10 MB (R1)
+const ALLOWED_PAYMENT_EVIDENCE_MIME_TYPES =
+  /^(application\/pdf|image\/jpeg|image\/png)$/;
+
+// Exported so the controller spec can exercise the exact pipe configuration
+// used by the payment-evidence route (R1): MIME allowlist + size cap, both
+// checked in-memory before Cloudinary is ever invoked. skipMagicNumbersValidation
+// keeps this a plain mimetype-string check, avoiding a dependency on the
+// `file-type` ESM package for magic-number sniffing.
+export function createPaymentEvidenceFilePipe(): ParseFilePipe {
+  return new ParseFilePipe({
+    validators: [
+      new FileTypeValidator({
+        fileType: ALLOWED_PAYMENT_EVIDENCE_MIME_TYPES,
+        skipMagicNumbersValidation: true,
+      }),
+      // Nest's MaxFileSizeValidator rejects when size >= maxSize, so +1
+      // keeps a file of exactly 10485760 bytes ("<= 10MB") valid.
+      new MaxFileSizeValidator({
+        maxSize: MAX_PAYMENT_EVIDENCE_FILE_SIZE_BYTES + 1,
+      }),
+    ],
+    fileIsRequired: true,
+    errorHttpStatusCode: HttpStatus.BAD_REQUEST,
+  });
 }
 
 @Controller('odcs')
@@ -80,6 +125,8 @@ export class OdcController {
     private readonly approvePurchaseUseCase: ApprovePurchaseUseCase,
     private readonly rejectOdcUseCase: RejectOdcUseCase,
     private readonly registerPaymentUseCase: RegisterPaymentUseCase,
+    private readonly uploadPaymentEvidenceUseCase: UploadPaymentEvidenceUseCase,
+    private readonly getPaymentEvidenceFileUseCase: GetPaymentEvidenceFileUseCase,
   ) {}
 
   @Post()
@@ -87,9 +134,13 @@ export class OdcController {
   async create(
     @Body() dto: CreateOdcDto,
     @Req() request: RequestWithSession,
-  ): Promise<PurchaseOrder> {
+  ): Promise<OdcResponseDto> {
     try {
-      return await this.createDraftUseCase.execute(dto, actorFrom(request));
+      const order = await this.createDraftUseCase.execute(
+        dto,
+        actorFrom(request),
+      );
+      return toOdcResponse(order);
     } catch (error) {
       rethrowDomainError(error);
     }
@@ -101,9 +152,10 @@ export class OdcController {
   async submit(
     @Param('id') id: string,
     @Req() request: RequestWithSession,
-  ): Promise<PurchaseOrder> {
+  ): Promise<OdcResponseDto> {
     try {
-      return await this.submitOdcUseCase.execute(id, actorFrom(request));
+      const order = await this.submitOdcUseCase.execute(id, actorFrom(request));
+      return toOdcResponse(order);
     } catch (error) {
       rethrowDomainError(error);
     }
@@ -115,9 +167,13 @@ export class OdcController {
   async approveBudget(
     @Param('id') id: string,
     @Req() request: RequestWithSession,
-  ): Promise<PurchaseOrder> {
+  ): Promise<OdcResponseDto> {
     try {
-      return await this.approveBudgetUseCase.execute(id, actorFrom(request));
+      const order = await this.approveBudgetUseCase.execute(
+        id,
+        actorFrom(request),
+      );
+      return toOdcResponse(order);
     } catch (error) {
       rethrowDomainError(error);
     }
@@ -129,9 +185,13 @@ export class OdcController {
   async approvePurchase(
     @Param('id') id: string,
     @Req() request: RequestWithSession,
-  ): Promise<PurchaseOrder> {
+  ): Promise<OdcResponseDto> {
     try {
-      return await this.approvePurchaseUseCase.execute(id, actorFrom(request));
+      const order = await this.approvePurchaseUseCase.execute(
+        id,
+        actorFrom(request),
+      );
+      return toOdcResponse(order);
     } catch (error) {
       rethrowDomainError(error);
     }
@@ -148,9 +208,14 @@ export class OdcController {
     @Param('id') id: string,
     @Body() dto: RejectOdcDto,
     @Req() request: RequestWithSession,
-  ): Promise<PurchaseOrder> {
+  ): Promise<OdcResponseDto> {
     try {
-      return await this.rejectOdcUseCase.execute(id, actorFrom(request), dto);
+      const order = await this.rejectOdcUseCase.execute(
+        id,
+        actorFrom(request),
+        dto,
+      );
+      return toOdcResponse(order);
     } catch (error) {
       rethrowDomainError(error);
     }
@@ -165,13 +230,43 @@ export class OdcController {
     @Param('id') id: string,
     @Body() dto: RegisterPaymentDto,
     @Req() request: RequestWithSession,
-  ): Promise<PurchaseOrder> {
+  ): Promise<OdcResponseDto> {
     try {
-      return await this.registerPaymentUseCase.execute(
+      const order = await this.registerPaymentUseCase.execute(
         id,
         actorFrom(request),
         dto,
       );
+      return toOdcResponse(order);
+    } catch (error) {
+      rethrowDomainError(error);
+    }
+  }
+
+  // T8: PAGO_REGISTRADO -> EVIDENCIA_PAGO_SUBIDA. multipart/form-data: file
+  // validated in-memory (MIME/size) before Cloudinary is ever reached (R1).
+  @Post(':id/payment-evidence')
+  @HttpCode(200)
+  @Roles('ADMINISTRACION')
+  @UseInterceptors(FileInterceptor('file', { storage: memoryStorage() }))
+  async uploadPaymentEvidence(
+    @Param('id') id: string,
+    @UploadedFile(createPaymentEvidenceFilePipe())
+    file: Express.Multer.File,
+    @Body() dto: UploadPaymentEvidenceDto,
+    @Req() request: RequestWithSession,
+  ): Promise<OdcResponseDto> {
+    try {
+      const order = await this.uploadPaymentEvidenceUseCase.execute(
+        id,
+        actorFrom(request),
+        {
+          buffer: file.buffer,
+          mimeType: file.mimetype,
+          evidenceReference: dto.evidenceReference,
+        },
+      );
+      return toOdcResponse(order);
     } catch (error) {
       rethrowDomainError(error);
     }
@@ -183,9 +278,14 @@ export class OdcController {
     @Param('id') id: string,
     @Body() dto: UpdateOdcDto,
     @Req() request: RequestWithSession,
-  ): Promise<PurchaseOrder> {
+  ): Promise<OdcResponseDto> {
     try {
-      return await this.updateDraftUseCase.execute(id, dto, actorFrom(request));
+      const order = await this.updateDraftUseCase.execute(
+        id,
+        dto,
+        actorFrom(request),
+      );
+      return toOdcResponse(order);
     } catch (error) {
       rethrowDomainError(error);
     }
@@ -197,14 +297,35 @@ export class OdcController {
   async list(
     @Query() query: ListOdcsQueryDto,
     @Req() request: RequestWithSession,
-  ): Promise<OdcPage> {
-    return this.listOdcsUseCase.execute(
+  ): Promise<OdcPageResponseDto> {
+    const page = await this.listOdcsUseCase.execute(
       {
         status: query.status,
         page: query.page !== undefined ? Number(query.page) : undefined,
       },
       actorFrom(request),
     );
+    return toOdcPageResponse(page);
+  }
+
+  // R5/R6: visibility delegated to GetPaymentEvidenceFileUseCase (same rule
+  // as GET :id). No @Roles: any authenticated role may follow this redirect
+  // once the ODC itself is visible to them.
+  @Get(':id/files/evidence')
+  @Redirect()
+  async getPaymentEvidenceFile(
+    @Param('id') id: string,
+    @Req() request: RequestWithSession,
+  ): Promise<{ url: string; statusCode: number }> {
+    try {
+      const url = await this.getPaymentEvidenceFileUseCase.execute(
+        id,
+        actorFrom(request),
+      );
+      return { url, statusCode: HttpStatus.FOUND };
+    } catch (error) {
+      rethrowDomainError(error);
+    }
   }
 
   // No @Roles: the 3 roles may view a detail; visibility of BORRADOR is
@@ -213,9 +334,10 @@ export class OdcController {
   async detail(
     @Param('id') id: string,
     @Req() request: RequestWithSession,
-  ): Promise<PurchaseOrder> {
+  ): Promise<OdcResponseDto> {
     try {
-      return await this.getOdcUseCase.execute(id, actorFrom(request));
+      const order = await this.getOdcUseCase.execute(id, actorFrom(request));
+      return toOdcResponse(order);
     } catch (error) {
       rethrowDomainError(error);
     }
