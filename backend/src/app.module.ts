@@ -11,6 +11,7 @@ import { HealthController } from './health.controller';
 import { AuthModule } from './modules/auth/auth.module';
 import { JwtAuthGuard } from './modules/auth/infrastructure/guards/jwt-auth.guard';
 import { RolesGuard } from './modules/auth/infrastructure/guards/roles.guard';
+import { OdcModule } from './modules/odc/odc.module';
 import { UsersModule } from './modules/users/users.module';
 
 export const configModuleOptions: ConfigModuleOptions = {
@@ -27,6 +28,7 @@ export const configModuleOptions: ConfigModuleOptions = {
     }),
     UsersModule,
     AuthModule,
+    OdcModule,
   ],
   controllers: [HealthController],
   providers: [
