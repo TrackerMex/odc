@@ -13,7 +13,7 @@ tags: [harness, spec]
 | R3 | `backend/src/modules/odc/domain/entities/purchase-order.entity.spec.ts::R3: transition covers the whole T1-T10 state machine` | `77a4855` feat(odc): add domain state machine T1-T10 with typed errors (R3,R4) |
 | R4 | `backend/src/modules/odc/domain/entities/purchase-order.entity.spec.ts::R4: invalid transitions raise typed domain errors without mutating` | `77a4855` feat(odc): add domain state machine T1-T10 with typed errors (R3,R4) |
 | R5 | `backend/src/modules/odc/infrastructure/entities/purchase-order.orm-entity.spec.ts::R5: ORM entity mapped onto the purchase_orders table`; `backend/src/modules/odc/infrastructure/entities/odc-status-history.orm-entity.spec.ts::R5: ORM entity mapped onto the odc_status_history table`; `backend/src/modules/odc/infrastructure/repositories/purchase-order.typeorm.repository.spec.ts::R5: ODC update and history insert share a single transaction` | `ed5c4e1` feat(odc): add TypeORM persistence for purchase orders and status history (R5) |
-| R6 | pendiente | pendiente |
+| R6 | `backend/src/modules/odc/domain/entities/purchase-order.entity.spec.ts::R6: ODC-YYYY-NNNNN numbering with a per-year sequence`; `backend/src/modules/odc/infrastructure/repositories/purchase-order.typeorm.repository.spec.ts::R6: create assigns the next yearly number and retries on UNIQUE collision` | `0a003e3` feat(odc): add ODC-YYYY-NNNNN numbering with yearly sequence and unique retry (R6) |
 | R7 | pendiente | pendiente |
 | R8 | pendiente | pendiente |
 | R9 | pendiente | pendiente |
