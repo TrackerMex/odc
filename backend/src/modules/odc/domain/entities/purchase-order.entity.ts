@@ -1,4 +1,5 @@
 import type { UserRole } from '../../../users/domain/entities/user.entity';
+import type { OdcStatusHistoryEntry } from './odc-status-history-entry.entity';
 import { InvalidRoleTransitionError } from '../errors/invalid-role-transition.error';
 import { InvalidStatusTransitionError } from '../errors/invalid-status-transition.error';
 import { MissingTransitionDataError } from '../errors/missing-transition-data.error';
@@ -197,6 +198,7 @@ export interface PurchaseOrderProps {
   observations: string | null;
   createdAt: Date | null;
   updatedAt: Date | null;
+  history?: OdcStatusHistoryEntry[];
 }
 
 export class PurchaseOrder {
@@ -225,6 +227,7 @@ export class PurchaseOrder {
   public observations: string | null;
   public createdAt: Date | null;
   public updatedAt: Date | null;
+  public history: OdcStatusHistoryEntry[];
 
   constructor(props: PurchaseOrderProps) {
     this.id = props.id;
@@ -252,6 +255,7 @@ export class PurchaseOrder {
     this.observations = props.observations;
     this.createdAt = props.createdAt;
     this.updatedAt = props.updatedAt;
+    this.history = props.history ?? [];
   }
 
   static computeTotalCents(quantity: number, unitPriceCents: number): number {
