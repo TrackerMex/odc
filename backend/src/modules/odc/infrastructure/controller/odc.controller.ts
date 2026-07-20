@@ -4,18 +4,22 @@ import {
   ConflictException,
   Controller,
   ForbiddenException,
+  Get,
   HttpCode,
   NotFoundException,
   Param,
   Patch,
   Post,
+  Query,
   Req,
 } from '@nestjs/common';
 import { Roles } from '../../../auth/infrastructure/decorators/roles.decorator';
 import type { SessionTokenPayload } from '../../../auth/infrastructure/guards/jwt-auth.guard';
 import { CreateOdcDto } from '../../application/dto/create-odc.dto';
+import { ListOdcsQueryDto } from '../../application/dto/list-odcs.query.dto';
 import { UpdateOdcDto } from '../../application/dto/update-odc.dto';
 import { CreateDraftUseCase } from '../../application/use-cases/create-draft.usecase';
+import { ListOdcsUseCase } from '../../application/use-cases/list-odcs.usecase';
 import { SubmitOdcUseCase } from '../../application/use-cases/submit-odc.usecase';
 import { UpdateDraftUseCase } from '../../application/use-cases/update-draft.usecase';
 import {
@@ -27,6 +31,7 @@ import { InvalidStatusTransitionError } from '../../domain/errors/invalid-status
 import { MissingTransitionDataError } from '../../domain/errors/missing-transition-data.error';
 import { OdcAccessDeniedError } from '../../domain/errors/odc-access-denied.error';
 import { OdcNotFoundError } from '../../domain/errors/odc-not-found.error';
+import { OdcPage } from '../../domain/repositories/purchase-order.repository';
 
 interface RequestWithSession {
   user: SessionTokenPayload;
@@ -62,6 +67,7 @@ export class OdcController {
     private readonly createDraftUseCase: CreateDraftUseCase,
     private readonly submitOdcUseCase: SubmitOdcUseCase,
     private readonly updateDraftUseCase: UpdateDraftUseCase,
+    private readonly listOdcsUseCase: ListOdcsUseCase,
   ) {}
 
   @Post()
@@ -103,5 +109,21 @@ export class OdcController {
     } catch (error) {
       rethrowDomainError(error);
     }
+  }
+
+  // No @Roles: the 3 roles may list, with BORRADOR visibility enforced by
+  // the use-case/repository (R12).
+  @Get()
+  async list(
+    @Query() query: ListOdcsQueryDto,
+    @Req() request: RequestWithSession,
+  ): Promise<OdcPage> {
+    return this.listOdcsUseCase.execute(
+      {
+        status: query.status,
+        page: query.page !== undefined ? Number(query.page) : undefined,
+      },
+      actorFrom(request),
+    );
   }
 }

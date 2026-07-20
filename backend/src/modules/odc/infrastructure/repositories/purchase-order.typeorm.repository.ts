@@ -1,8 +1,9 @@
 import { Injectable } from '@nestjs/common';
-import { DataSource, Like, Not } from 'typeorm';
+import { DataSource, FindOptionsWhere, Like, Not } from 'typeorm';
 import { OdcStatusHistoryEntry } from '../../domain/entities/odc-status-history-entry.entity';
 import {
   nextOdcNumber,
+  OdcStatus,
   PurchaseOrder,
 } from '../../domain/entities/purchase-order.entity';
 import {
@@ -131,11 +132,18 @@ function isUniqueViolation(error: unknown): boolean {
 // BORRADOR rows are only visible to their creator; every other status is
 // visible to the 3 roles. The condition lives in the query so pagination
 // and totals stay correct (R12).
-function buildVisibilityWhere(filter: OdcListFilter) {
+function buildVisibilityWhere(
+  filter: OdcListFilter,
+):
+  | FindOptionsWhere<PurchaseOrderOrmEntity>
+  | FindOptionsWhere<PurchaseOrderOrmEntity>[] {
   if (filter.status !== undefined) {
     return filter.status === 'BORRADOR'
       ? { status: filter.status, createdById: filter.viewer.userId }
       : { status: filter.status };
   }
-  return [{ status: Not('BORRADOR') }, { createdById: filter.viewer.userId }];
+  return [
+    { status: Not<OdcStatus>('BORRADOR') },
+    { createdById: filter.viewer.userId },
+  ];
 }

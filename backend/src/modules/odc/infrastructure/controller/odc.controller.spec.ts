@@ -9,6 +9,7 @@ import { InvalidRoleTransitionError } from '../../domain/errors/invalid-role-tra
 import { InvalidStatusTransitionError } from '../../domain/errors/invalid-status-transition.error';
 import { OdcAccessDeniedError } from '../../domain/errors/odc-access-denied.error';
 import { CreateDraftUseCase } from '../../application/use-cases/create-draft.usecase';
+import { ListOdcsUseCase } from '../../application/use-cases/list-odcs.usecase';
 import { SubmitOdcUseCase } from '../../application/use-cases/submit-odc.usecase';
 import { UpdateDraftUseCase } from '../../application/use-cases/update-draft.usecase';
 import { OdcController } from './odc.controller';
@@ -28,6 +29,7 @@ interface ControllerOverrides {
   createDraftUseCase?: Partial<CreateDraftUseCase>;
   submitOdcUseCase?: Partial<SubmitOdcUseCase>;
   updateDraftUseCase?: Partial<UpdateDraftUseCase>;
+  listOdcsUseCase?: Partial<ListOdcsUseCase>;
 }
 
 function createController(overrides: ControllerOverrides = {}): OdcController {
@@ -40,10 +42,14 @@ function createController(overrides: ControllerOverrides = {}): OdcController {
   const updateDraftUseCase = (overrides.updateDraftUseCase ?? {
     execute: jest.fn(),
   }) as UpdateDraftUseCase;
+  const listOdcsUseCase = (overrides.listOdcsUseCase ?? {
+    execute: jest.fn(),
+  }) as ListOdcsUseCase;
   return new OdcController(
     createDraftUseCase,
     submitOdcUseCase,
     updateDraftUseCase,
+    listOdcsUseCase,
   );
 }
 
@@ -236,5 +242,46 @@ describe('R11: PATCH /api/odcs/:id edits an editable ODC for its creator', () =>
     await expect(
       controller.update(ODC_ID, { quantity: 4 }, sessionUser()),
     ).rejects.toBeInstanceOf(ConflictException);
+  });
+});
+
+describe('R12: GET /api/odcs lists ODCs for any authenticated role', () => {
+  it('exposes the handler as GET on the collection without extra role restriction', () => {
+    const handler = getHandler('list');
+    expect(Reflect.getMetadata('path', handler)).toBe('/');
+    expect(Reflect.getMetadata('method', handler)).toBe(RequestMethod.GET);
+    // Session-only endpoint: the 3 roles may list, so no @Roles metadata.
+    expect(Reflect.getMetadata(ROLES_KEY, handler)).toBeUndefined();
+  });
+
+  it('delegates to the list use-case with the parsed query and session actor', async () => {
+    const page = { items: [], total: 0, page: 2, pageSize: 20 };
+    const execute = jest.fn().mockResolvedValue(page);
+    const controller = createController({ listOdcsUseCase: { execute } });
+
+    const body = await controller.list(
+      { status: 'PENDIENTE_ADMIN', page: '2' },
+      sessionUser(),
+    );
+
+    expect(execute).toHaveBeenCalledWith(
+      { status: 'PENDIENTE_ADMIN', page: 2 },
+      { userId: OPS_ID, role: 'DIRECTOR_OPS' },
+    );
+    expect(body).toBe(page);
+  });
+
+  it('omits page when the query does not include it', async () => {
+    const execute = jest
+      .fn()
+      .mockResolvedValue({ items: [], total: 0, page: 1, pageSize: 20 });
+    const controller = createController({ listOdcsUseCase: { execute } });
+
+    await controller.list({}, sessionUser());
+
+    expect(execute).toHaveBeenCalledWith(
+      { status: undefined, page: undefined },
+      { userId: OPS_ID, role: 'DIRECTOR_OPS' },
+    );
   });
 });
