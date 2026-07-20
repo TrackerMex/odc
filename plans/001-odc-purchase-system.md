@@ -41,7 +41,7 @@ preguntar nada.
 | Presupuesto | **Solo validación manual**: el sistema NO almacena presupuesto. Administración ve el total de la ODC y decide aprobar/rechazar. El "Presupuesto disponible" del mock es información externa al sistema. |
 | Rechazo | **Rechazada editable**: estado `RECHAZADA` con motivo obligatorio. Director Ops puede editar la ODC y reenviarla (vuelve a `PENDIENTE_ADMIN`). El historial de rechazos se conserva. |
 | Autenticación | **Email/password + JWT**. Usuarios internos creados por seed, sin auto-registro. Rol en el payload del JWT. Guards de NestJS por rol. |
-| Archivos (comprobantes/facturas) | Disco local `backend/uploads/` (gitignored), descarga vía endpoint autenticado. PDF/JPG/PNG, máx 10 MB. |
+| Archivos (comprobantes/facturas) | **Cloudinary** (carpeta `odc/<odcNumber>/...`), subida vía SDK oficial `cloudinary` con `resource_type: 'auto'` y tipo de entrega `authenticated`/`private` (nunca URL pública directa). Se persiste el `public_id`, no la URL. Descarga vía endpoint autenticado del backend que valida rol/visibilidad y redirige a una URL firmada de corta expiración. PDF/JPG/PNG, máx 10 MB. Credenciales por env (`CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET`). |
 | Dinero | Enteros en **centavos** (`unitPriceCents`, `totalCents`) para evitar flotantes. UI muestra MXN con 2 decimales. |
 | Idiomas | Código e identificadores en inglés; textos de UI en español; valores del enum de estado en español (vienen del negocio). |
 
@@ -337,16 +337,27 @@ PRESUPUESTO_APROBADO). Mismo contrato de reject que F4.
 paymentMethod (obligatorio, string libre: Transferencia/Efectivo/Tarjeta…),
 paymentReference y paymentNotes opcionales.
 
-**F7 `odc-payment-evidence`** — Infra de archivos: multer a
-`backend/uploads/<odcNumber>/`, validación MIME (pdf/jpg/png) y ≤10MB.
-T8 (multipart: file + evidenceReference opcional). `GET /api/odcs/:id/files/evidence`
-autenticado con streaming del archivo. Path guardado relativo, nunca aceptar
-paths del cliente (riesgo path traversal: generar nombre server-side).
+**F7 `odc-payment-evidence`** — Infra de archivos: multer en memoria
+(`memoryStorage`) solo para parsear el multipart, validación MIME (pdf/jpg/png)
+y ≤10MB **antes** de subir. Subida del buffer a **Cloudinary** vía un
+`FileStorageService`/interfaz inyectada por token (para que cambiar de
+proveedor sea solo un cambio de `infrastructure`), carpeta
+`odc/<odcNumber>/evidence`, tipo de entrega `authenticated`/`private`. Se
+persiste el `public_id` devuelto por Cloudinary, nunca la URL cruda. T8
+(multipart: file + evidenceReference opcional). `GET
+/api/odcs/:id/files/evidence` autenticado: valida rol/visibilidad de la ODC y
+responde con `302` a una URL firmada de Cloudinary de corta expiración
+(`cloudinary.url(publicId, { sign_url: true, type: 'authenticated',
+expires_at })`) — nunca se expone el `public_id` ni una URL pública sin pasar
+por este guard.
 
 **F8 `odc-invoice-completion`** — T9 (multipart: file obligatorio,
 `warehouseEntryDate` obligatoria — el sistema debe rechazar la petición sin
-ella, invoiceNumber/invoiceDate/observations opcionales). Al completar:
-estado `COMPLETADA`, fila de historial. `GET /api/odcs/:id/files/invoice`.
+ella, invoiceNumber/invoiceDate/observations opcionales). Reusa el mismo
+`FileStorageService` de F7 (carpeta `odc/<odcNumber>/invoice`), mismo patrón de
+`public_id` + URL firmada. Al completar: estado `COMPLETADA`, fila de
+historial. `GET /api/odcs/:id/files/invoice` con el mismo esquema de redirect
+firmado que F7.
 
 **F9 `frontend-foundation`** — Proxy `/api` → `localhost:3001` en
 `vite.config.ts`. Ruta `/login` (form email/password → `POST /api/auth/login`).
@@ -434,8 +445,11 @@ Detente y reporta (no improvises) si:
   migraciones y desactivarlo (deuda registrada aquí a propósito).
 - Si algún día se almacena presupuesto (opción descartada en v1), el punto de
   enganche es el use-case de T3 (`approve-budget`).
-- Archivos en disco local: si se despliega en más de un nodo, migrar a S3 u
-  objeto compatible; la interfaz de storage de F7 debe mantenerse detrás de un
-  token de inyección para que el cambio sea solo de infrastructure.
+- Storage de archivos: proveedor **Cloudinary** desde F7 (decisión actualizada
+  el 2026-07-20; v1 original consideraba disco local). La interfaz de storage
+  (`FileStorageService`) debe mantenerse detrás de un token de inyección para
+  que cambiar de proveedor en el futuro sea solo un cambio de
+  `infrastructure`. Credenciales de Cloudinary solo por env, nunca
+  hardcodeadas ni commiteadas.
 - Revisar en cada PR: que ningún use-case importe TypeORM (regla de
   dependencia), y que ningún endpoint acepte `totalCents` del cliente.
