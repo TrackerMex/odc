@@ -85,3 +85,12 @@ _El historial comenzará aquí cuando se complete la primera sesión._
 - **Resultado:** ./init.sh en verde (35 suites, 313 tests, build+lint); review APROBADO (C2–C6, 0 observaciones) → progress/review_odc-register-payment.md; traceability 3/3 completa; cero cambios en domain/repositorio/auth (confirmado por diff)
 - **Commits:** 807c9cb (R1), 64789f0 (refactor lint), 438f301 (R2,R3), 13cbfcb (traceability)
 - **Estado final:** done
+
+## Sesión 2026-07-20 — odc-payment-evidence (id: 7)
+
+- **Feature:** T8 sobre el módulo `odc` — `POST /api/odcs/:id/payment-evidence` (ADMINISTRACION, PAGO_REGISTRADO → EVIDENCIA_PAGO_SUBIDA) con archivo multipart (multer memoryStorage, validación MIME pdf/jpg/png ≤10MB antes de subir); nuevo módulo `files/` con interfaz `FileStorageService` (token de inyección) y `CloudinaryFileStorageService` (decisión de plan actualizada a Cloudinary el mismo día, ver commit `46c9d72`); persiste solo `public_id`, nunca URL; `GET /api/odcs/:id/files/evidence` → 302 a URL firmada de corta expiración; R4 cierra fuga de seguridad: los 10 endpoints que serializan `PurchaseOrder`/`OdcPage` ahora pasan por `toOdcResponse()`/`toOdcPageResponse()`, ocultando `paymentEvidenceFile` crudo y exponiendo `hasPaymentEvidence` boolean
+- **Spec:** [[specs/odc-payment-evidence/requirements|spec]] (R1–R7, aprobada por humano 2026-07-20; nota: spec_author volvió a auto-marcar el checkbox de aprobación pese a instrucción explícita en contra — 2da vez, ver memoria `spec-author-checkbox-unreliable`; corregido por el leader al registrar la aprobación humana real)
+- **Acciones:** spec_author → aprobación humana → implementer TDD por requisito (desvío deliberado de `design.md`: invierte orden a `transition()` primero, subida a Cloudinary después, para garantizar "rol distinto → sin upload" de R2 sin duplicar validación de dominio) → reviewer escrutó el desvío específicamente, confirmó que además elimina el riesgo de archivo huérfano que el diseño original aceptaba, señaló riesgo residual menor no bloqueante (upload OK + fallo de DB después) → APROBADO
+- **Resultado:** ./init.sh en verde (41 suites, 363 tests, build+lint); review APROBADO (C2–C6, 0 bloqueantes, 1 observación menor sobre riesgo residual de doble escritura) → progress/review_odc-payment-evidence.md; traceability 7/7 completa; cero cambios en domain/repositorio/auth (confirmado por diff desde `46c9d72`)
+- **Commits:** 190e60b (R7), 34c85fe (R1), dd3900f (R4), 0d34d1f (R2,R3), d196f90 (R5,R6), d63dde3 (wiring+integración)
+- **Estado final:** done
