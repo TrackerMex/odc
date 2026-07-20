@@ -20,6 +20,7 @@ import { ListOdcsQueryDto } from '../../application/dto/list-odcs.query.dto';
 import { RejectOdcDto } from '../../application/dto/reject-odc.dto';
 import { UpdateOdcDto } from '../../application/dto/update-odc.dto';
 import { ApproveBudgetUseCase } from '../../application/use-cases/approve-budget.usecase';
+import { ApprovePurchaseUseCase } from '../../application/use-cases/approve-purchase.usecase';
 import { CreateDraftUseCase } from '../../application/use-cases/create-draft.usecase';
 import { GetOdcUseCase } from '../../application/use-cases/get-odc.usecase';
 import { ListOdcsUseCase } from '../../application/use-cases/list-odcs.usecase';
@@ -74,6 +75,7 @@ export class OdcController {
     private readonly listOdcsUseCase: ListOdcsUseCase,
     private readonly getOdcUseCase: GetOdcUseCase,
     private readonly approveBudgetUseCase: ApproveBudgetUseCase,
+    private readonly approvePurchaseUseCase: ApprovePurchaseUseCase,
     private readonly rejectOdcUseCase: RejectOdcUseCase,
   ) {}
 
@@ -113,6 +115,23 @@ export class OdcController {
   ): Promise<PurchaseOrder> {
     try {
       return await this.approveBudgetUseCase.execute(id, actorFrom(request));
+    } catch (error) {
+      rethrowDomainError(error);
+    }
+  }
+
+  @Post(':id/approve-purchase')
+  @HttpCode(200)
+  @Roles('DIRECTOR_GENERAL')
+  async approvePurchase(
+    @Param('id') id: string,
+    @Req() request: RequestWithSession,
+  ): Promise<PurchaseOrder> {
+    try {
+      return await this.approvePurchaseUseCase.execute(
+        id,
+        actorFrom(request),
+      );
     } catch (error) {
       rethrowDomainError(error);
     }

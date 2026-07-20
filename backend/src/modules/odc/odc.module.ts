@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ApproveBudgetUseCase } from './application/use-cases/approve-budget.usecase';
+import { ApprovePurchaseUseCase } from './application/use-cases/approve-purchase.usecase';
 import { CreateDraftUseCase } from './application/use-cases/create-draft.usecase';
 import { GetOdcUseCase } from './application/use-cases/get-odc.usecase';
 import { ListOdcsUseCase } from './application/use-cases/list-odcs.usecase';
@@ -27,6 +28,7 @@ import { PurchaseOrderTypeOrmRepository } from './infrastructure/repositories/pu
     ListOdcsUseCase,
     GetOdcUseCase,
     ApproveBudgetUseCase,
+    ApprovePurchaseUseCase,
     RejectOdcUseCase,
     {
       provide: 'PurchaseOrderRepository',
