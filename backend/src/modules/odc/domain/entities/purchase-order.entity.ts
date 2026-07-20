@@ -1,4 +1,7 @@
 import type { UserRole } from '../../../users/domain/entities/user.entity';
+import { InvalidRoleTransitionError } from '../errors/invalid-role-transition.error';
+import { InvalidStatusTransitionError } from '../errors/invalid-status-transition.error';
+import { MissingTransitionDataError } from '../errors/missing-transition-data.error';
 
 export const ODC_STATUSES = [
   'BORRADOR',
@@ -29,10 +32,143 @@ export interface CreateDraftInput {
 
 export type EditableOdcFields = Partial<CreateDraftInput>;
 
+export const ODC_ACTIONS = [
+  'create',
+  'submit',
+  'approve_budget',
+  'reject',
+  'approve_purchase',
+  'register_payment',
+  'upload_payment_evidence',
+  'upload_invoice',
+] as const;
+
+export type OdcAction = (typeof ODC_ACTIONS)[number];
+
+export interface TransitionData {
+  rejectionReason?: string;
+  paymentDate?: string;
+  paymentMethod?: string;
+  paymentReference?: string;
+  paymentNotes?: string;
+  paymentEvidenceFile?: string;
+  evidenceReference?: string;
+  invoiceFile?: string;
+  invoiceNumber?: string;
+  invoiceDate?: string;
+  warehouseEntryDate?: string;
+  observations?: string;
+}
+
 export interface TransitionRecord {
   fromStatus: OdcStatus | null;
   toStatus: OdcStatus;
   note: string | null;
+}
+
+interface TransitionRule {
+  action: OdcAction;
+  from: OdcStatus | null;
+  to: OdcStatus;
+  role: UserRole;
+  requiredData: (keyof TransitionData)[];
+}
+
+// T1
+const CREATE_RULE: TransitionRule = {
+  action: 'create',
+  from: null,
+  to: 'BORRADOR',
+  role: 'DIRECTOR_OPS',
+  requiredData: [],
+};
+
+// Full T1-T10 table from the master plan. Features 4-8 only invoke it;
+// no transition rule is ever duplicated outside this entity (R3).
+const TRANSITIONS: TransitionRule[] = [
+  CREATE_RULE,
+  // T2
+  {
+    action: 'submit',
+    from: 'BORRADOR',
+    to: 'PENDIENTE_ADMIN',
+    role: 'DIRECTOR_OPS',
+    requiredData: [],
+  },
+  // T3
+  {
+    action: 'approve_budget',
+    from: 'PENDIENTE_ADMIN',
+    to: 'PRESUPUESTO_APROBADO',
+    role: 'ADMINISTRACION',
+    requiredData: [],
+  },
+  // T4
+  {
+    action: 'reject',
+    from: 'PENDIENTE_ADMIN',
+    to: 'RECHAZADA',
+    role: 'ADMINISTRACION',
+    requiredData: ['rejectionReason'],
+  },
+  // T5
+  {
+    action: 'approve_purchase',
+    from: 'PRESUPUESTO_APROBADO',
+    to: 'COMPRA_APROBADA',
+    role: 'DIRECTOR_GENERAL',
+    requiredData: [],
+  },
+  // T6
+  {
+    action: 'reject',
+    from: 'PRESUPUESTO_APROBADO',
+    to: 'RECHAZADA',
+    role: 'DIRECTOR_GENERAL',
+    requiredData: ['rejectionReason'],
+  },
+  // T7
+  {
+    action: 'register_payment',
+    from: 'COMPRA_APROBADA',
+    to: 'PAGO_REGISTRADO',
+    role: 'DIRECTOR_OPS',
+    requiredData: ['paymentDate', 'paymentMethod'],
+  },
+  // T8
+  {
+    action: 'upload_payment_evidence',
+    from: 'PAGO_REGISTRADO',
+    to: 'EVIDENCIA_PAGO_SUBIDA',
+    role: 'ADMINISTRACION',
+    requiredData: ['paymentEvidenceFile'],
+  },
+  // T9
+  {
+    action: 'upload_invoice',
+    from: 'EVIDENCIA_PAGO_SUBIDA',
+    to: 'COMPLETADA',
+    role: 'DIRECTOR_OPS',
+    requiredData: ['invoiceFile', 'warehouseEntryDate'],
+  },
+  // T10
+  {
+    action: 'submit',
+    from: 'RECHAZADA',
+    to: 'PENDIENTE_ADMIN',
+    role: 'DIRECTOR_OPS',
+    requiredData: [],
+  },
+];
+
+function assertRequiredData(rule: TransitionRule, data: TransitionData): void {
+  const missing = rule.requiredData.filter((field) => {
+    const value = data[field];
+    return value === undefined || value.trim() === '';
+  });
+  if (missing.length > 0) {
+    throw new MissingTransitionDataError(rule.action, missing);
+  }
 }
 
 export interface PurchaseOrderProps {
@@ -126,6 +262,9 @@ export class PurchaseOrder {
     input: CreateDraftInput,
     actor: OdcActor,
   ): { order: PurchaseOrder; record: TransitionRecord } {
+    if (actor.role !== CREATE_RULE.role) {
+      throw new InvalidRoleTransitionError(CREATE_RULE.action, actor.role);
+    }
     const order = new PurchaseOrder({
       id: null,
       odcNumber: null,
@@ -160,6 +299,55 @@ export class PurchaseOrder {
       order,
       record: { fromStatus: null, toStatus: 'BORRADOR', note: null },
     };
+  }
+
+  transition(
+    action: OdcAction,
+    role: UserRole,
+    data: TransitionData = {},
+  ): TransitionRecord {
+    const candidates = TRANSITIONS.filter(
+      (rule) => rule.action === action && rule.from !== null,
+    );
+    const rule = candidates.find((candidate) => candidate.from === this.status);
+    if (rule === undefined) {
+      throw new InvalidStatusTransitionError(action, this.status);
+    }
+    if (rule.role !== role) {
+      throw new InvalidRoleTransitionError(action, role);
+    }
+    assertRequiredData(rule, data);
+
+    this.applyTransitionData(data);
+    const fromStatus = this.status;
+    this.status = rule.to;
+    return {
+      fromStatus,
+      toStatus: rule.to,
+      note: data.rejectionReason ?? null,
+    };
+  }
+
+  private applyTransitionData(data: TransitionData): void {
+    if (data.rejectionReason !== undefined)
+      this.rejectionReason = data.rejectionReason;
+    if (data.paymentDate !== undefined) this.paymentDate = data.paymentDate;
+    if (data.paymentMethod !== undefined)
+      this.paymentMethod = data.paymentMethod;
+    if (data.paymentReference !== undefined)
+      this.paymentReference = data.paymentReference;
+    if (data.paymentNotes !== undefined) this.paymentNotes = data.paymentNotes;
+    if (data.paymentEvidenceFile !== undefined)
+      this.paymentEvidenceFile = data.paymentEvidenceFile;
+    if (data.evidenceReference !== undefined)
+      this.evidenceReference = data.evidenceReference;
+    if (data.invoiceFile !== undefined) this.invoiceFile = data.invoiceFile;
+    if (data.invoiceNumber !== undefined)
+      this.invoiceNumber = data.invoiceNumber;
+    if (data.invoiceDate !== undefined) this.invoiceDate = data.invoiceDate;
+    if (data.warehouseEntryDate !== undefined)
+      this.warehouseEntryDate = data.warehouseEntryDate;
+    if (data.observations !== undefined) this.observations = data.observations;
   }
 
   edit(fields: EditableOdcFields): void {
