@@ -5,20 +5,13 @@
 
 ---
 
-## Sesión en curso
+## Plantilla (sesión sin iniciar)
 
 ```
-feature: odc-create-draft
-id: 3
-inicio: 2026-07-19
-plan:
-  - spec_author escribe specs/odc-create-draft/ (requirements, design, tasks, traceability)
-  - PARA hasta aprobación humana de la spec
-estado: spec_ready — esperando aprobación humana de la spec
-bloqueos: gate humano — falta [x] Aprobado por humano en specs/odc-create-draft/requirements.md
-spec_author: done
-implementer: pendiente
-reviewer: pendiente
+feature: —
+inicio: —
+agentes lanzados: —
+estado: sin sesión activa
 ```
 
 ---

@@ -49,3 +49,12 @@ _El historial comenzará aquí cuando se complete la primera sesión._
 - **Resultado:** ./init.sh en verde (15 suites, 63 tests, build + lint); review APROBADO (0 críticos, 0 mayores, 3 menores) → progress/review_auth-users.md; traceability 11/11 completa
 - **Commits:** c2f934b spec, 7380749 deps, 8aa3630..5866e61 implementación por R-id, b55b768 lint, 5424c18 reporte
 - **Estado final:** done
+
+## Sesión 2026-07-19/20 — odc-create-draft (id: 3)
+
+- **Feature:** módulo `odc` — entidad de dominio pura `PurchaseOrder` con `totalCents` calculado, máquina de estados completa T1–T10 (errores tipados 403/409), persistencia TypeORM `purchase_orders` + `odc_status_history` (update+historial en misma transacción), numeración `ODC-YYYY-NNNNN` con reintento ante colisión; endpoints POST crear borrador (DIRECTOR_OPS), POST submit (T2/T10, solo creador), PATCH editar (BORRADOR/RECHAZADA), GET lista paginada (BORRADOR visible solo al creador), GET detalle con historial
+- **Spec:** [[specs/odc-create-draft/requirements|spec]] (R1–R13, aprobada por humano 2026-07-19)
+- **Acciones:** spec_author → aprobación humana → implementer TDD por requisito (2 tandas: 1er implementer cortado por límite de sesión API a mitad de R12, 2do implementer reanudado con contexto exacto del corte, terminó R12+R13) → reviewer
+- **Resultado:** ./init.sh en verde (29 suites, 220 tests, build+lint); review APROBADO (C1–C6, 0 bloqueantes, 1 nota cosmética en frontmatter de traceability.md) → progress/review_odc-create-draft.md; traceability 13/13 completa
+- **Commits:** d25f170 spec, 76783c1..622bf4d implementación R1–R11, 7222ece..106ed32 implementación R12–R13, 401c470 reporte
+- **Estado final:** done
