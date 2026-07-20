@@ -9,13 +9,13 @@
   {
     "id": 3,
     "name": "odc-create-draft",
-    "status": "pending",
+    "status": "done",
     "priority": "P1"
   },
   {
     "id": 4,
     "name": "odc-budget-validation",
-    "status": "pending",
+    "status": "done",
     "priority": "P1"
   },
   {
