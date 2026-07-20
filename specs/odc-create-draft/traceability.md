@@ -8,8 +8,8 @@ tags: [harness, spec]
 
 | Requisito | Test (archivo::nombre) | Commit (hash + mensaje) |
 |---|---|---|
-| R1 | pendiente | pendiente |
-| R2 | pendiente | pendiente |
+| R1 | `backend/src/modules/odc/domain/entities/purchase-order.entity.spec.ts::R1: pure PurchaseOrder domain entity with restricted status` | `76783c1` feat(odc): add pure PurchaseOrder domain entity with computed total (R1,R2) |
+| R2 | `backend/src/modules/odc/domain/entities/purchase-order.entity.spec.ts::R2: totalCents computed in the domain, never accepted from outside` | `76783c1` feat(odc): add pure PurchaseOrder domain entity with computed total (R1,R2) |
 | R3 | pendiente | pendiente |
 | R4 | pendiente | pendiente |
 | R5 | pendiente | pendiente |
