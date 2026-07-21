@@ -19,6 +19,9 @@ services:
     env_file: .env
     environment:
       DATABASE_URL: postgres://odc:odc@db:5432/odc
+      CLOUDINARY_CLOUD_NAME: ${CLOUDINARY_CLOUD_NAME}
+      CLOUDINARY_API_KEY: ${CLOUDINARY_API_KEY}
+      CLOUDINARY_API_SECRET: ${CLOUDINARY_API_SECRET}
     ports:
       - "3001:3001"
     volumes:

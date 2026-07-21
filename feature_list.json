@@ -71,5 +71,11 @@
     "name": "frontend-payment-invoice",
     "status": "pending",
     "priority": "P2"
+  },
+  {
+    "id": 14,
+    "name": "odc-suppliers-catalog",
+    "status": "in_progress",
+    "priority": "P2"
   }
 ]

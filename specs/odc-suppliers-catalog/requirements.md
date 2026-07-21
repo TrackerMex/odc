@@ -1,6 +1,6 @@
 ---
 feature: "odc-suppliers-catalog"
-status: draft        # draft | approved
+status: approved        # draft | approved
 tags: [harness, spec]
 ---
 
@@ -121,4 +121,4 @@ Ontracking GPS Remote.
 
 ## Aprobación
 
-- [X] Aprobado por humano (fecha: ____) ← gate obligatorio antes de implementar
+- [X] Aprobado por humano (fecha: 2026-07-21) ← gate obligatorio antes de implementar
