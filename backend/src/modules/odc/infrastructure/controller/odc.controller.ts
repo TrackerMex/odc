@@ -34,6 +34,7 @@ import { UploadPaymentEvidenceDto } from '../../application/dto/upload-payment-e
 import { ApproveBudgetUseCase } from '../../application/use-cases/approve-budget.usecase';
 import { ApprovePurchaseUseCase } from '../../application/use-cases/approve-purchase.usecase';
 import { CreateDraftUseCase } from '../../application/use-cases/create-draft.usecase';
+import { GetInvoiceFileUseCase } from '../../application/use-cases/get-invoice-file.usecase';
 import { GetOdcUseCase } from '../../application/use-cases/get-odc.usecase';
 import { GetPaymentEvidenceFileUseCase } from '../../application/use-cases/get-payment-evidence-file.usecase';
 import { ListOdcsUseCase } from '../../application/use-cases/list-odcs.usecase';
@@ -46,6 +47,7 @@ import { UploadPaymentEvidenceUseCase } from '../../application/use-cases/upload
 import { OdcActor } from '../../domain/entities/purchase-order.entity';
 import { InvalidRoleTransitionError } from '../../domain/errors/invalid-role-transition.error';
 import { InvalidStatusTransitionError } from '../../domain/errors/invalid-status-transition.error';
+import { InvoiceNotFoundError } from '../../domain/errors/invoice-not-found.error';
 import { MissingTransitionDataError } from '../../domain/errors/missing-transition-data.error';
 import { OdcAccessDeniedError } from '../../domain/errors/odc-access-denied.error';
 import { OdcNotFoundError } from '../../domain/errors/odc-not-found.error';
@@ -81,7 +83,8 @@ function rethrowDomainError(error: unknown): never {
   }
   if (
     error instanceof OdcNotFoundError ||
-    error instanceof PaymentEvidenceNotFoundError
+    error instanceof PaymentEvidenceNotFoundError ||
+    error instanceof InvoiceNotFoundError
   ) {
     throw new NotFoundException(error.message);
   }
@@ -152,6 +155,7 @@ export class OdcController {
     private readonly uploadPaymentEvidenceUseCase: UploadPaymentEvidenceUseCase,
     private readonly getPaymentEvidenceFileUseCase: GetPaymentEvidenceFileUseCase,
     private readonly uploadInvoiceUseCase: UploadInvoiceUseCase,
+    private readonly getInvoiceFileUseCase: GetInvoiceFileUseCase,
   ) {}
 
   @Post()
@@ -365,20 +369,30 @@ export class OdcController {
     return toOdcPageResponse(page);
   }
 
-  // R5/R6: visibility delegated to GetPaymentEvidenceFileUseCase (same rule
-  // as GET :id). No @Roles: any authenticated role may follow this redirect
-  // once the ODC itself is visible to them.
-  @Get(':id/files/evidence')
+  // R7: generalized download route, dispatching to GetPaymentEvidenceFileUseCase
+  // (kind=evidence) or GetInvoiceFileUseCase (kind=invoice); any other kind is
+  // a 400 before either use-case is invoked. Same literal segments as the
+  // former :id/files/evidence route, so no existing client URL changes.
+  // No @Roles: any authenticated role may follow this redirect once the ODC
+  // itself is visible to them (R5/R6).
+  @Get(':id/files/:kind')
   @Redirect()
-  async getPaymentEvidenceFile(
+  async getOdcFile(
     @Param('id') id: string,
+    @Param('kind') kind: string,
     @Req() request: RequestWithSession,
   ): Promise<{ url: string; statusCode: number }> {
+    if (kind !== 'evidence' && kind !== 'invoice') {
+      throw new BadRequestException(`Unsupported file kind: ${kind}`);
+    }
     try {
-      const url = await this.getPaymentEvidenceFileUseCase.execute(
-        id,
-        actorFrom(request),
-      );
+      const url =
+        kind === 'evidence'
+          ? await this.getPaymentEvidenceFileUseCase.execute(
+              id,
+              actorFrom(request),
+            )
+          : await this.getInvoiceFileUseCase.execute(id, actorFrom(request));
       return { url, statusCode: HttpStatus.FOUND };
     } catch (error) {
       rethrowDomainError(error);

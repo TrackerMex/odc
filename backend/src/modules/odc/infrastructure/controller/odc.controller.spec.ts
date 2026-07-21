@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   ConflictException,
   ForbiddenException,
   NotFoundException,
@@ -8,12 +9,14 @@ import { ROLES_KEY } from '../../../auth/infrastructure/decorators/roles.decorat
 import { PurchaseOrder } from '../../domain/entities/purchase-order.entity';
 import { InvalidRoleTransitionError } from '../../domain/errors/invalid-role-transition.error';
 import { InvalidStatusTransitionError } from '../../domain/errors/invalid-status-transition.error';
+import { InvoiceNotFoundError } from '../../domain/errors/invoice-not-found.error';
 import { OdcAccessDeniedError } from '../../domain/errors/odc-access-denied.error';
 import { OdcNotFoundError } from '../../domain/errors/odc-not-found.error';
 import { PaymentEvidenceNotFoundError } from '../../domain/errors/payment-evidence-not-found.error';
 import { ApproveBudgetUseCase } from '../../application/use-cases/approve-budget.usecase';
 import { ApprovePurchaseUseCase } from '../../application/use-cases/approve-purchase.usecase';
 import { CreateDraftUseCase } from '../../application/use-cases/create-draft.usecase';
+import { GetInvoiceFileUseCase } from '../../application/use-cases/get-invoice-file.usecase';
 import { GetOdcUseCase } from '../../application/use-cases/get-odc.usecase';
 import { GetPaymentEvidenceFileUseCase } from '../../application/use-cases/get-payment-evidence-file.usecase';
 import { ListOdcsUseCase } from '../../application/use-cases/list-odcs.usecase';
@@ -57,6 +60,7 @@ interface ControllerOverrides {
   uploadPaymentEvidenceUseCase?: Partial<UploadPaymentEvidenceUseCase>;
   getPaymentEvidenceFileUseCase?: Partial<GetPaymentEvidenceFileUseCase>;
   uploadInvoiceUseCase?: Partial<UploadInvoiceUseCase>;
+  getInvoiceFileUseCase?: Partial<GetInvoiceFileUseCase>;
 }
 
 function createController(overrides: ControllerOverrides = {}): OdcController {
@@ -98,6 +102,9 @@ function createController(overrides: ControllerOverrides = {}): OdcController {
   const uploadInvoiceUseCase = (overrides.uploadInvoiceUseCase ?? {
     execute: jest.fn(),
   }) as UploadInvoiceUseCase;
+  const getInvoiceFileUseCase = (overrides.getInvoiceFileUseCase ?? {
+    execute: jest.fn(),
+  }) as GetInvoiceFileUseCase;
   return new OdcController(
     createDraftUseCase,
     submitOdcUseCase,
@@ -111,6 +118,7 @@ function createController(overrides: ControllerOverrides = {}): OdcController {
     uploadPaymentEvidenceUseCase,
     getPaymentEvidenceFileUseCase,
     uploadInvoiceUseCase,
+    getInvoiceFileUseCase,
   );
 }
 
@@ -1292,15 +1300,32 @@ describe('R3: invoice responds 404 for an unknown id and 409 outside EVIDENCIA_P
   });
 });
 
-describe('R5: GET /api/odcs/:id/files/evidence redirects (302) to a signed Cloudinary URL', () => {
-  it("exposes the handler as GET on ':id/files/evidence' with @Redirect() metadata and no @Roles restriction", () => {
-    const handler = getHandler('getPaymentEvidenceFile');
-    expect(Reflect.getMetadata('path', handler)).toBe(':id/files/evidence');
+describe('R7: GET /api/odcs/:id/files/:kind generalizes the download route (evidence|invoice)', () => {
+  it("exposes the handler as GET on ':id/files/:kind' with @Redirect() metadata and no @Roles restriction", () => {
+    const handler = getHandler('getOdcFile');
+    expect(Reflect.getMetadata('path', handler)).toBe(':id/files/:kind');
     expect(Reflect.getMetadata('method', handler)).toBe(RequestMethod.GET);
     expect(Reflect.getMetadata(ROLES_KEY, handler)).toBeUndefined();
     expect(Reflect.getMetadata('__redirect__', handler)).toBeDefined();
   });
 
+  it('kind=foo responds 400 without invoking any file use-case', async () => {
+    const getPaymentEvidenceFileUseCase = { execute: jest.fn() };
+    const getInvoiceFileUseCase = { execute: jest.fn() };
+    const controller = createController({
+      getPaymentEvidenceFileUseCase,
+      getInvoiceFileUseCase,
+    });
+
+    await expect(
+      controller.getOdcFile(ODC_ID, 'foo', sessionUser()),
+    ).rejects.toBeInstanceOf(BadRequestException);
+    expect(getPaymentEvidenceFileUseCase.execute).not.toHaveBeenCalled();
+    expect(getInvoiceFileUseCase.execute).not.toHaveBeenCalled();
+  });
+});
+
+describe('R5: GET /api/odcs/:id/files/evidence redirects (302) to a signed Cloudinary URL (no regression from odc-payment-evidence)', () => {
   it('delegates to the get-payment-evidence-file use-case and redirects with statusCode 302', async () => {
     const signedUrl =
       'https://res.cloudinary.com/odc-cloud/raw/authenticated/s--signature--/abc123';
@@ -1309,8 +1334,9 @@ describe('R5: GET /api/odcs/:id/files/evidence redirects (302) to a signed Cloud
       getPaymentEvidenceFileUseCase: { execute },
     });
 
-    const result = await controller.getPaymentEvidenceFile(
+    const result = await controller.getOdcFile(
       ODC_ID,
+      'evidence',
       sessionUser(),
     );
 
@@ -1322,7 +1348,7 @@ describe('R5: GET /api/odcs/:id/files/evidence redirects (302) to a signed Cloud
   });
 });
 
-describe('R6: files/evidence responds 404 for an unknown id, 404 without evidence yet, and 403 on a BORRADOR of another creator', () => {
+describe('R6: files/evidence responds 404 for an unknown id, 404 without evidence yet, and 403 on a BORRADOR of another creator (no regression from odc-payment-evidence)', () => {
   it('translates the not-found domain error into a 404 NotFoundException', async () => {
     const controller = createController({
       getPaymentEvidenceFileUseCase: {
@@ -1331,7 +1357,7 @@ describe('R6: files/evidence responds 404 for an unknown id, 404 without evidenc
     });
 
     await expect(
-      controller.getPaymentEvidenceFile(ODC_ID, sessionUser()),
+      controller.getOdcFile(ODC_ID, 'evidence', sessionUser()),
     ).rejects.toBeInstanceOf(NotFoundException);
   });
 
@@ -1345,7 +1371,7 @@ describe('R6: files/evidence responds 404 for an unknown id, 404 without evidenc
     });
 
     await expect(
-      controller.getPaymentEvidenceFile(ODC_ID, sessionUser()),
+      controller.getOdcFile(ODC_ID, 'evidence', sessionUser()),
     ).rejects.toBeInstanceOf(NotFoundException);
   });
 
@@ -1361,7 +1387,72 @@ describe('R6: files/evidence responds 404 for an unknown id, 404 without evidenc
     });
 
     await expect(
-      controller.getPaymentEvidenceFile(ODC_ID, sessionUser()),
+      controller.getOdcFile(ODC_ID, 'evidence', sessionUser()),
+    ).rejects.toBeInstanceOf(ForbiddenException);
+  });
+});
+
+describe('R5: GET /api/odcs/:id/files/invoice redirects (302) to a signed Cloudinary URL', () => {
+  it('delegates to the get-invoice-file use-case and redirects with statusCode 302', async () => {
+    const signedUrl =
+      'https://res.cloudinary.com/odc-cloud/raw/authenticated/s--signature--/xyz789';
+    const execute = jest.fn().mockResolvedValue(signedUrl);
+    const controller = createController({
+      getInvoiceFileUseCase: { execute },
+    });
+
+    const result = await controller.getOdcFile(
+      ODC_ID,
+      'invoice',
+      sessionUser(),
+    );
+
+    expect(execute).toHaveBeenCalledWith(ODC_ID, {
+      userId: OPS_ID,
+      role: 'DIRECTOR_OPS',
+    });
+    expect(result).toEqual({ url: signedUrl, statusCode: 302 });
+  });
+});
+
+describe('R6: files/invoice responds 404 for an unknown id, 404 without invoice yet, and 403 on a BORRADOR of another creator', () => {
+  it('translates the not-found domain error into a 404 NotFoundException', async () => {
+    const controller = createController({
+      getInvoiceFileUseCase: {
+        execute: jest.fn().mockRejectedValue(new OdcNotFoundError(ODC_ID)),
+      },
+    });
+
+    await expect(
+      controller.getOdcFile(ODC_ID, 'invoice', sessionUser()),
+    ).rejects.toBeInstanceOf(NotFoundException);
+  });
+
+  it('translates the invoice-not-found domain error into a 404 NotFoundException', async () => {
+    const controller = createController({
+      getInvoiceFileUseCase: {
+        execute: jest.fn().mockRejectedValue(new InvoiceNotFoundError(ODC_ID)),
+      },
+    });
+
+    await expect(
+      controller.getOdcFile(ODC_ID, 'invoice', sessionUser()),
+    ).rejects.toBeInstanceOf(NotFoundException);
+  });
+
+  it('translates the access-denied domain error into a 403 ForbiddenException', async () => {
+    const controller = createController({
+      getInvoiceFileUseCase: {
+        execute: jest
+          .fn()
+          .mockRejectedValue(
+            new OdcAccessDeniedError('This ODC draft is not visible to you'),
+          ),
+      },
+    });
+
+    await expect(
+      controller.getOdcFile(ODC_ID, 'invoice', sessionUser()),
     ).rejects.toBeInstanceOf(ForbiddenException);
   });
 });
