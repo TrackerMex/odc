@@ -122,7 +122,8 @@ export function createPaymentEvidenceFilePipe(): ParseFilePipe {
 // as its own named pipe function rather than a shared parametrized factory
 // (R1, see design.md's "Alternativas descartadas").
 const MAX_INVOICE_FILE_SIZE_BYTES = 10 * 1024 * 1024; // 10 MB (R1)
-const ALLOWED_INVOICE_MIME_TYPES = /^(application\/pdf|image\/jpeg|image\/png)$/;
+const ALLOWED_INVOICE_MIME_TYPES =
+  /^(application\/pdf|image\/jpeg|image\/png)$/;
 
 export function createInvoiceFilePipe(): ParseFilePipe {
   return new ParseFilePipe({

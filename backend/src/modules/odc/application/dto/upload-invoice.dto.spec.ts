@@ -12,9 +12,7 @@ async function validatePayload(
 
 describe('R1: UploadInvoiceDto requires warehouseEntryDate and keeps invoiceNumber/invoiceDate/observations optional', () => {
   it('rejects a payload without warehouseEntryDate', async () => {
-    await expect(validatePayload({})).resolves.toContain(
-      'warehouseEntryDate',
-    );
+    await expect(validatePayload({})).resolves.toContain('warehouseEntryDate');
   });
 
   it('rejects an empty warehouseEntryDate', async () => {
