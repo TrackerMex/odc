@@ -1,6 +1,7 @@
 import { OdcStatusHistoryEntry } from '../../domain/entities/odc-status-history-entry.entity';
 import { PurchaseOrder } from '../../domain/entities/purchase-order.entity';
 import { InvalidRoleTransitionError } from '../../domain/errors/invalid-role-transition.error';
+import { UnknownSupplierError } from '../../domain/errors/unknown-supplier.error';
 import { CreateOdcDto } from '../dto/create-odc.dto';
 import { CreateDraftUseCase } from './create-draft.usecase';
 
@@ -23,6 +24,22 @@ function createRepositoryMock(): RepositoryMock {
   };
 }
 
+interface SupplierRepositoryMock {
+  findAll: jest.Mock;
+  findByName: jest.Mock;
+  create: jest.Mock;
+}
+
+// Defaults to "the supplier exists" so every pre-existing test (written
+// before R5) keeps passing without knowing about the catalog.
+function createSupplierRepositoryMock(): SupplierRepositoryMock {
+  return {
+    findAll: jest.fn(),
+    findByName: jest.fn().mockResolvedValue({ id: 'sup-1', name: 'CEMEX' }),
+    create: jest.fn(),
+  };
+}
+
 function buildDto(): CreateOdcDto {
   const dto = new CreateOdcDto();
   dto.description = 'Cemento gris 50kg';
@@ -40,7 +57,10 @@ describe('R7: create draft use-case persists a BORRADOR for its creator', () => 
     repository.create.mockImplementation((order: PurchaseOrder) =>
       Promise.resolve(order),
     );
-    const useCase = new CreateDraftUseCase(repository);
+    const useCase = new CreateDraftUseCase(
+      repository,
+      createSupplierRepositoryMock(),
+    );
 
     const created = await useCase.execute(buildDto(), {
       userId: OPS_ID,
@@ -67,7 +87,10 @@ describe('R7: create draft use-case persists a BORRADOR for its creator', () => 
 
   it('rejects a non DIRECTOR_OPS actor with the role domain error and creates nothing', async () => {
     const repository = createRepositoryMock();
-    const useCase = new CreateDraftUseCase(repository);
+    const useCase = new CreateDraftUseCase(
+      repository,
+      createSupplierRepositoryMock(),
+    );
 
     await expect(
       useCase.execute(buildDto(), {
@@ -85,7 +108,10 @@ describe('R2: a totalCents smuggled into the create payload never reaches the OD
     repository.create.mockImplementation((order: PurchaseOrder) =>
       Promise.resolve(order),
     );
-    const useCase = new CreateDraftUseCase(repository);
+    const useCase = new CreateDraftUseCase(
+      repository,
+      createSupplierRepositoryMock(),
+    );
     const maliciousDto = Object.assign(buildDto(), { totalCents: 1 });
 
     const created = await useCase.execute(maliciousDto, {
@@ -96,5 +122,38 @@ describe('R2: a totalCents smuggled into the create payload never reaches the OD
     expect(created.totalCents).toBe(185500);
     const [order] = repository.create.mock.calls[0] as [PurchaseOrder];
     expect(order.totalCents).toBe(185500);
+  });
+});
+
+describe('R5: create draft validates supplier against the suppliers catalog', () => {
+  it('continues creating the ODC when supplier matches a catalog name', async () => {
+    const repository = createRepositoryMock();
+    repository.create.mockImplementation((order: PurchaseOrder) =>
+      Promise.resolve(order),
+    );
+    const supplierRepository = createSupplierRepositoryMock();
+    const useCase = new CreateDraftUseCase(repository, supplierRepository);
+
+    await useCase.execute(buildDto(), {
+      userId: OPS_ID,
+      role: 'DIRECTOR_OPS',
+    });
+
+    expect(supplierRepository.findByName).toHaveBeenCalledWith('CEMEX');
+    expect(repository.create).toHaveBeenCalledTimes(1);
+  });
+
+  it('rejects a supplier that does not match any catalog name with the domain error and creates nothing', async () => {
+    const repository = createRepositoryMock();
+    const supplierRepository = createSupplierRepositoryMock();
+    supplierRepository.findByName.mockResolvedValue(null);
+    const useCase = new CreateDraftUseCase(repository, supplierRepository);
+    const dto = buildDto();
+    dto.supplier = 'Not In Catalog';
+
+    await expect(
+      useCase.execute(dto, { userId: OPS_ID, role: 'DIRECTOR_OPS' }),
+    ).rejects.toBeInstanceOf(UnknownSupplierError);
+    expect(repository.create).not.toHaveBeenCalled();
   });
 });

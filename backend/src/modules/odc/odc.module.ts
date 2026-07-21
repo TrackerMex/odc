@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { FilesModule } from '../files/files.module';
+import { SuppliersModule } from '../suppliers/suppliers.module';
 import { ApproveBudgetUseCase } from './application/use-cases/approve-budget.usecase';
 import { ApprovePurchaseUseCase } from './application/use-cases/approve-purchase.usecase';
 import { CreateDraftUseCase } from './application/use-cases/create-draft.usecase';
@@ -26,6 +27,7 @@ import { PurchaseOrderTypeOrmRepository } from './infrastructure/repositories/pu
       OdcStatusHistoryOrmEntity,
     ]),
     FilesModule,
+    SuppliersModule,
   ],
   controllers: [OdcController],
   providers: [

@@ -13,6 +13,7 @@ import { InvoiceNotFoundError } from '../../domain/errors/invoice-not-found.erro
 import { OdcAccessDeniedError } from '../../domain/errors/odc-access-denied.error';
 import { OdcNotFoundError } from '../../domain/errors/odc-not-found.error';
 import { PaymentEvidenceNotFoundError } from '../../domain/errors/payment-evidence-not-found.error';
+import { UnknownSupplierError } from '../../domain/errors/unknown-supplier.error';
 import { ApproveBudgetUseCase } from '../../application/use-cases/approve-budget.usecase';
 import { ApprovePurchaseUseCase } from '../../application/use-cases/approve-purchase.usecase';
 import { CreateDraftUseCase } from '../../application/use-cases/create-draft.usecase';
@@ -239,6 +240,31 @@ describe('R7: POST /api/odcs creates a draft only for DIRECTOR_OPS with 201', ()
   });
 });
 
+describe('R5: POST /api/odcs responds 400 when supplier is not in the catalog (odc-suppliers-catalog)', () => {
+  it('translates the unknown-supplier domain error into a 400 BadRequestException', async () => {
+    const controller = createController({
+      createDraftUseCase: {
+        execute: jest
+          .fn()
+          .mockRejectedValue(new UnknownSupplierError('Not In Catalog')),
+      },
+    });
+
+    await expect(
+      controller.create(
+        {
+          description: 'Cemento gris 50kg',
+          quantity: 10,
+          unit: 'bulto',
+          unitPriceCents: 18550,
+          supplier: 'Not In Catalog',
+        },
+        sessionUser(),
+      ),
+    ).rejects.toBeInstanceOf(BadRequestException);
+  });
+});
+
 describe('R9: POST /api/odcs/:id/submit sends the ODC to admin review with 200', () => {
   it("exposes the handler as POST on ':id/submit' with HTTP 200 restricted to DIRECTOR_OPS", () => {
     const handler = getHandler('submit');
@@ -339,6 +365,22 @@ describe('R11: PATCH /api/odcs/:id edits an editable ODC for its creator', () =>
     await expect(
       controller.update(ODC_ID, { quantity: 4 }, sessionUser()),
     ).rejects.toBeInstanceOf(ConflictException);
+  });
+});
+
+describe('R5: PATCH /api/odcs/:id responds 400 when supplier is not in the catalog (odc-suppliers-catalog)', () => {
+  it('translates the unknown-supplier domain error into a 400 BadRequestException', async () => {
+    const controller = createController({
+      updateDraftUseCase: {
+        execute: jest
+          .fn()
+          .mockRejectedValue(new UnknownSupplierError('Not In Catalog')),
+      },
+    });
+
+    await expect(
+      controller.update(ODC_ID, { supplier: 'Not In Catalog' }, sessionUser()),
+    ).rejects.toBeInstanceOf(BadRequestException);
   });
 });
 

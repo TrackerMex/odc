@@ -5,6 +5,7 @@ import {
 import { InvalidStatusTransitionError } from '../../domain/errors/invalid-status-transition.error';
 import { OdcAccessDeniedError } from '../../domain/errors/odc-access-denied.error';
 import { OdcNotFoundError } from '../../domain/errors/odc-not-found.error';
+import { UnknownSupplierError } from '../../domain/errors/unknown-supplier.error';
 import { UpdateDraftUseCase } from './update-draft.usecase';
 
 const OPS_ID = 'a3d1c9a2-0000-4000-8000-000000000001';
@@ -60,6 +61,22 @@ function createRepositoryMock(): RepositoryMock {
   };
 }
 
+interface SupplierRepositoryMock {
+  findAll: jest.Mock;
+  findByName: jest.Mock;
+  create: jest.Mock;
+}
+
+// Defaults to "the supplier exists" so every pre-existing test (written
+// before R5) keeps passing without knowing about the catalog.
+function createSupplierRepositoryMock(): SupplierRepositoryMock {
+  return {
+    findAll: jest.fn(),
+    findByName: jest.fn().mockResolvedValue({ id: 'sup-1', name: 'Holcim' }),
+    create: jest.fn(),
+  };
+}
+
 const opsActor = { userId: OPS_ID, role: 'DIRECTOR_OPS' as const };
 
 describe('R11: PATCH edits T1 fields in BORRADOR/RECHAZADA recomputing the total', () => {
@@ -69,7 +86,10 @@ describe('R11: PATCH edits T1 fields in BORRADOR/RECHAZADA recomputing the total
     repository.update.mockImplementation((order: PurchaseOrder) =>
       Promise.resolve(order),
     );
-    const useCase = new UpdateDraftUseCase(repository);
+    const useCase = new UpdateDraftUseCase(
+      repository,
+      createSupplierRepositoryMock(),
+    );
 
     const updated = await useCase.execute(
       ODC_ID,
@@ -101,7 +121,10 @@ describe('R11: PATCH edits T1 fields in BORRADOR/RECHAZADA recomputing the total
     repository.update.mockImplementation((order: PurchaseOrder) =>
       Promise.resolve(order),
     );
-    const useCase = new UpdateDraftUseCase(repository);
+    const useCase = new UpdateDraftUseCase(
+      repository,
+      createSupplierRepositoryMock(),
+    );
 
     const updated = await useCase.execute(
       ODC_ID,
@@ -127,7 +150,10 @@ describe('R11: PATCH edits T1 fields in BORRADOR/RECHAZADA recomputing the total
       const repository = createRepositoryMock();
       const order = buildOrder({ status });
       repository.findById.mockResolvedValue(order);
-      const useCase = new UpdateDraftUseCase(repository);
+      const useCase = new UpdateDraftUseCase(
+        repository,
+        createSupplierRepositoryMock(),
+      );
 
       await expect(
         useCase.execute(ODC_ID, { quantity: 4 }, opsActor),
@@ -141,7 +167,10 @@ describe('R11: PATCH edits T1 fields in BORRADOR/RECHAZADA recomputing the total
   it('rejects a DIRECTOR_OPS who is not the creator with the access-denied error', async () => {
     const repository = createRepositoryMock();
     repository.findById.mockResolvedValue(buildOrder());
-    const useCase = new UpdateDraftUseCase(repository);
+    const useCase = new UpdateDraftUseCase(
+      repository,
+      createSupplierRepositoryMock(),
+    );
 
     await expect(
       useCase.execute(
@@ -156,10 +185,58 @@ describe('R11: PATCH edits T1 fields in BORRADOR/RECHAZADA recomputing the total
   it('rejects an unknown ODC with the not-found domain error', async () => {
     const repository = createRepositoryMock();
     repository.findById.mockResolvedValue(null);
-    const useCase = new UpdateDraftUseCase(repository);
+    const useCase = new UpdateDraftUseCase(
+      repository,
+      createSupplierRepositoryMock(),
+    );
 
     await expect(
       useCase.execute('ghost-id', { quantity: 4 }, opsActor),
     ).rejects.toBeInstanceOf(OdcNotFoundError);
+  });
+});
+
+describe('R5: PATCH validates supplier against the suppliers catalog when the payload brings it', () => {
+  it('continues editing when supplier matches a catalog name', async () => {
+    const repository = createRepositoryMock();
+    repository.findById.mockResolvedValue(buildOrder());
+    repository.update.mockImplementation((order: PurchaseOrder) =>
+      Promise.resolve(order),
+    );
+    const supplierRepository = createSupplierRepositoryMock();
+    const useCase = new UpdateDraftUseCase(repository, supplierRepository);
+
+    await useCase.execute(ODC_ID, { supplier: 'Holcim' }, opsActor);
+
+    expect(supplierRepository.findByName).toHaveBeenCalledWith('Holcim');
+    expect(repository.update).toHaveBeenCalledTimes(1);
+  });
+
+  it('rejects a supplier that does not match any catalog name with the domain error and updates nothing', async () => {
+    const repository = createRepositoryMock();
+    repository.findById.mockResolvedValue(buildOrder());
+    const supplierRepository = createSupplierRepositoryMock();
+    supplierRepository.findByName.mockResolvedValue(null);
+    const useCase = new UpdateDraftUseCase(repository, supplierRepository);
+
+    await expect(
+      useCase.execute(ODC_ID, { supplier: 'Not In Catalog' }, opsActor),
+    ).rejects.toBeInstanceOf(UnknownSupplierError);
+    expect(repository.update).not.toHaveBeenCalled();
+  });
+
+  it('does not validate the catalog when the PATCH omits supplier', async () => {
+    const repository = createRepositoryMock();
+    repository.findById.mockResolvedValue(buildOrder());
+    repository.update.mockImplementation((order: PurchaseOrder) =>
+      Promise.resolve(order),
+    );
+    const supplierRepository = createSupplierRepositoryMock();
+    const useCase = new UpdateDraftUseCase(repository, supplierRepository);
+
+    await useCase.execute(ODC_ID, { quantity: 4 }, opsActor);
+
+    expect(supplierRepository.findByName).not.toHaveBeenCalled();
+    expect(repository.update).toHaveBeenCalledTimes(1);
   });
 });

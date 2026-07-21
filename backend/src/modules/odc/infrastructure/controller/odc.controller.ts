@@ -52,6 +52,7 @@ import { MissingTransitionDataError } from '../../domain/errors/missing-transiti
 import { OdcAccessDeniedError } from '../../domain/errors/odc-access-denied.error';
 import { OdcNotFoundError } from '../../domain/errors/odc-not-found.error';
 import { PaymentEvidenceNotFoundError } from '../../domain/errors/payment-evidence-not-found.error';
+import { UnknownSupplierError } from '../../domain/errors/unknown-supplier.error';
 import {
   OdcPageResponseDto,
   OdcResponseDto,
@@ -78,7 +79,10 @@ function rethrowDomainError(error: unknown): never {
   if (error instanceof InvalidStatusTransitionError) {
     throw new ConflictException(error.message);
   }
-  if (error instanceof MissingTransitionDataError) {
+  if (
+    error instanceof MissingTransitionDataError ||
+    error instanceof UnknownSupplierError
+  ) {
     throw new BadRequestException(error.message);
   }
   if (
