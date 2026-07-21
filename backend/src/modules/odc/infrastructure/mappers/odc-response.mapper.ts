@@ -28,7 +28,7 @@ export interface OdcResponseDto {
   paymentNotes: string | null;
   hasPaymentEvidence: boolean;
   evidenceReference: string | null;
-  invoiceFile: string | null;
+  hasInvoice: boolean;
   invoiceNumber: string | null;
   invoiceDate: string | null;
   warehouseEntryDate: string | null;
@@ -46,10 +46,11 @@ export interface OdcPageResponseDto {
 }
 
 export function toOdcResponse(order: PurchaseOrder): OdcResponseDto {
-  const { paymentEvidenceFile, ...rest } = order;
+  const { paymentEvidenceFile, invoiceFile, ...rest } = order;
   return {
     ...rest,
     hasPaymentEvidence: paymentEvidenceFile !== null,
+    hasInvoice: invoiceFile !== null,
   };
 }
 

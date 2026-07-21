@@ -71,7 +71,37 @@ describe('R4: toOdcResponse hides paymentEvidenceFile and exposes hasPaymentEvid
     expect(response.odcNumber).toBe(order.odcNumber);
     expect(response.status).toBe(order.status);
     expect(response.totalCents).toBe(order.totalCents);
-    expect(response.invoiceFile).toBeNull();
+    expect(response).not.toHaveProperty('invoiceFile');
+  });
+});
+
+describe('R4: toOdcResponse hides invoiceFile and exposes hasInvoice (odc-invoice-completion)', () => {
+  const INVOICE_PUBLIC_ID = 'odc/ODC-2026-00001/invoice/xyz789';
+
+  it('omits invoiceFile and sets hasInvoice true when a file is assigned', () => {
+    const response = toOdcResponse(
+      buildOrder({ invoiceFile: INVOICE_PUBLIC_ID }),
+    );
+
+    expect(response).not.toHaveProperty('invoiceFile');
+    expect(response.hasInvoice).toBe(true);
+  });
+
+  it('sets hasInvoice false when invoiceFile is null', () => {
+    const response = toOdcResponse(buildOrder({ invoiceFile: null }));
+
+    expect(response).not.toHaveProperty('invoiceFile');
+    expect(response.hasInvoice).toBe(false);
+  });
+
+  it('never leaks the invoice public_id or a cloudinary URL in the serialized body', () => {
+    const response = toOdcResponse(
+      buildOrder({ invoiceFile: INVOICE_PUBLIC_ID }),
+    );
+    const serialized = JSON.stringify(response);
+
+    expect(serialized).not.toContain(INVOICE_PUBLIC_ID);
+    expect(serialized).not.toContain('cloudinary.com');
   });
 });
 
