@@ -26,7 +26,11 @@ import {
   toOdcPageResponse,
   toOdcResponse,
 } from '../mappers/odc-response.mapper';
-import { createPaymentEvidenceFilePipe, OdcController } from './odc.controller';
+import {
+  createInvoiceFilePipe,
+  createPaymentEvidenceFilePipe,
+  OdcController,
+} from './odc.controller';
 
 const OPS_ID = 'a3d1c9a2-0000-4000-8000-000000000001';
 const ODC_ID = 'b4e2d8b3-0000-4000-8000-000000000010';
@@ -1010,6 +1014,49 @@ describe('R1: payment-evidence file validation (MIME/size) before Cloudinary (od
 
   it('rejects a file larger than 10MB with a 400 BadRequestException', async () => {
     const pipe = createPaymentEvidenceFilePipe();
+
+    await expect(
+      pipe.transform(buildMulterFile({ size: 10 * 1024 * 1024 + 1 })),
+    ).rejects.toMatchObject({ status: 400 });
+  });
+});
+
+describe('R1: invoice file validation (MIME/size) before Cloudinary (odc-invoice-completion)', () => {
+  it('accepts a valid pdf/jpg/png file at or under 10MB', async () => {
+    const pipe = createInvoiceFilePipe();
+
+    await expect(
+      pipe.transform(buildMulterFile({ originalname: 'invoice.pdf' })),
+    ).resolves.toBeDefined();
+    await expect(
+      pipe.transform(buildMulterFile({ mimetype: 'image/jpeg' })),
+    ).resolves.toBeDefined();
+    await expect(
+      pipe.transform(buildMulterFile({ mimetype: 'image/png' })),
+    ).resolves.toBeDefined();
+    await expect(
+      pipe.transform(buildMulterFile({ size: 10 * 1024 * 1024 })),
+    ).resolves.toBeDefined();
+  });
+
+  it('rejects a missing file with a 400 BadRequestException', async () => {
+    const pipe = createInvoiceFilePipe();
+
+    await expect(pipe.transform(undefined)).rejects.toMatchObject({
+      status: 400,
+    });
+  });
+
+  it('rejects an unsupported MIME type (text/plain) with a 400 BadRequestException', async () => {
+    const pipe = createInvoiceFilePipe();
+
+    await expect(
+      pipe.transform(buildMulterFile({ mimetype: 'text/plain' })),
+    ).rejects.toMatchObject({ status: 400 });
+  });
+
+  it('rejects a file larger than 10MB with a 400 BadRequestException', async () => {
+    const pipe = createInvoiceFilePipe();
 
     await expect(
       pipe.transform(buildMulterFile({ size: 10 * 1024 * 1024 + 1 })),

@@ -113,6 +113,28 @@ export function createPaymentEvidenceFilePipe(): ParseFilePipe {
   });
 }
 
+// Same MIME allowlist and size cap as the payment-evidence route, replicated
+// as its own named pipe function rather than a shared parametrized factory
+// (R1, see design.md's "Alternativas descartadas").
+const MAX_INVOICE_FILE_SIZE_BYTES = 10 * 1024 * 1024; // 10 MB (R1)
+const ALLOWED_INVOICE_MIME_TYPES = /^(application\/pdf|image\/jpeg|image\/png)$/;
+
+export function createInvoiceFilePipe(): ParseFilePipe {
+  return new ParseFilePipe({
+    validators: [
+      new FileTypeValidator({
+        fileType: ALLOWED_INVOICE_MIME_TYPES,
+        skipMagicNumbersValidation: true,
+      }),
+      new MaxFileSizeValidator({
+        maxSize: MAX_INVOICE_FILE_SIZE_BYTES + 1,
+      }),
+    ],
+    fileIsRequired: true,
+    errorHttpStatusCode: HttpStatus.BAD_REQUEST,
+  });
+}
+
 @Controller('odcs')
 export class OdcController {
   constructor(
