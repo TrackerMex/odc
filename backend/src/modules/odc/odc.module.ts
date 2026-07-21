@@ -4,6 +4,7 @@ import { FilesModule } from '../files/files.module';
 import { ApproveBudgetUseCase } from './application/use-cases/approve-budget.usecase';
 import { ApprovePurchaseUseCase } from './application/use-cases/approve-purchase.usecase';
 import { CreateDraftUseCase } from './application/use-cases/create-draft.usecase';
+import { GetInvoiceFileUseCase } from './application/use-cases/get-invoice-file.usecase';
 import { GetOdcUseCase } from './application/use-cases/get-odc.usecase';
 import { GetPaymentEvidenceFileUseCase } from './application/use-cases/get-payment-evidence-file.usecase';
 import { ListOdcsUseCase } from './application/use-cases/list-odcs.usecase';
@@ -40,6 +41,7 @@ import { PurchaseOrderTypeOrmRepository } from './infrastructure/repositories/pu
     UploadPaymentEvidenceUseCase,
     GetPaymentEvidenceFileUseCase,
     UploadInvoiceUseCase,
+    GetInvoiceFileUseCase,
     {
       provide: 'PurchaseOrderRepository',
       useClass: PurchaseOrderTypeOrmRepository,
