@@ -29,6 +29,7 @@ import { ListOdcsQueryDto } from '../../application/dto/list-odcs.query.dto';
 import { RegisterPaymentDto } from '../../application/dto/register-payment.dto';
 import { RejectOdcDto } from '../../application/dto/reject-odc.dto';
 import { UpdateOdcDto } from '../../application/dto/update-odc.dto';
+import { UploadInvoiceDto } from '../../application/dto/upload-invoice.dto';
 import { UploadPaymentEvidenceDto } from '../../application/dto/upload-payment-evidence.dto';
 import { ApproveBudgetUseCase } from '../../application/use-cases/approve-budget.usecase';
 import { ApprovePurchaseUseCase } from '../../application/use-cases/approve-purchase.usecase';
@@ -40,6 +41,7 @@ import { RegisterPaymentUseCase } from '../../application/use-cases/register-pay
 import { RejectOdcUseCase } from '../../application/use-cases/reject-odc.usecase';
 import { SubmitOdcUseCase } from '../../application/use-cases/submit-odc.usecase';
 import { UpdateDraftUseCase } from '../../application/use-cases/update-draft.usecase';
+import { UploadInvoiceUseCase } from '../../application/use-cases/upload-invoice.usecase';
 import { UploadPaymentEvidenceUseCase } from '../../application/use-cases/upload-payment-evidence.usecase';
 import { OdcActor } from '../../domain/entities/purchase-order.entity';
 import { InvalidRoleTransitionError } from '../../domain/errors/invalid-role-transition.error';
@@ -149,6 +151,7 @@ export class OdcController {
     private readonly registerPaymentUseCase: RegisterPaymentUseCase,
     private readonly uploadPaymentEvidenceUseCase: UploadPaymentEvidenceUseCase,
     private readonly getPaymentEvidenceFileUseCase: GetPaymentEvidenceFileUseCase,
+    private readonly uploadInvoiceUseCase: UploadInvoiceUseCase,
   ) {}
 
   @Post()
@@ -286,6 +289,38 @@ export class OdcController {
           buffer: file.buffer,
           mimeType: file.mimetype,
           evidenceReference: dto.evidenceReference,
+        },
+      );
+      return toOdcResponse(order);
+    } catch (error) {
+      rethrowDomainError(error);
+    }
+  }
+
+  // T9: EVIDENCIA_PAGO_SUBIDA -> COMPLETADA. multipart/form-data: file
+  // validated in-memory (MIME/size) before Cloudinary is ever reached (R1).
+  @Post(':id/invoice')
+  @HttpCode(200)
+  @Roles('DIRECTOR_OPS')
+  @UseInterceptors(FileInterceptor('file', { storage: memoryStorage() }))
+  async uploadInvoice(
+    @Param('id') id: string,
+    @UploadedFile(createInvoiceFilePipe())
+    file: Express.Multer.File,
+    @Body() dto: UploadInvoiceDto,
+    @Req() request: RequestWithSession,
+  ): Promise<OdcResponseDto> {
+    try {
+      const order = await this.uploadInvoiceUseCase.execute(
+        id,
+        actorFrom(request),
+        {
+          buffer: file.buffer,
+          mimeType: file.mimetype,
+          warehouseEntryDate: dto.warehouseEntryDate,
+          invoiceNumber: dto.invoiceNumber,
+          invoiceDate: dto.invoiceDate,
+          observations: dto.observations,
         },
       );
       return toOdcResponse(order);

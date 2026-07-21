@@ -21,6 +21,7 @@ import { RegisterPaymentUseCase } from '../../application/use-cases/register-pay
 import { RejectOdcUseCase } from '../../application/use-cases/reject-odc.usecase';
 import { SubmitOdcUseCase } from '../../application/use-cases/submit-odc.usecase';
 import { UpdateDraftUseCase } from '../../application/use-cases/update-draft.usecase';
+import { UploadInvoiceUseCase } from '../../application/use-cases/upload-invoice.usecase';
 import { UploadPaymentEvidenceUseCase } from '../../application/use-cases/upload-payment-evidence.usecase';
 import {
   toOdcPageResponse,
@@ -55,6 +56,7 @@ interface ControllerOverrides {
   registerPaymentUseCase?: Partial<RegisterPaymentUseCase>;
   uploadPaymentEvidenceUseCase?: Partial<UploadPaymentEvidenceUseCase>;
   getPaymentEvidenceFileUseCase?: Partial<GetPaymentEvidenceFileUseCase>;
+  uploadInvoiceUseCase?: Partial<UploadInvoiceUseCase>;
 }
 
 function createController(overrides: ControllerOverrides = {}): OdcController {
@@ -93,6 +95,9 @@ function createController(overrides: ControllerOverrides = {}): OdcController {
     (overrides.getPaymentEvidenceFileUseCase ?? {
       execute: jest.fn(),
     }) as GetPaymentEvidenceFileUseCase;
+  const uploadInvoiceUseCase = (overrides.uploadInvoiceUseCase ?? {
+    execute: jest.fn(),
+  }) as UploadInvoiceUseCase;
   return new OdcController(
     createDraftUseCase,
     submitOdcUseCase,
@@ -105,6 +110,7 @@ function createController(overrides: ControllerOverrides = {}): OdcController {
     registerPaymentUseCase,
     uploadPaymentEvidenceUseCase,
     getPaymentEvidenceFileUseCase,
+    uploadInvoiceUseCase,
   );
 }
 
@@ -1169,6 +1175,118 @@ describe('R3: payment-evidence responds 404 for an unknown id and 409 outside PA
         buildMulterFile(),
         {},
         sessionUser('ADMINISTRACION'),
+      ),
+    ).rejects.toBeInstanceOf(ConflictException);
+  });
+});
+
+describe('R2: POST /api/odcs/:id/invoice uploads to Cloudinary with 200 restricted to DIRECTOR_OPS', () => {
+  it("exposes the handler as POST on ':id/invoice' with HTTP 200 restricted to DIRECTOR_OPS", () => {
+    const handler = getHandler('uploadInvoice');
+    expect(Reflect.getMetadata('path', handler)).toBe(':id/invoice');
+    expect(Reflect.getMetadata('method', handler)).toBe(RequestMethod.POST);
+    expect(Reflect.getMetadata('__httpCode__', handler)).toBe(200);
+    expect(Reflect.getMetadata(ROLES_KEY, handler)).toEqual(['DIRECTOR_OPS']);
+  });
+
+  it('delegates to the upload-invoice use-case with the buffer/mimeType/warehouseEntryDate/invoiceNumber/invoiceDate/observations and returns the updated ODC', async () => {
+    const updated = {
+      status: 'COMPLETADA',
+      invoiceFile: 'odc/ODC-2026-00001/invoice/abc123',
+    } as PurchaseOrder;
+    const execute = jest.fn().mockResolvedValue(updated);
+    const controller = createController({
+      uploadInvoiceUseCase: { execute },
+    });
+    const file = buildMulterFile({ originalname: 'invoice.pdf' });
+    const dto = {
+      warehouseEntryDate: '2026-07-21',
+      invoiceNumber: 'F-001',
+      invoiceDate: '2026-07-20',
+      observations: 'Entrega parcial',
+    };
+
+    const body = await controller.uploadInvoice(
+      ODC_ID,
+      file,
+      dto,
+      sessionUser('DIRECTOR_OPS'),
+    );
+
+    expect(execute).toHaveBeenCalledWith(
+      ODC_ID,
+      { userId: OPS_ID, role: 'DIRECTOR_OPS' },
+      {
+        buffer: file.buffer,
+        mimeType: file.mimetype,
+        warehouseEntryDate: '2026-07-21',
+        invoiceNumber: 'F-001',
+        invoiceDate: '2026-07-20',
+        observations: 'Entrega parcial',
+      },
+    );
+    expect(body).toEqual(toOdcResponse(updated));
+    expect(body).not.toHaveProperty('invoiceFile');
+    expect(body).toHaveProperty('hasInvoice', true);
+  });
+
+  it('translates the role domain error into a 403 ForbiddenException without needing Cloudinary', async () => {
+    const controller = createController({
+      uploadInvoiceUseCase: {
+        execute: jest
+          .fn()
+          .mockRejectedValue(
+            new InvalidRoleTransitionError('upload_invoice', 'ADMINISTRACION'),
+          ),
+      },
+    });
+
+    await expect(
+      controller.uploadInvoice(
+        ODC_ID,
+        buildMulterFile({ originalname: 'invoice.pdf' }),
+        { warehouseEntryDate: '2026-07-21' },
+        sessionUser('ADMINISTRACION'),
+      ),
+    ).rejects.toBeInstanceOf(ForbiddenException);
+  });
+});
+
+describe('R3: invoice responds 404 for an unknown id and 409 outside EVIDENCIA_PAGO_SUBIDA', () => {
+  it('translates the not-found domain error into a 404 NotFoundException', async () => {
+    const controller = createController({
+      uploadInvoiceUseCase: {
+        execute: jest.fn().mockRejectedValue(new OdcNotFoundError(ODC_ID)),
+      },
+    });
+
+    await expect(
+      controller.uploadInvoice(
+        ODC_ID,
+        buildMulterFile({ originalname: 'invoice.pdf' }),
+        { warehouseEntryDate: '2026-07-21' },
+        sessionUser('DIRECTOR_OPS'),
+      ),
+    ).rejects.toBeInstanceOf(NotFoundException);
+  });
+
+  it('translates the status domain error into a 409 ConflictException', async () => {
+    const controller = createController({
+      uploadInvoiceUseCase: {
+        execute: jest
+          .fn()
+          .mockRejectedValue(
+            new InvalidStatusTransitionError('upload_invoice', 'BORRADOR'),
+          ),
+      },
+    });
+
+    await expect(
+      controller.uploadInvoice(
+        ODC_ID,
+        buildMulterFile({ originalname: 'invoice.pdf' }),
+        { warehouseEntryDate: '2026-07-21' },
+        sessionUser('DIRECTOR_OPS'),
       ),
     ).rejects.toBeInstanceOf(ConflictException);
   });

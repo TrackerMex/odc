@@ -11,6 +11,7 @@ import { RegisterPaymentUseCase } from './application/use-cases/register-payment
 import { RejectOdcUseCase } from './application/use-cases/reject-odc.usecase';
 import { SubmitOdcUseCase } from './application/use-cases/submit-odc.usecase';
 import { UpdateDraftUseCase } from './application/use-cases/update-draft.usecase';
+import { UploadInvoiceUseCase } from './application/use-cases/upload-invoice.usecase';
 import { UploadPaymentEvidenceUseCase } from './application/use-cases/upload-payment-evidence.usecase';
 import { OdcController } from './infrastructure/controller/odc.controller';
 import { OdcStatusHistoryOrmEntity } from './infrastructure/entities/odc-status-history.orm-entity';
@@ -38,6 +39,7 @@ import { PurchaseOrderTypeOrmRepository } from './infrastructure/repositories/pu
     RegisterPaymentUseCase,
     UploadPaymentEvidenceUseCase,
     GetPaymentEvidenceFileUseCase,
+    UploadInvoiceUseCase,
     {
       provide: 'PurchaseOrderRepository',
       useClass: PurchaseOrderTypeOrmRepository,
