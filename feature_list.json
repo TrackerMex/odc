@@ -39,7 +39,7 @@
   {
     "id": 8,
     "name": "odc-invoice-completion",
-    "status": "pending",
+    "status": "done",
     "priority": "P1"
   },
   {

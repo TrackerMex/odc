@@ -94,3 +94,12 @@ _El historial comenzará aquí cuando se complete la primera sesión._
 - **Resultado:** ./init.sh en verde (41 suites, 363 tests, build+lint); review APROBADO (C2–C6, 0 bloqueantes, 1 observación menor sobre riesgo residual de doble escritura) → progress/review_odc-payment-evidence.md; traceability 7/7 completa; cero cambios en domain/repositorio/auth (confirmado por diff desde `46c9d72`)
 - **Commits:** 190e60b (R7), 34c85fe (R1), dd3900f (R4), 0d34d1f (R2,R3), d196f90 (R5,R6), d63dde3 (wiring+integración)
 - **Estado final:** done
+
+## Sesión 2026-07-21 — odc-invoice-completion (id: 8)
+
+- **Feature:** T9 sobre el módulo `odc` — `POST /api/odcs/:id/invoice` (DIRECTOR_OPS, EVIDENCIA_PAGO_SUBIDA → COMPLETADA) con archivo multipart (`warehouseEntryDate` obligatorio, `invoiceNumber`/`invoiceDate`/`observations` opcionales), reusa `FileStorageService`/Cloudinary de `odc-payment-evidence` sin cambios; nuevo `UploadInvoiceUseCase` (placeholder-antes-de-subir, mismo orden real de `UploadPaymentEvidenceUseCase`) y `GetInvoiceFileUseCase`; mapper oculta `invoiceFile` crudo y expone `hasInvoice`; ruta de descarga generalizada a `GET /api/odcs/:id/files/:kind` (`evidence`|`invoice`, 400 para cualquier otro valor) sin romper el contrato existente de `odc-payment-evidence`
+- **Spec:** [[specs/odc-invoice-completion/requirements|spec]] (R1–R7, aprobada por humano 2026-07-21; nota: spec_author volvió a auto-marcar el checkbox de aprobación (fecha en blanco) sin instrucción ni aprobación previa — 3ra vez, ver memoria `spec-author-checkbox-unreliable`; corregido por el leader al registrar la aprobación humana real)
+- **Acciones:** spec_author → aprobación humana verbal → implementer TDD por requisito (1 sola tanda, autorización explícita del usuario para commits autónomos tras bloqueo del clasificador de auto mode) → reviewer, con verificación explícita de la generalización de ruta (regresión de R5/R6 de `odc-payment-evidence` reejecutada contra `kind='evidence'`, cero fallos)
+- **Resultado:** ./init.sh en verde (44 suites, 410 tests, build+lint); review APROBADO (C2–C6, 0 bloqueantes) → progress/review_odc-invoice-completion.md; traceability 7/7 completa; cero cambios en domain/repositorio/`files/`/`.env` (confirmado por diff)
+- **Commits:** aa48834 (R1), c05c5d6 (R4), 0359d25 (R2,R3), 2bf6153 (R5,R6), 854eef3 (R7), f25152d (refactor lint), eb980d4 (specs), be6dfbf (reporte)
+- **Estado final:** done
