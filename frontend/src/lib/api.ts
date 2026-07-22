@@ -1,3 +1,5 @@
+import type { SessionUser } from './session'
+
 export class ApiError extends Error {
   constructor(
     public readonly status: number,
@@ -22,4 +24,8 @@ export async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> 
   }
 
   return response.json() as Promise<T>
+}
+
+export function getMe(): Promise<SessionUser> {
+  return apiFetch<SessionUser>('/api/auth/me')
 }
