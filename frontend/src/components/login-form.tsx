@@ -13,7 +13,12 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
-import { Field, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field'
+import {
+  Field,
+  FieldError,
+  FieldGroup,
+  FieldLabel,
+} from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
 
 interface FieldErrors {
@@ -21,7 +26,10 @@ interface FieldErrors {
   password?: string
 }
 
-export function LoginForm({ className, ...props }: React.ComponentProps<'div'>) {
+export function LoginForm({
+  className,
+  ...props
+}: React.ComponentProps<'div'>) {
   const navigate = useNavigate()
   const setUser = useSessionStore((state) => state.setUser)
 
@@ -72,7 +80,10 @@ export function LoginForm({ className, ...props }: React.ComponentProps<'div'>) 
         <CardContent>
           <form data-testid="login-form" onSubmit={handleSubmit} noValidate>
             <FieldGroup>
-              <Field data-testid="email-field" data-invalid={!!fieldErrors.email}>
+              <Field
+                data-testid="email-field"
+                data-invalid={!!fieldErrors.email}
+              >
                 <FieldLabel htmlFor="email">Email</FieldLabel>
                 <Input
                   id="email"
@@ -83,10 +94,15 @@ export function LoginForm({ className, ...props }: React.ComponentProps<'div'>) 
                   aria-invalid={!!fieldErrors.email}
                 />
                 <FieldError
-                  errors={fieldErrors.email ? [{ message: fieldErrors.email }] : []}
+                  errors={
+                    fieldErrors.email ? [{ message: fieldErrors.email }] : []
+                  }
                 />
               </Field>
-              <Field data-testid="password-field" data-invalid={!!fieldErrors.password}>
+              <Field
+                data-testid="password-field"
+                data-invalid={!!fieldErrors.password}
+              >
                 <FieldLabel htmlFor="password">Password</FieldLabel>
                 <Input
                   id="password"
@@ -97,7 +113,9 @@ export function LoginForm({ className, ...props }: React.ComponentProps<'div'>) 
                 />
                 <FieldError
                   errors={
-                    fieldErrors.password ? [{ message: fieldErrors.password }] : []
+                    fieldErrors.password
+                      ? [{ message: fieldErrors.password }]
+                      : []
                   }
                 />
               </Field>
