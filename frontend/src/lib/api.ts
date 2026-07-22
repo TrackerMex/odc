@@ -29,3 +29,14 @@ export async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> 
 export function getMe(): Promise<SessionUser> {
   return apiFetch<SessionUser>('/api/auth/me')
 }
+
+export function login(credentials: {
+  email: string
+  password: string
+}): Promise<{ user: SessionUser }> {
+  return apiFetch<{ user: SessionUser }>('/api/auth/login', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(credentials),
+  })
+}

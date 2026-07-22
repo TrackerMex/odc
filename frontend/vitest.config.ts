@@ -9,5 +9,6 @@ export default defineConfig({
   plugins: [viteReact()],
   test: {
     environment: 'jsdom',
+    setupFiles: ['./src/test/setup.ts'],
   },
 })
