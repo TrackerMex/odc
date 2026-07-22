@@ -38,18 +38,9 @@ reviewer: pendiente / en curso / aprobado / rechazado
 ## Sesión activa
 
 ```
-feature: frontend-odc-form
-id: 10
-inicio: 2026-07-22
-plan:
-  - implementar cliente API y utilidades ODC con TDD
-  - implementar dashboard DIRECTOR_OPS
-  - implementar creación, detalle, edición y reenvío
-  - verificar, revisar y cerrar trazabilidad
-estado: in_progress
-bloqueos: —
-spec_author: done
-implementer: en curso
-reviewer: pendiente
+feature: —
+inicio: —
+agentes lanzados: —
+estado: sin sesión activa
 ```
 
