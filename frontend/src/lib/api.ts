@@ -40,3 +40,7 @@ export function login(credentials: {
     body: JSON.stringify(credentials),
   })
 }
+
+export function logout(): Promise<{ success: true }> {
+  return apiFetch<{ success: true }>('/api/auth/logout', { method: 'POST' })
+}

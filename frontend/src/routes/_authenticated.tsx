@@ -1,5 +1,7 @@
 import { Outlet, createFileRoute, redirect } from '@tanstack/react-router'
+import { AppLayout } from '../components/layout/app-layout'
 import { resolveSession } from '../lib/session'
+import { useSessionStore } from '../stores/session.store'
 
 export async function authGuardBeforeLoad() {
   const user = await resolveSession()
@@ -14,5 +16,15 @@ export const Route = createFileRoute('/_authenticated')({
 })
 
 function AuthenticatedLayout() {
-  return <Outlet />
+  const user = useSessionStore((state) => state.user)
+
+  // Guaranteed by authGuardBeforeLoad above; guarded again here purely for
+  // type-safety (SessionUser | null), it's not a reachable UI state.
+  if (!user) return <Outlet />
+
+  return (
+    <AppLayout user={user}>
+      <Outlet />
+    </AppLayout>
+  )
 }
