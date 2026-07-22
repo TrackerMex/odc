@@ -38,17 +38,9 @@ reviewer: pendiente / en curso / aprobado / rechazado
 ## Sesión activa
 
 ```
-feature: odc-suppliers-catalog
-id: 14
-inicio: 2026-07-21
-plan:
-  - Módulo nuevo backend/src/modules/suppliers (domain/application/infrastructure)
-  - Entidad Supplier, SupplierRepository, seed de 22 proveedores, GET /api/suppliers
-  - Validación cruzada en odc: create-draft/update-draft rechazan supplier desconocido (UnknownSupplierError -> 400)
-estado: in_progress
-bloqueos: —
-spec_author: done (specs/odc-suppliers-catalog/, aprobada por humano)
-implementer: en curso
-reviewer: pendiente
+feature: —
+inicio: —
+agentes lanzados: —
+estado: sin sesión activa
 ```
 
