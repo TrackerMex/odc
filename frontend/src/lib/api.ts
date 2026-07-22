@@ -1,5 +1,12 @@
 import { createIsomorphicFn } from '@tanstack/react-start'
 import type { SessionUser } from './session'
+import type {
+  Odc,
+  OdcPage,
+  OdcPayload,
+  OdcStatus,
+  Supplier,
+} from './odc'
 
 export class ApiError extends Error {
   constructor(
@@ -101,4 +108,43 @@ export function login(credentials: {
 
 export function logout(): Promise<{ success: true }> {
   return apiFetch<{ success: true }>('/api/auth/logout', { method: 'POST' })
+}
+
+function jsonRequest(method: 'POST' | 'PATCH', body?: unknown): RequestInit {
+  return {
+    method,
+    headers: { 'Content-Type': 'application/json' },
+    ...(body === undefined ? {} : { body: JSON.stringify(body) }),
+  }
+}
+
+export function listOdcs(status: OdcStatus, page = 1): Promise<OdcPage> {
+  const query = new URLSearchParams({ status, page: String(page) })
+  return apiFetch<OdcPage>(`/api/odcs?${query.toString()}`)
+}
+
+export function getOdc(id: string): Promise<Odc> {
+  return apiFetch<Odc>(`/api/odcs/${encodeURIComponent(id)}`)
+}
+
+export function listSuppliers(): Promise<Supplier[]> {
+  return apiFetch<Supplier[]>('/api/suppliers')
+}
+
+export function createOdc(payload: OdcPayload): Promise<Odc> {
+  return apiFetch<Odc>('/api/odcs', jsonRequest('POST', payload))
+}
+
+export function updateOdc(id: string, payload: OdcPayload): Promise<Odc> {
+  return apiFetch<Odc>(
+    `/api/odcs/${encodeURIComponent(id)}`,
+    jsonRequest('PATCH', payload),
+  )
+}
+
+export function submitOdc(id: string): Promise<Odc> {
+  return apiFetch<Odc>(
+    `/api/odcs/${encodeURIComponent(id)}/submit`,
+    jsonRequest('POST'),
+  )
 }
