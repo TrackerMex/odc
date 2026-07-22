@@ -34,6 +34,12 @@ Frontend: rutas file-based en `frontend/src/routes/`, componentes en
 `frontend/src/components/`, utilidades en `frontend/src/lib/`. Imports internos
 con el alias `#/` (→ `src/`), definido en `frontend/package.json`.
 
+Componentes UI: **shadcn/ui obligatorio**. MCP server ya configurado en
+`frontend/.mcp.json`. Antes de escribir un componente de UI (botón, form,
+dialog, tabla, etc.), usar las tools del MCP `shadcn` para buscar/instalar el
+componente en vez de escribirlo a mano. Solo si shadcn no ofrece el
+componente se justifica uno custom (dejar la razón en `design.md` de la spec).
+
 ---
 
 ## Tokens de inyección / resolución de dependencias

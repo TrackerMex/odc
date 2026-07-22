@@ -21,6 +21,9 @@ proyecto y la disciplina TDD.
 3. Lee `docs/conventions.md` — convenciones de nombres, patrones del proyecto
 4. Identifica el módulo/feature más parecido ya implementado y estúdialo
 5. Lee `specs/<feature>/design.md` y `specs/<feature>/tasks.md`
+6. Si la feature es de `frontend/`: usa el MCP `shadcn` (ya configurado en
+   `frontend/.mcp.json`) para cualquier componente de UI. No escribas a mano
+   un botón/form/dialog/tabla que shadcn ya provee.
 
 ---
 
