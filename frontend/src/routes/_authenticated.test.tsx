@@ -32,6 +32,6 @@ describe('R6: protected route guard redirects to /login without a session', () =
   it('does not redirect when resolveSession resolves a user', async () => {
     vi.mocked(resolveSession).mockResolvedValue(mockUser)
 
-    await expect(authGuardBeforeLoad()).resolves.toBeUndefined()
+    await expect(authGuardBeforeLoad()).resolves.toEqual({ user: mockUser })
   })
 })

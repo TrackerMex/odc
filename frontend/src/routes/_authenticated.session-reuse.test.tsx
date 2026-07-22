@@ -26,7 +26,7 @@ describe('R13: protected route reuses the post-login session without refetching'
   })
 
   it('does not call GET /api/auth/me and lets the navigation through', async () => {
-    await expect(authGuardBeforeLoad()).resolves.toBeUndefined()
+    await expect(authGuardBeforeLoad()).resolves.toEqual({ user })
     expect(getMe).not.toHaveBeenCalled()
   })
 })
