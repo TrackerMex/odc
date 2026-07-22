@@ -1,16 +1,16 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { getMe } from '../lib/api'
+import type * as ApiModule from '../lib/api'
+import { useSessionStore } from '../stores/session.store'
+import { authGuardBeforeLoad } from './_authenticated'
 
 // Deliberately does NOT mock '../lib/session': this exercises the real
 // resolveSession() (store-first) together with the real guard, only
 // spying on the network call it would otherwise make.
 vi.mock('../lib/api', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('../lib/api')>()
+  const actual = await importOriginal<typeof ApiModule>()
   return { ...actual, getMe: vi.fn() }
 })
-
-import { getMe } from '../lib/api'
-import { useSessionStore } from '../stores/session.store'
-import { authGuardBeforeLoad } from './_authenticated'
 
 const user = {
   id: 'u1',

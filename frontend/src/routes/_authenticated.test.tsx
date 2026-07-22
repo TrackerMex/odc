@@ -1,10 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { isRedirect } from '@tanstack/react-router'
-
-vi.mock('../lib/session', () => ({ resolveSession: vi.fn() }))
-
 import { resolveSession } from '../lib/session'
 import { authGuardBeforeLoad } from './_authenticated'
+
+vi.mock('../lib/session', () => ({ resolveSession: vi.fn() }))
 
 const mockUser = {
   id: 'u1',

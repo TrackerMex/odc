@@ -1,21 +1,22 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { fireEvent, render, screen } from '@testing-library/react'
+import { logout } from '@/lib/api'
+import type * as ApiModule from '@/lib/api'
+import { useSessionStore } from '@/stores/session.store'
+import type * as RouterModule from '@tanstack/react-router'
+import { AppLayout } from './app-layout'
 
 const navigateMock = vi.hoisted(() => vi.fn())
 
 vi.mock('@/lib/api', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('@/lib/api')>()
+  const actual = await importOriginal<typeof ApiModule>()
   return { ...actual, logout: vi.fn() }
 })
 
 vi.mock('@tanstack/react-router', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('@tanstack/react-router')>()
+  const actual = await importOriginal<typeof RouterModule>()
   return { ...actual, useNavigate: () => navigateMock }
 })
-
-import { logout } from '@/lib/api'
-import { useSessionStore } from '@/stores/session.store'
-import { AppLayout } from './app-layout'
 
 const user = {
   id: 'u1',
