@@ -47,7 +47,7 @@ const user = {
   role: 'DIRECTOR_OPS',
 }
 
-describe('R2-R4: ODC form metadata, fields and live total', () => {
+describe('R2,R3,R4,R5,R6: ODC form metadata, fields and live total', () => {
   it('shows the server-assigned number hint, accessible labels and live MXN total', () => {
     render(
       <OdcForm
@@ -140,7 +140,7 @@ describe('R2-R4: ODC form metadata, fields and live total', () => {
   })
 })
 
-describe('R8-R11: rejected ODC editing, resend and failures', () => {
+describe('R8,R9,R10,R11: rejected ODC editing, resend and failures', () => {
   beforeEach(() => vi.clearAllMocks())
 
   it('prefills rejected values, persists the PATCH payload and then submits', async () => {

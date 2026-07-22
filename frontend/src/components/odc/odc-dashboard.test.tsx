@@ -51,7 +51,7 @@ function page(items: Odc[], total = items.length): OdcPage {
   return { items, total, page: 1, pageSize: 20 }
 }
 
-describe('R1: DIRECTOR_OPS dashboard exposes four workflow queues', () => {
+describe('R1,R12: DIRECTOR_OPS dashboard exposes four responsive workflow queues', () => {
   it('renders every counter, list item, detail link and create action', () => {
     render(
       <OdcDashboard
