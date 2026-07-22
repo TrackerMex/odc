@@ -1,6 +1,6 @@
 # ODC — Status
 
-**Última actualización**: 2026-07-21
+**Última actualización**: 2026-07-22
 **Features completadas**: 9/14 (`feature_list.json`)
 **Pendientes**: 5 (todas frontend: #9-#13, `pending`, sin spec aún)
 **En producción**: no
@@ -23,6 +23,12 @@ Plan maestro en `plans/001-odc-purchase-system.md`.
 docker compose up -d   # PostgreSQL 16 en :5432
 ./init.sh              # instala, build, tests, verificación del harness
 ```
+
+En desarrollo local sin Docker, el proxy de Vite usa por defecto
+`http://localhost:3001`. En Docker Compose, el frontend usa
+`API_PROXY_TARGET=http://backend:3001` porque `localhost` dentro del contenedor
+frontend no apunta al backend. El SSR usa `API_BASE_URL=http://backend:3001`
+para resolver el backend y reenviar la cookie de sesión entrante.
 
 Requiere `.env` en la raíz (plantilla en `.env.example`): `DATABASE_URL`,
 `JWT_SECRET`, `PORT`.
@@ -109,7 +115,7 @@ Próximos pasos:
 - **Backend**: NestJS 11 + TypeORM + PostgreSQL 16, pnpm, Jest. Puerto 3001,
   prefijo `/api`. Clean Architecture (`docs/architecture.md`).
 - **Frontend**: TanStack Start + React 19 + Tailwind 4, Vite (puerto 3000,
-  proxy `/api` → 3001 aún no configurado, lo hará #9), Vitest. `shadcn/ui`
+  proxy `/api` configurable para local o Docker), Vitest. `shadcn/ui`
   (base `@base-ui/react`, preset base "neutral") agregado 2026-07-21.
 - **Infra dev**: Docker Compose (solo PostgreSQL). Archivos subidos a
   `backend/uploads/` (disco local, gitignored).

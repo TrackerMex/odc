@@ -36,8 +36,11 @@ services:
       - backend
     environment:
       # Backend is reachable as `backend` on the docker-compose network, not
-      # `localhost` — only used server-side (SSR), see src/lib/api.ts.
+      # `localhost` — SSR uses this URL in src/lib/api.ts.
       API_BASE_URL: http://backend:3001
+      # Vite runs inside this frontend container, so its proxy must use the
+      # Docker service name instead of localhost.
+      API_PROXY_TARGET: http://backend:3001
     ports:
       - "3000:3000"
     volumes:

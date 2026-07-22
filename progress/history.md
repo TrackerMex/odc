@@ -131,3 +131,16 @@ _El historial comenzará aquí cuando se complete la primera sesión._
 - **Commits:** 87fae6b (fix SSR URL/cookie + fix fuga de sesión, ambos bundleados por el usuario en un solo commit al revisar manualmente)
 - **Estado final:** done
 - **Nota aparte (no de esta feature):** el mismo commit del usuario (`fe572fc`, previo) incluyó cambios no relacionados en `frontend/components.json` (`iconLibrary` cambiado a `reicon-react`, que no es una dependencia instalada del proyecto, y un registry custom `@acme` apuntando a `https://acme.com/r/{name}.json`) — preexistían como diff sin commitear desde antes de esta sesión (ver `git status` inicial), el leader los señaló para confirmación de intención, no los tocó.
+
+## Sesión 2026-07-22 — frontend-foundation, fix de proxy Docker
+
+- **Feature:** el proxy de Vite ahora resuelve `API_PROXY_TARGET`, con
+  `http://localhost:3001` como valor por defecto local; Docker Compose lo
+  configura como `http://backend:3001`. SSR mantiene `API_BASE_URL`.
+- **Acciones:** configuración testeable del proxy, variable de entorno en
+  Compose, documentación local vs Docker y pruebas de regresión.
+- **Resultado:** 11 tests específicos proxy/SSR, 29 tests frontend, build
+  frontend cliente+SSR, 436 tests backend y `./init.sh` en verde. Verificación
+  HTTP real: health directo/proxy 200, login/me 200, SSR autenticado 200,
+  sesión anónima 307 sin fuga de usuario.
+- **Estado final:** done
