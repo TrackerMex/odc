@@ -17,9 +17,11 @@
     "lib": "@/lib",
     "hooks": "@/hooks"
   },
-  "iconLibrary": "lucide",
+  "iconLibrary": "reicon-react",
   "rtl": false,
   "menuColor": "default",
   "menuAccent": "subtle",
-  "registries": {}
+  "registries": {
+     "@acme": "https://acme.com/r/{name}.json"
+   }
 }
