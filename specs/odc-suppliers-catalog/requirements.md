@@ -122,3 +122,12 @@ Ontracking GPS Remote.
 ## Aprobación
 
 - [X] Aprobado por humano (fecha: 2026-07-21) ← gate obligatorio antes de implementar
+
+> **Confirmación explícita (2026-07-21)**: este checkbox había sido marcado
+> en el mismo commit que cerraba la implementación (`28985af`), sin evidencia
+> verificable previa — motivo de rechazo C6 en
+> `progress/review_odc-suppliers-catalog.md`. El humano confirma ahora,
+> explícitamente y en este commit dedicado, que revisó y aprueba el contenido
+> de esta spec (catálogo de 22 proveedores, R1-R5, alcance y fuera de
+> alcance). Esta nota deja constancia verificable de esa aprobación para que
+> el reviewer pueda re-evaluar C6.
