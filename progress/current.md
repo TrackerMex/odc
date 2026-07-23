@@ -14,7 +14,6 @@ agentes lanzados: —
 estado: sin sesión activa
 ```
 
-
 ---
 
 _Cuando inicies una sesión, reemplaza la plantilla con:_
@@ -43,4 +42,3 @@ inicio: —
 agentes lanzados: —
 estado: sin sesión activa
 ```
-

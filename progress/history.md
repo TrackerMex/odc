@@ -144,3 +144,40 @@ _El historial comenzará aquí cuando se complete la primera sesión._
   HTTP real: health directo/proxy 200, login/me 200, SSR autenticado 200,
   sesión anónima 307 sin fuga de usuario.
 - **Estado final:** done
+
+## Sesión 2026-07-22 — frontend-odc-form (id: 10)
+
+- **Feature:** dashboard `DIRECTOR_OPS` con contadores/listas de Borradores,
+  Rechazadas, Listas para comprar y Pendientes de factura; creación de ODC con
+  catálogo de proveedores, total MXN en vivo y acciones Guardar/Enviar; detalle
+  con historial; edición y reenvío de ODC rechazada con motivo visible.
+- **Spec:** [[specs/frontend-odc-form/requirements|spec]] (R1–R12, aprobada por
+  humano 2026-07-22).
+- **Acciones:** spec aprobada → tests rojos → cliente/tipos/utilidades →
+  dashboard y rutas `/odcs/new`/`/odcs/$id` → componentes shadcn → revisión
+  C2–C6. La skill `emil-design-eng` guió una interfaz operativa sobria, con
+  feedback inmediato y movimiento limitado a estados funcionales.
+- **Resultado:** 16 archivos/44 tests frontend en verde; 15 tests focales
+  R1–R12; build cliente+SSR, TypeScript, lint de alcance y `./init.sh` verdes;
+  review APROBADO → `progress/review_frontend-odc-form.md`.
+- **Commits:** `a0267b5` spec aprobada, `40da676` tests TDD, `f69dc48`
+  implementación, `90a6e89` normalización de nombres R-id.
+- **Estado final:** done
+
+## Sesión 2026-07-22 — frontend-admin-flows (id: 11)
+
+- **Feature:** dashboard `ADMINISTRACION` con colas `Pendientes de validar`
+  (`PENDIENTE_ADMIN`) y `Compras pagadas` (`PAGO_REGISTRADO`); detalle con
+  aprobación de presupuesto, rechazo mediante diálogo con motivo obligatorio,
+  datos de pago y subida multipart de comprobante PDF/JPG/PNG de máximo 10 MB.
+- **Spec:** [[specs/frontend-admin-flows/requirements|spec]] (R1–R12,
+  aprobada por humano 2026-07-22).
+- **Acciones:** spec aprobada → commit de tests rojos → cliente API, dashboard
+  por rol y acciones administrativas → `Dialog` generado con CLI oficial de
+  shadcn (MCP no disponible) → revisión C2–C6.
+- **Resultado:** `./init.sh` en verde; backend 51 suites/436 tests, frontend 19
+  archivos/56 tests, builds cliente+SSR y lint; review APROBADO →
+  `progress/review_frontend-admin-flows.md`; trazabilidad 12/12 completa.
+- **Commits:** `5bcce36` spec aprobada, `8ad0352` tests TDD, `17d91df`
+  implementación.
+- **Estado final:** done

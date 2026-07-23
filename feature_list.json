@@ -51,13 +51,13 @@
   {
     "id": 10,
     "name": "frontend-odc-form",
-    "status": "pending",
+    "status": "done",
     "priority": "P1"
   },
   {
     "id": 11,
     "name": "frontend-admin-flows",
-    "status": "pending",
+    "status": "done",
     "priority": "P2"
   },
   {

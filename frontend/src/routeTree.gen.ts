@@ -12,6 +12,8 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/index'
+import { Route as AuthenticatedOdcsIdRouteImport } from './routes/_authenticated/odcs/$id'
+import { Route as AuthenticatedOdcsNewRouteImport } from './routes/_authenticated/odcs/new'
 
 const AuthenticatedRoute = AuthenticatedRouteImport.update({
   id: '/_authenticated',
@@ -27,27 +29,49 @@ const AuthenticatedIndexRoute = AuthenticatedIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedOdcsIdRoute = AuthenticatedOdcsIdRouteImport.update({
+  id: '/odcs/$id',
+  path: '/odcs/$id',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedOdcsNewRoute = AuthenticatedOdcsNewRouteImport.update({
+  id: '/odcs/new',
+  path: '/odcs/new',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof AuthenticatedIndexRoute
   '/login': typeof LoginRoute
+  '/odcs/$id': typeof AuthenticatedOdcsIdRoute
+  '/odcs/new': typeof AuthenticatedOdcsNewRoute
 }
 export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/': typeof AuthenticatedIndexRoute
+  '/odcs/$id': typeof AuthenticatedOdcsIdRoute
+  '/odcs/new': typeof AuthenticatedOdcsNewRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_authenticated': typeof AuthenticatedRouteWithChildren
   '/login': typeof LoginRoute
   '/_authenticated/': typeof AuthenticatedIndexRoute
+  '/_authenticated/odcs/$id': typeof AuthenticatedOdcsIdRoute
+  '/_authenticated/odcs/new': typeof AuthenticatedOdcsNewRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/login'
+  fullPaths: '/' | '/login' | '/odcs/$id' | '/odcs/new'
   fileRoutesByTo: FileRoutesByTo
-  to: '/login' | '/'
-  id: '__root__' | '/_authenticated' | '/login' | '/_authenticated/'
+  to: '/login' | '/' | '/odcs/$id' | '/odcs/new'
+  id:
+    | '__root__'
+    | '/_authenticated'
+    | '/login'
+    | '/_authenticated/'
+    | '/_authenticated/odcs/$id'
+    | '/_authenticated/odcs/new'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -78,15 +102,33 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedIndexRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/odcs/$id': {
+      id: '/_authenticated/odcs/$id'
+      path: '/odcs/$id'
+      fullPath: '/odcs/$id'
+      preLoaderRoute: typeof AuthenticatedOdcsIdRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/odcs/new': {
+      id: '/_authenticated/odcs/new'
+      path: '/odcs/new'
+      fullPath: '/odcs/new'
+      preLoaderRoute: typeof AuthenticatedOdcsNewRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
   }
 }
 
 interface AuthenticatedRouteChildren {
   AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
+  AuthenticatedOdcsIdRoute: typeof AuthenticatedOdcsIdRoute
+  AuthenticatedOdcsNewRoute: typeof AuthenticatedOdcsNewRoute
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedIndexRoute: AuthenticatedIndexRoute,
+  AuthenticatedOdcsIdRoute: AuthenticatedOdcsIdRoute,
+  AuthenticatedOdcsNewRoute: AuthenticatedOdcsNewRoute,
 }
 
 const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(

@@ -1,0 +1,291 @@
+{
+  "info": {
+    "name": "ODC API",
+    "description": "Colección manual para probar la API de ODC. Login por cookie de sesión (Postman gestiona la cookie jar automáticamente por dominio).\n\nUsuarios seed (backend/src/modules/users/application/use-cases/seed-users.usecase.ts):\n- ops@odc.local (DIRECTOR_OPS)\n- admin@odc.local (ADMINISTRACION)\n- dg@odc.local (DIRECTOR_GENERAL)\nPassword: odc-dev-password (o SEED_PASSWORD si se sobreescribió en .env)",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:3001/api" },
+    { "key": "odcId", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Login - DIRECTOR_OPS (ops)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"ops@odc.local\",\n  \"password\": \"odc-dev-password\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/auth/login", "host": ["{{baseUrl}}"], "path": ["auth", "login"] }
+          }
+        },
+        {
+          "name": "Login - ADMINISTRACION (admin)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@odc.local\",\n  \"password\": \"odc-dev-password\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/auth/login", "host": ["{{baseUrl}}"], "path": ["auth", "login"] }
+          }
+        },
+        {
+          "name": "Login - DIRECTOR_GENERAL (dg)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"dg@odc.local\",\n  \"password\": \"odc-dev-password\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/auth/login", "host": ["{{baseUrl}}"], "path": ["auth", "login"] }
+          }
+        },
+        {
+          "name": "Me",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/auth/me", "host": ["{{baseUrl}}"], "path": ["auth", "me"] }
+          }
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/auth/logout", "host": ["{{baseUrl}}"], "path": ["auth", "logout"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "ODC",
+      "item": [
+        {
+          "name": "Create draft (T1) - DIRECTOR_OPS",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 201 || pm.response.code === 200) {",
+                  "  const body = pm.response.json();",
+                  "  if (body && body.id) pm.collectionVariables.set('odcId', body.id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"description\": \"Compra de laptops\",\n  \"quantity\": 3,\n  \"unit\": \"unidad\",\n  \"unitPriceCents\": 1500000,\n  \"supplier\": \"Proveedor S.A.\",\n  \"comments\": \"Urgente\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/odcs", "host": ["{{baseUrl}}"], "path": ["odcs"] }
+          }
+        },
+        {
+          "name": "Update draft (PATCH) - DIRECTOR_OPS",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"comments\": \"Actualizado\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/odcs/{{odcId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["odcs", "{{odcId}}"]
+            }
+          }
+        },
+        {
+          "name": "Submit (T2->T3) - DIRECTOR_OPS",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/odcs/{{odcId}}/submit",
+              "host": ["{{baseUrl}}"],
+              "path": ["odcs", "{{odcId}}", "submit"]
+            }
+          }
+        },
+        {
+          "name": "Approve budget (T4) - ADMINISTRACION",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/odcs/{{odcId}}/approve-budget",
+              "host": ["{{baseUrl}}"],
+              "path": ["odcs", "{{odcId}}", "approve-budget"]
+            }
+          }
+        },
+        {
+          "name": "Approve purchase (T6) - DIRECTOR_GENERAL",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/odcs/{{odcId}}/approve-purchase",
+              "host": ["{{baseUrl}}"],
+              "path": ["odcs", "{{odcId}}", "approve-purchase"]
+            }
+          }
+        },
+        {
+          "name": "Reject (T4/T6) - ADMINISTRACION|DIRECTOR_GENERAL",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"rejectionReason\": \"Presupuesto excedido\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/odcs/{{odcId}}/reject",
+              "host": ["{{baseUrl}}"],
+              "path": ["odcs", "{{odcId}}", "reject"]
+            }
+          }
+        },
+        {
+          "name": "Register payment (T7) - DIRECTOR_OPS",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"paymentDate\": \"2026-07-21\",\n  \"paymentMethod\": \"Transferencia\",\n  \"paymentReference\": \"REF-001\",\n  \"paymentNotes\": \"Pago completo\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/odcs/{{odcId}}/payment",
+              "host": ["{{baseUrl}}"],
+              "path": ["odcs", "{{odcId}}", "payment"]
+            }
+          }
+        },
+        {
+          "name": "Upload payment evidence (T8) - ADMINISTRACION",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "file", "type": "file", "src": "" },
+                { "key": "evidenceReference", "value": "COMP-001", "type": "text" }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/odcs/{{odcId}}/payment-evidence",
+              "host": ["{{baseUrl}}"],
+              "path": ["odcs", "{{odcId}}", "payment-evidence"]
+            }
+          }
+        },
+        {
+          "name": "Upload invoice (T9) - DIRECTOR_OPS",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "file", "type": "file", "src": "" },
+                { "key": "warehouseEntryDate", "value": "2026-07-21", "type": "text" },
+                { "key": "invoiceNumber", "value": "FAC-001", "type": "text" },
+                { "key": "invoiceDate", "value": "2026-07-20", "type": "text" },
+                { "key": "observations", "value": "Recibido conforme", "type": "text" }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/odcs/{{odcId}}/invoice",
+              "host": ["{{baseUrl}}"],
+              "path": ["odcs", "{{odcId}}", "invoice"]
+            }
+          }
+        },
+        {
+          "name": "List ODCs",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/odcs?status=BORRADOR&page=1",
+              "host": ["{{baseUrl}}"],
+              "path": ["odcs"],
+              "query": [
+                { "key": "status", "value": "BORRADOR", "disabled": true },
+                { "key": "page", "value": "1", "disabled": true }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get ODC detail",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/odcs/{{odcId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["odcs", "{{odcId}}"]
+            }
+          }
+        },
+        {
+          "name": "Get file (redirect) - evidence",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/odcs/{{odcId}}/files/evidence",
+              "host": ["{{baseUrl}}"],
+              "path": ["odcs", "{{odcId}}", "files", "evidence"]
+            }
+          }
+        },
+        {
+          "name": "Get file (redirect) - invoice",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/odcs/{{odcId}}/files/invoice",
+              "host": ["{{baseUrl}}"],
+              "path": ["odcs", "{{odcId}}", "files", "invoice"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Health",
+      "item": [
+        {
+          "name": "Health check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/health", "host": ["{{baseUrl}}"], "path": ["health"] }
+          }
+        }
+      ]
+    }
+  ]
+}
