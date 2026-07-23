@@ -48,7 +48,7 @@ plan:
 estado: in_progress
 bloqueos: —
 spec_author: done
-implementer: en curso
-reviewer: pendiente
+implementer: done
+reviewer: en curso
 gate humano: aprobado por el usuario el 2026-07-23
 ```
