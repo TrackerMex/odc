@@ -1,7 +1,11 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type * as ApiModule from '@/lib/api'
 import { getOdc, listOdcs, listSuppliers } from '@/lib/api'
-import { loadAdminDashboard, loadOpsDashboard } from '../index'
+import {
+  loadAdminDashboard,
+  loadGeneralDashboard,
+  loadOpsDashboard,
+} from '../index'
 import { loadOdcDetail } from './$id'
 
 vi.mock('@/lib/api', async (importOriginal) => {
@@ -50,6 +54,19 @@ describe('R1: dashboard loader requests only ADMINISTRACION queues', () => {
     expect(listOdcs).toHaveBeenNthCalledWith(1, 'PENDIENTE_ADMIN')
     expect(listOdcs).toHaveBeenNthCalledWith(2, 'PAGO_REGISTRADO')
     expect(Object.keys(result)).toEqual(['PENDIENTE_ADMIN', 'PAGO_REGISTRADO'])
+  })
+})
+
+describe('R1: dashboard loader requests only the DIRECTOR_GENERAL queue', () => {
+  beforeEach(() => vi.clearAllMocks())
+
+  it('loads exactly page 1 of PRESUPUESTO_APROBADO', async () => {
+    vi.mocked(listOdcs).mockResolvedValue(emptyPage)
+
+    await expect(loadGeneralDashboard()).resolves.toEqual(emptyPage)
+
+    expect(listOdcs).toHaveBeenCalledOnce()
+    expect(listOdcs).toHaveBeenCalledWith('PRESUPUESTO_APROBADO', 1)
   })
 })
 

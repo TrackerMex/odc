@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import {
   approveBudget,
+  approvePurchase,
   createOdc,
   getOdc,
   listOdcs,
@@ -89,7 +90,7 @@ describe('R1,R3,R5,R6,R7,R8,R9: typed ODC API client', () => {
   })
 })
 
-describe('R4,R6,R9: ADMINISTRACION mutation contracts', () => {
+describe('R4,R6,R8,R9: ADMINISTRACION and shared rejection contracts', () => {
   beforeEach(() => {
     vi.stubGlobal('fetch', vi.fn())
   })
@@ -145,5 +146,25 @@ describe('R4,R6,R9: ADMINISTRACION mutation contracts', () => {
     const emptyReferenceBody = vi.mocked(fetch).mock.calls[1][1]
       ?.body as FormData
     expect(emptyReferenceBody.has('evidenceReference')).toBe(false)
+  })
+})
+
+describe('R6: DIRECTOR_GENERAL purchase approval contract', () => {
+  beforeEach(() => {
+    vi.stubGlobal('fetch', vi.fn())
+  })
+
+  it('posts once to the approve-purchase endpoint', async () => {
+    vi.mocked(fetch).mockResolvedValue(
+      jsonResponse({ id: 'o1', status: 'COMPRA_APROBADA' }),
+    )
+
+    await approvePurchase('o1')
+
+    expect(fetch).toHaveBeenCalledOnce()
+    expect(fetch).toHaveBeenCalledWith(
+      '/api/odcs/o1/approve-purchase',
+      expect.objectContaining({ method: 'POST' }),
+    )
   })
 })
