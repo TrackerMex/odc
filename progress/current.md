@@ -5,42 +5,19 @@
 
 ---
 
-## Plantilla (sesión sin iniciar)
-
-```
-feature: —
-inicio: —
-agentes lanzados: —
-estado: sin sesión activa
-```
-
-
----
-
-_Cuando inicies una sesión, reemplaza la plantilla con:_
-
-```
-feature: <nombre de la feature>
-id: <id en feature_list.json>
-inicio: <fecha y hora>
-plan:
-  - <paso 1>
-  - <paso 2>
-estado: pending / spec_ready / in_progress / done
-bloqueos: —
-spec_author: pendiente / en curso / done
-implementer: pendiente / en curso / done
-reviewer: pendiente / en curso / aprobado / rechazado
-```
-
----
-
 ## Sesión activa
 
+```yaml
+feature: frontend-admin-flows
+id: 11
+inicio: 2026-07-22 20:25 America/Mexico_City
+plan:
+  - redactar requisitos EARS contra los contratos backend existentes
+  - definir diseño, tareas TDD y trazabilidad inicial
+  - dejar la feature en spec_ready y detenerse en el gate humano
+estado: in_progress
+bloqueos: —
+spec_author: done
+implementer: en curso
+reviewer: pendiente
 ```
-feature: —
-inicio: —
-agentes lanzados: —
-estado: sin sesión activa
-```
-
