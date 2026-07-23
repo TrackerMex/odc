@@ -181,3 +181,23 @@ _El historial comenzará aquí cuando se complete la primera sesión._
 - **Commits:** `5bcce36` spec aprobada, `8ad0352` tests TDD, `17d91df`
   implementación.
 - **Estado final:** done
+
+## Sesión 2026-07-23 — frontend-general-approval (id: 12)
+
+- **Feature:** dashboard `DIRECTOR_GENERAL` con la cola `Esperando mi
+  aprobación` (`PRESUPUESTO_APROBADO`); detalle con total, proveedor, historial
+  y marca `Validado por Administración`; aprobación de compra y rechazo mediante
+  diálogo con motivo obligatorio.
+- **Spec:** [[specs/frontend-general-approval/requirements|spec]] (R1–R10,
+  aprobada por humano 2026-07-23).
+- **Acciones:** spec aprobada → tests R1–R10 → implementación de dashboard,
+  cliente API y panel de acciones → primera revisión rechazada por falta de
+  evidencia test-first en Git y un timeout aislado → reescritura autorizada
+  con respaldo `backup/frontend-general-approval-pre-rewrite-20260723` →
+  secuencia test-first verificable → segunda revisión C2–C6 APROBADA.
+- **Resultado:** `./init.sh` en verde; backend 51 suites/436 tests, frontend 21
+  archivos/75 tests, builds cliente+SSR y lint; review APROBADO →
+  `progress/review_frontend-general-approval.md`; trazabilidad 10/10 completa.
+- **Commits:** `e0f9588` spec aprobada, `287ba8f` tests rojos,
+  `5e63420` implementación verde, `1ce640c` trazabilidad.
+- **Estado final:** done
