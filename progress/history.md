@@ -163,3 +163,21 @@ _El historial comenzará aquí cuando se complete la primera sesión._
 - **Commits:** `a0267b5` spec aprobada, `40da676` tests TDD, `f69dc48`
   implementación, `90a6e89` normalización de nombres R-id.
 - **Estado final:** done
+
+## Sesión 2026-07-22 — frontend-admin-flows (id: 11)
+
+- **Feature:** dashboard `ADMINISTRACION` con colas `Pendientes de validar`
+  (`PENDIENTE_ADMIN`) y `Compras pagadas` (`PAGO_REGISTRADO`); detalle con
+  aprobación de presupuesto, rechazo mediante diálogo con motivo obligatorio,
+  datos de pago y subida multipart de comprobante PDF/JPG/PNG de máximo 10 MB.
+- **Spec:** [[specs/frontend-admin-flows/requirements|spec]] (R1–R12,
+  aprobada por humano 2026-07-22).
+- **Acciones:** spec aprobada → commit de tests rojos → cliente API, dashboard
+  por rol y acciones administrativas → `Dialog` generado con CLI oficial de
+  shadcn (MCP no disponible) → revisión C2–C6.
+- **Resultado:** `./init.sh` en verde; backend 51 suites/436 tests, frontend 19
+  archivos/56 tests, builds cliente+SSR y lint; review APROBADO →
+  `progress/review_frontend-admin-flows.md`; trazabilidad 12/12 completa.
+- **Commits:** `5bcce36` spec aprobada, `8ad0352` tests TDD, `17d91df`
+  implementación.
+- **Estado final:** done
