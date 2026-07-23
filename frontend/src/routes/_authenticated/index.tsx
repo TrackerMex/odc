@@ -2,6 +2,8 @@ import { createFileRoute } from '@tanstack/react-router'
 import { listOdcs } from '@/lib/api'
 import { OdcDashboard } from '@/components/odc/odc-dashboard'
 import type { DashboardSections } from '@/components/odc/odc-dashboard'
+import { AdminDashboard } from '@/components/odc/admin-dashboard'
+import type { AdminDashboardSections } from '@/components/odc/admin-dashboard'
 import {
   OdcPageError,
   OdcPagePending,
@@ -23,17 +25,40 @@ export async function loadOpsDashboard(): Promise<DashboardSections> {
   }
 }
 
+export async function loadAdminDashboard(): Promise<AdminDashboardSections> {
+  const [pending, paid] = await Promise.all([
+    listOdcs('PENDIENTE_ADMIN'),
+    listOdcs('PAGO_REGISTRADO'),
+  ])
+  return {
+    PENDIENTE_ADMIN: pending,
+    PAGO_REGISTRADO: paid,
+  }
+}
+
 export const Route = createFileRoute('/_authenticated/')({
-  loader: async ({ context }) =>
-    context.user.role === 'DIRECTOR_OPS' ? loadOpsDashboard() : null,
+  loader: async ({ context }) => {
+    if (context.user.role === 'DIRECTOR_OPS') {
+      return { kind: 'ops' as const, sections: await loadOpsDashboard() }
+    }
+    if (context.user.role === 'ADMINISTRACION') {
+      return { kind: 'admin' as const, sections: await loadAdminDashboard() }
+    }
+    return null
+  },
   pendingComponent: OdcPagePending,
   errorComponent: OdcPageError,
   component: Home,
 })
 
 function Home() {
-  const sections = Route.useLoaderData()
+  const dashboard = Route.useLoaderData()
   const { user } = Route.useRouteContext()
-  if (!sections) return <RolePlaceholder />
-  return <OdcDashboard userName={user.fullName} sections={sections} />
+  if (!dashboard) return <RolePlaceholder />
+  if (dashboard.kind === 'admin') {
+    return (
+      <AdminDashboard userName={user.fullName} sections={dashboard.sections} />
+    )
+  }
+  return <OdcDashboard userName={user.fullName} sections={dashboard.sections} />
 }

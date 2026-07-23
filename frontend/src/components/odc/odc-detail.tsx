@@ -6,7 +6,12 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
-import { formatCurrency, formatDate, statusLabel } from '@/lib/odc'
+import {
+  formatCurrency,
+  formatDate,
+  formatDateOnly,
+  statusLabel,
+} from '@/lib/odc'
 import type { Odc } from '@/lib/odc'
 import { OdcStatusBadge } from './odc-status-badge'
 
@@ -78,6 +83,35 @@ export function OdcDetail({ odc }: { odc: Odc }) {
                   Comentarios
                 </p>
                 <p className="mt-2 text-sm leading-relaxed">{odc.comments}</p>
+              </div>
+            ) : null}
+            {odc.paymentDate || odc.paymentMethod ? (
+              <div className="mt-4 rounded-2xl border p-4">
+                <p className="text-xs font-medium tracking-[0.1em] text-muted-foreground uppercase">
+                  Información de pago
+                </p>
+                <dl className="mt-3 grid gap-3 sm:grid-cols-2">
+                  <DetailItem
+                    label="Fecha de pago"
+                    value={formatDateOnly(odc.paymentDate)}
+                  />
+                  <DetailItem
+                    label="Método de pago"
+                    value={odc.paymentMethod ?? 'Pendiente'}
+                  />
+                  {odc.paymentReference ? (
+                    <DetailItem
+                      label="Referencia de pago"
+                      value={odc.paymentReference}
+                    />
+                  ) : null}
+                  {odc.paymentNotes ? (
+                    <DetailItem
+                      label="Notas de pago"
+                      value={odc.paymentNotes}
+                    />
+                  ) : null}
+                </dl>
               </div>
             ) : null}
           </CardContent>

@@ -1,12 +1,6 @@
 import { createIsomorphicFn } from '@tanstack/react-start'
 import type { SessionUser } from './session'
-import type {
-  Odc,
-  OdcPage,
-  OdcPayload,
-  OdcStatus,
-  Supplier,
-} from './odc'
+import type { Odc, OdcPage, OdcPayload, OdcStatus, Supplier } from './odc'
 
 export class ApiError extends Error {
   constructor(
@@ -147,4 +141,34 @@ export function submitOdc(id: string): Promise<Odc> {
     `/api/odcs/${encodeURIComponent(id)}/submit`,
     jsonRequest('POST'),
   )
+}
+
+export function approveBudget(id: string): Promise<Odc> {
+  return apiFetch<Odc>(
+    `/api/odcs/${encodeURIComponent(id)}/approve-budget`,
+    jsonRequest('POST'),
+  )
+}
+
+export function rejectOdc(id: string, rejectionReason: string): Promise<Odc> {
+  return apiFetch<Odc>(
+    `/api/odcs/${encodeURIComponent(id)}/reject`,
+    jsonRequest('POST', { rejectionReason: rejectionReason.trim() }),
+  )
+}
+
+export function uploadPaymentEvidence(
+  id: string,
+  file: File,
+  evidenceReference?: string,
+): Promise<Odc> {
+  const formData = new FormData()
+  formData.set('file', file)
+  const reference = evidenceReference?.trim()
+  if (reference) formData.set('evidenceReference', reference)
+
+  return apiFetch<Odc>(`/api/odcs/${encodeURIComponent(id)}/payment-evidence`, {
+    method: 'POST',
+    body: formData,
+  })
 }

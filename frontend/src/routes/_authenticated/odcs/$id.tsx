@@ -1,10 +1,20 @@
 import { useState } from 'react'
 import { ArrowLeftIcon } from 'lucide-react'
 import { createFileRoute, Link } from '@tanstack/react-router'
-import { getOdc, listSuppliers, submitOdc, updateOdc } from '@/lib/api'
+import {
+  approveBudget,
+  getOdc,
+  listSuppliers,
+  rejectOdc,
+  submitOdc,
+  updateOdc,
+  uploadPaymentEvidence,
+} from '@/lib/api'
 import type { Odc } from '@/lib/odc'
 import { OdcDetail } from '@/components/odc/odc-detail'
 import { OdcForm } from '@/components/odc/odc-form'
+import { AdminBudgetActions } from '@/components/odc/admin-budget-actions'
+import { PaymentEvidenceForm } from '@/components/odc/payment-evidence-form'
 import { OdcPageError, OdcPagePending } from '@/components/odc/odc-page-state'
 import { buttonVariants } from '@/components/ui/button'
 
@@ -42,6 +52,23 @@ function OdcDetailPage() {
         <div className="mt-5">
           <OdcDetail odc={odc} />
         </div>
+
+        <AdminBudgetActions
+          odc={odc}
+          role={user.role}
+          approve={() => approveBudget(odc.id ?? '')}
+          reject={(reason) => rejectOdc(odc.id ?? '', reason)}
+          onSuccess={setOdc}
+        />
+
+        <PaymentEvidenceForm
+          odc={odc}
+          role={user.role}
+          upload={(file, reference) =>
+            uploadPaymentEvidence(odc.id ?? '', file, reference)
+          }
+          onSuccess={setOdc}
+        />
 
         {canEdit ? (
           <section className="mt-8" aria-labelledby="edit-odc-title">

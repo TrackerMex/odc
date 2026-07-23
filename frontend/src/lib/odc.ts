@@ -156,6 +156,14 @@ export function formatDate(value: string | null): string {
   }).format(new Date(value))
 }
 
+export function formatDateOnly(value: string | null): string {
+  if (!value) return 'Pendiente'
+  return new Intl.DateTimeFormat('es-MX', {
+    dateStyle: 'medium',
+    timeZone: 'UTC',
+  }).format(new Date(`${value.slice(0, 10)}T00:00:00.000Z`))
+}
+
 export function statusLabel(status: OdcStatus): string {
   const labels: Record<OdcStatus, string> = {
     BORRADOR: 'Borrador',
