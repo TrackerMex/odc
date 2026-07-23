@@ -37,8 +37,18 @@ reviewer: pendiente / en curso / aprobado / rechazado
 ## Sesión activa
 
 ```
-feature: —
-inicio: —
-agentes lanzados: —
-estado: sin sesión activa
+feature: frontend-general-approval
+id: 12
+inicio: 2026-07-23 10:55:52 -06:00
+plan:
+  - spec_author redacta requirements, design, tasks y traceability
+  - revisar que la spec quede en spec_ready sin autoaprobar el gate humano
+  - implementer ejecuta TDD para R1-R10 y completa trazabilidad
+  - reviewer valida C2-C6 y el cierre de la feature
+estado: in_progress
+bloqueos: —
+spec_author: done
+implementer: en curso
+reviewer: pendiente
+gate humano: aprobado por el usuario el 2026-07-23
 ```
