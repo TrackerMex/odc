@@ -3,6 +3,7 @@ import { ArrowLeftIcon } from 'lucide-react'
 import { createFileRoute, Link } from '@tanstack/react-router'
 import {
   approveBudget,
+  approvePurchase,
   getOdc,
   listSuppliers,
   rejectOdc,
@@ -14,6 +15,7 @@ import type { Odc } from '@/lib/odc'
 import { OdcDetail } from '@/components/odc/odc-detail'
 import { OdcForm } from '@/components/odc/odc-form'
 import { AdminBudgetActions } from '@/components/odc/admin-budget-actions'
+import { GeneralApprovalActions } from '@/components/odc/general-approval-actions'
 import { PaymentEvidenceForm } from '@/components/odc/payment-evidence-form'
 import { OdcPageError, OdcPagePending } from '@/components/odc/odc-page-state'
 import { buttonVariants } from '@/components/ui/button'
@@ -57,6 +59,14 @@ function OdcDetailPage() {
           odc={odc}
           role={user.role}
           approve={() => approveBudget(odc.id ?? '')}
+          reject={(reason) => rejectOdc(odc.id ?? '', reason)}
+          onSuccess={setOdc}
+        />
+
+        <GeneralApprovalActions
+          odc={odc}
+          role={user.role}
+          approve={() => approvePurchase(odc.id ?? '')}
           reject={(reason) => rejectOdc(odc.id ?? '', reason)}
           onSuccess={setOdc}
         />

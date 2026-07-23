@@ -4,6 +4,7 @@ import { OdcDashboard } from '@/components/odc/odc-dashboard'
 import type { DashboardSections } from '@/components/odc/odc-dashboard'
 import { AdminDashboard } from '@/components/odc/admin-dashboard'
 import type { AdminDashboardSections } from '@/components/odc/admin-dashboard'
+import { GeneralDashboard } from '@/components/odc/general-dashboard'
 import {
   OdcPageError,
   OdcPagePending,
@@ -36,6 +37,10 @@ export async function loadAdminDashboard(): Promise<AdminDashboardSections> {
   }
 }
 
+export function loadGeneralDashboard() {
+  return listOdcs('PRESUPUESTO_APROBADO', 1)
+}
+
 export const Route = createFileRoute('/_authenticated/')({
   loader: async ({ context }) => {
     if (context.user.role === 'DIRECTOR_OPS') {
@@ -43,6 +48,9 @@ export const Route = createFileRoute('/_authenticated/')({
     }
     if (context.user.role === 'ADMINISTRACION') {
       return { kind: 'admin' as const, sections: await loadAdminDashboard() }
+    }
+    if (context.user.role === 'DIRECTOR_GENERAL') {
+      return { kind: 'general' as const, page: await loadGeneralDashboard() }
     }
     return null
   },
@@ -59,6 +67,9 @@ function Home() {
     return (
       <AdminDashboard userName={user.fullName} sections={dashboard.sections} />
     )
+  }
+  if (dashboard.kind === 'general') {
+    return <GeneralDashboard userName={user.fullName} page={dashboard.page} />
   }
   return <OdcDashboard userName={user.fullName} sections={dashboard.sections} />
 }

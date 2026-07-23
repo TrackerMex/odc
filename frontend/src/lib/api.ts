@@ -150,6 +150,13 @@ export function approveBudget(id: string): Promise<Odc> {
   )
 }
 
+export function approvePurchase(id: string): Promise<Odc> {
+  return apiFetch<Odc>(
+    `/api/odcs/${encodeURIComponent(id)}/approve-purchase`,
+    jsonRequest('POST'),
+  )
+}
+
 export function rejectOdc(id: string, rejectionReason: string): Promise<Odc> {
   return apiFetch<Odc>(
     `/api/odcs/${encodeURIComponent(id)}/reject`,
