@@ -67,3 +67,26 @@ describe('R7,R8: ODC detail and chronological history', () => {
     expect(entries[1].textContent).toMatch(/rechazada/i)
   })
 })
+
+describe('R7: payment information in the shared detail', () => {
+  it('shows payment date, method, reference and notes when registered', () => {
+    render(
+      <OdcDetail
+        odc={{
+          ...odc,
+          status: 'PAGO_REGISTRADO',
+          rejectionReason: null,
+          paymentDate: '2026-07-22',
+          paymentMethod: 'Transferencia',
+          paymentReference: 'SPEI-100',
+          paymentNotes: 'Pago confirmado por tesorería',
+        }}
+      />,
+    )
+
+    expect(screen.getByText('Transferencia')).toBeTruthy()
+    expect(screen.getByText('SPEI-100')).toBeTruthy()
+    expect(screen.getByText(/pago confirmado por tesorería/i)).toBeTruthy()
+    expect(screen.getAllByText(/22 jul 2026/i).length).toBeGreaterThan(0)
+  })
+})
