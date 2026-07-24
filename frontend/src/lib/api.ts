@@ -196,3 +196,31 @@ export function registerPayment(
     jsonRequest('POST', payload),
   )
 }
+
+export interface UploadInvoicePayload {
+  warehouseEntryDate: string
+  invoiceNumber?: string
+  invoiceDate?: string
+  observations?: string
+}
+
+export function uploadInvoice(
+  id: string,
+  file: File,
+  payload: UploadInvoicePayload,
+): Promise<Odc> {
+  const formData = new FormData()
+  formData.set('file', file)
+  formData.set('warehouseEntryDate', payload.warehouseEntryDate)
+  const invoiceNumber = payload.invoiceNumber?.trim()
+  if (invoiceNumber) formData.set('invoiceNumber', invoiceNumber)
+  const invoiceDate = payload.invoiceDate?.trim()
+  if (invoiceDate) formData.set('invoiceDate', invoiceDate)
+  const observations = payload.observations?.trim()
+  if (observations) formData.set('observations', observations)
+
+  return apiFetch<Odc>(`/api/odcs/${encodeURIComponent(id)}/invoice`, {
+    method: 'POST',
+    body: formData,
+  })
+}
