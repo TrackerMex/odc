@@ -114,6 +114,38 @@ export function OdcDetail({ odc }: { odc: Odc }) {
                 </dl>
               </div>
             ) : null}
+            {odc.invoiceNumber ||
+            odc.invoiceDate ||
+            odc.warehouseEntryDate ||
+            odc.observations ? (
+              <div className="mt-4 rounded-2xl border p-4">
+                <p className="text-xs font-medium tracking-[0.1em] text-muted-foreground uppercase">
+                  Información de factura
+                </p>
+                <dl className="mt-3 grid gap-3 sm:grid-cols-2">
+                  {odc.invoiceNumber ? (
+                    <DetailItem
+                      label="Número de factura"
+                      value={odc.invoiceNumber}
+                    />
+                  ) : null}
+                  <DetailItem
+                    label="Fecha de factura"
+                    value={formatDateOnly(odc.invoiceDate)}
+                  />
+                  <DetailItem
+                    label="Fecha de entrada a almacén"
+                    value={formatDateOnly(odc.warehouseEntryDate)}
+                  />
+                  {odc.observations ? (
+                    <DetailItem
+                      label="Observaciones"
+                      value={odc.observations}
+                    />
+                  ) : null}
+                </dl>
+              </div>
+            ) : null}
           </CardContent>
         </Card>
       </div>
