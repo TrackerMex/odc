@@ -6,6 +6,7 @@ import {
   getOdc,
   listOdcs,
   listSuppliers,
+  registerPayment,
   rejectOdc,
   submitOdc,
   updateOdc,
@@ -146,6 +147,60 @@ describe('R4,R6,R8,R9: ADMINISTRACION and shared rejection contracts', () => {
     const emptyReferenceBody = vi.mocked(fetch).mock.calls[1][1]
       ?.body as FormData
     expect(emptyReferenceBody.has('evidenceReference')).toBe(false)
+  })
+})
+
+describe('R3: registerPayment JSON contract', () => {
+  beforeEach(() => {
+    vi.stubGlobal('fetch', vi.fn())
+  })
+
+  it('posts the payment payload including only the trimmed optional fields', async () => {
+    vi.mocked(fetch).mockResolvedValue(
+      jsonResponse({ id: 'o1', status: 'PAGO_REGISTRADO' }),
+    )
+
+    await registerPayment('o1', {
+      paymentDate: '2026-07-22',
+      paymentMethod: 'Transferencia',
+      paymentReference: 'SPEI-100',
+      paymentNotes: 'Pago confirmado',
+    })
+
+    expect(fetch).toHaveBeenCalledWith(
+      '/api/odcs/o1/payment',
+      expect.objectContaining({
+        method: 'POST',
+        body: JSON.stringify({
+          paymentDate: '2026-07-22',
+          paymentMethod: 'Transferencia',
+          paymentReference: 'SPEI-100',
+          paymentNotes: 'Pago confirmado',
+        }),
+      }),
+    )
+  })
+
+  it('omits paymentReference and paymentNotes when not provided', async () => {
+    vi.mocked(fetch).mockResolvedValue(
+      jsonResponse({ id: 'o1', status: 'PAGO_REGISTRADO' }),
+    )
+
+    await registerPayment('o1', {
+      paymentDate: '2026-07-22',
+      paymentMethod: 'Transferencia',
+    })
+
+    expect(fetch).toHaveBeenCalledWith(
+      '/api/odcs/o1/payment',
+      expect.objectContaining({
+        method: 'POST',
+        body: JSON.stringify({
+          paymentDate: '2026-07-22',
+          paymentMethod: 'Transferencia',
+        }),
+      }),
+    )
   })
 })
 
