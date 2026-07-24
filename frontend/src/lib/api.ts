@@ -179,3 +179,20 @@ export function uploadPaymentEvidence(
     body: formData,
   })
 }
+
+export interface RegisterPaymentPayload {
+  paymentDate: string
+  paymentMethod: string
+  paymentReference?: string
+  paymentNotes?: string
+}
+
+export function registerPayment(
+  id: string,
+  payload: RegisterPaymentPayload,
+): Promise<Odc> {
+  return apiFetch<Odc>(
+    `/api/odcs/${encodeURIComponent(id)}/payment`,
+    jsonRequest('POST', payload),
+  )
+}
