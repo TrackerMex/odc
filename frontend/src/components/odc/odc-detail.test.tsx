@@ -120,3 +120,56 @@ describe('R9: COMPLETADA badge and invoice information block', () => {
     expect(screen.queryByText(/información de factura/i)).toBeNull()
   })
 })
+
+describe('R10: evidence and invoice download links', () => {
+  it('shows both links pointing to the file routes, opening in a new tab', () => {
+    render(
+      <OdcDetail
+        odc={{
+          ...odc,
+          status: 'COMPLETADA',
+          rejectionReason: null,
+          hasPaymentEvidence: true,
+          hasInvoice: true,
+        }}
+      />,
+    )
+
+    const evidenceLink = screen.getByRole('link', {
+      name: /descargar comprobante de pago/i,
+    })
+    expect(evidenceLink.getAttribute('href')).toBe(
+      '/api/odcs/o1/files/evidence',
+    )
+    expect(evidenceLink.getAttribute('target')).toBe('_blank')
+    expect(evidenceLink.getAttribute('rel')).toMatch(/noopener/)
+
+    const invoiceLink = screen.getByRole('link', {
+      name: /descargar factura/i,
+    })
+    expect(invoiceLink.getAttribute('href')).toBe('/api/odcs/o1/files/invoice')
+    expect(invoiceLink.getAttribute('target')).toBe('_blank')
+    expect(invoiceLink.getAttribute('rel')).toMatch(/noopener/)
+  })
+
+  it('hides each link when its indicator is false', () => {
+    render(
+      <OdcDetail
+        odc={{
+          ...odc,
+          status: 'PAGO_REGISTRADO',
+          rejectionReason: null,
+          hasPaymentEvidence: false,
+          hasInvoice: false,
+        }}
+      />,
+    )
+
+    expect(
+      screen.queryByRole('link', { name: /descargar comprobante de pago/i }),
+    ).toBeNull()
+    expect(
+      screen.queryByRole('link', { name: /descargar factura/i }),
+    ).toBeNull()
+  })
+})
