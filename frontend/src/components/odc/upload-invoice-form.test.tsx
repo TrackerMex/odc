@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { ODC_STATUSES } from '@/lib/odc'
 import type { Odc, OdcStatus } from '@/lib/odc'
 import type { SessionUser } from '@/lib/session'
 import { UploadInvoiceForm } from './upload-invoice-form'
@@ -38,6 +39,12 @@ function evidenceUploadedOdc(): Odc {
 function setFile(input: HTMLInputElement, file: File) {
   fireEvent.change(input, { target: { files: [file] } })
 }
+
+const allRoles: Array<SessionUser['role']> = [
+  'DIRECTOR_OPS',
+  'ADMINISTRACION',
+  'DIRECTOR_GENERAL',
+]
 
 const otherRoles: Array<SessionUser['role']> = [
   'ADMINISTRACION',
@@ -372,5 +379,31 @@ describe('R11: loading state and accessibility of upload invoice', () => {
 
     resolveUpload(evidenceUploadedOdc())
     await waitFor(() => expect(upload).toHaveBeenCalledOnce())
+  })
+})
+
+describe('R12: role x status boundary for upload invoice', () => {
+  const validCombination = {
+    role: 'DIRECTOR_OPS',
+    status: 'EVIDENCIA_PAGO_SUBIDA',
+  }
+
+  it.each(
+    allRoles.flatMap((role) =>
+      ODC_STATUSES.filter(
+        (status) =>
+          !(role === validCombination.role && status === validCombination.status),
+      ).map((status) => [role, status] as const),
+    ),
+  )('hides the form for role %s and status %s', (role, status) => {
+    render(
+      <UploadInvoiceForm
+        odc={{ ...evidenceUploadedOdc(), status }}
+        role={role}
+        upload={vi.fn()}
+        onSuccess={vi.fn()}
+      />,
+    )
+    expect(screen.queryByLabelText(/archivo de la factura/i)).toBeNull()
   })
 })

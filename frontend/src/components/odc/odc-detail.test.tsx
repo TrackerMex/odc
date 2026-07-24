@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { render, screen, within } from '@testing-library/react'
+import { odcFileUrl } from '@/lib/odc'
 import type { Odc } from '@/lib/odc'
 import { OdcDetail } from './odc-detail'
 
@@ -171,5 +172,29 @@ describe('R10: evidence and invoice download links', () => {
     expect(
       screen.queryByRole('link', { name: /descargar factura/i }),
     ).toBeNull()
+  })
+})
+
+describe('R12: responsive layout of the download links row', () => {
+  it('wraps the download links instead of forcing horizontal scroll', () => {
+    render(
+      <OdcDetail
+        odc={{
+          ...odc,
+          status: 'COMPLETADA',
+          rejectionReason: null,
+          hasPaymentEvidence: true,
+          hasInvoice: true,
+        }}
+      />,
+    )
+
+    const evidenceLink = screen.getByRole('link', {
+      name: /descargar comprobante de pago/i,
+    })
+    expect(evidenceLink.getAttribute('href')).toBe(
+      odcFileUrl(odc.id ?? '', 'evidence'),
+    )
+    expect(evidenceLink.parentElement?.className).toMatch(/flex-wrap/)
   })
 })

@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { ODC_STATUSES } from '@/lib/odc'
 import type { Odc, OdcStatus } from '@/lib/odc'
 import type { SessionUser } from '@/lib/session'
 import { RegisterPaymentForm } from './register-payment-form'
@@ -34,6 +35,12 @@ function approvedOdc(): Odc {
     history: [],
   }
 }
+
+const allRoles: Array<SessionUser['role']> = [
+  'DIRECTOR_OPS',
+  'ADMINISTRACION',
+  'DIRECTOR_GENERAL',
+]
 
 const otherRoles: Array<SessionUser['role']> = [
   'ADMINISTRACION',
@@ -312,5 +319,28 @@ describe('R4: recoverable errors on register payment', () => {
         .getByRole('button', { name: /registrar pago/i })
         .hasAttribute('disabled'),
     ).toBe(false)
+  })
+})
+
+describe('R12: role x status boundary for register payment', () => {
+  const validCombination = { role: 'DIRECTOR_OPS', status: 'COMPRA_APROBADA' }
+
+  it.each(
+    allRoles.flatMap((role) =>
+      ODC_STATUSES.filter(
+        (status) =>
+          !(role === validCombination.role && status === validCombination.status),
+      ).map((status) => [role, status] as const),
+    ),
+  )('hides the form for role %s and status %s', (role, status) => {
+    render(
+      <RegisterPaymentForm
+        odc={{ ...approvedOdc(), status }}
+        role={role}
+        register={vi.fn()}
+        onSuccess={vi.fn()}
+      />,
+    )
+    expect(screen.queryByLabelText(/fecha de pago/i)).toBeNull()
   })
 })
