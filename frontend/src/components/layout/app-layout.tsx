@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 import { NavUser } from '@/components/nav-user'
+import { ThemeToggle } from '@/lib/theme'
 import {
   Sidebar,
   SidebarFooter,
@@ -18,7 +19,11 @@ export function AppLayout({
   return (
     <SidebarProvider>
       <Sidebar collapsible="icon">
-        <SidebarHeader />
+        <SidebarHeader>
+          <div className="flex justify-end">
+            <ThemeToggle />
+          </div>
+        </SidebarHeader>
         <SidebarFooter>
           <NavUser user={user} />
         </SidebarFooter>

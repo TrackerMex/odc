@@ -24,7 +24,7 @@ const visitorA = {
   role: 'ADMINISTRACION',
 }
 
-describe('bug: resolveSession() must not read or write the shared store on the server', () => {
+describe('R4: resolveSession() must not read or write the shared store on the server', () => {
   beforeEach(() => {
     useSessionStore.setState({ user: null })
     vi.restoreAllMocks()

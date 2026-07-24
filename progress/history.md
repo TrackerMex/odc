@@ -41,6 +41,21 @@ _El historial comenzará aquí cuando se complete la primera sesión._
 - **Commits:** 7187c59 harness, 16cc1f9 spec, b8d25eb..0699abd implementación por requisito (feat+docs por R-id)
 - **Estado final:** done
 
+## SesiÃ³n 2026-07-24 â€” odc-draft-editing (id: 15)
+
+- **Feature:** habilitada la ediciÃ³n de ODCs `BORRADOR` desde el detalle para
+  el creador con rol `DIRECTOR_OPS`; se reutilizan PATCH para guardar y submit
+  para pasar a `PENDIENTE_ADMIN`, manteniendo la ediciÃ³n existente de `RECHAZADA`.
+- **Spec:** [[specs/odc-draft-editing/requirements|spec]] (R1â€“R5,
+  aprobada por humano 2026-07-24)
+- **Acciones:** aprobaciÃ³n humana â†’ tests TDD de acceso y formulario â†’
+  implementaciÃ³n en la ruta de detalle â†’ regresiÃ³n frontend/backend y build.
+- **Resultado:** frontend 23 archivos/169 tests, backend 51 suites/436 tests,
+  build frontend exitoso, `git diff --check` limpio e `./init.sh` exit 0;
+  trazabilidad 5/5 completa.
+- **Commits:** cambios sin commit (working tree)
+- **Estado final:** done
+
 ## Sesión 2026-07-19 — auth-users (id: 2)
 
 - **Feature:** módulos users + auth: entidad User pura, ORM entity + UserRepository (token string), seed idempotente de 3 usuarios (bcrypt, pnpm seed), login/logout/me con JWT 8h {sub, role} en cookie httpOnly odc_session, JwtAuthGuard global con @Public() (login/health), RolesGuard + @Roles()
@@ -232,3 +247,27 @@ _El historial comenzará aquí cuando se complete la primera sesión._
   `f8a014b`→`456a0d0` (R10), `1f823b7`→`adb0b91` (R12), `2e25e1d`
   trazabilidad, `b2d677d` reporte.
 - **Estado final:** done
+
+## Sesión 2026-07-24 — session-isolation (id: 16), estabilización de sesión
+
+- **Feature:** las rutas protegidas consumen la identidad resuelta por
+  `/_authenticated`; logout y expiración 401 limpian el cliente y reemplazan
+  el documento de login para no conservar loaders de otra identidad.
+- **Acciones:** pruebas TDD R7–R10, contexto autenticado compartido, expiración
+  401 centralizada, sincronización post-login, estados de carga/error sin botón
+  `Reintentar` y navegación de documento al cerrar o expirar sesión.
+- **Validación en navegador:** `DIRECTOR_OPS`, `ADMINISTRACION` y
+  `DIRECTOR_GENERAL` mostraron su identidad y dashboard correctos; recargas de
+  Administración y Dirección General conservaron sesión; no hubo panel previo,
+  alerta ni botón `Reintentar`.
+- **Resultado:** `./init.sh` verde; backend 51 suites/438 tests, frontend 27
+  archivos/184 tests, builds cliente+SSR y lint de todos los archivos tocados
+  sin errores. Trazabilidad R1–R10 completa.
+- **Estado final:** done
+## Sesion 2026-07-24 — frontend-dark-mode (id: 17)
+
+- Implementado tema claro/oscuro global con persistencia en `localStorage` y fallback a `prefers-color-scheme`.
+- Añadido control accesible en español al layout autenticado.
+- Verificacion: 28 archivos de prueba, 189 pruebas, build cliente/SSR y lint de archivos afectados.
+- El lint/formato global conserva errores preexistentes no relacionados; pnpm intento reinstalar modulos sin TTY.
+- Estado final: done

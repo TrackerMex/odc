@@ -1,44 +1,13 @@
-# Sesión activa
-
-> Este archivo describe el estado de la sesión en curso.
-> Al cerrar la sesión, mueve este contenido a progress/history.md y deja solo esta plantilla.
-
----
-
-## Plantilla (sesión sin iniciar)
+# Sesion activa
 
 ```
-feature: —
-inicio: —
-agentes lanzados: —
-estado: sin sesión activa
-```
-
----
-
-_Cuando inicies una sesión, reemplaza la plantilla con:_
-
-```
-feature: <nombre de la feature>
-id: <id en feature_list.json>
-inicio: <fecha y hora>
+feature:
+id:
+inicio:
 plan:
-  - <paso 1>
-  - <paso 2>
-estado: pending / spec_ready / in_progress / done
-bloqueos: —
-spec_author: pendiente / en curso / done
-implementer: pendiente / en curso / done
-reviewer: pendiente / en curso / aprobado / rechazado
-```
-
----
-
-## Sesión activa
-
-```
-feature: —
-inicio: —
-agentes lanzados: —
-estado: sin sesión activa
+estado: idle
+bloqueos: ninguno
+spec_author:
+implementer:
+reviewer:
 ```

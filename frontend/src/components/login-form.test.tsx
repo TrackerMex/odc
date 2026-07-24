@@ -15,7 +15,10 @@ vi.mock('@/lib/api', async (importOriginal) => {
 
 vi.mock('@tanstack/react-router', async (importOriginal) => {
   const actual = await importOriginal<typeof RouterModule>()
-  return { ...actual, useNavigate: () => navigateMock }
+  return {
+    ...actual,
+    useNavigate: () => navigateMock,
+  }
 })
 
 const loggedInUser = {
@@ -69,17 +72,21 @@ describe('R8: successful login stores the user and navigates to / without re-cal
     vi.mocked(login).mockReset()
     vi.mocked(getMe).mockReset()
     navigateMock.mockReset()
+    navigateMock.mockResolvedValue(undefined)
     useSessionStore.setState({ user: null })
   })
 
-  it('writes the returned user to the session store and navigates to /', async () => {
+  it('stores the user and awaits navigation from a clean login document', async () => {
     vi.mocked(login).mockResolvedValue({ user: loggedInUser })
     render(<LoginForm />)
 
     fillAndSubmit('user@example.com', 'secret123')
 
     await vi.waitFor(() => {
-      expect(navigateMock).toHaveBeenCalledWith({ to: '/' })
+      expect(navigateMock).toHaveBeenCalledWith({
+        to: '/',
+        replace: true,
+      })
     })
     expect(useSessionStore.getState().user).toEqual(loggedInUser)
     expect(getMe).not.toHaveBeenCalled()

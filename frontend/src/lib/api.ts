@@ -1,6 +1,10 @@
 import { createIsomorphicFn } from '@tanstack/react-start'
 import type { SessionUser } from './session'
 import type { Odc, OdcPage, OdcPayload, OdcStatus, Supplier } from './odc'
+import {
+  expireClientSession,
+  resetClientSessionExpiration,
+} from './session-expiration'
 
 export class ApiError extends Error {
   constructor(
@@ -79,7 +83,18 @@ export async function apiFetch<T>(
     const body = await response.json().catch(() => null)
     const message =
       (body as { message?: string } | null)?.message ?? response.statusText
+    if (
+      response.status === 401 &&
+      path !== '/api/auth/login' &&
+      !isServer()
+    ) {
+      expireClientSession()
+    }
     throw new ApiError(response.status, message)
+  }
+
+  if (path === '/api/auth/login' && !isServer()) {
+    resetClientSessionExpiration()
   }
 
   return response.json() as Promise<T>

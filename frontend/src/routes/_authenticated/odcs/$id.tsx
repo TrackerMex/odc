@@ -14,6 +14,8 @@ import {
   uploadPaymentEvidence,
 } from '@/lib/api'
 import type { Odc } from '@/lib/odc'
+import type { SessionUser } from '@/lib/session'
+import { useAuthenticatedUser } from '@/lib/use-authenticated-user'
 import { OdcDetail } from '@/components/odc/odc-detail'
 import { OdcForm } from '@/components/odc/odc-form'
 import { AdminBudgetActions } from '@/components/odc/admin-budget-actions'
@@ -23,6 +25,17 @@ import { RegisterPaymentForm } from '@/components/odc/register-payment-form'
 import { UploadInvoiceForm } from '@/components/odc/upload-invoice-form'
 import { OdcPageError, OdcPagePending } from '@/components/odc/odc-page-state'
 import { buttonVariants } from '@/components/ui/button'
+
+export function canEditOdc(
+  user: Pick<SessionUser, 'id' | 'role'>,
+  odc: Pick<Odc, 'createdById' | 'status'>,
+): boolean {
+  return (
+    user.role === 'DIRECTOR_OPS' &&
+    user.id === odc.createdById &&
+    (odc.status === 'BORRADOR' || odc.status === 'RECHAZADA')
+  )
+}
 
 export async function loadOdcDetail(id: string) {
   const [odc, suppliers] = await Promise.all([getOdc(id), listSuppliers()])
@@ -38,12 +51,9 @@ export const Route = createFileRoute('/_authenticated/odcs/$id')({
 
 function OdcDetailPage() {
   const loaded = Route.useLoaderData()
-  const { user } = Route.useRouteContext()
+  const user = useAuthenticatedUser()
   const [odc, setOdc] = useState<Odc>(loaded.odc)
-  const canEdit =
-    user.role === 'DIRECTOR_OPS' &&
-    odc.status === 'RECHAZADA' &&
-    odc.createdById === user.id
+  const canEdit = canEditOdc(user, odc)
 
   return (
     <main className="min-w-0 flex-1 p-4 sm:p-6 lg:p-8">

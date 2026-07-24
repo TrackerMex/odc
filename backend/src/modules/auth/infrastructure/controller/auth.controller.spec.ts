@@ -97,6 +97,56 @@ describe('R5: POST /api/auth/login responds { user } and sets the session cookie
       sameSite: 'lax',
     });
   });
+
+  it('R1: keeps three role logins independent when handled by the same controller', async () => {
+    const users = [
+      {
+        id: 'ops-id',
+        email: 'ops@odc.local',
+        fullName: 'Operations Director',
+        role: 'DIRECTOR_OPS' as const,
+      },
+      {
+        id: 'admin-id',
+        email: 'admin@odc.local',
+        fullName: 'Administration',
+        role: 'ADMINISTRACION' as const,
+      },
+      {
+        id: 'dg-id',
+        email: 'dg@odc.local',
+        fullName: 'General Director',
+        role: 'DIRECTOR_GENERAL' as const,
+      },
+    ];
+    const execute = jest
+      .fn()
+      .mockResolvedValueOnce({ user: users[0], token: 'ops-token' })
+      .mockResolvedValueOnce({ user: users[1], token: 'admin-token' })
+      .mockResolvedValueOnce({ user: users[2], token: 'dg-token' });
+    const controller = createController({ loginUseCase: { execute } });
+    const responses = [
+      createResponseMock(),
+      createResponseMock(),
+      createResponseMock(),
+    ];
+
+    const bodies = await Promise.all(
+      users.map((user, index) =>
+        controller.login(
+          { email: user.email, password: 'secret-password' },
+          responses[index] as unknown as Response,
+        ),
+      ),
+    );
+
+    expect(bodies.map((body) => body.user)).toEqual(users);
+    expect(
+      responses.map(
+        (response) => (response.cookie.mock.calls[0] as [string, string])[1],
+      ),
+    ).toEqual(['ops-token', 'admin-token', 'dg-token']);
+  });
 });
 
 describe('R7: failed login responds 401 without setting any cookie', () => {
@@ -156,6 +206,43 @@ describe('R10: GET /api/auth/me returns the session user', () => {
     await expect(
       controller.me({ user: { sub: 'ghost-id', role: 'DIRECTOR_OPS' } }),
     ).rejects.toBeInstanceOf(UnauthorizedException);
+  });
+
+  it('R2: resolves alternating session payloads without sharing the previous user', async () => {
+    const users = [
+      {
+        id: 'ops-id',
+        email: 'ops@odc.local',
+        fullName: 'Operations Director',
+        role: 'DIRECTOR_OPS' as const,
+      },
+      {
+        id: 'admin-id',
+        email: 'admin@odc.local',
+        fullName: 'Administration',
+        role: 'ADMINISTRACION' as const,
+      },
+      {
+        id: 'dg-id',
+        email: 'dg@odc.local',
+        fullName: 'General Director',
+        role: 'DIRECTOR_GENERAL' as const,
+      },
+    ];
+    const execute = jest.fn((id: string) =>
+      Promise.resolve(users.find((user) => user.id === id)),
+    );
+    const controller = createController({ getMeUseCase: { execute } });
+
+    await expect(
+      controller.me({ user: { sub: 'admin-id', role: 'ADMINISTRACION' } }),
+    ).resolves.toEqual(users[1]);
+    await expect(
+      controller.me({ user: { sub: 'ops-id', role: 'DIRECTOR_OPS' } }),
+    ).resolves.toEqual(users[0]);
+    await expect(
+      controller.me({ user: { sub: 'dg-id', role: 'DIRECTOR_GENERAL' } }),
+    ).resolves.toEqual(users[2]);
   });
 });
 

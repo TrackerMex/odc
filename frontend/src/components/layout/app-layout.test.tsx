@@ -5,6 +5,7 @@ import type * as ApiModule from '@/lib/api'
 import { useSessionStore } from '@/stores/session.store'
 import type * as RouterModule from '@tanstack/react-router'
 import { AppLayout } from './app-layout'
+import { ThemeProvider } from '@/lib/theme'
 
 const navigateMock = vi.hoisted(() => vi.fn())
 
@@ -25,6 +26,16 @@ const user = {
   role: 'DIRECTOR_OPS',
 }
 
+function renderAppLayout() {
+  return render(
+    <ThemeProvider>
+      <AppLayout user={user}>
+        <div>protected content</div>
+      </AppLayout>
+    </ThemeProvider>,
+  )
+}
+
 describe('R11: authenticated layout shows fullName/role and a logout control, no section nav', () => {
   beforeEach(() => {
     navigateMock.mockReset()
@@ -32,11 +43,7 @@ describe('R11: authenticated layout shows fullName/role and a logout control, no
   })
 
   it('renders the user fullName and role with a logout control, without project/team nav', () => {
-    render(
-      <AppLayout user={user}>
-        <div>protected content</div>
-      </AppLayout>,
-    )
+    renderAppLayout()
 
     expect(screen.getByText(user.fullName)).toBeTruthy()
     expect(screen.getByText(user.role)).toBeTruthy()
@@ -50,7 +57,7 @@ describe('R11: authenticated layout shows fullName/role and a logout control, no
   })
 })
 
-describe('R12: logout calls the API, clears the session store and navigates to /login', () => {
+describe('R5,R12: logout calls the API, clears the session store and navigates to /login', () => {
   beforeEach(() => {
     navigateMock.mockReset()
     vi.mocked(logout).mockReset()
@@ -59,11 +66,7 @@ describe('R12: logout calls the API, clears the session store and navigates to /
 
   it('logs out, clears the store and navigates to /login', async () => {
     vi.mocked(logout).mockResolvedValue({ success: true })
-    render(
-      <AppLayout user={user}>
-        <div>protected content</div>
-      </AppLayout>,
-    )
+    renderAppLayout()
 
     fireEvent.click(screen.getByText(user.fullName))
     fireEvent.click(screen.getByText('Cerrar sesión'))
@@ -72,6 +75,10 @@ describe('R12: logout calls the API, clears the session store and navigates to /
       expect(logout).toHaveBeenCalled()
     })
     expect(useSessionStore.getState().user).toBeNull()
-    expect(navigateMock).toHaveBeenCalledWith({ to: '/login' })
+    expect(navigateMock).toHaveBeenCalledWith({
+      to: '/login',
+      replace: true,
+      reloadDocument: true,
+    })
   })
 })

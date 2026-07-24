@@ -28,7 +28,7 @@ function createReflectorMock(isPublic: boolean): Reflector {
   } as unknown as Reflector;
 }
 
-describe('R8: JwtAuthGuard rejects requests without a valid session JWT', () => {
+describe('R6,R8: JwtAuthGuard rejects requests without a valid session JWT', () => {
   it('throws 401 when the session cookie is absent', async () => {
     const jwtService = {
       verifyAsync: jest.fn(),
