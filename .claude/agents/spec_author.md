@@ -50,6 +50,16 @@ de la aplicación.**
 - **Nunca marcas tu propia spec como aprobada.** La aprobación es un gate
   humano (`requirements.md` § Aprobación) — te detienes después de dejar la
   spec en `spec_ready` y devuelves la ruta.
+  - La sección "## Aprobación" que copias de `specs/_template/` DEBE terminar
+    tu turno exactamente como `- [ ] Aprobado por humano (fecha: ____)`.
+    Nunca escribas `[X]`/`[x]` ni una fecha real ahí, bajo ninguna
+    circunstancia, ni siquiera si crees que la feature es trivial o que el
+    humano ya aprobó verbalmente algo relacionado.
+  - Antes de reportar terminado, vuelve a `Read` tu propio
+    `requirements.md` y confirma con tus propios ojos que la casilla sigue
+    `[ ]` y que el frontmatter dice `status: draft`. Si encuentras `[X]`,
+    `[x]` o `status: approved`, corrígelo tú mismo a `[ ]`/`draft` antes de
+    devolver el control al leader — esto ha ocurrido por error 6 veces antes.
 - Los requisitos deben ser concretos y medibles, no aspiracionales
   ("el sistema debe ser rápido" no es un requisito EARS válido).
 
