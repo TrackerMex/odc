@@ -1,4 +1,9 @@
-import { AlertTriangleIcon, CalendarDaysIcon } from 'lucide-react'
+import {
+  AlertTriangleIcon,
+  CalendarDaysIcon,
+  DownloadIcon,
+} from 'lucide-react'
+import { buttonVariants } from '@/components/ui/button'
 import {
   Card,
   CardContent,
@@ -10,6 +15,7 @@ import {
   formatCurrency,
   formatDate,
   formatDateOnly,
+  odcFileUrl,
   statusLabel,
 } from '@/lib/odc'
 import type { Odc } from '@/lib/odc'
@@ -77,6 +83,38 @@ export function OdcDetail({ odc }: { odc: Odc }) {
                 value={formatDate(odc.updatedAt)}
               />
             </dl>
+            {odc.hasPaymentEvidence || odc.hasInvoice ? (
+              <div className="mt-4 flex flex-wrap gap-3">
+                {odc.hasPaymentEvidence ? (
+                  <a
+                    href={odcFileUrl(odc.id ?? '', 'evidence')}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={buttonVariants({
+                      variant: 'outline',
+                      size: 'sm',
+                    })}
+                  >
+                    <DownloadIcon aria-hidden="true" />
+                    Descargar comprobante de pago
+                  </a>
+                ) : null}
+                {odc.hasInvoice ? (
+                  <a
+                    href={odcFileUrl(odc.id ?? '', 'invoice')}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={buttonVariants({
+                      variant: 'outline',
+                      size: 'sm',
+                    })}
+                  >
+                    <DownloadIcon aria-hidden="true" />
+                    Descargar factura
+                  </a>
+                ) : null}
+              </div>
+            ) : null}
             {odc.comments ? (
               <div className="mt-4 rounded-2xl border p-4">
                 <p className="text-xs font-medium tracking-[0.1em] text-muted-foreground uppercase">
@@ -109,6 +147,38 @@ export function OdcDetail({ odc }: { odc: Odc }) {
                     <DetailItem
                       label="Notas de pago"
                       value={odc.paymentNotes}
+                    />
+                  ) : null}
+                </dl>
+              </div>
+            ) : null}
+            {odc.invoiceNumber ||
+            odc.invoiceDate ||
+            odc.warehouseEntryDate ||
+            odc.observations ? (
+              <div className="mt-4 rounded-2xl border p-4">
+                <p className="text-xs font-medium tracking-[0.1em] text-muted-foreground uppercase">
+                  Información de factura
+                </p>
+                <dl className="mt-3 grid gap-3 sm:grid-cols-2">
+                  {odc.invoiceNumber ? (
+                    <DetailItem
+                      label="Número de factura"
+                      value={odc.invoiceNumber}
+                    />
+                  ) : null}
+                  <DetailItem
+                    label="Fecha de factura"
+                    value={formatDateOnly(odc.invoiceDate)}
+                  />
+                  <DetailItem
+                    label="Fecha de entrada a almacén"
+                    value={formatDateOnly(odc.warehouseEntryDate)}
+                  />
+                  {odc.observations ? (
+                    <DetailItem
+                      label="Observaciones"
+                      value={odc.observations}
                     />
                   ) : null}
                 </dl>

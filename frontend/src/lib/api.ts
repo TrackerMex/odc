@@ -150,6 +150,13 @@ export function approveBudget(id: string): Promise<Odc> {
   )
 }
 
+export function approvePurchase(id: string): Promise<Odc> {
+  return apiFetch<Odc>(
+    `/api/odcs/${encodeURIComponent(id)}/approve-purchase`,
+    jsonRequest('POST'),
+  )
+}
+
 export function rejectOdc(id: string, rejectionReason: string): Promise<Odc> {
   return apiFetch<Odc>(
     `/api/odcs/${encodeURIComponent(id)}/reject`,
@@ -168,6 +175,51 @@ export function uploadPaymentEvidence(
   if (reference) formData.set('evidenceReference', reference)
 
   return apiFetch<Odc>(`/api/odcs/${encodeURIComponent(id)}/payment-evidence`, {
+    method: 'POST',
+    body: formData,
+  })
+}
+
+export interface RegisterPaymentPayload {
+  paymentDate: string
+  paymentMethod: string
+  paymentReference?: string
+  paymentNotes?: string
+}
+
+export function registerPayment(
+  id: string,
+  payload: RegisterPaymentPayload,
+): Promise<Odc> {
+  return apiFetch<Odc>(
+    `/api/odcs/${encodeURIComponent(id)}/payment`,
+    jsonRequest('POST', payload),
+  )
+}
+
+export interface UploadInvoicePayload {
+  warehouseEntryDate: string
+  invoiceNumber?: string
+  invoiceDate?: string
+  observations?: string
+}
+
+export function uploadInvoice(
+  id: string,
+  file: File,
+  payload: UploadInvoicePayload,
+): Promise<Odc> {
+  const formData = new FormData()
+  formData.set('file', file)
+  formData.set('warehouseEntryDate', payload.warehouseEntryDate)
+  const invoiceNumber = payload.invoiceNumber?.trim()
+  if (invoiceNumber) formData.set('invoiceNumber', invoiceNumber)
+  const invoiceDate = payload.invoiceDate?.trim()
+  if (invoiceDate) formData.set('invoiceDate', invoiceDate)
+  const observations = payload.observations?.trim()
+  if (observations) formData.set('observations', observations)
+
+  return apiFetch<Odc>(`/api/odcs/${encodeURIComponent(id)}/invoice`, {
     method: 'POST',
     body: formData,
   })

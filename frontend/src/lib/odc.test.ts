@@ -4,6 +4,7 @@ import {
   computeTotalCents,
   formatCurrency,
   formatUnitPriceInput,
+  odcFileUrl,
   odcFormSchema,
 } from './odc'
 
@@ -74,5 +75,12 @@ describe('R4: MXN totals and API payload conversion', () => {
   it('formats backend cents for the UI without floating point drift', () => {
     expect(formatUnitPriceInput(14_990)).toBe('149.90')
     expect(formatCurrency(44_970)).toMatch(/449[.,]70/)
+  })
+})
+
+describe('R10: file download route builder', () => {
+  it('builds the evidence and invoice download routes for an ODC id', () => {
+    expect(odcFileUrl('o1', 'evidence')).toBe('/api/odcs/o1/files/evidence')
+    expect(odcFileUrl('o1', 'invoice')).toBe('/api/odcs/o1/files/invoice')
   })
 })

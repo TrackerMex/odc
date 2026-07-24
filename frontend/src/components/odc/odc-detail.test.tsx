@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { render, screen, within } from '@testing-library/react'
+import { odcFileUrl } from '@/lib/odc'
 import type { Odc } from '@/lib/odc'
 import { OdcDetail } from './odc-detail'
 
@@ -88,5 +89,112 @@ describe('R7: payment information in the shared detail', () => {
     expect(screen.getByText('SPEI-100')).toBeTruthy()
     expect(screen.getByText(/pago confirmado por tesorería/i)).toBeTruthy()
     expect(screen.getAllByText(/22 jul 2026/i).length).toBeGreaterThan(0)
+  })
+})
+
+describe('R9: COMPLETADA badge and invoice information block', () => {
+  it('shows the invoice information with pending dates and omitted text fields', () => {
+    render(
+      <OdcDetail
+        odc={{
+          ...odc,
+          status: 'COMPLETADA',
+          rejectionReason: null,
+          invoiceNumber: null,
+          invoiceDate: null,
+          warehouseEntryDate: '2026-07-23',
+          observations: 'Recibido en almacén central',
+        }}
+      />,
+    )
+
+    expect(screen.getByText('Completada')).toBeTruthy()
+    expect(screen.getByText(/información de factura/i)).toBeTruthy()
+    expect(screen.getByText(/recibido en almacén central/i)).toBeTruthy()
+    expect(screen.queryByText(/número de factura/i)).toBeNull()
+    expect(screen.getAllByText('Pendiente').length).toBeGreaterThan(0)
+  })
+
+  it('does not render an invoice block when there is no invoice data yet', () => {
+    render(<OdcDetail odc={{ ...odc, status: 'EVIDENCIA_PAGO_SUBIDA' }} />)
+
+    expect(screen.queryByText(/información de factura/i)).toBeNull()
+  })
+})
+
+describe('R10: evidence and invoice download links', () => {
+  it('shows both links pointing to the file routes, opening in a new tab', () => {
+    render(
+      <OdcDetail
+        odc={{
+          ...odc,
+          status: 'COMPLETADA',
+          rejectionReason: null,
+          hasPaymentEvidence: true,
+          hasInvoice: true,
+        }}
+      />,
+    )
+
+    const evidenceLink = screen.getByRole('link', {
+      name: /descargar comprobante de pago/i,
+    })
+    expect(evidenceLink.getAttribute('href')).toBe(
+      '/api/odcs/o1/files/evidence',
+    )
+    expect(evidenceLink.getAttribute('target')).toBe('_blank')
+    expect(evidenceLink.getAttribute('rel')).toMatch(/noopener/)
+
+    const invoiceLink = screen.getByRole('link', {
+      name: /descargar factura/i,
+    })
+    expect(invoiceLink.getAttribute('href')).toBe('/api/odcs/o1/files/invoice')
+    expect(invoiceLink.getAttribute('target')).toBe('_blank')
+    expect(invoiceLink.getAttribute('rel')).toMatch(/noopener/)
+  })
+
+  it('hides each link when its indicator is false', () => {
+    render(
+      <OdcDetail
+        odc={{
+          ...odc,
+          status: 'PAGO_REGISTRADO',
+          rejectionReason: null,
+          hasPaymentEvidence: false,
+          hasInvoice: false,
+        }}
+      />,
+    )
+
+    expect(
+      screen.queryByRole('link', { name: /descargar comprobante de pago/i }),
+    ).toBeNull()
+    expect(
+      screen.queryByRole('link', { name: /descargar factura/i }),
+    ).toBeNull()
+  })
+})
+
+describe('R12: responsive layout of the download links row', () => {
+  it('wraps the download links instead of forcing horizontal scroll', () => {
+    render(
+      <OdcDetail
+        odc={{
+          ...odc,
+          status: 'COMPLETADA',
+          rejectionReason: null,
+          hasPaymentEvidence: true,
+          hasInvoice: true,
+        }}
+      />,
+    )
+
+    const evidenceLink = screen.getByRole('link', {
+      name: /descargar comprobante de pago/i,
+    })
+    expect(evidenceLink.getAttribute('href')).toBe(
+      odcFileUrl(odc.id ?? '', 'evidence'),
+    )
+    expect(evidenceLink.parentElement?.className).toMatch(/flex-wrap/)
   })
 })

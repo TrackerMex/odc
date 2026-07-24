@@ -1,8 +1,10 @@
 # ODC — Status
 
-**Última actualización**: 2026-07-22
-**Features completadas**: 9/14 (`feature_list.json`)
-**Pendientes**: 5 (todas frontend: #9-#13, `pending`, sin spec aún)
+**Última actualización**: 2026-07-23
+**Features completadas**: 14/14 (`feature_list.json`) — backlog del plan
+maestro completo
+**Pendientes**: ninguna del plan original; próximo trabajo requiere una
+nueva feature añadida a `feature_list.json`
 **En producción**: no
 
 ---
@@ -52,22 +54,56 @@ Requiere `.env` en la raíz (plantilla en `.env.example`): `DATABASE_URL`,
   vez que pasa esto con `spec_author`, ver memoria de Claude
   `spec-author-checkbox-unreliable`); se resolvió con aprobación humana real
   + commit de spec dedicado, reviewer aprobó en la re-revisión.
-- **Frontend**: sigue sin ninguna feature de negocio implementada (#9-#13
-  `pending`). Hoy se investigó (`explorer`) qué hace falta del ecosistema
-  TanStack antes de especificar #9 — ver
-  `progress/explore_frontend-foundation.md`: agregar `@tanstack/react-query`
-  y `@tanstack/react-form` (justificado por feature); NO hace falta
-  `react-table`/`react-store`/`react-virtual` con el alcance actual de
-  #9-#13. También se instaló y arregló `shadcn/ui` (ver "Última sesión").
+- **Frontend completo (5/5 features de negocio, #9-#13)**: fundación
+  TanStack Start + shadcn/ui + sesión (#9), dashboard/creación/edición de ODC
+  para `DIRECTOR_OPS` (#10), flujos de `ADMINISTRACION` (#11), aprobación de
+  `DIRECTOR_GENERAL` (#12), y registro de pago + subida de factura para
+  `DIRECTOR_OPS` (#13, última, cerrada 2026-07-23). Ver `progress/history.md`
+  para detalle sesión por sesión.
 - Deuda anotada (backend): `synchronize: true` solo dev (migraciones antes de
   prod); `backend/test/app.e2e-spec.ts` scaffold desactualizado (fuera de
   TEST_CMD); sin fail-fast si falta `JWT_SECRET` al arrancar.
-- Siguiente: `spec_author` para `frontend-foundation` (#9) usando el brief de
-  `progress/explore_frontend-foundation.md` → aprobación humana → implementer.
+- Deuda anotada (frontend, no bloqueante, señalada por el reviewer en #13):
+  el wiring de props al componer acciones/formularios en
+  `frontend/src/routes/_authenticated/odcs/$id.tsx` (`AdminBudgetActions`,
+  `GeneralApprovalActions`, `RegisterPaymentForm`, `UploadInvoiceForm`) no
+  tiene ningún test de regresión — bajo riesgo (glue trivial), pero pendiente
+  si se toca esa ruta de nuevo.
+- Siguiente: no hay feature pendiente del plan maestro. Cualquier trabajo
+  nuevo (bug, mejora, feature no planeada) entra como entrada nueva en
+  `feature_list.json` y sigue el pipeline normal (`spec_author` →
+  aprobación humana → `implementer` → `reviewer`).
 
 ---
 
 ## Última sesión
+
+**2026-07-23** — Cierre de `frontend-payment-invoice` (#13), última feature
+del plan maestro → **14/14 completadas**.
+
+- Spec aprobada por humano (R1-R12) → implementación de `RegisterPaymentForm`
+  y `UploadInvoiceForm` + cliente API + composición en el detalle.
+- 1ra revisión RECHAZADA por C4: los 5 commits mezclaban test+implementación
+  sin evidencia rojo→verde en Git (mismo defecto ya visto en
+  `frontend-general-approval`, #12).
+- Corregido con la misma técnica que ya funcionó en #12: rama de respaldo
+  (`backup/frontend-payment-invoice-pre-rewrite-20260723`), `git reset --soft`
+  + recomposición en 5 pares `test(...)`→`feat(...)` por grupo de
+  requisitos, sin tocar tests en el commit `feat`.
+- 2da revisión APROBADA, con verificación independiente de rojo→verde
+  (checkouts reales + `vitest run`, no aceptada de palabra).
+- De paso: se reforzó `.claude/agents/spec_author.md` contra la
+  auto-aprobación de la casilla humana (6ta recurrencia observada; ver
+  memoria de Claude `spec-author-checkbox-unreliable`) y se documentó el
+  patrón de rechazo C4 recurrente (memoria `implementer-bundles-test-impl-commits`).
+- `./init.sh` en verde: backend 51 suites/436 tests, frontend 23
+  archivos/161 tests, build cliente+SSR y lint sin errores.
+- El usuario pusheó los cambios manualmente al terminar la sesión.
+
+**Próxima sesión**: sin feature pendiente del plan maestro — definir qué
+sigue (nueva feature, deuda técnica anotada arriba, o cierre del proyecto).
+
+---
 
 **2026-07-21** — Dos cosas distintas:
 

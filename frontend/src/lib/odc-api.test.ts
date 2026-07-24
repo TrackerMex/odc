@@ -1,13 +1,16 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import {
   approveBudget,
+  approvePurchase,
   createOdc,
   getOdc,
   listOdcs,
   listSuppliers,
+  registerPayment,
   rejectOdc,
   submitOdc,
   updateOdc,
+  uploadInvoice,
   uploadPaymentEvidence,
 } from './api'
 
@@ -89,7 +92,7 @@ describe('R1,R3,R5,R6,R7,R8,R9: typed ODC API client', () => {
   })
 })
 
-describe('R4,R6,R9: ADMINISTRACION mutation contracts', () => {
+describe('R4,R6,R8,R9: ADMINISTRACION and shared rejection contracts', () => {
   beforeEach(() => {
     vi.stubGlobal('fetch', vi.fn())
   })
@@ -145,5 +148,132 @@ describe('R4,R6,R9: ADMINISTRACION mutation contracts', () => {
     const emptyReferenceBody = vi.mocked(fetch).mock.calls[1][1]
       ?.body as FormData
     expect(emptyReferenceBody.has('evidenceReference')).toBe(false)
+  })
+})
+
+describe('R3: registerPayment JSON contract', () => {
+  beforeEach(() => {
+    vi.stubGlobal('fetch', vi.fn())
+  })
+
+  it('posts the payment payload including only the trimmed optional fields', async () => {
+    vi.mocked(fetch).mockResolvedValue(
+      jsonResponse({ id: 'o1', status: 'PAGO_REGISTRADO' }),
+    )
+
+    await registerPayment('o1', {
+      paymentDate: '2026-07-22',
+      paymentMethod: 'Transferencia',
+      paymentReference: 'SPEI-100',
+      paymentNotes: 'Pago confirmado',
+    })
+
+    expect(fetch).toHaveBeenCalledWith(
+      '/api/odcs/o1/payment',
+      expect.objectContaining({
+        method: 'POST',
+        body: JSON.stringify({
+          paymentDate: '2026-07-22',
+          paymentMethod: 'Transferencia',
+          paymentReference: 'SPEI-100',
+          paymentNotes: 'Pago confirmado',
+        }),
+      }),
+    )
+  })
+
+  it('omits paymentReference and paymentNotes when not provided', async () => {
+    vi.mocked(fetch).mockResolvedValue(
+      jsonResponse({ id: 'o1', status: 'PAGO_REGISTRADO' }),
+    )
+
+    await registerPayment('o1', {
+      paymentDate: '2026-07-22',
+      paymentMethod: 'Transferencia',
+    })
+
+    expect(fetch).toHaveBeenCalledWith(
+      '/api/odcs/o1/payment',
+      expect.objectContaining({
+        method: 'POST',
+        body: JSON.stringify({
+          paymentDate: '2026-07-22',
+          paymentMethod: 'Transferencia',
+        }),
+      }),
+    )
+  })
+})
+
+describe('R7: uploadInvoice multipart contract', () => {
+  beforeEach(() => {
+    vi.stubGlobal('fetch', vi.fn())
+  })
+
+  it('sends the file and warehouseEntryDate as FormData without a Content-Type header', async () => {
+    vi.mocked(fetch).mockResolvedValue(
+      jsonResponse({ id: 'o1', status: 'COMPLETADA' }),
+    )
+    const file = new File(['pdf'], 'factura.pdf', {
+      type: 'application/pdf',
+    })
+
+    await uploadInvoice('o1', file, {
+      warehouseEntryDate: '2026-07-22',
+      invoiceNumber: '  FAC-100  ',
+      invoiceDate: '2026-07-21',
+      observations: '  Recibido en almacén  ',
+    })
+
+    const [url, init] = vi.mocked(fetch).mock.calls[0]
+    expect(url).toBe('/api/odcs/o1/invoice')
+    expect(init?.method).toBe('POST')
+    expect(init?.headers).toBeUndefined()
+    expect(init?.body).toBeInstanceOf(FormData)
+    const body = init?.body as FormData
+    expect(body.get('file')).toBe(file)
+    expect(body.get('warehouseEntryDate')).toBe('2026-07-22')
+    expect(body.get('invoiceNumber')).toBe('FAC-100')
+    expect(body.get('invoiceDate')).toBe('2026-07-21')
+    expect(body.get('observations')).toBe('Recibido en almacén')
+  })
+
+  it('omits optional fields left blank after trimming', async () => {
+    vi.mocked(fetch).mockResolvedValue(
+      jsonResponse({ id: 'o1', status: 'COMPLETADA' }),
+    )
+    const file = new File(['pdf'], 'factura.pdf', {
+      type: 'application/pdf',
+    })
+
+    await uploadInvoice('o1', file, {
+      warehouseEntryDate: '2026-07-22',
+      invoiceNumber: '   ',
+    })
+
+    const body = vi.mocked(fetch).mock.calls[0][1]?.body as FormData
+    expect(body.has('invoiceNumber')).toBe(false)
+    expect(body.has('invoiceDate')).toBe(false)
+    expect(body.has('observations')).toBe(false)
+  })
+})
+
+describe('R6: DIRECTOR_GENERAL purchase approval contract', () => {
+  beforeEach(() => {
+    vi.stubGlobal('fetch', vi.fn())
+  })
+
+  it('posts once to the approve-purchase endpoint', async () => {
+    vi.mocked(fetch).mockResolvedValue(
+      jsonResponse({ id: 'o1', status: 'COMPRA_APROBADA' }),
+    )
+
+    await approvePurchase('o1')
+
+    expect(fetch).toHaveBeenCalledOnce()
+    expect(fetch).toHaveBeenCalledWith(
+      '/api/odcs/o1/approve-purchase',
+      expect.objectContaining({ method: 'POST' }),
+    )
   })
 })

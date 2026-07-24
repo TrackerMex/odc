@@ -181,3 +181,54 @@ _El historial comenzará aquí cuando se complete la primera sesión._
 - **Commits:** `5bcce36` spec aprobada, `8ad0352` tests TDD, `17d91df`
   implementación.
 - **Estado final:** done
+
+## Sesión 2026-07-23 — frontend-general-approval (id: 12)
+
+- **Feature:** dashboard `DIRECTOR_GENERAL` con la cola `Esperando mi
+  aprobación` (`PRESUPUESTO_APROBADO`); detalle con total, proveedor, historial
+  y marca `Validado por Administración`; aprobación de compra y rechazo mediante
+  diálogo con motivo obligatorio.
+- **Spec:** [[specs/frontend-general-approval/requirements|spec]] (R1–R10,
+  aprobada por humano 2026-07-23).
+- **Acciones:** spec aprobada → tests R1–R10 → implementación de dashboard,
+  cliente API y panel de acciones → primera revisión rechazada por falta de
+  evidencia test-first en Git y un timeout aislado → reescritura autorizada
+  con respaldo `backup/frontend-general-approval-pre-rewrite-20260723` →
+  secuencia test-first verificable → segunda revisión C2–C6 APROBADA.
+- **Resultado:** `./init.sh` en verde; backend 51 suites/436 tests, frontend 21
+  archivos/75 tests, builds cliente+SSR y lint; review APROBADO →
+  `progress/review_frontend-general-approval.md`; trazabilidad 10/10 completa.
+- **Commits:** `e0f9588` spec aprobada, `287ba8f` tests rojos,
+  `5e63420` implementación verde, `1ce640c` trazabilidad.
+- **Estado final:** done
+
+## Sesión 2026-07-23 — frontend-payment-invoice (id: 13)
+
+- **Feature:** para `DIRECTOR_OPS`, formulario `Registrar pago` sobre ODCs
+  `COMPRA_APROBADA` y formulario `Subir factura` (con fecha de entrada a
+  almacén obligatoria) sobre ODCs `EVIDENCIA_PAGO_SUBIDA`; insignia
+  `Completada` y bloque `Información de factura` en estado terminal; enlaces
+  de descarga de comprobante y factura visibles para cualquier rol
+  autenticado.
+- **Spec:** [[specs/frontend-payment-invoice/requirements|spec]] (R1–R12,
+  aprobada por humano 2026-07-23).
+- **Acciones:** spec aprobada → implementación de ambos formularios, cliente
+  API (`registerPayment`/`uploadInvoice`) y composición en el detalle →
+  primera revisión rechazada por C4 (test+implementación mezclados en el
+  mismo commit, sin evidencia rojo→verde, mismo defecto ya visto en
+  `frontend-general-approval`) → reescritura autorizada con respaldo
+  `backup/frontend-payment-invoice-pre-rewrite-20260723` → recomposición en 5
+  pares `test(...)`→`feat(...)` por grupo de requisitos → segunda revisión
+  con verificación independiente de rojo→verde vía checkouts reales →
+  APROBADO C2–C6. De paso, se reforzó `.claude/agents/spec_author.md` contra
+  la auto-aprobación de la casilla humana (6ª recurrencia observada en esta
+  feature, ya corregida manualmente por el leader antes de implementar).
+- **Resultado:** `./init.sh` en verde; backend 51 suites/436 tests, frontend
+  23 archivos/161 tests, builds cliente+SSR, lint y `tsc --noEmit` sin errores
+  nuevos; review APROBADO → `progress/review_frontend-payment-invoice.md`;
+  trazabilidad 12/12 completa.
+- **Commits:** `6a5744d` spec aprobada, `45a3536`→`f31f99d` (R1-4,R11),
+  `9a05986`→`f7cf878` (R5-8,R11), `a09682e`→`fb18a4d` (R9),
+  `f8a014b`→`456a0d0` (R10), `1f823b7`→`adb0b91` (R12), `2e25e1d`
+  trazabilidad, `b2d677d` reporte.
+- **Estado final:** done

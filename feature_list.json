@@ -63,13 +63,13 @@
   {
     "id": 12,
     "name": "frontend-general-approval",
-    "status": "pending",
+    "status": "done",
     "priority": "P2"
   },
   {
     "id": 13,
     "name": "frontend-payment-invoice",
-    "status": "pending",
+    "status": "done",
     "priority": "P2"
   },
   {
