@@ -93,6 +93,20 @@ describe('R1: register payment form visibility and fields', () => {
   )
 })
 
+describe('R9: hidden once the ODC reaches COMPLETADA', () => {
+  it('does not render for DIRECTOR_OPS when status is COMPLETADA', () => {
+    render(
+      <RegisterPaymentForm
+        odc={{ ...approvedOdc(), status: 'COMPLETADA' }}
+        role="DIRECTOR_OPS"
+        register={vi.fn()}
+        onSuccess={vi.fn()}
+      />,
+    )
+    expect(screen.queryByLabelText(/fecha de pago/i)).toBeNull()
+  })
+})
+
 describe('R2: required field validation on register payment', () => {
   function fillOptionalFields() {
     fireEvent.change(screen.getByLabelText(/^referencia$/i), {

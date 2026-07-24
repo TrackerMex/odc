@@ -98,6 +98,20 @@ describe('R5: upload invoice form visibility and fields', () => {
   )
 })
 
+describe('R9: hidden once the ODC reaches COMPLETADA', () => {
+  it('does not render for DIRECTOR_OPS when status is COMPLETADA', () => {
+    render(
+      <UploadInvoiceForm
+        odc={{ ...evidenceUploadedOdc(), status: 'COMPLETADA' }}
+        role="DIRECTOR_OPS"
+        upload={vi.fn()}
+        onSuccess={vi.fn()}
+      />,
+    )
+    expect(screen.queryByLabelText(/archivo de la factura/i)).toBeNull()
+  })
+})
+
 describe('R6: file and warehouse entry date validation', () => {
   it('requires a file before submitting', () => {
     const upload = vi.fn()

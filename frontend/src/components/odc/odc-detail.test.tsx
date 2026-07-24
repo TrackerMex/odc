@@ -90,3 +90,33 @@ describe('R7: payment information in the shared detail', () => {
     expect(screen.getAllByText(/22 jul 2026/i).length).toBeGreaterThan(0)
   })
 })
+
+describe('R9: COMPLETADA badge and invoice information block', () => {
+  it('shows the invoice information with pending dates and omitted text fields', () => {
+    render(
+      <OdcDetail
+        odc={{
+          ...odc,
+          status: 'COMPLETADA',
+          rejectionReason: null,
+          invoiceNumber: null,
+          invoiceDate: null,
+          warehouseEntryDate: '2026-07-23',
+          observations: 'Recibido en almacén central',
+        }}
+      />,
+    )
+
+    expect(screen.getByText('Completada')).toBeTruthy()
+    expect(screen.getByText(/información de factura/i)).toBeTruthy()
+    expect(screen.getByText(/recibido en almacén central/i)).toBeTruthy()
+    expect(screen.queryByText(/número de factura/i)).toBeNull()
+    expect(screen.getAllByText('Pendiente').length).toBeGreaterThan(0)
+  })
+
+  it('does not render an invoice block when there is no invoice data yet', () => {
+    render(<OdcDetail odc={{ ...odc, status: 'EVIDENCIA_PAGO_SUBIDA' }} />)
+
+    expect(screen.queryByText(/información de factura/i)).toBeNull()
+  })
+})
