@@ -4,6 +4,7 @@ import {
   PlusIcon,
   ReceiptTextIcon,
   ShoppingCartIcon,
+  ChartNoAxesCombinedIcon,
 } from 'lucide-react'
 import { Link } from '@tanstack/react-router'
 import { buttonVariants } from '@/components/ui/button'
@@ -151,13 +152,19 @@ export function OdcDashboard({
               quedó.
             </p>
           </div>
-          <Link
-            to="/odcs/new"
-            className={cn(buttonVariants({ size: 'lg' }), 'self-start')}
-          >
-            <PlusIcon />
-            Nueva ODC
-          </Link>
+          <div className="flex flex-wrap gap-2 self-start">
+            <Link
+              to="/monthly-summary"
+              className={buttonVariants({ variant: 'outline', size: 'lg' })}
+            >
+              <ChartNoAxesCombinedIcon />
+              Resumen mensual
+            </Link>
+            <Link to="/odcs/new" className={cn(buttonVariants({ size: 'lg' }))}>
+              <PlusIcon />
+              Nueva ODC
+            </Link>
+          </div>
         </header>
 
         <section

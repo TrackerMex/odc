@@ -1,4 +1,4 @@
-import { LogOutIcon } from 'lucide-react'
+import { ChevronsUpDownIcon, LogOutIcon } from 'lucide-react'
 import { useNavigate } from '@tanstack/react-router'
 
 import { logout } from '@/lib/api'
@@ -17,6 +17,7 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  useSidebar,
 } from '@/components/ui/sidebar'
 
 function initials(fullName: string) {
@@ -35,6 +36,7 @@ export function NavUser({
 }) {
   const navigate = useNavigate()
   const clearSession = useSessionStore((state) => state.clear)
+  const { isMobile } = useSidebar()
 
   async function handleLogout() {
     await logout()
@@ -64,8 +66,14 @@ export function NavUser({
                 {user.role}
               </span>
             </div>
+            <ChevronsUpDownIcon className="ml-auto size-4" aria-hidden="true" />
           </DropdownMenuTrigger>
-          <DropdownMenuContent className="w-56" align="end" sideOffset={4}>
+          <DropdownMenuContent
+            className="w-56"
+            align="end"
+            side={isMobile ? 'bottom' : 'right'}
+            sideOffset={4}
+          >
             <DropdownMenuGroup>
               <DropdownMenuLabel className="p-0 font-normal">
                 <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">

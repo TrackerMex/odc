@@ -19,6 +19,29 @@ export interface OdcPage {
   pageSize: number;
 }
 
+export const MONTHLY_PURCHASE_STATUSES: OdcStatus[] = [
+  'PAGO_REGISTRADO',
+  'EVIDENCIA_PAGO_SUBIDA',
+  'COMPLETADA',
+];
+
+export interface MonthlyPurchase {
+  id: string;
+  odcNumber: string;
+  status: OdcStatus;
+  requesterName: string | null;
+  description: string;
+  supplier: string;
+  quantity: number;
+  unit: string;
+  totalCents: number;
+  paymentDate: string;
+  warehouseEntryDate: string | null;
+  hasInvoice: boolean;
+  comments: string | null;
+  observations: string | null;
+}
+
 export interface PurchaseOrderRepository {
   // Assigns the ODC-YYYY-NNNNN number and persists the order plus its
   // opening history row in a single transaction (R5, R6).
@@ -39,4 +62,5 @@ export interface PurchaseOrderRepository {
     page: number,
     pageSize: number,
   ): Promise<OdcPage>;
+  findMonthlyPurchases(month: string): Promise<MonthlyPurchase[]>;
 }

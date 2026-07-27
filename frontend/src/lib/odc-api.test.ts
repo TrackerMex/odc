@@ -4,6 +4,7 @@ import {
   approvePurchase,
   createOdc,
   getOdc,
+  getMonthlyPurchaseSummary,
   listOdcs,
   listSuppliers,
   registerPayment,
@@ -88,6 +89,32 @@ describe('R1,R3,R5,R6,R7,R8,R9: typed ODC API client', () => {
       4,
       '/api/odcs/o1/submit',
       expect.objectContaining({ method: 'POST' }),
+    )
+  })
+})
+
+describe('R1,R4: monthly purchase summary API contract', () => {
+  it('encodes the selected month in the protected summary endpoint', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue(
+        jsonResponse({
+          month: '2026-07',
+          totalCents: 0,
+          purchaseCount: 0,
+          averageTicketCents: 0,
+          averageWarehouseDays: null,
+          stages: [],
+          purchases: [],
+        }),
+      ),
+    )
+
+    await getMonthlyPurchaseSummary('2026-07')
+
+    expect(fetch).toHaveBeenCalledWith(
+      '/api/odcs/monthly-summary?month=2026-07',
+      expect.objectContaining({ credentials: 'include' }),
     )
   })
 })

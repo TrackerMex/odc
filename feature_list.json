@@ -95,5 +95,11 @@
     "name": "frontend-dark-mode",
     "status": "done",
     "priority": "P2"
+  },
+  {
+    "id": 18,
+    "name": "operations-monthly-summary",
+    "status": "done",
+    "priority": "P1"
   }
 ]

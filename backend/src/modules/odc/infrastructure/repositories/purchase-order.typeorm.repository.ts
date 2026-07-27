@@ -1,5 +1,14 @@
 import { Injectable } from '@nestjs/common';
-import { DataSource, FindOptionsWhere, Like, Not } from 'typeorm';
+import {
+  And,
+  DataSource,
+  FindOptionsWhere,
+  In,
+  LessThan,
+  Like,
+  MoreThanOrEqual,
+  Not,
+} from 'typeorm';
 import { OdcStatusHistoryEntry } from '../../domain/entities/odc-status-history-entry.entity';
 import {
   nextOdcNumber,
@@ -9,6 +18,8 @@ import {
 import {
   OdcListFilter,
   OdcPage,
+  MonthlyPurchase,
+  MONTHLY_PURCHASE_STATUSES,
   PurchaseOrderRepository,
 } from '../../domain/repositories/purchase-order.repository';
 import { OdcStatusHistoryOrmEntity } from '../entities/odc-status-history.orm-entity';
@@ -117,6 +128,39 @@ export class PurchaseOrderTypeOrmRepository implements PurchaseOrderRepository {
       page,
       pageSize,
     };
+  }
+
+  async findMonthlyPurchases(month: string): Promise<MonthlyPurchase[]> {
+    const [year, monthNumber] = month.split('-').map(Number);
+    const start = `${year}-${String(monthNumber).padStart(2, '0')}-01`;
+    const next = new Date(Date.UTC(year, monthNumber, 1));
+    const nextStart = `${next.getUTCFullYear()}-${String(
+      next.getUTCMonth() + 1,
+    ).padStart(2, '0')}-01`;
+    const rows = await this.dataSource.manager.find(PurchaseOrderOrmEntity, {
+      where: {
+        status: In(MONTHLY_PURCHASE_STATUSES),
+        paymentDate: And(MoreThanOrEqual(start), LessThan(nextStart)),
+      },
+      relations: { createdBy: true },
+      order: { paymentDate: 'ASC', odcNumber: 'ASC' },
+    });
+    return rows.map((row) => ({
+      id: row.id,
+      odcNumber: row.odcNumber,
+      status: row.status,
+      requesterName: row.createdBy?.fullName ?? null,
+      description: row.description,
+      supplier: row.supplier,
+      quantity: row.quantity,
+      unit: row.unit,
+      totalCents: row.totalCents,
+      paymentDate: row.paymentDate!,
+      warehouseEntryDate: row.warehouseEntryDate ?? null,
+      hasInvoice: row.invoiceFile !== null,
+      comments: row.comments ?? null,
+      observations: row.observations ?? null,
+    }));
   }
 }
 
