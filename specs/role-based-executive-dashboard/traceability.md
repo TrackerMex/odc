@@ -20,6 +20,7 @@ tags: [harness, spec, dashboard, roles]
 | R10 | get-executive-dashboard.usecase.spec.ts::R1,R2,R5,R6,R7,R10; executive-dashboard.controller.spec.ts::R1,R10 | e509930 test(role-based-executive-dashboard); 308cdf6 feat(role-based-executive-dashboard) |
 | R11 | executive-dashboard.typeorm.repository.spec.ts::R2,R5,R6,R7,R11 | e509930 test(role-based-executive-dashboard); 308cdf6 feat(role-based-executive-dashboard) |
 | R12 | get-executive-tasks.usecase.spec.ts::R12; executive-dashboard.test.tsx::R3,R12 | 3ccbe33 feat(role-based-executive-dashboard): add paginated task queue (R12) |
+| R13 | executive-dashboard.test.tsx::R13 | 9cac886 test(role-based-executive-dashboard): add R13 dashboard order assertions; 6077742 feat(role-based-executive-dashboard): reorder dashboard sections per R13 |
 
 Regla: el reviewer no aprueba si alguna fila queda "pendiente".
 Convención de commit: `feat(<scope>): <desc> (R1,R2)`.

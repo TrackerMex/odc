@@ -230,3 +230,61 @@ describe('R9: executive dashboard preserves semantic order, responsive compositi
     expect(container.querySelector('[class*="motion-reduce"]')).toBeTruthy()
   })
 })
+
+describe('R13: executive dashboard orders sections by hierarchy — alerts, priority, pulse, suppliers', () => {
+  it('places ageing alerts before priority, priority before pulse, and suppliers after all three in the DOM', () => {
+    const { container } = render(
+      <ExecutiveDashboard userName="Ana Pérez" dashboard={dashboard} />,
+    )
+
+    const alerts = screen.getByRole('region', {
+      name: /alertas: órdenes con mayor antigüedad/i,
+    })
+    const priority = screen.getByRole('region', {
+      name: /prioridad inmediata/i,
+    })
+    const pulse = screen.getByRole('region', { name: /pulso del periodo/i })
+    const suppliers = screen.getByRole('region', {
+      name: /proveedores del periodo/i,
+    })
+
+    expect(
+      Boolean(
+        alerts.compareDocumentPosition(priority) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
+      ),
+    ).toBe(true)
+    expect(
+      Boolean(
+        priority.compareDocumentPosition(pulse) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
+      ),
+    ).toBe(true)
+    expect(
+      Boolean(
+        pulse.compareDocumentPosition(suppliers) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
+      ),
+    ).toBe(true)
+    expect(
+      Boolean(
+        alerts.compareDocumentPosition(suppliers) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
+      ),
+    ).toBe(true)
+    expect(
+      container.querySelector('[aria-label="Órdenes con mayor antigüedad"]'),
+    ).toBeTruthy()
+  })
+
+  it('reuses the R6 ageing orders data verbatim as the alerts section, without a new data source', () => {
+    render(<ExecutiveDashboard userName="Ana Pérez" dashboard={dashboard} />)
+
+    expect(
+      screen
+        .getByRole('link', { name: /ODC-2026-00004/i })
+        .getAttribute('href'),
+    ).toBe('/odcs/active-1')
+    expect(screen.getByText(/Software MX/i)).toBeTruthy()
+  })
+})

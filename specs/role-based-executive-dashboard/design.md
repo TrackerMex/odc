@@ -29,6 +29,8 @@ tags: [harness, spec, dashboard, roles]
 
 - **Vista completa de tareas**: añadir `GET /api/odcs/executive-dashboard/tasks?page=N`, que deriva el rol y la identidad exclusivamente de la sesión y devuelve una página de tareas bajo el mismo filtro, proyección, orden y mapa de siguiente acción que R2-R4. La ruta autenticada `/tasks` reutilizará la lista visual de prioridad y ofrecerá un retorno claro a la bandeja; el dashboard sólo expone el enlace cuando quedan tareas fuera de las primeras cinco (R12).
 
+- **Reordenamiento de jerarquía visual (sin cambio de datos)**: dentro de `ExecutiveDashboard` (`frontend/src/components/odc/executive-dashboard.tsx`), reordenar el JSX/grid de nivel superior para que la sección de alertas preceda a `PriorityQueue`, y esta a su vez preceda a `Pulse`; `topSuppliers` (dentro de `OperationalContext`) permanece como sección de menor jerarquía después de las tres anteriores. La sección de alertas es una re-etiquetación visual de la tarjeta existente "Órdenes con mayor antigüedad" (misma prop `oldestActiveOrders`, mismo origen R6): no se crea componente de datos nuevo, no cambia el contrato HTTP, el caso de uso ni el repositorio. El cambio es puramente de composición/orden en el árbol de React y clases de grid (R13).
+
 ## Contrato HTTP propuesto
 
 `GET /api/odcs/executive-dashboard?month=YYYY-MM`

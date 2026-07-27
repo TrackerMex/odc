@@ -1,4 +1,5 @@
 import {
+  AlertTriangleIcon,
   ArrowRightIcon,
   CircleAlertIcon,
   FilePenLineIcon,
@@ -251,97 +252,111 @@ function Pulse({ dashboard }: { dashboard: ExecutiveDashboardResponse }) {
   )
 }
 
-function OperationalContext({
+function AgeingAlerts({
   dashboard,
 }: {
   dashboard: ExecutiveDashboardResponse
 }) {
   return (
-    <div className="grid min-w-0 gap-4 lg:grid-cols-2">
-      <section aria-labelledby="ageing-title">
-        <Card>
-          <CardHeader>
-            <CardTitle id="ageing-title">
-              Órdenes con mayor antigüedad
+    <section aria-labelledby="ageing-alerts-title" className="min-w-0">
+      <Card className="border-amber-200 dark:border-amber-900/60">
+        <CardHeader>
+          <div className="flex items-center gap-2">
+            <AlertTriangleIcon
+              className="size-5 shrink-0 text-amber-600 dark:text-amber-400"
+              aria-hidden="true"
+            />
+            <CardTitle id="ageing-alerts-title">
+              Alertas: órdenes con mayor antigüedad
             </CardTitle>
-            <CardDescription>
-              Órdenes activas que conviene destrabar.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            {dashboard.oldestActiveOrders.length === 0 ? (
-              <p className="rounded-2xl border border-dashed p-4 text-sm text-muted-foreground">
-                No hay órdenes activas con antigüedad para mostrar.
-              </p>
-            ) : (
-              <ul
-                className="divide-y divide-border/70"
-                aria-label="Órdenes con mayor antigüedad"
-              >
-                {dashboard.oldestActiveOrders.map((order) => (
-                  <li key={order.id} className="py-3 first:pt-0 last:pb-0">
-                    <Link
-                      to="/odcs/$id"
-                      params={{ id: order.id }}
-                      className="group flex min-w-0 items-center justify-between gap-3 rounded-xl outline-none focus-visible:ring-3 focus-visible:ring-ring/30"
-                    >
-                      <span className="min-w-0">
-                        <span className="block font-medium group-hover:underline group-hover:underline-offset-4">
-                          {order.odcNumber}
-                        </span>
-                        <span className="block truncate text-sm text-muted-foreground">
-                          {order.supplier} · {statusLabel(order.status)}
-                        </span>
-                      </span>
-                      <span className="shrink-0 text-right text-sm tabular-nums">
-                        {order.ageDays} días
-                      </span>
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </CardContent>
-        </Card>
-      </section>
-      <section aria-labelledby="suppliers-title">
-        <Card>
-          <CardHeader>
-            <CardTitle id="suppliers-title">Proveedores del periodo</CardTitle>
-            <CardDescription>
-              Compras pagadas agrupadas por proveedor.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            {dashboard.topSuppliers.length === 0 ? (
-              <p className="rounded-2xl border border-dashed p-4 text-sm text-muted-foreground">
-                No hay compras pagadas en este periodo.
-              </p>
-            ) : (
-              <ol
-                className="divide-y divide-border/70"
-                aria-label="Proveedores del periodo"
-              >
-                {dashboard.topSuppliers.map((supplier) => (
-                  <li
-                    key={supplier.supplier}
-                    className="flex items-center justify-between gap-3 py-3 first:pt-0 last:pb-0"
+          </div>
+          <CardDescription>
+            Órdenes activas que llevan más tiempo abiertas y conviene
+            destrabar primero.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {dashboard.oldestActiveOrders.length === 0 ? (
+            <p className="rounded-2xl border border-dashed p-4 text-sm text-muted-foreground">
+              No hay órdenes activas con antigüedad para mostrar.
+            </p>
+          ) : (
+            <ul
+              className="divide-y divide-border/70"
+              aria-label="Órdenes con mayor antigüedad"
+            >
+              {dashboard.oldestActiveOrders.map((order) => (
+                <li key={order.id} className="py-3 first:pt-0 last:pb-0">
+                  <Link
+                    to="/odcs/$id"
+                    params={{ id: order.id }}
+                    className="group flex min-w-0 items-center justify-between gap-3 rounded-xl outline-none focus-visible:ring-3 focus-visible:ring-ring/30"
                   >
-                    <span className="min-w-0 truncate font-medium">
-                      {supplier.supplier}
+                    <span className="min-w-0">
+                      <span className="block font-medium group-hover:underline group-hover:underline-offset-4">
+                        {order.odcNumber}
+                      </span>
+                      <span className="block truncate text-sm text-muted-foreground">
+                        {order.supplier} · {statusLabel(order.status)}
+                      </span>
                     </span>
-                    <span className="shrink-0 text-right text-sm tabular-nums text-muted-foreground">
-                      {supplier.purchaseCount} compras ·{' '}
-                      {formatCurrency(supplier.totalCents)}
+                    <span className="shrink-0 text-right text-sm tabular-nums">
+                      {order.ageDays} días
                     </span>
-                  </li>
-                ))}
-              </ol>
-            )}
-          </CardContent>
-        </Card>
-      </section>
-    </div>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          )}
+        </CardContent>
+      </Card>
+    </section>
+  )
+}
+
+function TopSuppliers({
+  dashboard,
+}: {
+  dashboard: ExecutiveDashboardResponse
+}) {
+  return (
+    <section aria-labelledby="suppliers-title" className="min-w-0">
+      <Card>
+        <CardHeader>
+          <CardTitle id="suppliers-title">Proveedores del periodo</CardTitle>
+          <CardDescription>
+            Compras pagadas agrupadas por proveedor.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {dashboard.topSuppliers.length === 0 ? (
+            <p className="rounded-2xl border border-dashed p-4 text-sm text-muted-foreground">
+              No hay compras pagadas en este periodo.
+            </p>
+          ) : (
+            <ol
+              className="divide-y divide-border/70"
+              aria-label="Proveedores del periodo"
+            >
+              {dashboard.topSuppliers.map((supplier) => (
+                <li
+                  key={supplier.supplier}
+                  className="flex items-center justify-between gap-3 py-3 first:pt-0 last:pb-0"
+                >
+                  <span className="min-w-0 truncate font-medium">
+                    {supplier.supplier}
+                  </span>
+                  <span className="shrink-0 text-right text-sm tabular-nums text-muted-foreground">
+                    {supplier.purchaseCount} compras ·{' '}
+                    {formatCurrency(supplier.totalCents)}
+                  </span>
+                </li>
+              ))}
+            </ol>
+          )}
+        </CardContent>
+      </Card>
+    </section>
   )
 }
 
@@ -366,11 +381,12 @@ export function ExecutiveDashboard({
           <p className="mt-2 text-muted-foreground">{copy.description}</p>
         </header>
         <div className="space-y-4 transition-opacity duration-200 motion-reduce:transition-none">
+          <AgeingAlerts dashboard={dashboard} />
           <div className="grid min-w-0 gap-4 sm:grid-cols-[minmax(0,1.45fr)_minmax(19rem,0.9fr)]">
             <PriorityQueue dashboard={dashboard} />
             <Pulse dashboard={dashboard} />
           </div>
-          <OperationalContext dashboard={dashboard} />
+          <TopSuppliers dashboard={dashboard} />
         </div>
       </div>
     </main>

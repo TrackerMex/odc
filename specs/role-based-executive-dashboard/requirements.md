@@ -36,6 +36,10 @@ tags: [harness, spec, dashboard, roles]
 
 - **R12**: WHEN un usuario de negocio selecciona “Ver todas las tareas” desde la franja de prioridad, THE SYSTEM SHALL mostrar una vista paginada con exclusivamente todas sus tareas accionables, ordenadas por antigüedad descendente y fecha de creación ascendente, conservando para cada una el contexto y siguiente acción definidos en R3-R4; la interfaz SHALL enlazar de vuelta a la bandeja de trabajo y no mostrará la vista cuando no existan tareas adicionales.
 
+- **R13**: WHEN la vista se muestra en pantalla de escritorio, THE SYSTEM SHALL ordenar en el DOM y visualmente las secciones del resumen ejecutivo, de mayor a menor jerarquía, en este orden: alertas de órdenes con mayor antigüedad, prioridad inmediata y pulso del periodo; THE SYSTEM SHALL ubicar la sección de proveedores del periodo después de estas tres secciones, sin intercalarla entre ellas. WHEN se muestra con ancho menor a `640px`, THE SYSTEM SHALL conservar el mismo orden —alertas, luego prioridad inmediata con su siguiente acción, luego pulso— sin recorte horizontal de contenido. La sección de alertas SHALL reutilizar exclusivamente los datos de órdenes activas de mayor antigüedad ya definidos en R6 (mismo origen, límite y orden), re-enmarcada visualmente como alertas de atención, sin introducir una consulta, endpoint o dato nuevo.
+
+  > **Nota de superación parcial de R9**: R13 reemplaza la cláusula de orden visual de R9 —"la prioridad y el pulso del periodo en el primer nivel visual" en escritorio, y "la prioridad y su siguiente acción antes de las métricas" en móvil—; el orden vigente para ambos anchos es a partir de ahora el definido en R13. El resto de R9 (foco visible, etiquetas accesibles para secciones y enlaces, `prefers-reduced-motion` para transiciones de carga/actualización y la garantía de no recorte horizontal) permanece vigente sin cambios y aplica también a la nueva sección de alertas.
+
 ## Fuera de alcance
 
 - Presupuesto contra gasto, objetivos de gasto, pronósticos o métricas no respaldadas por datos persistidos.
@@ -46,4 +50,5 @@ tags: [harness, spec, dashboard, roles]
 
 ## Aprobación
 
-- [X] Aprobado por humano (fecha: 2026-07-27; extensión R12 autorizada en conversación)
+- [X] Aprobado por humano (fecha: 2026-07-27; extensión R12 autorizada en conversación) ← cubre R1-R12
+- [X] Aprobado por humano (fecha: 2026-07-27; R13 autorizada en conversación) ← cubre R13
