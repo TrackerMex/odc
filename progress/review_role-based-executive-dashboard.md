@@ -152,3 +152,143 @@ Sin regresión en R1-R12: el backend no fue tocado por R13 (confirmado por
 `specs/.../traceability.md` / `progress/impl_....md`), y los conteos de
 tests suben respecto al reporte previo del implementer (453→454 backend,
 199→201 frontend) sin ningún test en rojo.
+
+---
+
+# review: role-based-executive-dashboard (R13) — segunda pasada
+Fecha: 2026-07-27 (misma jornada, revisión posterior a la corrección de C6)
+Veredicto: APROBADO (excepción documentada en C4/granularidad de commits)
+
+Alcance: re-evaluar únicamente lo que cambió desde el rechazo anterior —
+el hallazgo crítico C6 (aprobación de R13 no commiteada) y la granularidad
+de los dos commits nuevos que la corrigieron (`b1cb5f9`, `f90d072`). No se
+repite la auditoría completa de R1-R12 (ya cerrada en revisiones previas);
+sí se repite `./init.sh` completo para descartar regresión.
+
+## 1. Qué toca cada commit nuevo
+
+`git show --stat b1cb5f9` (`docs(...): approve R13 extension`):
+- `specs/role-based-executive-dashboard/requirements.md` (+7/-1)
+- `specs/role-based-executive-dashboard/design.md` (+2)
+- `frontend/src/components/odc/executive-dashboard.test.tsx` (+58)
+- `frontend/src/components/odc/executive-dashboard.tsx` (+180/-83 líneas mostradas por diff, en realidad reemplazo de sección)
+- `progress/impl_role-based-executive-dashboard.md` (+108)
+- `specs/role-based-executive-dashboard/traceability.md` (+1)
+
+Confirmado: mezcla aprobación + test + implementación + docs en un solo
+commit. **No** es la disciplina test→feat atómica normal del proyecto.
+
+`git show --stat f90d072` (HEAD, `Prepare R13: reorder executive dashboard and docs`):
+- `feature_list.json`, `progress/current.md`, `progress/review_role-based-executive-dashboard.md` (bookkeeping de esta feature)
+- `specs/frontend-odc-form/{requirements,design,tasks,traceability}.md` (spec de OTRA feature, id 10)
+- `backend/.../get-executive-tasks.usecase.ts` (reformateo)
+- `.claude/agents/implementer.md` (fix de harness)
+- `.impeccable/critique/...md`, `.impeccable/surfaces/...md` (archivos internos de la skill impeccable)
+
+Confirmado: contenido de al menos 4 categorías no relacionadas entre sí
+mezclado en un solo commit.
+
+## 2. Código idéntico al ya evaluado
+
+`git diff f92fb90 HEAD -- frontend/src/components/odc/executive-dashboard.tsx`
+y el mismo diff para `executive-dashboard.test.tsx` → **ambos vacíos, sin
+ninguna línea de diferencia**. El código en disco es byte-idéntico al que ya
+audité y aprobé en el checklist C4 de la primera revisión (orden en el DOM
+vía `compareDocumentPosition`, reutilización literal de los datos de R6,
+sin mock ni endpoint nuevo). No hay cambio funcional nuevo desde entonces.
+
+## 3. Aprobación humana ahora sí commiteada
+
+`git show HEAD:specs/role-based-executive-dashboard/requirements.md`:
+- `status: approved` en el frontmatter.
+- Dos casillas en `## Aprobación`:
+  - `[X] ... (fecha: 2026-07-27; extensión R12 autorizada en conversación) ← cubre R1-R12`
+  - `[X] ... (fecha: 2026-07-27; R13 autorizada en conversación) ← cubre R13`
+- El texto del requisito R13 (con la nota de superación parcial de R9) está
+  presente en el mismo `HEAD`.
+
+A diferencia de la primera revisión, esto ya no vive solo en el working
+tree: está en el commit `b1cb5f9`, con autor y fecha reales
+(`AlexisSM377`, 2026-07-27 17:37:12 -0600). El hallazgo crítico que motivó
+el rechazo anterior queda cerrado.
+
+## 4. `feature_list.json` id 10 (`frontend-odc-form`)
+
+`grep -A3 '"id": 10' feature_list.json` → `"status": "done"`, sin cambio.
+Revisé el contenido que viajó de más en `f90d072` para esa feature:
+`specs/frontend-odc-form/requirements.md` gana un R13 nuevo con su propia
+nota de superación parcial (sobre R1, no sobre R9 — es la versión de esta
+regla para el dashboard operativo de `DIRECTOR_OPS`, no el ejecutivo), y
+`tasks.md`/`traceability.md` para ese R13 quedan con checkboxes sin marcar
+y con la fila `| R13 | pendiente | pendiente |` respectivamente. Es decir:
+es únicamente texto de especificación (EARS) preparado por adelantado, sin
+ninguna implementación ni activación fuera de turno — `feature_list.json`
+sigue reflejando el estado real (`done`, sin R13 implementada). No hay
+código de aplicación de `frontend-odc-form` en este commit.
+
+## 5. `./init.sh`
+
+```
+✅ Dependencias instaladas
+✅ Archivos del harness presentes
+⚠️  Feature en progreso: role-based-executive-dashboard
+
+→ Build...
+✓ built in 1.76s (client)
+✓ built in 886ms (ssr)
+✅ Build exitoso
+
+→ Ejecutando tests...
+Backend  Test Suites: 58 passed, 58 total | Tests: 454 passed, 454 total
+Frontend Test Files  30 passed (30) | Tests  201 passed (201)
+✅ Tests pasados
+
+→ Lint...
+✅ Lint sin errores
+
+✅ Todo verde. Listo para trabajar.
+Features: 18/19 completadas | 0 pendientes
+```
+
+Mismos conteos que la revisión anterior (454 backend, 201 frontend) — sin
+regresión.
+
+## 6. Nota no bloqueante: `.impeccable/`
+
+`git ls-files .impeccable` muestra `critique/*.md`, `surfaces/*.md`,
+`design.json` y `live/config.json` **trackeados** en el repo, y
+`.gitignore` no menciona `impeccable` en ninguna línea. Son artefactos
+internos de la skill `impeccable` (críticas/superficies generadas), no
+contenido del proyecto ODC. Recomiendo añadir `.impeccable/` a
+`.gitignore` para que dejen de colarse en commits ajenos como `f90d072`.
+No lo corrijo yo mismo — es solo una observación para el leader/humano.
+
+## Veredicto y razonamiento
+
+El único problema real que queda es la granularidad/mezcla de contenido en
+los commits `b1cb5f9` y `f90d072` (sección 1). Esto normalmente sería
+motivo de rechazo bajo C4 ("historial de commits muestra test-primero, no
+todo junto") y bajo la disciplina general de commits atómicos del
+proyecto. Pero en este caso concreto:
+
+- Ambos commits ya están públicos en `origin/refactor-ui` (`git status`
+  confirma `## refactor-ui...origin/refactor-ui` sin `ahead`/`behind`, es
+  decir, sincronizado con el remoto).
+- El humano decidió explícitamente NO reescribir ese historial (evitar
+  force-push sobre una rama compartida), decisión ya documentada por
+  escrito en `progress/current.md` antes de esta revisión.
+- Todo lo demás se verificó de forma independiente y está correcto: el
+  código es idéntico al ya auditado (sección 2), la aprobación humana de
+  R13 está commiteada con fecha/autor reales (sección 3), no hay cambio de
+  estado indebido en `frontend-odc-form` y lo que viajó de más ahí es solo
+  texto de spec, no código (sección 4), `init.sh` sigue en verde sin
+  regresión (sección 5), y `traceability.md` de esta feature no tiene
+  filas "pendiente" (fila R13 apunta a `9cac886`/`6077742`, los commits
+  reales test→feat de la implementación).
+
+Por lo tanto, trato la mezcla de estos dos commits como una **excepción
+aceptada**: un problema de disciplina de commits ya ocurrido, ya público,
+que no se puede corregir sin reescribir historial compartido (acción que
+el humano vetó explícitamente), y que no oculta ningún problema de fondo
+en el código, la spec o la trazabilidad. Apruebo R13 dejando esta nota
+por escrito como registro de la excepción y su justificación.

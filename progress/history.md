@@ -312,3 +312,14 @@ _El historial comenzará aquí cuando se complete la primera sesión._
 - **Resultado:** revisión aprobada; backend 58 suites / 454 pruebas, frontend 30 archivos / 199 pruebas, builds e `./init.sh` verdes.
 - **Commits:** `3ccbe33 feat(role-based-executive-dashboard): add paginated task queue (R12)`.
 - **Estado final:** done.
+
+## Sesión 2026-07-27 — role-based-executive-dashboard (id: 19, extensión R13)
+
+- **Feature:** reordenamiento visual del resumen ejecutivo — alertas de órdenes con mayor antigüedad (re-etiquetado de la tarjeta existente, mismos datos de R6) → prioridad inmediata → pulso/KPIs → proveedores del periodo, en desktop y mobile. Frontend puro, sin cambios de backend/contrato HTTP.
+- **Spec:** [[specs/role-based-executive-dashboard/requirements|spec]] (R13, aprobado por humano en conversación, commit `b1cb5f9`).
+- **Acciones:** spec_author añadió R13 (con nota de superación parcial de R9); implementer dividió `OperationalContext` en `AgeingAlerts`/`TopSuppliers` y reordenó el layout; primera revisión rechazó por C6 (aprobación humana sin commitear); tras corregir el checkbox se detectó además que el historial volvió a mezclar test+feat+docs (C4) y que un commit posterior arrastró de forma no intencional trabajo de otra feature (`frontend-odc-form`, id 10, solo su spec — sigue `done` sin activarse fuera de turno) y archivos internos de la skill `impeccable`.
+- **Nota de excepción documentada:** dos intentos de recomponer el historial en commits atómicos (test→feat→docs) vía subagente tuvieron éxito localmente, pero la rama ya se pusheó a `origin/refactor-ui` antes de que se detectara el tercer intento manual mal empaquetado. El humano decidió explícitamente no reescribir historial ya público (evitar `force-push`) y aceptar la mezcla de commits como excepción documentada, dado que el código quedó byte-idéntico al ya verificado como correcto y probado. Segunda revisión aprobó bajo ese criterio explícito.
+- **Resultado:** revisión aprobada (con excepción C4 documentada); `./init.sh` verde: backend 58 suites / 454 pruebas, frontend 30 archivos / 201 pruebas, sin regresión R1-R12.
+- **Commits:** `b1cb5f9 docs(role-based-executive-dashboard): approve R13 extension`, `9677d48 docs(...): log R13 implementation summary`, `f90d072 "Prepare R13: reorder executive dashboard and docs"` (mezclado, ver nota de excepción).
+- **Pendiente para la próxima sesión:** implementar R13 de `frontend-odc-form` (id 10, spec ya escrita y aprobada en `specs/frontend-odc-form/requirements.md`, reordenar `odc-dashboard.tsx` a Rechazadas → Borradores → Listas para comprar → Pendientes de factura) — una feature a la vez, no se empezó su implementación en esta sesión. Considerar también añadir `.impeccable/` a `.gitignore` (hallazgo no bloqueante del reviewer).
+- **Estado final:** done.
