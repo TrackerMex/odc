@@ -303,3 +303,12 @@ _El historial comenzará aquí cuando se complete la primera sesión._
   cliente/SSR y lint backend.
 - **Commits:** `e596de4`, `e509930`, `308cdf6`, `fd35f1a`.
 - **Estado final:** done.
+
+## Sesión 2026-07-27 — role-based-executive-dashboard (id: 19, extensión R12)
+
+- **Feature:** vista paginada de todas las tareas accionables, accesible desde la prioridad cuando hay más de cinco órdenes.
+- **Spec:** [[specs/role-based-executive-dashboard/requirements|spec]] (R12 aprobado por humano en conversación).
+- **Acciones:** endpoint derivado de la sesión, paginación ordenada por antigüedad, ruta `/tasks`, acciones autorizadas y retorno a la bandeja.
+- **Resultado:** revisión aprobada; backend 58 suites / 454 pruebas, frontend 30 archivos / 199 pruebas, builds e `./init.sh` verdes.
+- **Commits:** `3ccbe33 feat(role-based-executive-dashboard): add paginated task queue (R12)`.
+- **Estado final:** done.

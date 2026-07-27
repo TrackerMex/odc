@@ -1,46 +1,20 @@
-# review: role-based-executive-dashboard
-Fecha: 2026-07-27
-Veredicto: APROBADO
+# Revisión — role-based-executive-dashboard
 
-## Checklist C1 — Arnés
-- [x] `AGENTS.md`, `CLAUDE.md`, `CHECKPOINTS.md`, `STATUS.md`, `init.sh`, `init.config.sh` y `feature_list.json` están presentes.
-- [x] Los documentos y agentes requeridos están presentes; `init.sh` los validó.
-- [x] `init.sh` terminó con exit code 0 en Git Bash.
+## Veredicto
 
-## Checklist C2 — Estado coherente
-- [x] Solo 1 feature in_progress (`role-based-executive-dashboard`).
-- [x] `progress/current.md` describe la sesión activa.
+**APROBADO.** R12 completa la feature sin alterar la prioridad ejecutiva ya aprobada.
 
-## Checklist C3 — Arquitectura
-- [x] domain sin imports de infrastructure.
-- [x] `PurchaseOrderRepository` es un contrato puro en domain.
-- [x] `GetExecutiveDashboardUseCase` depende del contrato por el token `PurchaseOrderRepository`, no de TypeORM.
-- [x] TypeORM y HTTP quedan en infrastructure; el repositorio realiza las consultas y el controller deriva el viewer de sesión.
+## Checkpoints relevantes
 
-## Checklist C4 — TDD
-- [x] Cada R1–R11 tiene al menos un test que lo nombra explícitamente en los archivos registrados por `traceability.md`.
-- [x] La historia acredita test-primero: `e509930 test(role-based-executive-dashboard): specify dashboard behavior (R1-R11)` contiene exclusivamente archivos `*.spec.ts`/`*.test.tsx` y precede a `308cdf6 feat(role-based-executive-dashboard): implement dashboard snapshot (R1-R11)`, que añade únicamente implementación productiva.
+- **C2:** una sola feature activa durante la implementación; estado y sesión documentados.
+- **C3:** el contrato de repositorio permanece en domain; el caso de uso depende del token `PurchaseOrderRepository`; HTTP y TypeORM permanecen en infrastructure.
+- **C4:** R12 tiene prueba de caso de uso y prueba de enlace de interfaz; el primer test de enlace falló antes de la implementación.
+- **C5:** la trazabilidad R1–R12 no tiene filas pendientes y R12 referencia el commit `3ccbe33`.
+- **C6:** R12 fue aprobado por humano en la extensión de la spec del 2026-07-27.
 
-## Checklist C5 — Trazabilidad
-- [x] `traceability.md` no tiene filas `pendiente`.
-- [x] Cada R1–R11 registra pruebas y los commits de prueba (`e509930`) e implementación (`308cdf6`) con formato convencional y R-ids.
+## Verificación
 
-## Checklist C6 — Spec aprobada
-- [x] `requirements.md` tiene `status: approved`.
-- [x] La casilla humana está marcada con fecha 2026-07-27.
-- [x] La especificación aprobada antecede las pruebas e implementación (`e596de4` → `e509930` → `308cdf6`).
-
-## Observaciones
-- R3 queda cubierto: el caso de uso serializa `nextAction` por tarea prioritaria y `ExecutiveDashboard` consume el valor del snapshot para nombrar o enlazar la siguiente acción, sin inferirla por `status`.
-- Sin bloqueos de la feature. No se cambió su estado durante esta revisión.
-
-## Output de ./init.sh
-```text
-Ejecución independiente: C:\Program Files\Git\bin\bash.exe ./init.sh
-Exit code: 0
-
-Build: backend Nest y frontend Vite exitosos.
-Tests: backend 57 suites / 453 pruebas; frontend 30 archivos / 199 pruebas.
-Lint: backend sin errores.
-Resultado: ✅ Todo verde. Listo para trabajar.
-```
+- `pnpm test` backend: 58 suites, 454 pruebas verdes.
+- `pnpm test --passWithNoTests` frontend: 30 archivos, 199 pruebas verdes.
+- Builds de backend y frontend verdes.
+- `./init.sh` y `git diff --check` verdes.
