@@ -5,6 +5,7 @@ import {
   createOdc,
   getOdc,
   getMonthlyPurchaseSummary,
+  getExecutiveDashboard,
   listOdcs,
   listSuppliers,
   registerPayment,
@@ -114,6 +115,36 @@ describe('R1,R4: monthly purchase summary API contract', () => {
 
     expect(fetch).toHaveBeenCalledWith(
       '/api/odcs/monthly-summary?month=2026-07',
+      expect.objectContaining({ credentials: 'include' }),
+    )
+  })
+})
+
+describe('R1: executive dashboard API contract', () => {
+  it('requests one protected snapshot for the selected month', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue(
+        jsonResponse({
+          month: '2026-07',
+          role: 'DIRECTOR_OPS',
+          priority: { total: 0, items: [] },
+          pulse: {
+            current: { purchaseCount: 0, totalCents: 0 },
+            previous: { month: '2026-06', purchaseCount: 0, totalCents: 0 },
+            purchaseCountChangePercent: null,
+            totalCentsChangePercent: null,
+          },
+          oldestActiveOrders: [],
+          topSuppliers: [],
+        }),
+      ),
+    )
+
+    await getExecutiveDashboard('2026-07')
+
+    expect(fetch).toHaveBeenCalledWith(
+      '/api/odcs/executive-dashboard?month=2026-07',
       expect.objectContaining({ credentials: 'include' }),
     )
   })

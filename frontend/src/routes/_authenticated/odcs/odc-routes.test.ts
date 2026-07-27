@@ -1,12 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type * as ApiModule from '@/lib/api'
-import { getOdc, listOdcs, listSuppliers } from '@/lib/api'
-import {
-  loadAuthenticatedDashboard,
-  loadAdminDashboard,
-  loadGeneralDashboard,
-  loadOpsDashboard,
-} from '../index'
+import { getExecutiveDashboard, getOdc, listSuppliers } from '@/lib/api'
+import { loadAuthenticatedDashboard } from '../index'
 import { canEditOdc, loadOdcDetail } from './$id'
 
 vi.mock('@/lib/api', async (importOriginal) => {
@@ -14,81 +9,52 @@ vi.mock('@/lib/api', async (importOriginal) => {
   return {
     ...actual,
     getOdc: vi.fn(),
-    listOdcs: vi.fn(),
+    getExecutiveDashboard: vi.fn(),
     listSuppliers: vi.fn(),
   }
 })
 
-const emptyPage = { items: [], total: 0, page: 1, pageSize: 20 }
+const emptyDashboard = {
+  month: '2026-07',
+  role: 'DIRECTOR_OPS',
+  priority: { total: 0, items: [] },
+  pulse: {
+    current: { purchaseCount: 0, totalCents: 0 },
+    previous: { month: '2026-06', purchaseCount: 0, totalCents: 0 },
+    purchaseCountChangePercent: null,
+    totalCentsChangePercent: null,
+  },
+  oldestActiveOrders: [],
+  topSuppliers: [],
+} as const
 
-describe('R3: authenticated dashboard selection is isolated by role', () => {
+describe('R1: authenticated dashboard loads one executive snapshot by role', () => {
   beforeEach(() => vi.clearAllMocks())
 
   it.each([
     ['DIRECTOR_OPS', 'ops'],
     ['ADMINISTRACION', 'admin'],
     ['DIRECTOR_GENERAL', 'general'],
-  ] as const)('selects only the %s dashboard', async (role, kind) => {
-    vi.mocked(listOdcs).mockResolvedValue(emptyPage)
+  ] as const)('selects only the %s dashboard', async (role) => {
+    vi.mocked(getExecutiveDashboard).mockResolvedValue({
+      ...emptyDashboard,
+      role,
+    })
 
     await expect(loadAuthenticatedDashboard({ role })).resolves.toMatchObject({
-      kind,
+      role,
     })
+    expect(getExecutiveDashboard).toHaveBeenCalledOnce()
+    expect(getExecutiveDashboard).toHaveBeenCalledWith(
+      expect.stringMatching(/^\d{4}-\d{2}$/),
+    )
   })
 
   it('does not select a dashboard for an unknown role', async () => {
-    await expect(loadAuthenticatedDashboard({ role: 'UNKNOWN' })).resolves.toBeNull()
-    expect(listOdcs).not.toHaveBeenCalled()
-  })
-})
-
-describe('R1: dashboard loader requests every DIRECTOR_OPS queue', () => {
-  beforeEach(() => vi.clearAllMocks())
-
-  it('maps the four filtered pages without deriving totals client-side', async () => {
-    vi.mocked(listOdcs).mockResolvedValue(emptyPage)
-
-    const result = await loadOpsDashboard()
-
-    expect(listOdcs).toHaveBeenCalledTimes(4)
-    expect(listOdcs).toHaveBeenCalledWith('BORRADOR')
-    expect(listOdcs).toHaveBeenCalledWith('RECHAZADA')
-    expect(listOdcs).toHaveBeenCalledWith('COMPRA_APROBADA')
-    expect(listOdcs).toHaveBeenCalledWith('EVIDENCIA_PAGO_SUBIDA')
-    expect(Object.keys(result)).toEqual([
-      'BORRADOR',
-      'RECHAZADA',
-      'COMPRA_APROBADA',
-      'EVIDENCIA_PAGO_SUBIDA',
-    ])
-  })
-})
-
-describe('R1: dashboard loader requests only ADMINISTRACION queues', () => {
-  beforeEach(() => vi.clearAllMocks())
-
-  it('maps PENDIENTE_ADMIN and PAGO_REGISTRADO without Ops queues', async () => {
-    vi.mocked(listOdcs).mockResolvedValue(emptyPage)
-
-    const result = await loadAdminDashboard()
-
-    expect(listOdcs).toHaveBeenCalledTimes(2)
-    expect(listOdcs).toHaveBeenNthCalledWith(1, 'PENDIENTE_ADMIN')
-    expect(listOdcs).toHaveBeenNthCalledWith(2, 'PAGO_REGISTRADO')
-    expect(Object.keys(result)).toEqual(['PENDIENTE_ADMIN', 'PAGO_REGISTRADO'])
-  })
-})
-
-describe('R1: dashboard loader requests only the DIRECTOR_GENERAL queue', () => {
-  beforeEach(() => vi.clearAllMocks())
-
-  it('loads exactly page 1 of PRESUPUESTO_APROBADO', async () => {
-    vi.mocked(listOdcs).mockResolvedValue(emptyPage)
-
-    await expect(loadGeneralDashboard()).resolves.toEqual(emptyPage)
-
-    expect(listOdcs).toHaveBeenCalledOnce()
-    expect(listOdcs).toHaveBeenCalledWith('PRESUPUESTO_APROBADO', 1)
+    await expect(
+      loadAuthenticatedDashboard({ role: 'UNKNOWN' }),
+    ).resolves.toBeNull()
+    expect(getExecutiveDashboard).not.toHaveBeenCalled()
   })
 })
 
