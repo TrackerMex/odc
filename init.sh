@@ -7,7 +7,8 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$SCRIPT_DIR"
 
 # shellcheck source=./init.config.sh
-source ./init.config.sh
+# Strip CRLF carriage returns so this Bash script works with Windows checkouts.
+source <(tr -d '\r' < ./init.config.sh)
 
 RED='\033[0;31m'
 GREEN='\033[0;32m'
