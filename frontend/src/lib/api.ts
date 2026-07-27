@@ -2,6 +2,7 @@ import { createIsomorphicFn } from '@tanstack/react-start'
 import type { SessionUser } from './session'
 import type {
   MonthlyPurchaseSummary,
+  ExecutiveDashboardResponse,
   Odc,
   OdcPage,
   OdcPayload,
@@ -141,6 +142,15 @@ export function getMonthlyPurchaseSummary(
   const query = new URLSearchParams({ month })
   return apiFetch<MonthlyPurchaseSummary>(
     `/api/odcs/monthly-summary?${query.toString()}`,
+  )
+}
+
+export function getExecutiveDashboard(
+  month: string,
+): Promise<ExecutiveDashboardResponse> {
+  const query = new URLSearchParams({ month })
+  return apiFetch<ExecutiveDashboardResponse>(
+    `/api/odcs/executive-dashboard?${query.toString()}`,
   )
 }
 

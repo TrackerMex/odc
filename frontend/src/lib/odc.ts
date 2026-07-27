@@ -92,6 +92,58 @@ export interface MonthlyPurchaseSummary {
   purchases: MonthlyPurchase[]
 }
 
+export type ExecutiveDashboardRole =
+  'DIRECTOR_OPS' | 'ADMINISTRACION' | 'DIRECTOR_GENERAL'
+
+export type ExecutiveTaskNextAction =
+  | 'EDITAR_Y_REENVIAR'
+  | 'VALIDAR_PRESUPUESTO'
+  | 'APROBAR_COMPRA'
+  | 'REGISTRAR_PAGO'
+  | 'CARGAR_EVIDENCIA_PAGO'
+  | 'COMPLETAR_FACTURA'
+
+export interface ExecutiveTask {
+  id: string
+  odcNumber: string
+  status: OdcStatus
+  description: string
+  supplier: string
+  totalCents: number
+  createdAt: string
+  ageDays: number
+  nextAction: ExecutiveTaskNextAction
+}
+
+export interface ExecutiveOrder {
+  id: string
+  odcNumber: string
+  status: OdcStatus
+  description: string
+  supplier: string
+  totalCents: number
+  createdAt: string
+  ageDays: number
+}
+
+export interface ExecutiveDashboardResponse {
+  month: string
+  role: ExecutiveDashboardRole
+  priority: { total: number; items: ExecutiveTask[] }
+  pulse: {
+    current: { purchaseCount: number; totalCents: number }
+    previous: { month: string; purchaseCount: number; totalCents: number }
+    purchaseCountChangePercent: number | null
+    totalCentsChangePercent: number | null
+  }
+  oldestActiveOrders: ExecutiveOrder[]
+  topSuppliers: Array<{
+    supplier: string
+    purchaseCount: number
+    totalCents: number
+  }>
+}
+
 export interface Supplier {
   id: string | null
   name: string
@@ -204,6 +256,14 @@ export function formatMonth(value: string): string {
     year: 'numeric',
     timeZone: 'UTC',
   }).format(new Date(Date.UTC(year, month - 1, 1)))
+}
+
+export function formatPercentChange(value: number | null): string {
+  if (value === null) return 'Sin base comparable'
+  const sign = value > 0 ? '+' : ''
+  return `${sign}${new Intl.NumberFormat('es-MX', {
+    maximumFractionDigits: 1,
+  }).format(value)}%`
 }
 
 export function odcFileUrl(id: string, kind: 'evidence' | 'invoice'): string {

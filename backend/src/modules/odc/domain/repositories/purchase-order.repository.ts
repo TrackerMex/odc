@@ -42,6 +42,43 @@ export interface MonthlyPurchase {
   observations: string | null;
 }
 
+export interface ExecutiveDashboardOrder {
+  id: string;
+  odcNumber: string;
+  status: OdcStatus;
+  description: string;
+  supplier: string;
+  totalCents: number;
+  createdAt: Date;
+}
+
+export type ExecutiveTaskNextAction =
+  | 'EDITAR_Y_REENVIAR'
+  | 'VALIDAR_PRESUPUESTO'
+  | 'APROBAR_COMPRA'
+  | 'REGISTRAR_PAGO'
+  | 'CARGAR_EVIDENCIA_PAGO'
+  | 'COMPLETAR_FACTURA';
+
+export interface ExecutiveDashboardSupplier {
+  supplier: string;
+  purchaseCount: number;
+  totalCents: number;
+}
+
+export interface ExecutiveDashboardData {
+  priority: {
+    total: number;
+    items: ExecutiveDashboardOrder[];
+  };
+  pulse: {
+    current: { purchaseCount: number; totalCents: number };
+    previous: { purchaseCount: number; totalCents: number };
+  };
+  oldestActiveOrders: ExecutiveDashboardOrder[];
+  topSuppliers: ExecutiveDashboardSupplier[];
+}
+
 export interface PurchaseOrderRepository {
   // Assigns the ODC-YYYY-NNNNN number and persists the order plus its
   // opening history row in a single transaction (R5, R6).
@@ -63,4 +100,9 @@ export interface PurchaseOrderRepository {
     pageSize: number,
   ): Promise<OdcPage>;
   findMonthlyPurchases(month: string): Promise<MonthlyPurchase[]>;
+  getExecutiveDashboard(
+    viewer: OdcViewer,
+    month: string,
+    previousMonth: string,
+  ): Promise<ExecutiveDashboardData>;
 }
