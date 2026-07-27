@@ -1,6 +1,7 @@
 import { ArrowLeftIcon } from 'lucide-react'
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
 import { createOdc, listSuppliers, submitOdc } from '@/lib/api'
+import { useAuthenticatedUser } from '@/lib/use-authenticated-user'
 import { OdcForm } from '@/components/odc/odc-form'
 import {
   OdcPageError,
@@ -18,7 +19,7 @@ export const Route = createFileRoute('/_authenticated/odcs/new')({
 
 function NewOdcPage() {
   const suppliers = Route.useLoaderData()
-  const { user } = Route.useRouteContext()
+  const user = useAuthenticatedUser()
   const navigate = useNavigate()
 
   if (user.role !== 'DIRECTOR_OPS') return <RolePlaceholder />

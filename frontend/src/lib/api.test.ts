@@ -1,5 +1,14 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { apiFetch, ApiError } from './api'
+import {
+  expireClientSession,
+  resetClientSessionExpiration,
+} from './session-expiration'
+
+vi.mock('./session-expiration', () => ({
+  expireClientSession: vi.fn(),
+  resetClientSessionExpiration: vi.fn(),
+}))
 
 function jsonResponse(status: number, body: unknown) {
   return {
@@ -56,19 +65,51 @@ describe('R3: apiFetch rejects with status + message on non-2xx, non-401 respons
   })
 })
 
-describe('R4: apiFetch rejects with a distinguishable 401 error, without redirecting', () => {
+describe('session-isolation R9: apiFetch centralizes protected 401 expiration', () => {
   beforeEach(() => {
     vi.stubGlobal('fetch', vi.fn())
+    vi.mocked(expireClientSession).mockReset()
+    vi.mocked(resetClientSessionExpiration).mockReset()
   })
 
-  it('rejects with status 401 and does not touch navigation', async () => {
+  it('expires the client session before rejecting a protected 401', async () => {
     vi.mocked(fetch).mockResolvedValue(
       jsonResponse(401, { message: 'Unauthorized' }),
     )
 
-    const error = await apiFetch('/api/auth/me').catch((e: unknown) => e)
+    const error = await apiFetch('/api/odcs').catch((e: unknown) => e)
 
     expect(error).toBeInstanceOf(ApiError)
     expect((error as ApiError).status).toBe(401)
+    expect(expireClientSession).toHaveBeenCalledOnce()
+  })
+
+  it('keeps invalid login credentials local to the login form', async () => {
+    vi.mocked(fetch).mockResolvedValue(
+      jsonResponse(401, { message: 'Invalid credentials' }),
+    )
+
+    await expect(
+      apiFetch('/api/auth/login', { method: 'POST' }),
+    ).rejects.toMatchObject({ status: 401 })
+
+    expect(expireClientSession).not.toHaveBeenCalled()
+  })
+
+  it('rearms expiration handling after a successful login', async () => {
+    vi.mocked(fetch).mockResolvedValue(
+      jsonResponse(200, {
+        user: {
+          id: 'u1',
+          email: 'user@example.com',
+          fullName: 'User Example',
+          role: 'ADMINISTRACION',
+        },
+      }),
+    )
+
+    await apiFetch('/api/auth/login', { method: 'POST' })
+
+    expect(resetClientSessionExpiration).toHaveBeenCalledOnce()
   })
 })

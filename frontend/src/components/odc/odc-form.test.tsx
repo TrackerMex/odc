@@ -40,6 +40,10 @@ function rejectedOdc(): Odc {
   }
 }
 
+function draftOdc(): Odc {
+  return { ...rejectedOdc(), status: 'BORRADOR', rejectionReason: null }
+}
+
 const user = {
   id: 'u1',
   email: 'ops@odc.local',
@@ -209,5 +213,101 @@ describe('R8,R9,R10,R11: rejected ODC editing, resend and failures', () => {
     expect(within(alert).getByText(/estado de la odc cambió/i)).toBeTruthy()
     expect(screen.getByDisplayValue('Valor que debe conservarse')).toBeTruthy()
     expect(submit).not.toHaveBeenCalled()
+  })
+})
+
+describe('R2,R3,R4: saved BORRADOR editing and status transition', () => {
+  it('saves draft changes without submitting', async () => {
+    const initialOdc = draftOdc()
+    const updated = { ...initialOdc, description: 'Sensores actualizados' }
+    const persist = vi.fn().mockResolvedValue(updated)
+    const submit = vi.fn()
+    const onSuccess = vi.fn()
+
+    render(
+      <OdcForm
+        user={user}
+        suppliers={suppliers}
+        initialOdc={initialOdc}
+        persist={persist}
+        submit={submit}
+        onSuccess={onSuccess}
+      />,
+    )
+
+    fireEvent.change(screen.getByLabelText(/descripci/i), {
+      target: { value: 'Sensores actualizados' },
+    })
+    fireEvent.click(
+      screen.getByRole('button', { name: /guardar como borrador/i }),
+    )
+
+    await vi.waitFor(() => expect(persist).toHaveBeenCalled())
+    expect(persist.mock.calls[0][0]).toMatchObject({
+      description: 'Sensores actualizados',
+    })
+    expect(submit).not.toHaveBeenCalled()
+    await vi.waitFor(() => expect(onSuccess).toHaveBeenCalledWith(updated))
+  })
+
+  it('persists draft changes before submitting them', async () => {
+    const initialOdc = draftOdc()
+    const updated = { ...initialOdc, description: 'Sensores actualizados' }
+    const submitted = { ...updated, status: 'PENDIENTE_ADMIN' as const }
+    const calls: string[] = []
+    const persist = vi.fn().mockImplementation(async () => {
+      calls.push('persist')
+      return updated
+    })
+    const submit = vi.fn().mockImplementation(async () => {
+      calls.push('submit')
+      return submitted
+    })
+    const onSuccess = vi.fn()
+
+    render(
+      <OdcForm
+        user={user}
+        suppliers={suppliers}
+        initialOdc={initialOdc}
+        persist={persist}
+        submit={submit}
+        onSuccess={onSuccess}
+      />,
+    )
+
+    fireEvent.click(
+      screen.getByRole('button', { name: /enviar a administraci/i }),
+    )
+
+    await vi.waitFor(() => expect(onSuccess).toHaveBeenCalledWith(submitted))
+    expect(calls).toEqual(['persist', 'submit'])
+    expect(submit).toHaveBeenCalledWith('o1')
+  })
+
+  it('keeps saved draft data when submit fails', async () => {
+    const initialOdc = draftOdc()
+    const updated = { ...initialOdc, description: 'Guardado antes del error' }
+    const persist = vi.fn().mockResolvedValue(updated)
+    const submit = vi.fn().mockRejectedValue(new ApiError(409, 'Conflict'))
+
+    render(
+      <OdcForm
+        user={user}
+        suppliers={suppliers}
+        initialOdc={initialOdc}
+        persist={persist}
+        submit={submit}
+        onSuccess={vi.fn()}
+      />,
+    )
+
+    fireEvent.click(
+      screen.getByRole('button', { name: /enviar a administraci/i }),
+    )
+
+    const alert = await screen.findByRole('alert')
+    expect(within(alert).getByText(/estado de la odc cambi/i)).toBeTruthy()
+    expect(screen.getByDisplayValue('Guardado antes del error')).toBeTruthy()
   })
 })

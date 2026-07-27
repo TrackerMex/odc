@@ -39,7 +39,11 @@ export function NavUser({
   async function handleLogout() {
     await logout()
     clearSession()
-    navigate({ to: '/login' })
+    await navigate({
+      to: '/login',
+      replace: true,
+      reloadDocument: true,
+    })
   }
 
   return (

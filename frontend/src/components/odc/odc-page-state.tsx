@@ -1,5 +1,4 @@
 import { AlertCircleIcon, LoaderCircleIcon } from 'lucide-react'
-import { Button } from '@/components/ui/button'
 
 export function OdcPagePending() {
   return (
@@ -31,11 +30,9 @@ export function OdcPageError() {
         />
         <h1 className="font-medium">No pudimos cargar esta información</h1>
         <p className="mt-2 text-sm text-muted-foreground">
-          Revisa tu conexión y vuelve a intentarlo.
+          Verifica tu conexión. Si tu sesión expiró, volverás al inicio de
+          sesión automáticamente.
         </p>
-        <Button className="mt-5" onClick={() => window.location.reload()}>
-          Reintentar
-        </Button>
       </div>
     </main>
   )

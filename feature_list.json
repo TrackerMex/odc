@@ -77,5 +77,23 @@
     "name": "odc-suppliers-catalog",
     "status": "done",
     "priority": "P2"
+  },
+  {
+    "id": 15,
+    "name": "odc-draft-editing",
+    "status": "done",
+    "priority": "P2"
+  },
+  {
+    "id": 16,
+    "name": "session-isolation",
+    "status": "done",
+    "priority": "P1"
+  },
+  {
+    "id": 17,
+    "name": "frontend-dark-mode",
+    "status": "done",
+    "priority": "P2"
   }
 ]

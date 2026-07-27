@@ -25,7 +25,7 @@ function jsonResponse(status: number, body: unknown) {
   } as Response
 }
 
-describe('bug: apiFetch on the server must use an absolute URL and forward the incoming Cookie header', () => {
+describe('R4: apiFetch on the server must use an absolute URL and forward the incoming Cookie header', () => {
   beforeEach(() => {
     vi.stubGlobal('fetch', vi.fn())
     vi.mocked(getRequestHeaders).mockReturnValue(new Headers())

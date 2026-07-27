@@ -1,5 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { listOdcs } from '@/lib/api'
+import { useAuthenticatedUser } from '@/lib/use-authenticated-user'
 import { OdcDashboard } from '@/components/odc/odc-dashboard'
 import type { DashboardSections } from '@/components/odc/odc-dashboard'
 import { AdminDashboard } from '@/components/odc/admin-dashboard'
@@ -41,18 +42,29 @@ export function loadGeneralDashboard() {
   return listOdcs('PRESUPUESTO_APROBADO', 1)
 }
 
+export type AuthenticatedDashboard =
+  | { kind: 'ops'; sections: DashboardSections }
+  | { kind: 'admin'; sections: AdminDashboardSections }
+  | { kind: 'general'; page: Awaited<ReturnType<typeof loadGeneralDashboard>> }
+
+export async function loadAuthenticatedDashboard(user: {
+  role: string
+}): Promise<AuthenticatedDashboard | null> {
+  if (user.role === 'DIRECTOR_OPS') {
+    return { kind: 'ops', sections: await loadOpsDashboard() }
+  }
+  if (user.role === 'ADMINISTRACION') {
+    return { kind: 'admin', sections: await loadAdminDashboard() }
+  }
+  if (user.role === 'DIRECTOR_GENERAL') {
+    return { kind: 'general', page: await loadGeneralDashboard() }
+  }
+  return null
+}
+
 export const Route = createFileRoute('/_authenticated/')({
   loader: async ({ context }) => {
-    if (context.user.role === 'DIRECTOR_OPS') {
-      return { kind: 'ops' as const, sections: await loadOpsDashboard() }
-    }
-    if (context.user.role === 'ADMINISTRACION') {
-      return { kind: 'admin' as const, sections: await loadAdminDashboard() }
-    }
-    if (context.user.role === 'DIRECTOR_GENERAL') {
-      return { kind: 'general' as const, page: await loadGeneralDashboard() }
-    }
-    return null
+    return loadAuthenticatedDashboard(context.user)
   },
   pendingComponent: OdcPagePending,
   errorComponent: OdcPageError,
@@ -61,7 +73,7 @@ export const Route = createFileRoute('/_authenticated/')({
 
 function Home() {
   const dashboard = Route.useLoaderData()
-  const { user } = Route.useRouteContext()
+  const user = useAuthenticatedUser()
   if (!dashboard) return <RolePlaceholder />
   if (dashboard.kind === 'admin') {
     return (

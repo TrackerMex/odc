@@ -58,7 +58,7 @@ export function LoginForm({
     try {
       const { user } = await login(result.data)
       setUser(user)
-      navigate({ to: '/' })
+      await navigate({ to: '/', replace: true })
     } catch (error) {
       if (error instanceof ApiError && error.status === 401) {
         setFormError('Correo o contraseña incorrectos.')
