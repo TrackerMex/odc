@@ -290,3 +290,16 @@ _El historial comenzará aquí cuando se complete la primera sesión._
   frontend en verde. La instancia local respondió correctamente; su revisión
   visual no pudo pasar del login al no haber sesión autenticada disponible.
 - Estado final: completado.
+
+## Sesión 2026-07-27 — role-based-executive-dashboard (id: 19)
+
+- **Feature:** dashboard ejecutivo por rol con prioridad propia, antigüedad,
+  proveedores, comparación mensual y acciones operativas autorizadas.
+- **Acciones:** se corrigió R3 para devolver y consumir `nextAction`; se
+  reconstruyó la historia autorizada como spec → pruebas → implementación →
+  trazabilidad para acreditar C4.
+- **Resultado:** revisión independiente APROBADA en C1–C6 y `./init.sh` verde:
+  backend 57 suites / 453 pruebas, frontend 30 archivos / 199 pruebas, builds
+  cliente/SSR y lint backend.
+- **Commits:** `e596de4`, `e509930`, `308cdf6`, `fd35f1a`.
+- **Estado final:** done.
