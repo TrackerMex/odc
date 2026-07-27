@@ -278,3 +278,15 @@ _El historial comenzará aquí cuando se complete la primera sesión._
 - Se generaron `Table` y `Alert` con shadcn/ui y se añadieron `html-to-image` y `jspdf` para la exportación en cliente.
 - Verificado: backend 53 suites / 441 pruebas, frontend 29 archivos / 193 pruebas, build de ambos y lint backend verdes.
 - Commits: `e2778c5`, `0262d57`, `7fdd0f4`.
+
+# Sesión 2026-07-27 — mantenimiento de interfaz: sidebar-07
+
+- Se incorporó la composición de `sidebar-07` de shadcn al shell autenticado:
+  identidad ODC, rail para colapsar a iconos, disparador superior y menú de
+  sesión adaptable a móvil.
+- La navegación expone sólo rutas reales; `DIRECTOR_OPS` ve Nueva orden y
+  Resumen mensual, mientras los demás roles conservan su bandeja de trabajo.
+- Verificado: build cliente/SSR y 29 archivos de prueba / 193 pruebas del
+  frontend en verde. La instancia local respondió correctamente; su revisión
+  visual no pudo pasar del login al no haber sesión autenticada disponible.
+- Estado final: completado.

@@ -1,5 +1,10 @@
 import { useEffect } from 'react'
-import { Outlet, createFileRoute, redirect } from '@tanstack/react-router'
+import {
+  Outlet,
+  createFileRoute,
+  redirect,
+  useRouterState,
+} from '@tanstack/react-router'
 import { AppLayout } from '../components/layout/app-layout'
 import { resolveSession, type SessionUser } from '../lib/session'
 import { useSessionStore } from '../stores/session.store'
@@ -22,6 +27,9 @@ export const Route = createFileRoute('/_authenticated')({
 
 function AuthenticatedLayout() {
   const { user } = Route.useRouteContext()
+  const pathname = useRouterState({
+    select: (state) => state.location.pathname,
+  })
 
   // Client-only (never runs during SSR): hydrates the store from the user
   // resolved by authGuardBeforeLoad so post-hydration interactions (logout,
@@ -32,7 +40,7 @@ function AuthenticatedLayout() {
   }, [user])
 
   return (
-    <AppLayout user={user}>
+    <AppLayout user={user} pathname={pathname}>
       <Outlet />
     </AppLayout>
   )

@@ -1,34 +1,29 @@
 import type { ReactNode } from 'react'
-import { NavUser } from '@/components/nav-user'
-import { ThemeToggle } from '@/lib/theme'
+import { AppSidebar } from '@/components/layout/app-sidebar'
 import {
-  Sidebar,
-  SidebarFooter,
-  SidebarHeader,
   SidebarInset,
   SidebarProvider,
+  SidebarTrigger,
 } from '@/components/ui/sidebar'
 
 export function AppLayout({
+  pathname,
   user,
   children,
 }: {
+  pathname?: string
   user: { fullName: string; email: string; role: string }
   children: ReactNode
 }) {
   return (
     <SidebarProvider>
-      <Sidebar collapsible="icon">
-        <SidebarHeader>
-          <div className="flex justify-end">
-            <ThemeToggle />
-          </div>
-        </SidebarHeader>
-        <SidebarFooter>
-          <NavUser user={user} />
-        </SidebarFooter>
-      </Sidebar>
-      <SidebarInset>{children}</SidebarInset>
+      <AppSidebar user={user} pathname={pathname} />
+      <SidebarInset>
+        <header className="flex h-12 shrink-0 items-center border-b px-4">
+          <SidebarTrigger className="-ml-1" />
+        </header>
+        <div className="flex min-h-0 flex-1 flex-col">{children}</div>
+      </SidebarInset>
     </SidebarProvider>
   )
 }
