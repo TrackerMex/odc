@@ -27,6 +27,7 @@ import type { SessionTokenPayload } from '../../../auth/infrastructure/guards/jw
 import { CreateOdcDto } from '../../application/dto/create-odc.dto';
 import { GetMonthlyPurchaseSummaryQueryDto } from '../../application/dto/get-monthly-purchase-summary.query.dto';
 import { GetExecutiveDashboardQueryDto } from '../../application/dto/get-executive-dashboard.query.dto';
+import { GetExecutiveTasksQueryDto } from '../../application/dto/get-executive-tasks.query.dto';
 import { ListOdcsQueryDto } from '../../application/dto/list-odcs.query.dto';
 import { RegisterPaymentDto } from '../../application/dto/register-payment.dto';
 import { RejectOdcDto } from '../../application/dto/reject-odc.dto';
@@ -41,6 +42,7 @@ import { GetOdcUseCase } from '../../application/use-cases/get-odc.usecase';
 import { GetPaymentEvidenceFileUseCase } from '../../application/use-cases/get-payment-evidence-file.usecase';
 import { GetMonthlyPurchaseSummaryUseCase } from '../../application/use-cases/get-monthly-purchase-summary.usecase';
 import { GetExecutiveDashboardUseCase } from '../../application/use-cases/get-executive-dashboard.usecase';
+import { GetExecutiveTasksUseCase } from '../../application/use-cases/get-executive-tasks.usecase';
 import { ListOdcsUseCase } from '../../application/use-cases/list-odcs.usecase';
 import { RegisterPaymentUseCase } from '../../application/use-cases/register-payment.usecase';
 import { RejectOdcUseCase } from '../../application/use-cases/reject-odc.usecase';
@@ -171,6 +173,7 @@ export class OdcController {
     private readonly getInvoiceFileUseCase: GetInvoiceFileUseCase,
     private readonly getMonthlyPurchaseSummaryUseCase: GetMonthlyPurchaseSummaryUseCase,
     private readonly getExecutiveDashboardUseCase: GetExecutiveDashboardUseCase,
+    private readonly getExecutiveTasksUseCase: GetExecutiveTasksUseCase,
   ) {}
 
   @Post()
@@ -407,6 +410,21 @@ export class OdcController {
           query.month,
           actorFrom(request),
         ),
+      );
+    } catch (error) {
+      rethrowDomainError(error);
+    }
+  }
+
+  @Get('executive-dashboard/tasks')
+  async executiveTasks(
+    @Query() query: GetExecutiveTasksQueryDto,
+    @Req() request: RequestWithSession,
+  ) {
+    try {
+      return await this.getExecutiveTasksUseCase.execute(
+        query.page,
+        actorFrom(request),
       );
     } catch (error) {
       rethrowDomainError(error);

@@ -184,10 +184,18 @@ function PriorityQueue({
             </ul>
           )}
           {priority.total > priority.items.length ? (
-            <p className="mt-4 text-sm text-muted-foreground">
-              Se muestran las {priority.items.length} tareas más antiguas de{' '}
-              {priority.total}.
-            </p>
+            <div className="mt-4 flex flex-wrap items-center justify-between gap-3 text-sm text-muted-foreground">
+              <p>
+                Se muestran las {priority.items.length} tareas más antiguas de{' '}
+                {priority.total}.
+              </p>
+              <Link
+                to="/tasks"
+                className="font-medium text-foreground underline-offset-4 hover:underline focus-visible:rounded-sm focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/30"
+              >
+                Ver todas las tareas
+              </Link>
+            </div>
           ) : null}
         </CardContent>
       </Card>

@@ -13,6 +13,7 @@ import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/index'
 import { Route as AuthenticatedMonthlySummaryRouteImport } from './routes/_authenticated/monthly-summary'
+import { Route as AuthenticatedTasksRouteImport } from './routes/_authenticated/tasks'
 import { Route as AuthenticatedOdcsIdRouteImport } from './routes/_authenticated/odcs/$id'
 import { Route as AuthenticatedOdcsNewRouteImport } from './routes/_authenticated/odcs/new'
 
@@ -36,6 +37,11 @@ const AuthenticatedMonthlySummaryRoute =
     path: '/monthly-summary',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
+const AuthenticatedTasksRoute = AuthenticatedTasksRouteImport.update({
+  id: '/tasks',
+  path: '/tasks',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
 const AuthenticatedOdcsIdRoute = AuthenticatedOdcsIdRouteImport.update({
   id: '/odcs/$id',
   path: '/odcs/$id',
@@ -51,12 +57,14 @@ export interface FileRoutesByFullPath {
   '/': typeof AuthenticatedIndexRoute
   '/login': typeof LoginRoute
   '/monthly-summary': typeof AuthenticatedMonthlySummaryRoute
+  '/tasks': typeof AuthenticatedTasksRoute
   '/odcs/$id': typeof AuthenticatedOdcsIdRoute
   '/odcs/new': typeof AuthenticatedOdcsNewRoute
 }
 export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/monthly-summary': typeof AuthenticatedMonthlySummaryRoute
+  '/tasks': typeof AuthenticatedTasksRoute
   '/': typeof AuthenticatedIndexRoute
   '/odcs/$id': typeof AuthenticatedOdcsIdRoute
   '/odcs/new': typeof AuthenticatedOdcsNewRoute
@@ -66,20 +74,23 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteWithChildren
   '/login': typeof LoginRoute
   '/_authenticated/monthly-summary': typeof AuthenticatedMonthlySummaryRoute
+  '/_authenticated/tasks': typeof AuthenticatedTasksRoute
   '/_authenticated/': typeof AuthenticatedIndexRoute
   '/_authenticated/odcs/$id': typeof AuthenticatedOdcsIdRoute
   '/_authenticated/odcs/new': typeof AuthenticatedOdcsNewRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/login' | '/monthly-summary' | '/odcs/$id' | '/odcs/new'
+  fullPaths:
+    '/' | '/login' | '/monthly-summary' | '/tasks' | '/odcs/$id' | '/odcs/new'
   fileRoutesByTo: FileRoutesByTo
-  to: '/login' | '/monthly-summary' | '/' | '/odcs/$id' | '/odcs/new'
+  to: '/login' | '/monthly-summary' | '/tasks' | '/' | '/odcs/$id' | '/odcs/new'
   id:
     | '__root__'
     | '/_authenticated'
     | '/login'
     | '/_authenticated/monthly-summary'
+    | '/_authenticated/tasks'
     | '/_authenticated/'
     | '/_authenticated/odcs/$id'
     | '/_authenticated/odcs/new'
@@ -120,6 +131,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedMonthlySummaryRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/tasks': {
+      id: '/_authenticated/tasks'
+      path: '/tasks'
+      fullPath: '/tasks'
+      preLoaderRoute: typeof AuthenticatedTasksRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/odcs/$id': {
       id: '/_authenticated/odcs/$id'
       path: '/odcs/$id'
@@ -139,6 +157,7 @@ declare module '@tanstack/react-router' {
 
 interface AuthenticatedRouteChildren {
   AuthenticatedMonthlySummaryRoute: typeof AuthenticatedMonthlySummaryRoute
+  AuthenticatedTasksRoute: typeof AuthenticatedTasksRoute
   AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
   AuthenticatedOdcsIdRoute: typeof AuthenticatedOdcsIdRoute
   AuthenticatedOdcsNewRoute: typeof AuthenticatedOdcsNewRoute
@@ -146,6 +165,7 @@ interface AuthenticatedRouteChildren {
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedMonthlySummaryRoute: AuthenticatedMonthlySummaryRoute,
+  AuthenticatedTasksRoute: AuthenticatedTasksRoute,
   AuthenticatedIndexRoute: AuthenticatedIndexRoute,
   AuthenticatedOdcsIdRoute: AuthenticatedOdcsIdRoute,
   AuthenticatedOdcsNewRoute: AuthenticatedOdcsNewRoute,

@@ -144,6 +144,13 @@ export interface ExecutiveDashboardResponse {
   }>
 }
 
+export interface ExecutiveTaskPage {
+  items: ExecutiveTask[]
+  total: number
+  page: number
+  pageSize: number
+}
+
 export interface Supplier {
   id: string | null
   name: string

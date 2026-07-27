@@ -34,6 +34,8 @@ tags: [harness, spec, dashboard, roles]
 
 - **R11**: WHEN el backend construye el resumen ejecutivo, THE SYSTEM SHALL obtener las tareas priorizadas, los totales mensuales, las órdenes activas antiguas y los proveedores mediante consultas acotadas y agregadas en el repositorio, sin una consulta por ODC ni por proveedor.
 
+- **R12**: WHEN un usuario de negocio selecciona “Ver todas las tareas” desde la franja de prioridad, THE SYSTEM SHALL mostrar una vista paginada con exclusivamente todas sus tareas accionables, ordenadas por antigüedad descendente y fecha de creación ascendente, conservando para cada una el contexto y siguiente acción definidos en R3-R4; la interfaz SHALL enlazar de vuelta a la bandeja de trabajo y no mostrará la vista cuando no existan tareas adicionales.
+
 ## Fuera de alcance
 
 - Presupuesto contra gasto, objetivos de gasto, pronósticos o métricas no respaldadas por datos persistidos.
@@ -44,4 +46,4 @@ tags: [harness, spec, dashboard, roles]
 
 ## Aprobación
 
-- [X] Aprobado por humano (fecha: 2026-07-27)
+- [X] Aprobado por humano (fecha: 2026-07-27; extensión R12 autorizada en conversación)

@@ -74,3 +74,9 @@ tags: [harness, spec, dashboard, roles]
 - [ ] (1) Escribir tests de repositorio que fallen para las consultas agregadas/acotadas y que no invocan una consulta por fila.
 - [ ] (2) Implementar las consultas TypeORM mínimas que los pasan.
 - [ ] (3) Refactorizar manteniendo los tests verdes.
+
+## R12 — Consultar y recorrer todas las tareas accionables
+
+- [X] (1) Escribir tests que fallen para el endpoint paginado, la ruta y el enlace desde la prioridad.
+- [X] (2) Implementar la consulta, vista reutilizada y navegación mínima que los pasan.
+- [X] (3) Refactorizar manteniendo los tests verdes.

@@ -27,6 +27,8 @@ tags: [harness, spec, dashboard, roles]
 
 - **Estados y movimiento prudente**: la ruta seguirá usando componentes de pending/error existentes para la carga inicial y el panel añadirá estados de vacío por sección. Las actualizaciones o reintentos usarán transiciones CSS discretas condicionadas por `motion-reduce`; no se introducirá una librería de animación nueva (R8-R9).
 
+- **Vista completa de tareas**: añadir `GET /api/odcs/executive-dashboard/tasks?page=N`, que deriva el rol y la identidad exclusivamente de la sesión y devuelve una página de tareas bajo el mismo filtro, proyección, orden y mapa de siguiente acción que R2-R4. La ruta autenticada `/tasks` reutilizará la lista visual de prioridad y ofrecerá un retorno claro a la bandeja; el dashboard sólo expone el enlace cuando quedan tareas fuera de las primeras cinco (R12).
+
 ## Contrato HTTP propuesto
 
 `GET /api/odcs/executive-dashboard?month=YYYY-MM`
@@ -64,6 +66,7 @@ interface ExecutiveDashboardResponse {
 - `frontend/src/lib/api.ts` — cliente `getExecutiveDashboard(month)`.
 - `frontend/src/routes/_authenticated/index.tsx` — loader único y composición de la portada por rol.
 - `frontend/src/components/odc/executive-dashboard.tsx` — prioridad, pulso, antigüedad, proveedores, estados y diseño responsive compartido.
+- `frontend/src/routes/_authenticated/tasks.tsx` y `frontend/src/components/odc/executive-task-list.tsx` — vista completa paginada y lista reutilizada por el dashboard.
 - `frontend/src/components/odc/{odc-dashboard,admin-dashboard,general-dashboard}.tsx` — retirar o sustituir la composición de colas duplicada, manteniendo los flujos de detalle enlazados.
 - Archivos `*.spec.ts` y `*.test.tsx` adyacentes — pruebas unitarias, de repositorio, controlador, cliente y UI nombradas por R-id.
 

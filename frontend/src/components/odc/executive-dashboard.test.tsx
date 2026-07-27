@@ -99,6 +99,9 @@ describe('R3: executive priority makes the oldest actionable work visible first'
         .getByRole('link', { name: /ODC-2026-00001/i })
         .getAttribute('href'),
     ).toBe('/odcs/draft-1')
+    expect(
+      screen.getByRole('link', { name: /ver todas las tareas/i }).getAttribute('href'),
+    ).toBe('/tasks')
     expect(screen.getByText(/Pulso del periodo/i)).toBeTruthy()
   })
 

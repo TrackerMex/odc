@@ -79,6 +79,13 @@ export interface ExecutiveDashboardData {
   topSuppliers: ExecutiveDashboardSupplier[];
 }
 
+export interface ExecutiveTaskPage {
+  items: ExecutiveDashboardOrder[];
+  total: number;
+  page: number;
+  pageSize: number;
+}
+
 export interface PurchaseOrderRepository {
   // Assigns the ODC-YYYY-NNNNN number and persists the order plus its
   // opening history row in a single transaction (R5, R6).
@@ -105,4 +112,9 @@ export interface PurchaseOrderRepository {
     month: string,
     previousMonth: string,
   ): Promise<ExecutiveDashboardData>;
+  getExecutiveTasks(
+    viewer: OdcViewer,
+    page: number,
+    pageSize: number,
+  ): Promise<ExecutiveTaskPage>;
 }

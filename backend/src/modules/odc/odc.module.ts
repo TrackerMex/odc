@@ -8,6 +8,7 @@ import { CreateDraftUseCase } from './application/use-cases/create-draft.usecase
 import { GetInvoiceFileUseCase } from './application/use-cases/get-invoice-file.usecase';
 import { GetMonthlyPurchaseSummaryUseCase } from './application/use-cases/get-monthly-purchase-summary.usecase';
 import { GetExecutiveDashboardUseCase } from './application/use-cases/get-executive-dashboard.usecase';
+import { GetExecutiveTasksUseCase } from './application/use-cases/get-executive-tasks.usecase';
 import { GetOdcUseCase } from './application/use-cases/get-odc.usecase';
 import { GetPaymentEvidenceFileUseCase } from './application/use-cases/get-payment-evidence-file.usecase';
 import { ListOdcsUseCase } from './application/use-cases/list-odcs.usecase';
@@ -39,6 +40,7 @@ import { PurchaseOrderTypeOrmRepository } from './infrastructure/repositories/pu
     ListOdcsUseCase,
     GetMonthlyPurchaseSummaryUseCase,
     GetExecutiveDashboardUseCase,
+    GetExecutiveTasksUseCase,
     GetOdcUseCase,
     ApproveBudgetUseCase,
     ApprovePurchaseUseCase,

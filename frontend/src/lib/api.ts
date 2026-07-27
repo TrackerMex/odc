@@ -3,6 +3,7 @@ import type { SessionUser } from './session'
 import type {
   MonthlyPurchaseSummary,
   ExecutiveDashboardResponse,
+  ExecutiveTaskPage,
   Odc,
   OdcPage,
   OdcPayload,
@@ -151,6 +152,13 @@ export function getExecutiveDashboard(
   const query = new URLSearchParams({ month })
   return apiFetch<ExecutiveDashboardResponse>(
     `/api/odcs/executive-dashboard?${query.toString()}`,
+  )
+}
+
+export function getExecutiveTasks(page = 1): Promise<ExecutiveTaskPage> {
+  const query = new URLSearchParams({ page: String(page) })
+  return apiFetch<ExecutiveTaskPage>(
+    `/api/odcs/executive-dashboard/tasks?${query.toString()}`,
   )
 }
 

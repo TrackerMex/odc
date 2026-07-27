@@ -23,6 +23,7 @@ import {
   MONTHLY_PURCHASE_STATUSES,
   ExecutiveDashboardData,
   ExecutiveDashboardOrder,
+  ExecutiveTaskPage,
   OdcViewer,
   PurchaseOrderRepository,
 } from '../../domain/repositories/purchase-order.repository';
@@ -219,6 +220,29 @@ export class PurchaseOrderTypeOrmRepository implements PurchaseOrderRepository {
       },
       oldestActiveOrders: oldestActiveRows.map(toExecutiveDashboardOrder),
       topSuppliers: suppliers,
+    };
+  }
+
+  async getExecutiveTasks(
+    viewer: OdcViewer,
+    page: number,
+    pageSize: number,
+  ): Promise<ExecutiveTaskPage> {
+    const [rows, total] = await this.dataSource.manager.findAndCount(
+      PurchaseOrderOrmEntity,
+      {
+        select: executiveOrderSelection(),
+        where: buildExecutiveTaskWhere(viewer),
+        order: { createdAt: 'ASC' },
+        skip: (page - 1) * pageSize,
+        take: pageSize,
+      },
+    );
+    return {
+      items: rows.map(toExecutiveDashboardOrder),
+      total,
+      page,
+      pageSize,
     };
   }
 
