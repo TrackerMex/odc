@@ -25,6 +25,7 @@ import { memoryStorage } from 'multer';
 import { Roles } from '../../../auth/infrastructure/decorators/roles.decorator';
 import type { SessionTokenPayload } from '../../../auth/infrastructure/guards/jwt-auth.guard';
 import { CreateOdcDto } from '../../application/dto/create-odc.dto';
+import { GetMonthlyPurchaseSummaryQueryDto } from '../../application/dto/get-monthly-purchase-summary.query.dto';
 import { ListOdcsQueryDto } from '../../application/dto/list-odcs.query.dto';
 import { RegisterPaymentDto } from '../../application/dto/register-payment.dto';
 import { RejectOdcDto } from '../../application/dto/reject-odc.dto';
@@ -37,6 +38,7 @@ import { CreateDraftUseCase } from '../../application/use-cases/create-draft.use
 import { GetInvoiceFileUseCase } from '../../application/use-cases/get-invoice-file.usecase';
 import { GetOdcUseCase } from '../../application/use-cases/get-odc.usecase';
 import { GetPaymentEvidenceFileUseCase } from '../../application/use-cases/get-payment-evidence-file.usecase';
+import { GetMonthlyPurchaseSummaryUseCase } from '../../application/use-cases/get-monthly-purchase-summary.usecase';
 import { ListOdcsUseCase } from '../../application/use-cases/list-odcs.usecase';
 import { RegisterPaymentUseCase } from '../../application/use-cases/register-payment.usecase';
 import { RejectOdcUseCase } from '../../application/use-cases/reject-odc.usecase';
@@ -56,8 +58,10 @@ import { UnknownSupplierError } from '../../domain/errors/unknown-supplier.error
 import {
   OdcPageResponseDto,
   OdcResponseDto,
+  MonthlyPurchaseSummaryResponseDto,
   toOdcPageResponse,
   toOdcResponse,
+  toMonthlyPurchaseSummaryResponse,
 } from '../mappers/odc-response.mapper';
 
 interface RequestWithSession {
@@ -161,6 +165,7 @@ export class OdcController {
     private readonly getPaymentEvidenceFileUseCase: GetPaymentEvidenceFileUseCase,
     private readonly uploadInvoiceUseCase: UploadInvoiceUseCase,
     private readonly getInvoiceFileUseCase: GetInvoiceFileUseCase,
+    private readonly getMonthlyPurchaseSummaryUseCase: GetMonthlyPurchaseSummaryUseCase,
   ) {}
 
   @Post()
@@ -372,6 +377,16 @@ export class OdcController {
       actorFrom(request),
     );
     return toOdcPageResponse(page);
+  }
+
+  @Get('monthly-summary')
+  @Roles('DIRECTOR_OPS')
+  async monthlySummary(
+    @Query() query: GetMonthlyPurchaseSummaryQueryDto,
+  ): Promise<MonthlyPurchaseSummaryResponseDto> {
+    return toMonthlyPurchaseSummaryResponse(
+      await this.getMonthlyPurchaseSummaryUseCase.execute(query.month),
+    );
   }
 
   // R7: generalized download route, dispatching to GetPaymentEvidenceFileUseCase

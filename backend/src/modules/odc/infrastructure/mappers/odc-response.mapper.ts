@@ -3,7 +3,11 @@ import {
   OdcStatus,
   PurchaseOrder,
 } from '../../domain/entities/purchase-order.entity';
-import { OdcPage } from '../../domain/repositories/purchase-order.repository';
+import {
+  MonthlyPurchase,
+  OdcPage,
+} from '../../domain/repositories/purchase-order.repository';
+import { MonthlyPurchaseSummary } from '../../application/use-cases/get-monthly-purchase-summary.usecase';
 
 // HTTP-facing shape of a PurchaseOrder (R4): the raw paymentEvidenceFile
 // Cloudinary public_id is never serialized; hasPaymentEvidence replaces it.
@@ -45,6 +49,13 @@ export interface OdcPageResponseDto {
   pageSize: number;
 }
 
+export interface MonthlyPurchaseSummaryResponseDto extends Omit<
+  MonthlyPurchaseSummary,
+  'purchases'
+> {
+  purchases: MonthlyPurchase[];
+}
+
 export function toOdcResponse(order: PurchaseOrder): OdcResponseDto {
   const { paymentEvidenceFile, invoiceFile, ...rest } = order;
   return {
@@ -59,4 +70,10 @@ export function toOdcPageResponse(page: OdcPage): OdcPageResponseDto {
     ...page,
     items: page.items.map(toOdcResponse),
   };
+}
+
+export function toMonthlyPurchaseSummaryResponse(
+  summary: MonthlyPurchaseSummary,
+): MonthlyPurchaseSummaryResponseDto {
+  return summary;
 }

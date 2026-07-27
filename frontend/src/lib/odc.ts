@@ -59,6 +59,39 @@ export interface OdcPage {
   pageSize: number
 }
 
+export interface MonthlyPurchase {
+  id: string
+  odcNumber: string
+  status: OdcStatus
+  requesterName: string | null
+  description: string
+  supplier: string
+  quantity: number
+  unit: string
+  totalCents: number
+  paymentDate: string
+  warehouseEntryDate: string | null
+  hasInvoice: boolean
+  comments: string | null
+  observations: string | null
+}
+
+export interface MonthlyPurchaseStage {
+  status: 'PAGO_REGISTRADO' | 'EVIDENCIA_PAGO_SUBIDA' | 'COMPLETADA'
+  count: number
+  totalCents: number
+}
+
+export interface MonthlyPurchaseSummary {
+  month: string
+  totalCents: number
+  purchaseCount: number
+  averageTicketCents: number
+  averageWarehouseDays: number | null
+  stages: MonthlyPurchaseStage[]
+  purchases: MonthlyPurchase[]
+}
+
 export interface Supplier {
   id: string | null
   name: string
@@ -164,10 +197,16 @@ export function formatDateOnly(value: string | null): string {
   }).format(new Date(`${value.slice(0, 10)}T00:00:00.000Z`))
 }
 
-export function odcFileUrl(
-  id: string,
-  kind: 'evidence' | 'invoice',
-): string {
+export function formatMonth(value: string): string {
+  const [year, month] = value.split('-').map(Number)
+  return new Intl.DateTimeFormat('es-MX', {
+    month: 'long',
+    year: 'numeric',
+    timeZone: 'UTC',
+  }).format(new Date(Date.UTC(year, month - 1, 1)))
+}
+
+export function odcFileUrl(id: string, kind: 'evidence' | 'invoice'): string {
   return `/api/odcs/${id}/files/${kind}`
 }
 

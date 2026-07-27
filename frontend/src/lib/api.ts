@@ -1,6 +1,13 @@
 import { createIsomorphicFn } from '@tanstack/react-start'
 import type { SessionUser } from './session'
-import type { Odc, OdcPage, OdcPayload, OdcStatus, Supplier } from './odc'
+import type {
+  MonthlyPurchaseSummary,
+  Odc,
+  OdcPage,
+  OdcPayload,
+  OdcStatus,
+  Supplier,
+} from './odc'
 import {
   expireClientSession,
   resetClientSessionExpiration,
@@ -83,11 +90,7 @@ export async function apiFetch<T>(
     const body = await response.json().catch(() => null)
     const message =
       (body as { message?: string } | null)?.message ?? response.statusText
-    if (
-      response.status === 401 &&
-      path !== '/api/auth/login' &&
-      !isServer()
-    ) {
+    if (response.status === 401 && path !== '/api/auth/login' && !isServer()) {
       expireClientSession()
     }
     throw new ApiError(response.status, message)
@@ -130,6 +133,15 @@ function jsonRequest(method: 'POST' | 'PATCH', body?: unknown): RequestInit {
 export function listOdcs(status: OdcStatus, page = 1): Promise<OdcPage> {
   const query = new URLSearchParams({ status, page: String(page) })
   return apiFetch<OdcPage>(`/api/odcs?${query.toString()}`)
+}
+
+export function getMonthlyPurchaseSummary(
+  month: string,
+): Promise<MonthlyPurchaseSummary> {
+  const query = new URLSearchParams({ month })
+  return apiFetch<MonthlyPurchaseSummary>(
+    `/api/odcs/monthly-summary?${query.toString()}`,
+  )
 }
 
 export function getOdc(id: string): Promise<Odc> {

@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/index'
+import { Route as AuthenticatedMonthlySummaryRouteImport } from './routes/_authenticated/monthly-summary'
 import { Route as AuthenticatedOdcsIdRouteImport } from './routes/_authenticated/odcs/$id'
 import { Route as AuthenticatedOdcsNewRouteImport } from './routes/_authenticated/odcs/new'
 
@@ -29,6 +30,12 @@ const AuthenticatedIndexRoute = AuthenticatedIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedMonthlySummaryRoute =
+  AuthenticatedMonthlySummaryRouteImport.update({
+    id: '/monthly-summary',
+    path: '/monthly-summary',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedOdcsIdRoute = AuthenticatedOdcsIdRouteImport.update({
   id: '/odcs/$id',
   path: '/odcs/$id',
@@ -43,11 +50,13 @@ const AuthenticatedOdcsNewRoute = AuthenticatedOdcsNewRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof AuthenticatedIndexRoute
   '/login': typeof LoginRoute
+  '/monthly-summary': typeof AuthenticatedMonthlySummaryRoute
   '/odcs/$id': typeof AuthenticatedOdcsIdRoute
   '/odcs/new': typeof AuthenticatedOdcsNewRoute
 }
 export interface FileRoutesByTo {
   '/login': typeof LoginRoute
+  '/monthly-summary': typeof AuthenticatedMonthlySummaryRoute
   '/': typeof AuthenticatedIndexRoute
   '/odcs/$id': typeof AuthenticatedOdcsIdRoute
   '/odcs/new': typeof AuthenticatedOdcsNewRoute
@@ -56,19 +65,21 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_authenticated': typeof AuthenticatedRouteWithChildren
   '/login': typeof LoginRoute
+  '/_authenticated/monthly-summary': typeof AuthenticatedMonthlySummaryRoute
   '/_authenticated/': typeof AuthenticatedIndexRoute
   '/_authenticated/odcs/$id': typeof AuthenticatedOdcsIdRoute
   '/_authenticated/odcs/new': typeof AuthenticatedOdcsNewRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/login' | '/odcs/$id' | '/odcs/new'
+  fullPaths: '/' | '/login' | '/monthly-summary' | '/odcs/$id' | '/odcs/new'
   fileRoutesByTo: FileRoutesByTo
-  to: '/login' | '/' | '/odcs/$id' | '/odcs/new'
+  to: '/login' | '/monthly-summary' | '/' | '/odcs/$id' | '/odcs/new'
   id:
     | '__root__'
     | '/_authenticated'
     | '/login'
+    | '/_authenticated/monthly-summary'
     | '/_authenticated/'
     | '/_authenticated/odcs/$id'
     | '/_authenticated/odcs/new'
@@ -102,6 +113,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedIndexRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/monthly-summary': {
+      id: '/_authenticated/monthly-summary'
+      path: '/monthly-summary'
+      fullPath: '/monthly-summary'
+      preLoaderRoute: typeof AuthenticatedMonthlySummaryRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/odcs/$id': {
       id: '/_authenticated/odcs/$id'
       path: '/odcs/$id'
@@ -120,12 +138,14 @@ declare module '@tanstack/react-router' {
 }
 
 interface AuthenticatedRouteChildren {
+  AuthenticatedMonthlySummaryRoute: typeof AuthenticatedMonthlySummaryRoute
   AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
   AuthenticatedOdcsIdRoute: typeof AuthenticatedOdcsIdRoute
   AuthenticatedOdcsNewRoute: typeof AuthenticatedOdcsNewRoute
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
+  AuthenticatedMonthlySummaryRoute: AuthenticatedMonthlySummaryRoute,
   AuthenticatedIndexRoute: AuthenticatedIndexRoute,
   AuthenticatedOdcsIdRoute: AuthenticatedOdcsIdRoute,
   AuthenticatedOdcsNewRoute: AuthenticatedOdcsNewRoute,
