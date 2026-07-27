@@ -86,3 +86,43 @@ describe('R1,R12: DIRECTOR_OPS dashboard exposes four responsive workflow queues
     expect(screen.getByText('2')).toBeTruthy()
   })
 })
+
+describe('R13: DIRECTOR_OPS dashboard orders sections by visual priority', () => {
+  it('places Rechazadas, Borradores, Listas para comprar and Pendientes de factura in that DOM order', () => {
+    render(
+      <OdcDashboard
+        userName="Ana Pérez"
+        sections={{
+          BORRADOR: page([], 1),
+          RECHAZADA: page([], 1),
+          COMPRA_APROBADA: page([], 1),
+          EVIDENCIA_PAGO_SUBIDA: page([], 1),
+        }}
+      />,
+    )
+
+    const rejected = screen.getByText('Rechazadas')
+    const drafts = screen.getByText('Borradores')
+    const readyToPurchase = screen.getByText('Listas para comprar')
+    const pendingInvoice = screen.getByText('Pendientes de factura')
+
+    expect(
+      Boolean(
+        rejected.compareDocumentPosition(drafts) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
+      ),
+    ).toBe(true)
+    expect(
+      Boolean(
+        drafts.compareDocumentPosition(readyToPurchase) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
+      ),
+    ).toBe(true)
+    expect(
+      Boolean(
+        readyToPurchase.compareDocumentPosition(pendingInvoice) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
+      ),
+    ).toBe(true)
+  })
+})
