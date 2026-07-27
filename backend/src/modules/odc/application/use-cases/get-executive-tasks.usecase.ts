@@ -29,9 +29,13 @@ export interface ExecutiveTaskPageResponse {
   pageSize: number;
 }
 
-function nextActionFor(role: UserRole, status: OdcStatus): ExecutiveTaskNextAction {
+function nextActionFor(
+  role: UserRole,
+  status: OdcStatus,
+): ExecutiveTaskNextAction {
   if (role === 'DIRECTOR_OPS') {
-    if (status === 'BORRADOR' || status === 'RECHAZADA') return 'EDITAR_Y_REENVIAR';
+    if (status === 'BORRADOR' || status === 'RECHAZADA')
+      return 'EDITAR_Y_REENVIAR';
     if (status === 'COMPRA_APROBADA') return 'REGISTRAR_PAGO';
     if (status === 'EVIDENCIA_PAGO_SUBIDA') return 'COMPLETAR_FACTURA';
   }
@@ -39,8 +43,11 @@ function nextActionFor(role: UserRole, status: OdcStatus): ExecutiveTaskNextActi
     if (status === 'PENDIENTE_ADMIN') return 'VALIDAR_PRESUPUESTO';
     if (status === 'PAGO_REGISTRADO') return 'CARGAR_EVIDENCIA_PAGO';
   }
-  if (role === 'DIRECTOR_GENERAL' && status === 'PRESUPUESTO_APROBADO') return 'APROBAR_COMPRA';
-  throw new Error(`No executive next action is defined for ${role} and ${status}`);
+  if (role === 'DIRECTOR_GENERAL' && status === 'PRESUPUESTO_APROBADO')
+    return 'APROBAR_COMPRA';
+  throw new Error(
+    `No executive next action is defined for ${role} and ${status}`,
+  );
 }
 
 @Injectable()
@@ -50,9 +57,14 @@ export class GetExecutiveTasksUseCase {
     private readonly purchaseOrderRepository: PurchaseOrderRepository,
   ) {}
 
-  async execute(page: number | undefined, viewer: OdcViewer): Promise<ExecutiveTaskPageResponse> {
+  async execute(
+    page: number | undefined,
+    viewer: OdcViewer,
+  ): Promise<ExecutiveTaskPageResponse> {
     if (!EXECUTIVE_ROLES.includes(viewer.role)) {
-      throw new OdcAccessDeniedError('This role does not have access to executive tasks');
+      throw new OdcAccessDeniedError(
+        'This role does not have access to executive tasks',
+      );
     }
     const result = await this.purchaseOrderRepository.getExecutiveTasks(
       viewer,
@@ -64,7 +76,12 @@ export class GetExecutiveTasksUseCase {
       ...result,
       items: result.items.map((task) => ({
         ...task,
-        ageDays: Math.max(0, Math.floor((now.getTime() - task.createdAt.getTime()) / DAY_IN_MILLISECONDS)),
+        ageDays: Math.max(
+          0,
+          Math.floor(
+            (now.getTime() - task.createdAt.getTime()) / DAY_IN_MILLISECONDS,
+          ),
+        ),
         nextAction: nextActionFor(viewer.role, task.status),
       })),
     };

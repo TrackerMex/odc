@@ -32,6 +32,13 @@ tags: [frontend, odc, spec]
   paginado existente y `total` para los contadores, sin inferir contadores a
   partir de una página parcial. Cada tarjeta maneja su lista vacía y enlaza al
   detalle (R1).
+- **Reorden de secciones del dashboard (R13)**: reordenar el array
+  `sectionConfig` de `odc-dashboard.tsx` a `RECHAZADA`, `BORRADOR`,
+  `COMPRA_APROBADA`, `EVIDENCIA_PAGO_SUBIDA`, ya que `Rechazadas` es la
+  sección de mayor urgencia (requiere corrección del usuario). Es un cambio
+  puramente de orden del array/grid: no toca datos, consultas, el endpoint
+  `GET /api/odcs?status=<status>&page=1` ni el componente `QueueCard`, que
+  sigue renderizando las cuatro tarjetas con igual peso visual (R13).
 - **Reutilización de shadcn/ui**: usar los componentes existentes y añadir vía
   MCP/CLI solo los componentes necesarios que no estén instalados, en especial
   `Select`, `Textarea`, `Badge` y componentes de feedback. No se crearán
@@ -58,7 +65,7 @@ tags: [frontend, odc, spec]
 - `frontend/src/components/odc/` — formulario, tarjetas/listas, badge de
   estado e historial reutilizables.
 - `frontend/src/components/ui/` — solo componentes shadcn que falten.
-- Tests Vitest junto a cada módulo/componente, nombrados con R1–R12.
+- Tests Vitest junto a cada módulo/componente, nombrados con R1–R13.
 
 ## Alternativas descartadas
 
