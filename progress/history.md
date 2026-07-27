@@ -271,3 +271,10 @@ _El historial comenzará aquí cuando se complete la primera sesión._
 - Verificacion: 28 archivos de prueba, 189 pruebas, build cliente/SSR y lint de archivos afectados.
 - El lint/formato global conserva errores preexistentes no relacionados; pnpm intento reinstalar modulos sin TTY.
 - Estado final: done
+# Sesión 2026-07-26 — operations-monthly-summary
+
+- Spec aprobada por humano; se implementó `GET /api/odcs/monthly-summary?month=YYYY-MM` para `DIRECTOR_OPS`, filtrando por `paymentDate` y estados de compras ya pagadas.
+- Se añadió la ruta de Operaciones `/monthly-summary`, KPIs mensuales, detalle auditable y exportación de lámina en PNG y PDF.
+- Se generaron `Table` y `Alert` con shadcn/ui y se añadieron `html-to-image` y `jspdf` para la exportación en cliente.
+- Verificado: backend 53 suites / 441 pruebas, frontend 29 archivos / 193 pruebas, build de ambos y lint backend verdes.
+- Commits: `e2778c5`, `0262d57`, `7fdd0f4`.
