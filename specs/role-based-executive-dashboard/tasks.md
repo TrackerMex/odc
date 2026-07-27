@@ -80,3 +80,13 @@ tags: [harness, spec, dashboard, roles]
 - [X] (1) Escribir tests que fallen para el endpoint paginado, la ruta y el enlace desde la prioridad.
 - [X] (2) Implementar la consulta, vista reutilizada y navegación mínima que los pasan.
 - [X] (3) Refactorizar manteniendo los tests verdes.
+
+## R13 — Reordenar la jerarquía visual: alertas, prioridad, pulso
+
+> Cambio puramente de frontend/presentación en `executive-dashboard.tsx`
+> (reordenar JSX/CSS grid). No toca el caso de uso, el repositorio ni el
+> contrato HTTP existentes.
+
+- [X] (1) Escribir tests que fallen para el orden en el DOM de las secciones (alertas antes de prioridad, prioridad antes de pulso, proveedores después de las tres) en escritorio y en viewport `<640px`, y para la ausencia de recorte horizontal en móvil.
+- [X] (2) Implementar el reordenamiento mínimo de `ExecutiveDashboard`/`OperationalContext` (JSX y clases de grid) que hace pasar los tests, re-enmarcando la tarjeta de antigüedad como sección de alertas sin tocar `use-case`/`repository`.
+- [X] (3) Refactorizar manteniendo los tests verdes.
