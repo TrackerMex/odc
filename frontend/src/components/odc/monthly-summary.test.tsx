@@ -43,7 +43,7 @@ const summary = {
   ],
 }
 
-describe('R5,R6,R7,R8,R9: monthly operations summary', () => {
+describe('R3,R5,R6,R7,R8,R9: monthly operations summary', () => {
   beforeEach(() => {
     getMonthlyPurchaseSummary.mockResolvedValue(summary)
     exportMonthlySummarySlide.mockResolvedValue(undefined)
@@ -59,6 +59,8 @@ describe('R5,R6,R7,R8,R9: monthly operations summary', () => {
       screen.getByRole('heading', { name: 'Compras que sí se realizaron' }),
     ).toBeTruthy()
     expect(screen.getAllByText('ODC-2026-00001')).toHaveLength(2)
+    expect(screen.getAllByText('Suntech')).toHaveLength(2)
+    expect(screen.getByText(/Rodrigo Espinosa/)).toBeTruthy()
     expect(document.querySelector('[data-slot="table"]')).toBeTruthy()
     expect(screen.getByText('Ingreso a almacén')).toBeTruthy()
   })
