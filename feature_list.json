@@ -117,7 +117,7 @@
   {
     "id": 21,
     "name": "completed-odc-document-review",
-    "status": "in_progress",
+    "status": "done",
     "priority": "P1"
   }
 ]

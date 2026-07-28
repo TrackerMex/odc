@@ -386,3 +386,14 @@ _El historial comenzará aquí cuando se complete la primera sesión._
 - **Verificación:** pruebas específicas en verde (13), build cliente/SSR, `./init.sh` y revisión visual en navegador. En móvil, el ancho de contenido fue igual al viewport (375px), sin desbordamiento horizontal.
 - **Commits:** `c852c96 test(executive-dashboard-visual-refinement): define dashboard presentation (R1,R2,R3,R4,R5)`; `c93d25d feat(executive-dashboard-visual-refinement): elevate operational dashboard (R1,R2,R3,R4,R5)`.
 - **Estado final:** done.
+
+## Sesión 2026-07-28 — completed-odc-document-review (id: 21)
+
+- **Hallazgo:** los archivos autenticados sí existían en Cloudinary, pero el backend firmaba la entrega como `auto/authenticated`; Cloudinary requería el tipo real (`image`) y el formato, por lo que el enlace terminaba en 404.
+- **Implementación:** las referencias nuevas conservan tipo y formato en un valor privado versionado; las referencias históricas resuelven esos metadatos mediante la API de Cloudinary sin migración ni re-subida. Los faltantes reales se traducen a 404 y las fallas recuperables del proveedor a 502, sin exponer identificadores privados.
+- **Frontend:** todas las ODC del resumen mensual, incluidas las completadas, enlazan a su detalle y conservan mes/página en la URL. El detalle ofrece vista previa protegida bajo demanda para comprobante y factura, con carga, reintento, cierre accesible y apertura en otra pestaña.
+- **Criterio de diseño:** se aplicaron las prácticas de NestJS para puertos, errores externos y mocks, y el skill `impeccable` guio la resiliencia, accesibilidad, dark mode y adaptación responsive del diálogo reutilizando las primitivas shadcn existentes.
+- **Verificación:** navegador real sobre ODC completada; comprobante y factura cargaron desde rutas firmadas `image/authenticated`, sin `auto`, ambos como PNG completos de 2240×1452. `./init.sh` verde: builds backend/frontend, 59 suites y 464 pruebas backend, 32 archivos y 214 pruebas frontend, lint backend; lint dirigido frontend sin errores.
+- **Cloudinary:** no se requirió cambiar el dashboard ni el plan; la corrección fue exclusivamente de construcción y resolución de URL en la aplicación.
+- **Commit:** `6874bf4 feat(completed-odc-document-review): repair signed previews (R1-R8)`.
+- **Estado final:** done.
