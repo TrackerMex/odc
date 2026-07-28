@@ -8,6 +8,9 @@ describe('session-isolation R10: protected route loading and error states', () =
 
     expect(screen.getByRole('main').getAttribute('aria-busy')).toBe('true')
     expect(screen.getByText(/cargando información/i)).not.toBeNull()
+    expect(
+      screen.getByTestId('page-loading-indicator').getAttribute('class'),
+    ).toContain('motion-reduce:animate-none')
   })
 
   it('shows a non-interactive error without a retry button', () => {

@@ -22,7 +22,9 @@ export function AppLayout({
         <header className="flex h-12 shrink-0 items-center border-b px-4">
           <SidebarTrigger className="-ml-1" />
         </header>
-        <div className="flex min-h-0 flex-1 flex-col">{children}</div>
+        <div className="odc-route-content flex min-h-0 flex-1 flex-col">
+          {children}
+        </div>
       </SidebarInset>
     </SidebarProvider>
   )

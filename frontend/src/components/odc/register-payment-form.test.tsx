@@ -3,6 +3,7 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { ODC_STATUSES } from '@/lib/odc'
 import type { Odc, OdcStatus } from '@/lib/odc'
 import type { SessionUser } from '@/lib/session'
+import { toast } from '@/components/ui/toast'
 import { RegisterPaymentForm } from './register-payment-form'
 
 function approvedOdc(): Odc {
@@ -203,6 +204,7 @@ describe('R3: register payment submission and confirmed transition', () => {
         }),
     )
     const onSuccess = vi.fn()
+    const showToast = vi.spyOn(toast, 'add').mockImplementation(vi.fn())
     render(
       <RegisterPaymentForm
         odc={approvedOdc()}
@@ -234,6 +236,12 @@ describe('R3: register payment submission and confirmed transition', () => {
 
     resolveRegister({ ...approvedOdc(), status: 'PAGO_REGISTRADO' })
     await waitFor(() => expect(onSuccess).toHaveBeenCalledOnce())
+    expect(showToast).toHaveBeenCalledWith({
+      type: 'success',
+      title: 'Pago registrado',
+      description: 'Administración ya puede adjuntar el comprobante.',
+    })
+    showToast.mockRestore()
   })
 })
 
@@ -262,9 +270,11 @@ describe('R11: loading state and accessibility of register payment', () => {
     })
     fireEvent.click(screen.getByRole('button', { name: /registrar pago/i }))
 
-    const form = screen.getByRole('button', {
-      name: /registrando/i,
-    }).closest('form')
+    const form = screen
+      .getByRole('button', {
+        name: /registrando/i,
+      })
+      .closest('form')
     expect(form?.getAttribute('aria-busy')).toBe('true')
     expect(
       (screen.getByLabelText(/fecha de pago/i) as HTMLInputElement).disabled,
@@ -329,7 +339,9 @@ describe('R12: role x status boundary for register payment', () => {
     allRoles.flatMap((role) =>
       ODC_STATUSES.filter(
         (status) =>
-          !(role === validCombination.role && status === validCombination.status),
+          !(
+            role === validCombination.role && status === validCombination.status
+          ),
       ).map((status) => [role, status] as const),
     ),
   )('hides the form for role %s and status %s', (role, status) => {

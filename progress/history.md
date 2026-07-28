@@ -350,3 +350,31 @@ _El historial comenzará aquí cuando se complete la primera sesión._
 - **Resultado:** review APROBADO sin excepciones; build, 202 tests vitest y el smoke test de Playwright en verde de forma independiente; ningún archivo fuera de `frontend/` tocado. Se documentó el uso para futuros agentes en `docs/verification.md`.
 - **Commits:** `8aac44b chore(frontend): add playwright for browser validation` (sin push).
 - **Estado final:** done (ad-hoc, no requiere actualizar feature_list.json).
+
+## Sesión 2026-07-27 — animate-odc-components (ad-hoc, UI — sin id en feature_list.json)
+
+- **Alcance:** movimiento funcional en `frontend/src/components/odc`: las etiquetas de estado interpolan su cambio semántico de color; el resumen mensual y la paginación de tareas revelan resultados actualizados mediante un recorte breve; las cargas respetan `prefers-reduced-motion`.
+- **Implementación:** sin dependencias ni cambios de API. La animación de resultados dura 240 ms y usa `opacity` + `clip-path`; las transiciones rutinarias de estado duran 150 ms. Las regiones de carga anuncian la actualización a lectores de pantalla.
+- **Verificación:** prueba roja→verde para el resultado filtrado y el indicador de carga; frontend 30 archivos / 202 pruebas y builds cliente+SSR verdes; `./init.sh` verde.
+- **Estado final:** done (ad-hoc, no requiere actualizar feature_list.json).
+
+## Sesión 2026-07-27 — theme-flash-fix (ad-hoc, UI — sin id en feature_list.json)
+
+- **Hallazgo:** en navegación autenticada con tema oscuro, la ruta destino llegaba con `html` sin clase y fondo claro; tras la hidratación, `ThemeProvider` aplicaba el tema guardado. El navegador reprodujo el destello blanco → negro.
+- **Corrección:** se añadió un inicializador de tema SSR mediante `ScriptOnce` de TanStack en la cabecera del documento. Consulta la preferencia guardada o la del sistema y asigna `dark` + `color-scheme` antes del primer pintado; `suppressHydrationWarning` evita la advertencia esperable del atributo preaplicado.
+- **Verificación:** prueba de inicialización síncrona; frontend 30 archivos / 203 pruebas, build cliente+SSR e `./init.sh` verdes. En navegador, recarga y navegación Bandeja ↔ Resumen comenzaron ya con fondo oscuro, `html.dark` y `color-scheme: dark`.
+- **Estado final:** done (ad-hoc, no requiere actualizar feature_list.json).
+
+## Sesión 2026-07-27 — odc-toast-calendar (ad-hoc, UI — sin id en feature_list.json)
+
+- **Alcance:** integración global de `Toaster` y selector de calendario reutilizable para operaciones ODC.
+- **Implementación:** avisos de éxito tras guardar/enviar ODC, aprobar o rechazar presupuesto/compra, registrar pago y subir comprobante o factura. Los errores continúan visibles junto al formulario para preservar su contexto accionable. Se reemplazaron todos los controles nativos de fecha y mes por `DatePicker` con calendario en español, selección por mes, entrada manual y etiquetas accesibles.
+- **Verificación:** 32 archivos / 205 pruebas del frontend en verde; pruebas específicas para la apertura del calendario, el render del toast y la confirmación al registrar pago.
+- **Estado final:** done (ad-hoc, no requiere actualizar feature_list.json).
+
+## Sesión 2026-07-27 — route-navigation-motion (ad-hoc, UI — sin id en feature_list.json)
+
+- **Alcance:** continuidad de navegación entre las secciones de la barra lateral y sus rutas autenticadas.
+- **Implementación:** la barra pasó de enlaces de documento a `Link` de TanStack Router con `viewTransition`; el área de trabajo recibe una transición nativa acotada (salida 120 ms, entrada 220 ms con `clip-path`, opacidad y desplazamiento leve). Sidebar y cabecera quedan estables; `prefers-reduced-motion` desactiva las animaciones.
+- **Verificación:** test de enlaces SPA y aislamiento del área de trabajo; build cliente/SSR y frontend 32 archivos / 206 pruebas en verde. El navegador disponible no pudo alcanzar el servidor temporal en el puerto 3001, pero la compilación validó los selectores y la API del router.
+- **Estado final:** done (ad-hoc, no requiere actualizar feature_list.json).

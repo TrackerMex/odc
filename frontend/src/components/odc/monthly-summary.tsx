@@ -15,8 +15,8 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
-import { Input } from '@/components/ui/input'
 import { Skeleton } from '@/components/ui/skeleton'
+import { DatePicker } from '@/components/ui/date-picker'
 import {
   Table,
   TableBody,
@@ -114,15 +114,16 @@ export function MonthlySummary({
             </p>
           </div>
           <div className="flex flex-wrap items-end gap-2">
-            <label className="grid gap-1 text-sm font-medium">
-              Mes de pago
-              <Input
-                aria-label="Mes de pago"
-                type="month"
+            <div className="grid gap-1 text-sm font-medium">
+              <label htmlFor="payment-month">Mes de pago</label>
+              <DatePicker
+                id="payment-month"
+                label="Mes de pago"
                 value={month}
-                onChange={(event) => setMonth(event.target.value)}
+                onChange={setMonth}
+                mode="month"
               />
-            </label>
+            </div>
             <Button
               variant="outline"
               onClick={() => exportSlide('png')}
@@ -157,7 +158,24 @@ export function MonthlySummary({
           </Alert>
         ) : null}
 
-        {loading ? <SummarySkeleton /> : <SummaryContent summary={summary} />}
+        <div aria-live="polite" className="sr-only">
+          {loading
+            ? `Actualizando el resumen de ${formatMonth(month)}.`
+            : `Resumen de ${formatMonth(summary.month)} actualizado.`}
+        </div>
+        <section aria-busy={loading} aria-label="Resumen mensual">
+          {loading ? (
+            <SummarySkeleton />
+          ) : (
+            <div
+              key={summary.month}
+              data-testid="monthly-summary-results"
+              className="odc-filter-results"
+            >
+              <SummaryContent summary={summary} />
+            </div>
+          )}
+        </section>
         {!loading && summary.purchases.length === 0 ? (
           <div className="mt-6 rounded-2xl border border-dashed p-8 text-center text-sm text-muted-foreground">
             No hay compras con pago registrado en {formatMonth(summary.month)}.
@@ -175,9 +193,9 @@ export function MonthlySummary({
 
 function SummarySkeleton() {
   return (
-    <div className="space-y-5" aria-busy="true">
-      <Skeleton className="h-52 w-full" />
-      <Skeleton className="h-72 w-full" />
+    <div className="space-y-5 motion-reduce:animate-none" aria-busy="true">
+      <Skeleton className="h-52 w-full motion-reduce:animate-none" />
+      <Skeleton className="h-72 w-full motion-reduce:animate-none" />
     </div>
   )
 }

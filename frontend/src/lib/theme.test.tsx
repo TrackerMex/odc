@@ -5,6 +5,7 @@ import {
   applyTheme,
   getInitialTheme,
   THEME_STORAGE_KEY,
+  themeInitScript,
   ThemeProvider,
   ThemeToggle,
 } from './theme'
@@ -41,6 +42,15 @@ describe('R1: activar y persistir el tema oscuro', () => {
 })
 
 describe('R2: restaurar preferencia guardada o del sistema', () => {
+  it('applies the stored theme synchronously before React hydrates', () => {
+    localStorage.setItem(THEME_STORAGE_KEY, 'dark')
+
+    new Function(themeInitScript)()
+
+    expect(document.documentElement.classList.contains('dark')).toBe(true)
+    expect(document.documentElement.style.colorScheme).toBe('dark')
+  })
+
   it('restores the saved preference before checking the system preference', () => {
     localStorage.setItem(THEME_STORAGE_KEY, 'dark')
     expect(getInitialTheme()).toBe('dark')

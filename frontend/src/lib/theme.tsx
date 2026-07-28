@@ -8,6 +8,20 @@ export type Theme = 'light' | 'dark'
 
 const THEME_STORAGE_KEY = 'odc-theme'
 
+export const themeInitScript = `(() => {
+  try {
+    const storedTheme = window.localStorage.getItem('${THEME_STORAGE_KEY}')
+    const theme =
+      storedTheme === 'dark' || storedTheme === 'light'
+        ? storedTheme
+        : window.matchMedia('(prefers-color-scheme: dark)').matches
+          ? 'dark'
+          : 'light'
+    document.documentElement.classList.toggle('dark', theme === 'dark')
+    document.documentElement.style.colorScheme = theme
+  } catch {}
+})()`
+
 type ThemeContextValue = {
   theme: Theme
   toggleTheme: () => void

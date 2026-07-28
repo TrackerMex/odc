@@ -14,6 +14,8 @@ import {
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
+import { DatePicker } from '@/components/ui/date-picker'
+import { toast } from '@/components/ui/toast'
 
 const MAX_FILE_SIZE = 10_485_760
 const ALLOWED_FILE_TYPES = new Set([
@@ -68,14 +70,18 @@ export function UploadInvoiceForm({
     setSubmitting(true)
     setError(null)
     try {
-      onSuccess(
-        await upload(file, {
-          warehouseEntryDate,
-          invoiceNumber: invoiceNumber.trim() || undefined,
-          invoiceDate: invoiceDate.trim() || undefined,
-          observations: observations.trim() || undefined,
-        }),
-      )
+      const nextOdc = await upload(file, {
+        warehouseEntryDate,
+        invoiceNumber: invoiceNumber.trim() || undefined,
+        invoiceDate: invoiceDate.trim() || undefined,
+        observations: observations.trim() || undefined,
+      })
+      toast.add({
+        type: 'success',
+        title: 'Factura subida',
+        description: 'La orden de compra se completó correctamente.',
+      })
+      onSuccess(nextOdc)
     } catch {
       setError('No pudimos subir la factura. Intenta nuevamente.')
     } finally {
@@ -123,11 +129,11 @@ export function UploadInvoiceForm({
             </div>
             <div className="space-y-2">
               <Label htmlFor="invoice-date">Fecha de factura</Label>
-              <Input
+              <DatePicker
                 id="invoice-date"
-                type="date"
+                label="Fecha de factura"
                 value={invoiceDate}
-                onChange={(event) => setInvoiceDate(event.target.value)}
+                onChange={setInvoiceDate}
                 disabled={submitting}
               />
             </div>
@@ -135,13 +141,11 @@ export function UploadInvoiceForm({
               <Label htmlFor="warehouse-entry-date">
                 Fecha de entrada a almacén
               </Label>
-              <Input
+              <DatePicker
                 id="warehouse-entry-date"
-                type="date"
+                label="Fecha de entrada a almacén"
                 value={warehouseEntryDate}
-                onChange={(event) =>
-                  setWarehouseEntryDate(event.target.value)
-                }
+                onChange={setWarehouseEntryDate}
                 disabled={submitting}
               />
             </div>

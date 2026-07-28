@@ -20,6 +20,7 @@ import {
 } from '@/components/ui/dialog'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
+import { toast } from '@/components/ui/toast'
 
 export function AdminBudgetActions({
   odc,
@@ -50,7 +51,13 @@ export function AdminBudgetActions({
     setSubmitting('approve')
     setError(null)
     try {
-      onSuccess(await approve())
+      const nextOdc = await approve()
+      toast.add({
+        type: 'success',
+        title: 'Presupuesto aprobado',
+        description: 'La orden pasó a aprobación de compra.',
+      })
+      onSuccess(nextOdc)
     } catch {
       setError('No pudimos aprobar el presupuesto. Intenta nuevamente.')
     } finally {
@@ -69,7 +76,13 @@ export function AdminBudgetActions({
     setSubmitting('reject')
     setError(null)
     try {
-      onSuccess(await reject(trimmedReason))
+      const nextOdc = await reject(trimmedReason)
+      toast.add({
+        type: 'success',
+        title: 'Presupuesto rechazado',
+        description: 'La orden volvió con observaciones al solicitante.',
+      })
+      onSuccess(nextOdc)
       setDialogOpen(false)
       setReason('')
     } catch {

@@ -8,7 +8,8 @@ export function OdcPagePending() {
     >
       <div className="text-center text-sm text-muted-foreground">
         <LoaderCircleIcon
-          className="mx-auto mb-3 size-5 animate-spin"
+          data-testid="page-loading-indicator"
+          className="mx-auto mb-3 size-5 animate-spin motion-reduce:animate-none"
           aria-hidden="true"
         />
         Cargando información…

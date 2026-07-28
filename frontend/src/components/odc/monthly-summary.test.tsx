@@ -67,6 +67,13 @@ describe('R3,R5,R6,R7,R8,R9: monthly operations summary', () => {
 
   it('loads the selected month and exports the same report as image or PDF', async () => {
     render(<MonthlySummary initialSummary={summary} />)
+
+    await waitFor(() =>
+      expect(
+        screen.getByTestId('monthly-summary-results').className,
+      ).toContain('odc-filter-results'),
+    )
+
     fireEvent.change(screen.getByLabelText('Mes de pago'), {
       target: { value: '2026-08' },
     })

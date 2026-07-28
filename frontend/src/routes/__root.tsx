@@ -1,10 +1,16 @@
-import { HeadContent, Scripts, createRootRoute } from '@tanstack/react-router'
+import {
+  HeadContent,
+  ScriptOnce,
+  Scripts,
+  createRootRoute,
+} from '@tanstack/react-router'
 import { TanStackRouterDevtoolsPanel } from '@tanstack/react-router-devtools'
 import { TanStackDevtools } from '@tanstack/react-devtools'
 
 import appCss from '../styles.css?url'
 import { SessionExpirationRedirect } from '@/components/session-expiration-redirect'
-import { ThemeProvider } from '@/lib/theme'
+import { Toaster } from '@/components/ui/toast'
+import { ThemeProvider, themeInitScript } from '@/lib/theme'
 
 export const Route = createRootRoute({
   head: () => ({
@@ -32,15 +38,18 @@ export const Route = createRootRoute({
 
 function RootDocument({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="es">
+    <html lang="es" suppressHydrationWarning>
       <head>
+        <ScriptOnce>{themeInitScript}</ScriptOnce>
         <HeadContent />
       </head>
       <body>
-        <ThemeProvider>
-          <SessionExpirationRedirect />
-          {children}
-        </ThemeProvider>
+        <Toaster>
+          <ThemeProvider>
+            <SessionExpirationRedirect />
+            {children}
+          </ThemeProvider>
+        </Toaster>
         <TanStackDevtools
           config={{
             position: 'bottom-right',
