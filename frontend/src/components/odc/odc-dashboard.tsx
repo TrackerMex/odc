@@ -32,16 +32,16 @@ const sectionConfig: Array<{
   icon: typeof FilePenLineIcon
 }> = [
   {
-    status: 'BORRADOR',
-    title: 'Borradores',
-    description: 'Órdenes que todavía puedes completar y enviar.',
-    icon: FilePenLineIcon,
-  },
-  {
     status: 'RECHAZADA',
     title: 'Rechazadas',
     description: 'Revisa el motivo, corrige y vuelve a enviar.',
     icon: CircleXIcon,
+  },
+  {
+    status: 'BORRADOR',
+    title: 'Borradores',
+    description: 'Órdenes que todavía puedes completar y enviar.',
+    icon: FilePenLineIcon,
   },
   {
     status: 'COMPRA_APROBADA',

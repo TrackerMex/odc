@@ -1,5 +1,6 @@
 import { ClassProvider } from '@nestjs/common';
 import { PurchaseOrderTypeOrmRepository } from './infrastructure/repositories/purchase-order.typeorm.repository';
+import { GetExecutiveDashboardUseCase } from './application/use-cases/get-executive-dashboard.usecase';
 import { OdcModule } from './odc.module';
 
 describe("R5: OdcModule registers the repository under the 'PurchaseOrderRepository' token", () => {
@@ -15,5 +16,14 @@ describe("R5: OdcModule registers the repository under the 'PurchaseOrderReposit
 
     expect(repositoryProvider).toBeDefined();
     expect(repositoryProvider?.useClass).toBe(PurchaseOrderTypeOrmRepository);
+  });
+});
+
+describe('R1: OdcModule registers the executive dashboard use-case', () => {
+  it('provides GetExecutiveDashboardUseCase for the authenticated endpoint', () => {
+    const providers = (Reflect.getMetadata('providers', OdcModule) ??
+      []) as unknown[];
+
+    expect(providers).toContain(GetExecutiveDashboardUseCase);
   });
 });

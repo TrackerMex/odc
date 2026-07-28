@@ -8,6 +8,7 @@ import {
   OdcPage,
 } from '../../domain/repositories/purchase-order.repository';
 import { MonthlyPurchaseSummary } from '../../application/use-cases/get-monthly-purchase-summary.usecase';
+import { ExecutiveDashboardResponse } from '../../application/use-cases/get-executive-dashboard.usecase';
 
 // HTTP-facing shape of a PurchaseOrder (R4): the raw paymentEvidenceFile
 // Cloudinary public_id is never serialized; hasPaymentEvidence replaces it.
@@ -56,6 +57,8 @@ export interface MonthlyPurchaseSummaryResponseDto extends Omit<
   purchases: MonthlyPurchase[];
 }
 
+export type ExecutiveDashboardResponseDto = ExecutiveDashboardResponse;
+
 export function toOdcResponse(order: PurchaseOrder): OdcResponseDto {
   const { paymentEvidenceFile, invoiceFile, ...rest } = order;
   return {
@@ -76,4 +79,12 @@ export function toMonthlyPurchaseSummaryResponse(
   summary: MonthlyPurchaseSummary,
 ): MonthlyPurchaseSummaryResponseDto {
   return summary;
+}
+
+// The application response is built from the dashboard repository's narrow
+// projection, so it contains no private files, notes, or user identifiers.
+export function toExecutiveDashboardResponse(
+  dashboard: ExecutiveDashboardResponse,
+): ExecutiveDashboardResponseDto {
+  return dashboard;
 }

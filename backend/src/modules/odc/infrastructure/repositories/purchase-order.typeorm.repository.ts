@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import {
   And,
   DataSource,
+  FindOptionsSelect,
   FindOptionsWhere,
   In,
   LessThan,
@@ -20,6 +21,10 @@ import {
   OdcPage,
   MonthlyPurchase,
   MONTHLY_PURCHASE_STATUSES,
+  ExecutiveDashboardData,
+  ExecutiveDashboardOrder,
+  ExecutiveTaskPage,
+  OdcViewer,
   PurchaseOrderRepository,
 } from '../../domain/repositories/purchase-order.repository';
 import { OdcStatusHistoryOrmEntity } from '../entities/odc-status-history.orm-entity';
@@ -162,6 +167,206 @@ export class PurchaseOrderTypeOrmRepository implements PurchaseOrderRepository {
       observations: row.observations ?? null,
     }));
   }
+
+  async getExecutiveDashboard(
+    viewer: OdcViewer,
+    month: string,
+    previousMonth: string,
+  ): Promise<ExecutiveDashboardData> {
+    const priorityPromise = this.dataSource.manager.findAndCount(
+      PurchaseOrderOrmEntity,
+      {
+        select: executiveOrderSelection(),
+        where: buildExecutiveTaskWhere(viewer),
+        order: { createdAt: 'ASC' },
+        take: EXECUTIVE_DASHBOARD_LIMIT,
+      },
+    );
+    const oldestActivePromise = this.dataSource.manager.find(
+      PurchaseOrderOrmEntity,
+      {
+        select: executiveOrderSelection(),
+        where: { status: In(ACTIVE_EXECUTIVE_STATUSES) },
+        order: { createdAt: 'ASC' },
+        take: EXECUTIVE_DASHBOARD_LIMIT,
+      },
+    );
+    const monthlyMetricsPromise = this.monthlyExecutiveMetrics(
+      previousMonth,
+      month,
+    );
+    const suppliersPromise = this.topExecutiveSuppliers(month);
+
+    const [
+      [priorityRows, priorityTotal],
+      oldestActiveRows,
+      metrics,
+      suppliers,
+    ] = await Promise.all([
+      priorityPromise,
+      oldestActivePromise,
+      monthlyMetricsPromise,
+      suppliersPromise,
+    ]);
+
+    return {
+      priority: {
+        total: priorityTotal,
+        items: priorityRows.map(toExecutiveDashboardOrder),
+      },
+      pulse: {
+        current: metrics.get(month) ?? EMPTY_MONTHLY_METRICS,
+        previous: metrics.get(previousMonth) ?? EMPTY_MONTHLY_METRICS,
+      },
+      oldestActiveOrders: oldestActiveRows.map(toExecutiveDashboardOrder),
+      topSuppliers: suppliers,
+    };
+  }
+
+  async getExecutiveTasks(
+    viewer: OdcViewer,
+    page: number,
+    pageSize: number,
+  ): Promise<ExecutiveTaskPage> {
+    const [rows, total] = await this.dataSource.manager.findAndCount(
+      PurchaseOrderOrmEntity,
+      {
+        select: executiveOrderSelection(),
+        where: buildExecutiveTaskWhere(viewer),
+        order: { createdAt: 'ASC' },
+        skip: (page - 1) * pageSize,
+        take: pageSize,
+      },
+    );
+    return {
+      items: rows.map(toExecutiveDashboardOrder),
+      total,
+      page,
+      pageSize,
+    };
+  }
+
+  private async monthlyExecutiveMetrics(
+    previousMonth: string,
+    month: string,
+  ): Promise<Map<string, ExecutiveMonthlyMetrics>> {
+    const rows = await this.dataSource.manager
+      .createQueryBuilder(PurchaseOrderOrmEntity, 'odc')
+      .select("TO_CHAR(odc.paymentDate, 'YYYY-MM')", 'month')
+      .addSelect('COUNT(odc.id)', 'purchaseCount')
+      .addSelect('COALESCE(SUM(odc.totalCents), 0)', 'totalCents')
+      .where('odc.status IN (:...statuses)', {
+        statuses: MONTHLY_PURCHASE_STATUSES,
+      })
+      .andWhere('odc.paymentDate >= :start', {
+        start: monthStart(previousMonth),
+      })
+      .andWhere('odc.paymentDate < :end', { end: nextMonthStart(month) })
+      .groupBy("TO_CHAR(odc.paymentDate, 'YYYY-MM')")
+      .getRawMany<ExecutiveMonthlyMetricsRaw>();
+
+    return new Map(
+      rows.map((row) => [
+        row.month,
+        {
+          purchaseCount: Number(row.purchaseCount),
+          totalCents: Number(row.totalCents),
+        },
+      ]),
+    );
+  }
+
+  private async topExecutiveSuppliers(
+    month: string,
+  ): Promise<ExecutiveDashboardData['topSuppliers']> {
+    const rows = await this.dataSource.manager
+      .createQueryBuilder(PurchaseOrderOrmEntity, 'odc')
+      .select('odc.supplier', 'supplier')
+      .addSelect('COUNT(odc.id)', 'purchaseCount')
+      .addSelect('COALESCE(SUM(odc.totalCents), 0)', 'totalCents')
+      .where('odc.status IN (:...statuses)', {
+        statuses: MONTHLY_PURCHASE_STATUSES,
+      })
+      .andWhere('odc.paymentDate >= :start', { start: monthStart(month) })
+      .andWhere('odc.paymentDate < :end', { end: nextMonthStart(month) })
+      .groupBy('odc.supplier')
+      .orderBy('SUM(odc.totalCents)', 'DESC')
+      .addOrderBy('odc.supplier', 'ASC')
+      .limit(EXECUTIVE_DASHBOARD_LIMIT)
+      .getRawMany<ExecutiveSupplierRaw>();
+
+    return rows.map((row) => ({
+      supplier: row.supplier,
+      purchaseCount: Number(row.purchaseCount),
+      totalCents: Number(row.totalCents),
+    }));
+  }
+}
+
+const EXECUTIVE_DASHBOARD_LIMIT = 5;
+const ACTIVE_EXECUTIVE_STATUSES: OdcStatus[] = [
+  'PENDIENTE_ADMIN',
+  'PRESUPUESTO_APROBADO',
+  'COMPRA_APROBADA',
+  'PAGO_REGISTRADO',
+  'EVIDENCIA_PAGO_SUBIDA',
+];
+const EMPTY_MONTHLY_METRICS = { purchaseCount: 0, totalCents: 0 };
+
+interface ExecutiveMonthlyMetrics {
+  purchaseCount: number;
+  totalCents: number;
+}
+
+interface ExecutiveMonthlyMetricsRaw {
+  month: string;
+  purchaseCount: string;
+  totalCents: string;
+}
+
+interface ExecutiveSupplierRaw {
+  supplier: string;
+  purchaseCount: string;
+  totalCents: string;
+}
+
+function executiveOrderSelection(): FindOptionsSelect<PurchaseOrderOrmEntity> {
+  return {
+    id: true,
+    odcNumber: true,
+    status: true,
+    description: true,
+    supplier: true,
+    totalCents: true,
+    createdAt: true,
+  };
+}
+
+function toExecutiveDashboardOrder(
+  row: PurchaseOrderOrmEntity,
+): ExecutiveDashboardOrder {
+  return {
+    id: row.id,
+    odcNumber: row.odcNumber,
+    status: row.status,
+    description: row.description,
+    supplier: row.supplier,
+    totalCents: row.totalCents,
+    createdAt: row.createdAt,
+  };
+}
+
+function monthStart(month: string): string {
+  return `${month}-01`;
+}
+
+function nextMonthStart(month: string): string {
+  const [year, monthNumber] = month.split('-').map(Number);
+  const next = new Date(Date.UTC(year, monthNumber, 1));
+  return `${next.getUTCFullYear()}-${String(next.getUTCMonth() + 1).padStart(
+    2,
+    '0',
+  )}-01`;
 }
 
 const CREATE_MAX_ATTEMPTS = 3;
@@ -190,4 +395,29 @@ function buildVisibilityWhere(
     { status: Not<OdcStatus>('BORRADOR') },
     { createdById: filter.viewer.userId },
   ];
+}
+
+function buildExecutiveTaskWhere(
+  viewer: OdcViewer,
+):
+  | FindOptionsWhere<PurchaseOrderOrmEntity>
+  | FindOptionsWhere<PurchaseOrderOrmEntity>[] {
+  switch (viewer.role) {
+    case 'DIRECTOR_OPS':
+      return [
+        {
+          status: In<OdcStatus>(['BORRADOR', 'RECHAZADA']),
+          createdById: viewer.userId,
+        },
+        {
+          status: In<OdcStatus>(['COMPRA_APROBADA', 'EVIDENCIA_PAGO_SUBIDA']),
+        },
+      ];
+    case 'ADMINISTRACION':
+      return {
+        status: In<OdcStatus>(['PENDIENTE_ADMIN', 'PAGO_REGISTRADO']),
+      };
+    case 'DIRECTOR_GENERAL':
+      return { status: 'PRESUPUESTO_APROBADO' };
+  }
 }

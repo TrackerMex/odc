@@ -5,8 +5,8 @@ feature:
 id:
 inicio:
 plan:
-estado: idle
-bloqueos: ninguno
+estado:
+bloqueos:
 spec_author:
 implementer:
 reviewer:

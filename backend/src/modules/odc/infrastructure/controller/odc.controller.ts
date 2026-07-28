@@ -26,6 +26,8 @@ import { Roles } from '../../../auth/infrastructure/decorators/roles.decorator';
 import type { SessionTokenPayload } from '../../../auth/infrastructure/guards/jwt-auth.guard';
 import { CreateOdcDto } from '../../application/dto/create-odc.dto';
 import { GetMonthlyPurchaseSummaryQueryDto } from '../../application/dto/get-monthly-purchase-summary.query.dto';
+import { GetExecutiveDashboardQueryDto } from '../../application/dto/get-executive-dashboard.query.dto';
+import { GetExecutiveTasksQueryDto } from '../../application/dto/get-executive-tasks.query.dto';
 import { ListOdcsQueryDto } from '../../application/dto/list-odcs.query.dto';
 import { RegisterPaymentDto } from '../../application/dto/register-payment.dto';
 import { RejectOdcDto } from '../../application/dto/reject-odc.dto';
@@ -39,6 +41,8 @@ import { GetInvoiceFileUseCase } from '../../application/use-cases/get-invoice-f
 import { GetOdcUseCase } from '../../application/use-cases/get-odc.usecase';
 import { GetPaymentEvidenceFileUseCase } from '../../application/use-cases/get-payment-evidence-file.usecase';
 import { GetMonthlyPurchaseSummaryUseCase } from '../../application/use-cases/get-monthly-purchase-summary.usecase';
+import { GetExecutiveDashboardUseCase } from '../../application/use-cases/get-executive-dashboard.usecase';
+import { GetExecutiveTasksUseCase } from '../../application/use-cases/get-executive-tasks.usecase';
 import { ListOdcsUseCase } from '../../application/use-cases/list-odcs.usecase';
 import { RegisterPaymentUseCase } from '../../application/use-cases/register-payment.usecase';
 import { RejectOdcUseCase } from '../../application/use-cases/reject-odc.usecase';
@@ -59,9 +63,11 @@ import {
   OdcPageResponseDto,
   OdcResponseDto,
   MonthlyPurchaseSummaryResponseDto,
+  ExecutiveDashboardResponseDto,
   toOdcPageResponse,
   toOdcResponse,
   toMonthlyPurchaseSummaryResponse,
+  toExecutiveDashboardResponse,
 } from '../mappers/odc-response.mapper';
 
 interface RequestWithSession {
@@ -166,6 +172,8 @@ export class OdcController {
     private readonly uploadInvoiceUseCase: UploadInvoiceUseCase,
     private readonly getInvoiceFileUseCase: GetInvoiceFileUseCase,
     private readonly getMonthlyPurchaseSummaryUseCase: GetMonthlyPurchaseSummaryUseCase,
+    private readonly getExecutiveDashboardUseCase: GetExecutiveDashboardUseCase,
+    private readonly getExecutiveTasksUseCase: GetExecutiveTasksUseCase,
   ) {}
 
   @Post()
@@ -387,6 +395,40 @@ export class OdcController {
     return toMonthlyPurchaseSummaryResponse(
       await this.getMonthlyPurchaseSummaryUseCase.execute(query.month),
     );
+  }
+
+  // No @Roles: all authenticated business roles share the read-only snapshot.
+  // The use-case rejects any session role outside that bounded set (R10).
+  @Get('executive-dashboard')
+  async executiveDashboard(
+    @Query() query: GetExecutiveDashboardQueryDto,
+    @Req() request: RequestWithSession,
+  ): Promise<ExecutiveDashboardResponseDto> {
+    try {
+      return toExecutiveDashboardResponse(
+        await this.getExecutiveDashboardUseCase.execute(
+          query.month,
+          actorFrom(request),
+        ),
+      );
+    } catch (error) {
+      rethrowDomainError(error);
+    }
+  }
+
+  @Get('executive-dashboard/tasks')
+  async executiveTasks(
+    @Query() query: GetExecutiveTasksQueryDto,
+    @Req() request: RequestWithSession,
+  ) {
+    try {
+      return await this.getExecutiveTasksUseCase.execute(
+        query.page,
+        actorFrom(request),
+      );
+    } catch (error) {
+      rethrowDomainError(error);
+    }
   }
 
   // R7: generalized download route, dispatching to GetPaymentEvidenceFileUseCase

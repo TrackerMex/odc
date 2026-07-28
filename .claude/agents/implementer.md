@@ -35,16 +35,27 @@ Sigue `specs/<feature>/tasks.md` al pie de la letra:
 Por cada requisito R<n>:
 1. Escribe un test que falla para R<n> (rojo) — el test nombra el requisito:
    describe('R<n>: ...', ...) o el equivalente idiomático del stack
-2. Escribe la implementación mínima que lo hace pasar (verde)
-3. Refactoriza manteniendo los tests en verde
-4. Commit: `feat(<scope>): <desc> (R<n>)` — o agrupa varios R-ids relacionados
-   en un commit si se implementaron juntos: (R1,R2)
-5. Actualiza specs/<feature>/traceability.md: reemplaza la fila "pendiente"
-   de ese R<n> con el test (archivo::nombre) y el hash del commit
+2. Corre el test y confirma que falla. Commit INMEDIATO, tocando
+   ÚNICAMENTE el/los archivo(s) *.test.*: `test(<scope>): <desc> (R<n>)`.
+   Este commit debe existir en el historial ANTES de escribir una sola línea
+   de implementación — no lo dejes para después "porque total se junta al
+   final". Si el commit de test no existe todavía, no has terminado el paso 2.
+3. Escribe la implementación mínima que lo hace pasar (verde)
+4. Refactoriza manteniendo los tests en verde
+5. Commit de implementación, tocando el resto de archivos pero NUNCA
+   archivos *.test.*: `feat(<scope>): <desc> (R<n>)` — o agrupa varios
+   R-ids relacionados en un commit si se implementaron juntos: (R1,R2).
+   No reabras ni reescribas el commit de test del paso 2.
+6. Actualiza specs/<feature>/traceability.md: reemplaza la fila "pendiente"
+   de ese R<n> con el test (archivo::nombre) y AMBOS hashes (test + feat)
 ```
 
 No se pasa al siguiente requisito sin haber cerrado el ciclo rojo-verde-refactor
-del actual.
+del actual. **El historial de commits es la evidencia de TDD, no tu proceso
+mental** — si escribes test e implementación en tu cabeza antes de commitear
+cualquiera de los dos y luego los commiteas juntos, el reviewer rechaza por
+CHECKPOINTS C4 ("no todo en un commit") aunque el código sea correcto. Esto ya
+ha pasado 3 veces en este proyecto.
 
 ---
 
@@ -106,6 +117,11 @@ Luego devuelve al leader **solo**: `"done → progress/impl_<feature-name>.md"`
 
 ❌ Escribir el código primero y el test después "porque total pasa igual" —
    rompe la trazabilidad y el propósito del test como especificación ejecutable.
+
+❌ Commitear el test y la implementación juntos, aunque los hayas escrito en
+   el orden correcto — el commit del test (rojo, verificado que falla) debe
+   existir solo, antes del commit `feat`. Un solo commit con `*.test.*` y el
+   código de producción del mismo requisito falla CHECKPOINTS C4.
 
 ❌ Dejar `traceability.md` con filas "pendiente" al reportar como terminado.
 

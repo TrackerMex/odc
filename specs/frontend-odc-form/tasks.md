@@ -80,3 +80,15 @@ tags: [frontend, odc, spec]
 - [x] (1) Escribir tests que fallen para labels/textos y estructura responsive
 - [x] (2) Implementar el layout final
 - [x] (3) Refactorizar estilos con tests verdes
+
+## R13 — Reorden de las cuatro secciones del dashboard (cambio de frontend puro)
+
+- [ ] (1) Escribir un test rojo en `odc-dashboard.test.tsx` que verifique el
+      nuevo orden en el DOM: `Rechazadas`, `Borradores`, `Listas para
+      comprar`, `Pendientes de factura` (falla contra el orden actual)
+- [ ] (2) Implementación mínima: reordenar las entradas del array
+      `sectionConfig` en `frontend/src/components/odc/odc-dashboard.tsx` para
+      que coincida con el nuevo orden; sin tocar `QueueCard`, el grid, las
+      consultas ni ningún otro archivo
+- [ ] (3) Refactor: confirmar que no queda lógica ni estilos duplicados y que
+      el resto de tests de R1/R12 siguen en verde

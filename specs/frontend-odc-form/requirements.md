@@ -95,6 +95,25 @@ tags: [frontend, odc, spec]
   horizontal involuntario; los textos de interfaz SHALL estar en español y los
   identificadores de código/API SHALL permanecer en inglés.
 
+- **R13**: WHEN el dashboard de `DIRECTOR_OPS` definido en R1 se renderiza, en
+  cualquier ancho de pantalla, THE SYSTEM SHALL ordenar los cuatro bloques en
+  el DOM y visualmente, de mayor a menor prioridad visual, en este orden:
+  `Rechazadas` (`RECHAZADA`), `Borradores` (`BORRADOR`), `Listas para comprar`
+  (`COMPRA_APROBADA`) y `Pendientes de factura` (`EVIDENCIA_PAGO_SUBIDA`). THE
+  SYSTEM SHALL mantener los cuatro bloques con igual peso visual entre sí
+  (mismo tamaño de tarjeta y mismo nivel de énfasis), sin introducir badges,
+  colores de alerta ni jerarquía visual nueva; el cambio SHALL limitarse al
+  orden/posición de los bloques ya existentes.
+
+  > **Nota de superación parcial de R1**: R13 reemplaza el orden fijo
+  > enumerado en R1 —"cuatro bloques visibles: `Borradores` (`BORRADOR`),
+  > `Rechazadas` (`RECHAZADA`), `Listas para comprar` (`COMPRA_APROBADA`) y
+  > `Pendientes de factura` (`EVIDENCIA_PAGO_SUBIDA`)"— por el orden definido
+  > en R13. El resto de R1 (qué datos trae cada bloque mediante
+  > `GET /api/odcs?status=<status>&page=1`, el total devuelto, la lista de
+  > ODCs de cada bloque y el enlace de cada ODC a su vista de detalle)
+  > permanece vigente sin cambios.
+
 ## Fuera de alcance
 
 - Acciones de aprobación, rechazo administrativo, registro de pago, subida de
@@ -107,4 +126,5 @@ tags: [frontend, odc, spec]
 
 ## Aprobación
 
-- [X] Aprobado por humano (fecha: 2026-07-22) ← gate obligatorio antes de implementar
+- [X] Aprobado por humano (fecha: 2026-07-22) ← gate obligatorio antes de implementar; cubre R1-R12
+- [X] Aprobado por humano (fecha: 2026-07-27; R13 autorizada en conversación) ← cubre R13 (R1-R12 ya cubiertas por la aprobación anterior)

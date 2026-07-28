@@ -20,6 +20,7 @@ tags: [frontend, odc, spec]
 | R10 | `odc-form.test.tsx::R8,R9,R10,R11: rejected ODC editing, resend and failures::preserves the form, skips submit after PATCH failure and reports a Spanish error` | `40da676` tests; `f69dc48` implementation |
 | R11 | `odc-form.test.tsx::R8,R9,R10,R11: rejected ODC editing, resend and failures`; `odc-form.test.tsx::R2,R3,R4,R5,R6: ODC form metadata, fields and live total::announces field errors and never persists invalid values` | `40da676` tests; `f69dc48` implementation |
 | R12 | `odc-dashboard.test.tsx::R1,R12: DIRECTOR_OPS dashboard exposes four responsive workflow queues`; `odc-form.test.tsx::R2,R3,R4,R5,R6: ODC form metadata, fields and live total` | `40da676` tests; `f69dc48` implementation |
+| R13 | `odc-dashboard.test.tsx::R13: DIRECTOR_OPS dashboard orders sections by visual priority` | `d4e4ee7` test; `522f5db` implementation |
 
 Regla: el reviewer no aprueba si alguna fila queda "pendiente".
 Convención de commit: `feat(frontend-odc-form): <desc> (R1,R2)`.
