@@ -25,24 +25,26 @@ export function MonthlySummarySlide({
       <div className="mt-7 grid grid-cols-[1.5fr_1fr_1fr] gap-5">
         <div className="border-b-4 border-slate-900 pb-4">
           <p className="text-sm text-slate-600">Total de compras</p>
-          <p className="mt-1 text-4xl font-semibold tracking-tight">
+          <p className="mt-1 text-4xl font-semibold tracking-tight tabular-nums">
             {formatCurrency(summary.totalCents)}
           </p>
         </div>
         <div>
           <p className="text-sm text-slate-600">Compras registradas</p>
-          <p className="mt-1 text-3xl font-semibold">{summary.purchaseCount}</p>
+          <p className="mt-1 text-3xl font-semibold tabular-nums">
+            {summary.purchaseCount}
+          </p>
         </div>
         <div>
           <p className="text-sm text-slate-600">Ticket promedio</p>
-          <p className="mt-1 text-3xl font-semibold">
+          <p className="mt-1 text-3xl font-semibold tabular-nums">
             {formatCurrency(summary.averageTicketCents)}
           </p>
         </div>
       </div>
 
       <table className="mt-8 w-full border-collapse text-left text-sm">
-        <thead className="border-y border-slate-300 text-xs tracking-[0.08em] uppercase text-slate-600">
+        <thead className="border-y border-slate-300 text-xs font-semibold tracking-[0.12em] uppercase text-slate-600">
           <tr>
             <th className="py-3">ODC</th>
             <th className="py-3">Pago</th>
@@ -67,7 +69,7 @@ export function MonthlySummarySlide({
               <td className="py-3">
                 {purchase.hasInvoice ? 'Sí' : 'Pendiente'}
               </td>
-              <td className="py-3 text-right font-medium">
+              <td className="py-3 text-right font-medium tabular-nums">
                 {formatCurrency(purchase.totalCents)}
               </td>
             </tr>

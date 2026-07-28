@@ -203,7 +203,7 @@ function SummaryContent({ summary }: { summary: MonthlyPurchaseSummary }) {
         <Card>
           <CardHeader className="border-b border-border/60">
             <CardDescription>Total de compras pagadas</CardDescription>
-            <CardTitle className="text-4xl font-semibold tracking-tight sm:text-5xl">
+            <CardTitle className="text-4xl font-semibold tracking-tight tabular-nums sm:text-5xl">
               {formatCurrency(summary.totalCents)}
             </CardTitle>
           </CardHeader>
@@ -211,7 +211,7 @@ function SummaryContent({ summary }: { summary: MonthlyPurchaseSummary }) {
             {metricCopy.slice(1).map(([label, value]) => (
               <div key={label}>
                 <p className="text-xs text-muted-foreground">{label}</p>
-                <p className="mt-1 font-semibold">{value}</p>
+                <p className="mt-1 font-semibold tabular-nums">{value}</p>
               </div>
             ))}
           </CardContent>
@@ -250,12 +250,24 @@ function SummaryContent({ summary }: { summary: MonthlyPurchaseSummary }) {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>ODC / pago</TableHead>
-                <TableHead>Solicitud</TableHead>
-                <TableHead>Proveedor</TableHead>
-                <TableHead>Almacén</TableHead>
-                <TableHead>Factura</TableHead>
-                <TableHead className="text-right">Total</TableHead>
+                <TableHead className="text-xs font-semibold tracking-[0.12em] text-muted-foreground uppercase">
+                  ODC / pago
+                </TableHead>
+                <TableHead className="text-xs font-semibold tracking-[0.12em] text-muted-foreground uppercase">
+                  Solicitud
+                </TableHead>
+                <TableHead className="text-xs font-semibold tracking-[0.12em] text-muted-foreground uppercase">
+                  Proveedor
+                </TableHead>
+                <TableHead className="text-xs font-semibold tracking-[0.12em] text-muted-foreground uppercase">
+                  Almacén
+                </TableHead>
+                <TableHead className="text-xs font-semibold tracking-[0.12em] text-muted-foreground uppercase">
+                  Factura
+                </TableHead>
+                <TableHead className="text-right text-xs font-semibold tracking-[0.12em] text-muted-foreground uppercase">
+                  Total
+                </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>

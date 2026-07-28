@@ -19,15 +19,34 @@ import {
   statusLabel,
 } from '@/lib/odc'
 import type { Odc } from '@/lib/odc'
+import { cn } from '@/lib/utils'
 import { OdcStatusBadge } from './odc-status-badge'
 
-function DetailItem({ label, value }: { label: string; value: string }) {
+function DetailItem({
+  label,
+  value,
+  numeric = false,
+  emphasis = false,
+}: {
+  label: string
+  value: string
+  numeric?: boolean
+  emphasis?: boolean
+}) {
   return (
     <div className="min-w-0 rounded-2xl bg-muted/60 p-4">
-      <dt className="text-xs font-medium tracking-[0.1em] text-muted-foreground uppercase">
+      <dt className="text-xs font-semibold tracking-[0.12em] text-muted-foreground uppercase">
         {label}
       </dt>
-      <dd className="mt-1 break-words font-medium">{value}</dd>
+      <dd
+        className={cn(
+          'mt-1 break-words font-medium',
+          numeric && 'tabular-nums',
+          emphasis && 'text-lg font-semibold',
+        )}
+      >
+        {value}
+      </dd>
     </div>
   )
 }
@@ -69,14 +88,18 @@ export function OdcDetail({ odc }: { odc: Odc }) {
               <DetailItem
                 label="Cantidad"
                 value={`${odc.quantity} ${odc.unit}`}
+                numeric
               />
               <DetailItem
                 label="Precio unitario"
                 value={formatCurrency(odc.unitPriceCents)}
+                numeric
               />
               <DetailItem
                 label="Total"
                 value={formatCurrency(odc.totalCents)}
+                numeric
+                emphasis
               />
               <DetailItem
                 label="Última actualización"
@@ -117,7 +140,7 @@ export function OdcDetail({ odc }: { odc: Odc }) {
             ) : null}
             {odc.comments ? (
               <div className="mt-4 rounded-2xl border p-4">
-                <p className="text-xs font-medium tracking-[0.1em] text-muted-foreground uppercase">
+                <p className="text-xs font-semibold tracking-[0.12em] text-muted-foreground uppercase">
                   Comentarios
                 </p>
                 <p className="mt-2 text-sm leading-relaxed">{odc.comments}</p>
@@ -125,7 +148,7 @@ export function OdcDetail({ odc }: { odc: Odc }) {
             ) : null}
             {odc.paymentDate || odc.paymentMethod ? (
               <div className="mt-4 rounded-2xl border p-4">
-                <p className="text-xs font-medium tracking-[0.1em] text-muted-foreground uppercase">
+                <p className="text-xs font-semibold tracking-[0.12em] text-muted-foreground uppercase">
                   Información de pago
                 </p>
                 <dl className="mt-3 grid gap-3 sm:grid-cols-2">
@@ -157,7 +180,7 @@ export function OdcDetail({ odc }: { odc: Odc }) {
             odc.warehouseEntryDate ||
             odc.observations ? (
               <div className="mt-4 rounded-2xl border p-4">
-                <p className="text-xs font-medium tracking-[0.1em] text-muted-foreground uppercase">
+                <p className="text-xs font-semibold tracking-[0.12em] text-muted-foreground uppercase">
                   Información de factura
                 </p>
                 <dl className="mt-3 grid gap-3 sm:grid-cols-2">

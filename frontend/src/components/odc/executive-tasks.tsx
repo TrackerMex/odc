@@ -57,7 +57,7 @@ function TaskAction({
     const Icon = action.icon
     return <Link to="/odcs/$id" params={{ id: task.id }} className={buttonVariants({ variant: 'outline', size: 'sm' })}><Icon aria-hidden="true" />{action.label}</Link>
   }
-  return <p className="shrink-0 text-right text-sm text-muted-foreground"><span className="block text-xs font-medium tracking-wide uppercase">Siguiente acción</span><span className="text-foreground">{actionLabel[task.nextAction]}</span></p>
+  return <p className="shrink-0 text-right text-sm text-muted-foreground"><span className="block text-xs font-semibold tracking-[0.12em] uppercase">Siguiente acción</span><span className="text-foreground">{actionLabel[task.nextAction]}</span></p>
 }
 
 export function ExecutiveTasks({
