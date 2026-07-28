@@ -323,3 +323,12 @@ _El historial comenzará aquí cuando se complete la primera sesión._
 - **Commits:** `b1cb5f9 docs(role-based-executive-dashboard): approve R13 extension`, `9677d48 docs(...): log R13 implementation summary`, `f90d072 "Prepare R13: reorder executive dashboard and docs"` (mezclado, ver nota de excepción).
 - **Pendiente para la próxima sesión:** implementar R13 de `frontend-odc-form` (id 10, spec ya escrita y aprobada en `specs/frontend-odc-form/requirements.md`, reordenar `odc-dashboard.tsx` a Rechazadas → Borradores → Listas para comprar → Pendientes de factura) — una feature a la vez, no se empezó su implementación en esta sesión. Considerar también añadir `.impeccable/` a `.gitignore` (hallazgo no bloqueante del reviewer).
 - **Estado final:** done.
+
+## Sesión 2026-07-27 — frontend-odc-form (id: 10, extensión R13)
+
+- **Feature:** reordenamiento visual del dashboard `DIRECTOR_OPS` — Rechazadas → Borradores → Listas para comprar → Pendientes de factura (antes: Borradores → Rechazadas → ...). Las 4 cards mantienen el mismo peso visual; sin badges ni colores nuevos; sin cambios de datos/endpoint.
+- **Spec:** [[specs/frontend-odc-form/requirements|spec]] (R13, aprobado por humano en conversación, línea de aprobación dedicada además de la histórica R1-R12).
+- **Acciones:** implementer aplicó la disciplina TDD reforzada (commit de test solo, verificado en rojo, antes de tocar implementación) usando `git commit -m "..." -- <archivo>` con pathspec para evitar arrastrar ~303 archivos ajenos que habían quedado staged en el índice de otra sesión; reviewer confirmó los 3 commits atómicos y limpios.
+- **Resultado:** revisión aprobada sin excepciones; `./init.sh` verde, sin regresión R1-R12.
+- **Commits:** `d4e4ee7 test(frontend-odc-form): add R13 dashboard order assertions`, `522f5db feat(frontend-odc-form): reorder dashboard sections per R13`, `520a6ba docs(frontend-odc-form): update traceability for R13`.
+- **Estado final:** done.
