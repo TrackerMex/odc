@@ -332,3 +332,21 @@ _El historial comenzará aquí cuando se complete la primera sesión._
 - **Resultado:** revisión aprobada sin excepciones; `./init.sh` verde, sin regresión R1-R12.
 - **Commits:** `d4e4ee7 test(frontend-odc-form): add R13 dashboard order assertions`, `522f5db feat(frontend-odc-form): reorder dashboard sections per R13`, `520a6ba docs(frontend-odc-form): update traceability for R13`.
 - **Estado final:** done.
+
+## Sesión 2026-07-27 — typeset-odc-components (ad-hoc, sin id en feature_list.json)
+
+- **Feature:** pulido tipográfico vía skill `/impeccable typeset` sobre `frontend/src/components/odc` — jerarquía de cifras (`tabular-nums`, énfasis en Total), etiquetas (unificadas a `font-semibold tracking-[0.12em]` según token `label` de DESIGN.md) y encabezados de tabla. Sin cambio de comportamiento/datos.
+- **Spec:** N/A — no es feature nueva, sin spec EARS ni R-ids (excepción aplicada de la tabla de escalado de `.claude/agents/leader.md`, tratado como tarea acotada a 1 implementer + 1 reviewer).
+- **Acciones:** implementer corrió el flujo del skill impeccable (`context.mjs` + `reference/typeset.md` + `reference/craft-floor.md`) sobre 5 archivos (`odc-detail.tsx`, `executive-dashboard.tsx`, `executive-tasks.tsx`, `monthly-summary.tsx`, `monthly-summary-slide.tsx`); reviewer verificó el diff real (`git diff 40d3bfc~1 40d3bfc`), corrió build/tests de forma independiente y descartó los dos riesgos de overflow señalados por el implementer.
+- **Resultado:** review APROBADO sin excepciones; build y 202 tests en verde (verificación independiente del reviewer); `frontend/src/components/ui/table.tsx` confirmado intacto; checklists C4/C5/C6 marcados N/A (no aplican sin spec EARS).
+- **Commits:** `40d3bfc style(odc-components): improve typographic hierarchy for figures, labels and tables` (sin push).
+- **Estado final:** done (ad-hoc, no requiere actualizar feature_list.json).
+
+## Sesión 2026-07-27 — install-playwright (ad-hoc, tooling — sin id en feature_list.json)
+
+- **Feature:** instalación de Playwright (solo chromium) en `frontend/` (`frontend/e2e/`, `playwright.config.ts`, script `e2e`) para que implementer/reviewer validen UI en navegador real. `example.spec.ts` boilerplate reemplazado por `e2e/login.spec.ts` (smoke test contra `/login`, mismos selectors que `login-form.test.tsx`). `vitest.config.ts` excluye `e2e/**` para no chocar con Playwright.
+- **Spec:** N/A — tooling ad-hoc, sin spec EARS ni R-ids (misma excepción de escalado que `typeset-odc-components`).
+- **Acciones:** implementer corrió `create-playwright` (workaround manual para bug del scaffold con `--browser`+`.`), configuró `webServer`/`baseURL`, y documentó con evidencia (curl a puerto inexistente → 500) que hasta `/login` requiere el backend arriba en SSR (`apiFetch`/`resolveSession` no atrapan errores de conexión, solo 401). Reviewer verificó el diff (`8aac44b`), releyó el código SSR confirmando el hallazgo, y corrió build/vitest/playwright en vivo contra el stack de docker-compose ya levantado.
+- **Resultado:** review APROBADO sin excepciones; build, 202 tests vitest y el smoke test de Playwright en verde de forma independiente; ningún archivo fuera de `frontend/` tocado. Se documentó el uso para futuros agentes en `docs/verification.md`.
+- **Commits:** `8aac44b chore(frontend): add playwright for browser validation` (sin push).
+- **Estado final:** done (ad-hoc, no requiere actualizar feature_list.json).

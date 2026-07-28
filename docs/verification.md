@@ -70,6 +70,31 @@ Esta es la regla central de verificación de este harness, no una sugerencia:
 
 ---
 
+## Validación visual en navegador (Playwright)
+
+Desde 2026-07-27 el workspace `frontend/` tiene Playwright instalado
+(`frontend/e2e/`, `frontend/playwright.config.ts`, chromium solamente) para
+que implementer/reviewer puedan confirmar en un navegador real que un cambio
+de UI se ve como debería, no solo que el build/tests pasan.
+
+```bash
+# Prerequisito: stack completo arriba (backend + Postgres), no solo el dev
+# server de frontend — hasta /login hace un fetch SSR al backend y revienta
+# con 500 si no está disponible.
+docker compose up -d        # desde la raíz del repo
+
+pnpm --dir frontend exec playwright test
+# o
+pnpm --dir frontend run e2e
+```
+
+Úsalo cuando una feature o un pulido (ej. `/impeccable`) toque UI y el
+build/tests automáticos no sean evidencia suficiente de que el resultado
+visual es correcto — especialmente antes de declarar "verificación visual
+pendiente" en un reporte de implementer. Ver
+`progress/impl_install-playwright.md` y `progress/review_install-playwright.md`
+para el detalle de la instalación y el hallazgo sobre el requisito de backend.
+
 ## Notas para el implementer
 
 - No declares done solo porque el build pasa. Prueba los casos edge (errores,
