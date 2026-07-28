@@ -378,3 +378,11 @@ _El historial comenzará aquí cuando se complete la primera sesión._
 - **Implementación:** la barra pasó de enlaces de documento a `Link` de TanStack Router con `viewTransition`; el área de trabajo recibe una transición nativa acotada (salida 120 ms, entrada 220 ms con `clip-path`, opacidad y desplazamiento leve). Sidebar y cabecera quedan estables; `prefers-reduced-motion` desactiva las animaciones.
 - **Verificación:** test de enlaces SPA y aislamiento del área de trabajo; build cliente/SSR y frontend 32 archivos / 206 pruebas en verde. El navegador disponible no pudo alcanzar el servidor temporal en el puerto 3001, pero la compilación validó los selectores y la API del router.
 - **Estado final:** done (ad-hoc, no requiere actualizar feature_list.json).
+
+## Sesión 2026-07-27 — executive-dashboard-visual-refinement (id: 20)
+
+- **Feature:** rediseño del dashboard ejecutivo sin cambios de API, datos, permisos ni flujos de compra.
+- **Acciones:** encabezado contextual con periodo y acción exclusiva de Operaciones; cola prioritaria como bloque principal; cuatro métricas reales de pulso; alertas de antigüedad y proveedores como contexto equilibrado.
+- **Verificación:** pruebas específicas en verde (13), build cliente/SSR, `./init.sh` y revisión visual en navegador. En móvil, el ancho de contenido fue igual al viewport (375px), sin desbordamiento horizontal.
+- **Commits:** `c852c96 test(executive-dashboard-visual-refinement): define dashboard presentation (R1,R2,R3,R4,R5)`; `c93d25d feat(executive-dashboard-visual-refinement): elevate operational dashboard (R1,R2,R3,R4,R5)`.
+- **Estado final:** done.

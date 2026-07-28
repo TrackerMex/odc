@@ -107,5 +107,11 @@
     "name": "role-based-executive-dashboard",
     "status": "done",
     "priority": "P1"
+  },
+  {
+    "id": 20,
+    "name": "executive-dashboard-visual-refinement",
+    "status": "done",
+    "priority": "P2"
   }
 ]
