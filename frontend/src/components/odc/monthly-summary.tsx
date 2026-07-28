@@ -25,11 +25,18 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { getMonthlyPurchaseSummary } from '@/lib/api'
 import {
-  exportMonthlySummarySlide,
-  type SummaryExportFormat,
-} from '@/lib/monthly-summary-export'
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from '@/components/ui/pagination'
+import { getMonthlyPurchaseSummary } from '@/lib/api'
+import { exportMonthlySummarySlide } from '@/lib/monthly-summary-export'
+import type { SummaryExportFormat } from '@/lib/monthly-summary-export'
 import {
   formatCurrency,
   formatDateOnly,
@@ -38,6 +45,8 @@ import {
 } from '@/lib/odc'
 import type { MonthlyPurchaseSummary } from '@/lib/odc'
 import { MonthlySummarySlide } from './monthly-summary-slide'
+
+const PURCHASES_PER_PAGE = 10
 
 function StageLabel({
   status,
@@ -58,6 +67,7 @@ export function MonthlySummary({
   const [error, setError] = useState<string | null>(null)
   const [requestVersion, setRequestVersion] = useState(0)
   const [exporting, setExporting] = useState<SummaryExportFormat | null>(null)
+  const [page, setPage] = useState(1)
   const slideRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -66,7 +76,10 @@ export function MonthlySummary({
     setError(null)
     getMonthlyPurchaseSummary(month)
       .then((nextSummary) => {
-        if (active) setSummary(nextSummary)
+        if (active) {
+          setSummary(nextSummary)
+          setPage(1)
+        }
       })
       .catch(() => {
         if (active)
@@ -81,6 +94,8 @@ export function MonthlySummary({
       active = false
     }
   }, [month, requestVersion])
+
+  const isSummaryCurrent = summary.month === month && error === null
 
   async function exportSlide(format: SummaryExportFormat) {
     if (!slideRef.current) return
@@ -109,8 +124,7 @@ export function MonthlySummary({
               Compras que sí se realizaron
             </h1>
             <p className="mt-2 text-muted-foreground">
-              Un corte mensual listo para revisar y compartir, sin trasladar el
-              control a Excel.
+              Un corte mensual listo para revisar y compartir.
             </p>
           </div>
           <div className="flex flex-wrap items-end gap-2">
@@ -127,14 +141,14 @@ export function MonthlySummary({
             <Button
               variant="outline"
               onClick={() => exportSlide('png')}
-              disabled={loading || exporting !== null}
+              disabled={loading || exporting !== null || !isSummaryCurrent}
             >
               <FileImageIcon aria-hidden="true" />{' '}
               {exporting === 'png' ? 'Generando…' : 'Imagen'}
             </Button>
             <Button
               onClick={() => exportSlide('pdf')}
-              disabled={loading || exporting !== null}
+              disabled={loading || exporting !== null || !isSummaryCurrent}
             >
               <FileTextIcon aria-hidden="true" />{' '}
               {exporting === 'pdf' ? 'Generando…' : 'PDF'}
@@ -161,22 +175,28 @@ export function MonthlySummary({
         <div aria-live="polite" className="sr-only">
           {loading
             ? `Actualizando el resumen de ${formatMonth(month)}.`
-            : `Resumen de ${formatMonth(summary.month)} actualizado.`}
+            : error
+              ? `No se pudo actualizar el resumen de ${formatMonth(month)}.`
+              : `Resumen de ${formatMonth(summary.month)} actualizado.`}
         </div>
         <section aria-busy={loading} aria-label="Resumen mensual">
           {loading ? (
             <SummarySkeleton />
-          ) : (
+          ) : isSummaryCurrent ? (
             <div
               key={summary.month}
               data-testid="monthly-summary-results"
               className="odc-filter-results"
             >
-              <SummaryContent summary={summary} />
+              <SummaryContent
+                summary={summary}
+                page={page}
+                onPageChange={setPage}
+              />
             </div>
-          )}
+          ) : null}
         </section>
-        {!loading && summary.purchases.length === 0 ? (
+        {!loading && isSummaryCurrent && summary.purchases.length === 0 ? (
           <div className="mt-6 rounded-2xl border border-dashed p-8 text-center text-sm text-muted-foreground">
             No hay compras con pago registrado en {formatMonth(summary.month)}.
           </div>
@@ -200,7 +220,15 @@ function SummarySkeleton() {
   )
 }
 
-function SummaryContent({ summary }: { summary: MonthlyPurchaseSummary }) {
+function SummaryContent({
+  summary,
+  page,
+  onPageChange,
+}: {
+  summary: MonthlyPurchaseSummary
+  page: number
+  onPageChange: (page: number) => void
+}) {
   const metricCopy = [
     ['Total del mes', formatCurrency(summary.totalCents)],
     ['Compras registradas', String(summary.purchaseCount)],
@@ -212,6 +240,13 @@ function SummaryContent({ summary }: { summary: MonthlyPurchaseSummary }) {
         : `${summary.averageWarehouseDays} días`,
     ],
   ]
+  const pageCount = Math.ceil(summary.purchases.length / PURCHASES_PER_PAGE)
+  const currentPage = Math.min(page, pageCount || 1)
+  const firstPurchaseIndex = (currentPage - 1) * PURCHASES_PER_PAGE
+  const visiblePurchases = summary.purchases.slice(
+    firstPurchaseIndex,
+    firstPurchaseIndex + PURCHASES_PER_PAGE,
+  )
   return (
     <div className="space-y-6">
       <section
@@ -265,7 +300,10 @@ function SummaryContent({ summary }: { summary: MonthlyPurchaseSummary }) {
           </CardDescription>
         </CardHeader>
         <CardContent className="pt-2">
-          <Table>
+          <Table
+            id="monthly-purchase-table"
+            data-testid="monthly-summary-detail"
+          >
             <TableHeader>
               <TableRow>
                 <TableHead className="text-xs font-semibold tracking-[0.12em] text-muted-foreground uppercase">
@@ -289,7 +327,7 @@ function SummaryContent({ summary }: { summary: MonthlyPurchaseSummary }) {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {summary.purchases.map((purchase) => (
+              {visiblePurchases.map((purchase) => (
                 <TableRow key={purchase.id}>
                   <TableCell>
                     <p className="font-medium">{purchase.odcNumber}</p>
@@ -327,8 +365,117 @@ function SummaryContent({ summary }: { summary: MonthlyPurchaseSummary }) {
               ))}
             </TableBody>
           </Table>
+          {pageCount > 1 ? (
+            <PurchasePagination
+              currentPage={currentPage}
+              pageCount={pageCount}
+              totalPurchases={summary.purchases.length}
+              onPageChange={onPageChange}
+            />
+          ) : null}
         </CardContent>
       </Card>
     </div>
+  )
+}
+
+function PurchasePagination({
+  currentPage,
+  pageCount,
+  totalPurchases,
+  onPageChange,
+}: {
+  currentPage: number
+  pageCount: number
+  totalPurchases: number
+  onPageChange: (page: number) => void
+}) {
+  const firstPurchase = (currentPage - 1) * PURCHASES_PER_PAGE + 1
+  const lastPurchase = Math.min(
+    currentPage * PURCHASES_PER_PAGE,
+    totalPurchases,
+  )
+  const pages = visiblePages(currentPage, pageCount)
+
+  return (
+    <div className="flex flex-col gap-3 border-t border-border/60 pt-4 sm:flex-row sm:items-center sm:justify-between">
+      <p className="text-sm text-muted-foreground" aria-live="polite">
+        Mostrando {firstPurchase}–{lastPurchase} de {totalPurchases} compras
+      </p>
+      <Pagination
+        aria-label="Paginación del detalle de compras"
+        className="mx-0 w-auto sm:justify-end"
+      >
+        <PaginationContent>
+          {currentPage > 1 ? (
+            <PaginationItem>
+              <PaginationPrevious
+                href="#monthly-purchase-table"
+                text="Anterior"
+                aria-label="Página anterior"
+                onClick={(event) => {
+                  event.preventDefault()
+                  onPageChange(currentPage - 1)
+                }}
+              />
+            </PaginationItem>
+          ) : null}
+          {pages.map((pageNumber, index) =>
+            pageNumber === null ? (
+              <PaginationItem key={`ellipsis-${index}`}>
+                <PaginationEllipsis />
+              </PaginationItem>
+            ) : (
+              <PaginationItem key={pageNumber}>
+                <PaginationLink
+                  href="#monthly-purchase-table"
+                  isActive={pageNumber === currentPage}
+                  aria-label={`Página ${pageNumber}`}
+                  onClick={(event) => {
+                    event.preventDefault()
+                    onPageChange(pageNumber)
+                  }}
+                >
+                  {pageNumber}
+                </PaginationLink>
+              </PaginationItem>
+            ),
+          )}
+          {currentPage < pageCount ? (
+            <PaginationItem>
+              <PaginationNext
+                href="#monthly-purchase-table"
+                text="Siguiente"
+                aria-label="Página siguiente"
+                onClick={(event) => {
+                  event.preventDefault()
+                  onPageChange(currentPage + 1)
+                }}
+              />
+            </PaginationItem>
+          ) : null}
+        </PaginationContent>
+      </Pagination>
+    </div>
+  )
+}
+
+function visiblePages(currentPage: number, pageCount: number) {
+  if (pageCount <= 5)
+    return Array.from({ length: pageCount }, (_, index) => index + 1)
+
+  const pages = new Set([
+    1,
+    pageCount,
+    currentPage - 1,
+    currentPage,
+    currentPage + 1,
+  ])
+  const sortedPages = [...pages]
+    .filter((page) => page >= 1 && page <= pageCount)
+    .sort((first, second) => first - second)
+
+  return sortedPages.flatMap((page, index) =>
+    index > 0 && page - sortedPages[index - 1] > 1 ? [null, page] : [page],
   )
 }

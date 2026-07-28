@@ -1,4 +1,10 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react'
+import {
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+  within,
+} from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { MonthlySummary } from './monthly-summary'
 
@@ -43,6 +49,20 @@ const summary = {
   ],
 }
 
+function summaryWithPurchases(month: string, count: number) {
+  return {
+    ...summary,
+    month,
+    purchaseCount: count,
+    purchases: Array.from({ length: count }, (_, index) => ({
+      ...summary.purchases[0],
+      id: `o${index + 1}`,
+      odcNumber: `ODC-2026-${String(index + 1).padStart(5, '0')}`,
+      description: `Compra ${index + 1}`,
+    })),
+  }
+}
+
 describe('R3,R5,R6,R7,R8,R9: monthly operations summary', () => {
   beforeEach(() => {
     getMonthlyPurchaseSummary.mockResolvedValue(summary)
@@ -66,12 +86,15 @@ describe('R3,R5,R6,R7,R8,R9: monthly operations summary', () => {
   })
 
   it('loads the selected month and exports the same report as image or PDF', async () => {
+    getMonthlyPurchaseSummary.mockImplementation((month: string) =>
+      Promise.resolve(month === '2026-08' ? { ...summary, month } : summary),
+    )
     render(<MonthlySummary initialSummary={summary} />)
 
     await waitFor(() =>
-      expect(
-        screen.getByTestId('monthly-summary-results').className,
-      ).toContain('odc-filter-results'),
+      expect(screen.getByTestId('monthly-summary-results').className).toContain(
+        'odc-filter-results',
+      ),
     )
 
     fireEvent.change(screen.getByLabelText('Mes de pago'), {
@@ -85,7 +108,7 @@ describe('R3,R5,R6,R7,R8,R9: monthly operations summary', () => {
     await waitFor(() =>
       expect(exportMonthlySummarySlide).toHaveBeenCalledWith(
         expect.any(HTMLElement),
-        '2026-07',
+        '2026-08',
         'png',
       ),
     )
@@ -93,10 +116,60 @@ describe('R3,R5,R6,R7,R8,R9: monthly operations summary', () => {
     await waitFor(() =>
       expect(exportMonthlySummarySlide).toHaveBeenCalledWith(
         expect.any(HTMLElement),
-        '2026-07',
+        '2026-08',
         'pdf',
       ),
     )
+  })
+
+  it('R5,R7,R8: paginates the detail, resets for a new month, and exports the complete current summary', async () => {
+    const julySummary = summaryWithPurchases('2026-07', 12)
+    const augustSummary = summaryWithPurchases('2026-08', 2)
+    getMonthlyPurchaseSummary.mockImplementation((month: string) =>
+      Promise.resolve(month === '2026-08' ? augustSummary : julySummary),
+    )
+
+    render(<MonthlySummary initialSummary={julySummary} />)
+
+    await waitFor(() =>
+      expect(screen.getByText('Mostrando 1–10 de 12 compras')).toBeTruthy(),
+    )
+    expect(
+      within(screen.getByTestId('monthly-summary-detail')).queryByText(
+        'Compra 11',
+      ),
+    ).toBeNull()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Página siguiente' }))
+    expect(screen.getByText('Mostrando 11–12 de 12 compras')).toBeTruthy()
+    expect(
+      within(screen.getByTestId('monthly-summary-detail')).getByText(
+        'Compra 11',
+      ),
+    ).toBeTruthy()
+
+    fireEvent.change(screen.getByLabelText('Mes de pago'), {
+      target: { value: '2026-08' },
+    })
+    await waitFor(() =>
+      expect(
+        within(screen.getByTestId('monthly-summary-detail')).getByText(
+          'Compra 1',
+        ),
+      ).toBeTruthy(),
+    )
+
+    fireEvent.click(screen.getByRole('button', { name: 'Imagen' }))
+    await waitFor(() =>
+      expect(exportMonthlySummarySlide).toHaveBeenCalledWith(
+        expect.any(HTMLElement),
+        '2026-08',
+        'png',
+      ),
+    )
+    const exportedElement = exportMonthlySummarySlide.mock.calls.at(-1)?.[0]
+    expect(exportedElement.textContent).toContain('Compra 1')
+    expect(exportedElement.textContent).toContain('Compra 2')
   })
 
   it('communicates an API failure and preserves an accessible recovery state', async () => {
