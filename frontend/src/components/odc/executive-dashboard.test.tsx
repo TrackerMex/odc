@@ -102,7 +102,7 @@ describe('R3: executive priority makes the oldest actionable work visible first'
     expect(
       screen.getByRole('link', { name: /ver todas las tareas/i }).getAttribute('href'),
     ).toBe('/tasks')
-    expect(screen.getByText(/Pulso del periodo/i)).toBeTruthy()
+    expect(screen.getByText(/Pulso operativo/i)).toBeTruthy()
   })
 
   it('uses the next action returned by the snapshot instead of inferring it from the status', () => {
@@ -130,6 +130,50 @@ describe('R3: executive priority makes the oldest actionable work visible first'
     expect(
       screen.queryByRole('link', { name: /reabrir y editar/i }),
     ).toBeNull()
+  })
+})
+
+describe('R1: executive dashboard frames the current work context', () => {
+  it('shows the role, current snapshot month and operations-only creation access in its header', () => {
+    render(<ExecutiveDashboard userName="Ana Pérez" dashboard={dashboard} />)
+
+    const header = screen.getByRole('region', {
+      name: /resumen ejecutivo/i,
+    })
+    expect(header.textContent).toMatch(/operaciones/i)
+    expect(header.textContent).toMatch(/julio de 2026/i)
+    expect(
+      screen.getByRole('link', { name: /crear odc/i }).getAttribute('href'),
+    ).toBe('/odcs/new')
+  })
+})
+
+describe('R2: executive dashboard makes each priority task scannable', () => {
+  it('labels the priority dimensions while retaining the task context and action', () => {
+    render(<ExecutiveDashboard userName="Ana Pérez" dashboard={dashboard} />)
+
+    const queue = screen.getByRole('region', {
+      name: /prioridad inmediata/i,
+    })
+    expect(queue.textContent).toMatch(/proveedor/i)
+    expect(queue.textContent).toMatch(/antigüedad/i)
+    expect(queue.textContent).toMatch(/importe/i)
+    expect(queue.textContent).toMatch(/siguiente acción/i)
+    expect(queue.textContent).toMatch(/Suntech/i)
+    expect(queue.textContent).toContain('26 días')
+  })
+})
+
+describe('R3: executive dashboard surfaces four real operating metrics', () => {
+  it('renders priority, purchases, paid amount and oldest active work without a chart', () => {
+    render(<ExecutiveDashboard userName="Ana Pérez" dashboard={dashboard} />)
+
+    const pulse = screen.getByRole('region', { name: /pulso operativo/i })
+    expect(pulse.textContent).toContain('Tareas prioritarias')
+    expect(pulse.textContent).toContain('Compras pagadas')
+    expect(pulse.textContent).toContain('Importe pagado')
+    expect(pulse.textContent).toContain('Mayor antigüedad')
+    expect(pulse.textContent).toContain('22 días')
   })
 })
 
@@ -194,7 +238,7 @@ describe('R8: executive dashboard communicates loading and empty task states', (
     )
 
     expect(screen.getByText(/no tienes pendientes/i)).toBeTruthy()
-    expect(screen.getByText(/Pulso del periodo/i)).toBeTruthy()
+    expect(screen.getByText(/Pulso operativo/i)).toBeTruthy()
     expect(screen.getByText(/Proveedores del periodo/i)).toBeTruthy()
   })
 
@@ -208,7 +252,7 @@ describe('R8: executive dashboard communicates loading and empty task states', (
   })
 })
 
-describe('R9: executive dashboard preserves semantic order, responsive composition and reduced motion', () => {
+describe('R5: executive dashboard preserves accessible states and reduced motion', () => {
   it('uses labelled sections, visible focus links and motion-safe transitions', () => {
     const { container } = render(
       <ExecutiveDashboard userName="Ana Pérez" dashboard={dashboard} />,
@@ -217,7 +261,7 @@ describe('R9: executive dashboard preserves semantic order, responsive compositi
     const priority = screen.getByRole('region', {
       name: /prioridad inmediata/i,
     })
-    const pulse = screen.getByRole('region', { name: /pulso del periodo/i })
+    const pulse = screen.getByRole('region', { name: /pulso operativo/i })
     expect(
       Boolean(
         priority.compareDocumentPosition(pulse) &
@@ -231,8 +275,8 @@ describe('R9: executive dashboard preserves semantic order, responsive compositi
   })
 })
 
-describe('R13: executive dashboard orders sections by hierarchy — alerts, priority, pulse, suppliers', () => {
-  it('places ageing alerts before priority, priority before pulse, and suppliers after all three in the DOM', () => {
+describe('R4: executive dashboard orders sections by hierarchy — priority, pulse, context', () => {
+  it('places priority before pulse and context modules in the DOM', () => {
     const { container } = render(
       <ExecutiveDashboard userName="Ana Pérez" dashboard={dashboard} />,
     )
@@ -243,17 +287,11 @@ describe('R13: executive dashboard orders sections by hierarchy — alerts, prio
     const priority = screen.getByRole('region', {
       name: /prioridad inmediata/i,
     })
-    const pulse = screen.getByRole('region', { name: /pulso del periodo/i })
+    const pulse = screen.getByRole('region', { name: /pulso operativo/i })
     const suppliers = screen.getByRole('region', {
       name: /proveedores del periodo/i,
     })
 
-    expect(
-      Boolean(
-        alerts.compareDocumentPosition(priority) &
-        Node.DOCUMENT_POSITION_FOLLOWING,
-      ),
-    ).toBe(true)
     expect(
       Boolean(
         priority.compareDocumentPosition(pulse) &
@@ -262,7 +300,7 @@ describe('R13: executive dashboard orders sections by hierarchy — alerts, prio
     ).toBe(true)
     expect(
       Boolean(
-        pulse.compareDocumentPosition(suppliers) &
+        pulse.compareDocumentPosition(alerts) &
         Node.DOCUMENT_POSITION_FOLLOWING,
       ),
     ).toBe(true)
