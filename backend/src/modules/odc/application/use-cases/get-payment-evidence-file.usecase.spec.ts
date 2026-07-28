@@ -12,6 +12,7 @@ import { GetPaymentEvidenceFileUseCase } from './get-payment-evidence-file.useca
 const VIEWER_ID = 'a3d1c9a2-0000-4000-8000-000000000001';
 const ODC_ID = 'b4e2d8b3-0000-4000-8000-000000000010';
 const EVIDENCE_PUBLIC_ID = 'odc/ODC-2026-00001/evidence/abc123';
+const EVIDENCE_REFERENCE = `cloudinary:v1:image:png:${EVIDENCE_PUBLIC_ID}`;
 const SIGNED_URL =
   'https://res.cloudinary.com/odc-cloud/raw/authenticated/s--signature--/abc123';
 
@@ -84,6 +85,24 @@ describe('R5: GET files/evidence resolves a short-lived signed Cloudinary URL', 
       publicId: EVIDENCE_PUBLIC_ID,
     });
     expect(url).toBe(SIGNED_URL);
+  });
+});
+
+describe('R2: GET files/evidence passes real delivery metadata to the storage port', () => {
+  it('parses a versioned reference before requesting the signed URL', async () => {
+    const order = buildOrder({ paymentEvidenceFile: EVIDENCE_REFERENCE });
+    const getOdcUseCase = { execute: jest.fn().mockResolvedValue(order) };
+    const fileStorageService = createFileStorageServiceMock();
+    fileStorageService.getSignedUrl.mockResolvedValue(SIGNED_URL);
+    const useCase = createUseCase(getOdcUseCase, fileStorageService);
+
+    await useCase.execute(ODC_ID, viewer);
+
+    expect(fileStorageService.getSignedUrl).toHaveBeenCalledWith({
+      publicId: EVIDENCE_PUBLIC_ID,
+      resourceType: 'image',
+      format: 'png',
+    });
   });
 });
 

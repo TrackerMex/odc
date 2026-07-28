@@ -1,5 +1,8 @@
 import { Inject, Injectable } from '@nestjs/common';
-import type { FileStorageService } from '../../../files/domain/services/file-storage.service';
+import {
+  parseFileReference,
+  type FileStorageService,
+} from '../../../files/domain/services/file-storage.service';
 import { OdcViewer } from '../../domain/repositories/purchase-order.repository';
 import { PaymentEvidenceNotFoundError } from '../../domain/errors/payment-evidence-not-found.error';
 import { GetOdcUseCase } from './get-odc.usecase';
@@ -19,8 +22,8 @@ export class GetPaymentEvidenceFileUseCase {
     if (order.paymentEvidenceFile === null) {
       throw new PaymentEvidenceNotFoundError(odcId);
     }
-    return this.fileStorageService.getSignedUrl({
-      publicId: order.paymentEvidenceFile,
-    });
+    return this.fileStorageService.getSignedUrl(
+      parseFileReference(order.paymentEvidenceFile),
+    );
   }
 }

@@ -6,6 +6,7 @@ import {
   within,
 } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import type * as RouterModule from '@tanstack/react-router'
 import { MonthlySummary } from './monthly-summary'
 
 const { getMonthlyPurchaseSummary, exportMonthlySummarySlide } = vi.hoisted(
@@ -17,6 +18,17 @@ const { getMonthlyPurchaseSummary, exportMonthlySummarySlide } = vi.hoisted(
 
 vi.mock('@/lib/api', () => ({ getMonthlyPurchaseSummary }))
 vi.mock('@/lib/monthly-summary-export', () => ({ exportMonthlySummarySlide }))
+vi.mock('@tanstack/react-router', async (importOriginal) => {
+  const actual = await importOriginal<typeof RouterModule>()
+  return {
+    ...actual,
+    Link: ({ children, params, ...props }: any) => (
+      <a href={`/odcs/${params.id}`} {...props}>
+        {children}
+      </a>
+    ),
+  }
+})
 
 const summary = {
   month: '2026-07',
@@ -65,6 +77,7 @@ function summaryWithPurchases(month: string, count: number) {
 
 describe('R3,R5,R6,R7,R8,R9: monthly operations summary', () => {
   beforeEach(() => {
+    window.history.replaceState({}, '', '/monthly-summary')
     getMonthlyPurchaseSummary.mockResolvedValue(summary)
     exportMonthlySummarySlide.mockResolvedValue(undefined)
   })
@@ -83,6 +96,37 @@ describe('R3,R5,R6,R7,R8,R9: monthly operations summary', () => {
     expect(screen.getByText(/Rodrigo Espinosa/)).toBeTruthy()
     expect(document.querySelector('[data-slot="table"]')).toBeTruthy()
     expect(screen.getByText('Ingreso a almacén')).toBeTruthy()
+  })
+
+  it('R5: links a completed ODC to its detail without changing the export slide', async () => {
+    render(<MonthlySummary initialSummary={summary} />)
+
+    const detailTable = await screen.findByTestId('monthly-summary-detail')
+    const detailLink = within(detailTable).getByRole('link', {
+      name: 'ODC-2026-00001',
+    })
+    expect(detailLink.getAttribute('href')).toBe('/odcs/o1')
+
+    const exportedSlide = screen
+      .getAllByText('ODC-2026-00001')
+      .find((element) => element.closest('[aria-hidden="true"]'))
+    expect(exportedSlide?.closest('a')).toBeNull()
+  })
+
+  it('R5: restores the selected month and page from the URL', async () => {
+    const julySummary = summaryWithPurchases('2026-07', 12)
+    window.history.replaceState({}, '', '/monthly-summary?month=2026-07&page=2')
+    getMonthlyPurchaseSummary.mockResolvedValue(julySummary)
+
+    render(
+      <MonthlySummary initialSummary={summaryWithPurchases('2026-06', 1)} />,
+    )
+
+    await waitFor(() =>
+      expect(screen.getByText('Mostrando 11–12 de 12 compras')).toBeTruthy(),
+    )
+    expect(window.location.search).toContain('month=2026-07')
+    expect(window.location.search).toContain('page=2')
   })
 
   it('loads the selected month and exports the same report as image or PDF', async () => {

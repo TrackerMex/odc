@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { FileImageIcon, FileTextIcon } from 'lucide-react'
+import { Link } from '@tanstack/react-router'
 import {
   Alert,
   AlertAction,
@@ -48,6 +49,18 @@ import { MonthlySummarySlide } from './monthly-summary-slide'
 
 const PURCHASES_PER_PAGE = 10
 
+function initialMonthFromLocation(fallback: string) {
+  if (typeof window === 'undefined') return fallback
+  const month = new URLSearchParams(window.location.search).get('month')
+  return month && /^\d{4}-(0[1-9]|1[0-2])$/.test(month) ? month : fallback
+}
+
+function initialPageFromLocation() {
+  if (typeof window === 'undefined') return 1
+  const value = Number(new URLSearchParams(window.location.search).get('page'))
+  return Number.isInteger(value) && value > 0 ? value : 1
+}
+
 function StageLabel({
   status,
 }: {
@@ -61,13 +74,15 @@ export function MonthlySummary({
 }: {
   initialSummary: MonthlyPurchaseSummary
 }) {
-  const [month, setMonth] = useState(initialSummary.month)
+  const [month, setMonth] = useState(() =>
+    initialMonthFromLocation(initialSummary.month),
+  )
   const [summary, setSummary] = useState(initialSummary)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [requestVersion, setRequestVersion] = useState(0)
   const [exporting, setExporting] = useState<SummaryExportFormat | null>(null)
-  const [page, setPage] = useState(1)
+  const [page, setPage] = useState(initialPageFromLocation)
   const slideRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -78,7 +93,6 @@ export function MonthlySummary({
       .then((nextSummary) => {
         if (active) {
           setSummary(nextSummary)
-          setPage(1)
         }
       })
       .catch(() => {
@@ -94,6 +108,17 @@ export function MonthlySummary({
       active = false
     }
   }, [month, requestVersion])
+
+  useEffect(() => {
+    const search = new URLSearchParams(window.location.search)
+    search.set('month', month)
+    search.set('page', String(page))
+    window.history.replaceState(
+      window.history.state,
+      '',
+      `${window.location.pathname}?${search.toString()}`,
+    )
+  }, [month, page])
 
   const isSummaryCurrent = summary.month === month && error === null
 
@@ -134,7 +159,10 @@ export function MonthlySummary({
                 id="payment-month"
                 label="Mes de pago"
                 value={month}
-                onChange={setMonth}
+                onChange={(nextMonth) => {
+                  setMonth(nextMonth)
+                  setPage(1)
+                }}
                 mode="month"
               />
             </div>
@@ -330,7 +358,13 @@ function SummaryContent({
               {visiblePurchases.map((purchase) => (
                 <TableRow key={purchase.id}>
                   <TableCell>
-                    <p className="font-medium">{purchase.odcNumber}</p>
+                    <Link
+                      to="/odcs/$id"
+                      params={{ id: purchase.id }}
+                      className="rounded-md font-medium underline-offset-4 outline-none hover:underline focus-visible:ring-3 focus-visible:ring-ring/30"
+                    >
+                      {purchase.odcNumber}
+                    </Link>
                     <p className="text-xs text-muted-foreground">
                       {formatDateOnly(purchase.paymentDate)}
                     </p>

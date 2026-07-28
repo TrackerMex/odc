@@ -94,6 +94,8 @@ describe('R2: upload-invoice transitions EVIDENCIA_PAGO_SUBIDA to COMPLETADA for
     const fileStorageService = createFileStorageServiceMock();
     fileStorageService.upload.mockResolvedValue({
       publicId: 'odc/ODC-2026-00001/invoice/abc123',
+      resourceType: 'image',
+      format: 'png',
     });
     const useCase = createUseCase(repository, fileStorageService);
 
@@ -115,7 +117,9 @@ describe('R2: upload-invoice transitions EVIDENCIA_PAGO_SUBIDA to COMPLETADA for
       OdcStatusHistoryEntry,
     ];
     expect(order.status).toBe('COMPLETADA');
-    expect(order.invoiceFile).toBe('odc/ODC-2026-00001/invoice/abc123');
+    expect(order.invoiceFile).toBe(
+      'cloudinary:v1:image:png:odc/ODC-2026-00001/invoice/abc123',
+    );
     expect(order.invoiceFile).not.toMatch(/^https?:\/\//);
     expect(order.warehouseEntryDate).toBe('2026-07-21');
     expect(entry).toBeInstanceOf(OdcStatusHistoryEntry);

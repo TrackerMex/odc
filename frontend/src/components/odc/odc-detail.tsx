@@ -1,9 +1,4 @@
-import {
-  AlertTriangleIcon,
-  CalendarDaysIcon,
-  DownloadIcon,
-} from 'lucide-react'
-import { buttonVariants } from '@/components/ui/button'
+import { AlertTriangleIcon, CalendarDaysIcon } from 'lucide-react'
 import {
   Card,
   CardContent,
@@ -15,12 +10,12 @@ import {
   formatCurrency,
   formatDate,
   formatDateOnly,
-  odcFileUrl,
   statusLabel,
 } from '@/lib/odc'
 import type { Odc } from '@/lib/odc'
 import { cn } from '@/lib/utils'
 import { OdcStatusBadge } from './odc-status-badge'
+import { OdcDocumentPreview } from './odc-document-preview'
 
 function DetailItem({
   label,
@@ -109,32 +104,18 @@ export function OdcDetail({ odc }: { odc: Odc }) {
             {odc.hasPaymentEvidence || odc.hasInvoice ? (
               <div className="mt-4 flex flex-wrap gap-3">
                 {odc.hasPaymentEvidence ? (
-                  <a
-                    href={odcFileUrl(odc.id ?? '', 'evidence')}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className={buttonVariants({
-                      variant: 'outline',
-                      size: 'sm',
-                    })}
-                  >
-                    <DownloadIcon aria-hidden="true" />
-                    Descargar comprobante de pago
-                  </a>
+                  <OdcDocumentPreview
+                    odcId={odc.id ?? ''}
+                    kind="evidence"
+                    label="Comprobante de pago"
+                  />
                 ) : null}
                 {odc.hasInvoice ? (
-                  <a
-                    href={odcFileUrl(odc.id ?? '', 'invoice')}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className={buttonVariants({
-                      variant: 'outline',
-                      size: 'sm',
-                    })}
-                  >
-                    <DownloadIcon aria-hidden="true" />
-                    Descargar factura
-                  </a>
+                  <OdcDocumentPreview
+                    odcId={odc.id ?? ''}
+                    kind="invoice"
+                    label="Factura"
+                  />
                 ) : null}
               </div>
             ) : null}

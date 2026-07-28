@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  BadGatewayException,
   Body,
   ConflictException,
   Controller,
@@ -22,6 +23,8 @@ import {
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { memoryStorage } from 'multer';
+import { FileStorageUnavailableError } from '../../../files/domain/errors/file-storage-unavailable.error';
+import { StoredFileNotFoundError } from '../../../files/domain/errors/stored-file-not-found.error';
 import { Roles } from '../../../auth/infrastructure/decorators/roles.decorator';
 import type { SessionTokenPayload } from '../../../auth/infrastructure/guards/jwt-auth.guard';
 import { CreateOdcDto } from '../../application/dto/create-odc.dto';
@@ -98,9 +101,13 @@ function rethrowDomainError(error: unknown): never {
   if (
     error instanceof OdcNotFoundError ||
     error instanceof PaymentEvidenceNotFoundError ||
-    error instanceof InvoiceNotFoundError
+    error instanceof InvoiceNotFoundError ||
+    error instanceof StoredFileNotFoundError
   ) {
     throw new NotFoundException(error.message);
+  }
+  if (error instanceof FileStorageUnavailableError) {
+    throw new BadGatewayException(error.message);
   }
   throw error;
 }

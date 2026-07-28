@@ -1,5 +1,8 @@
 import { Inject, Injectable } from '@nestjs/common';
-import type { FileStorageService } from '../../../files/domain/services/file-storage.service';
+import {
+  parseFileReference,
+  type FileStorageService,
+} from '../../../files/domain/services/file-storage.service';
 import { OdcViewer } from '../../domain/repositories/purchase-order.repository';
 import { InvoiceNotFoundError } from '../../domain/errors/invoice-not-found.error';
 import { GetOdcUseCase } from './get-odc.usecase';
@@ -20,8 +23,8 @@ export class GetInvoiceFileUseCase {
     if (order.invoiceFile === null) {
       throw new InvoiceNotFoundError(odcId);
     }
-    return this.fileStorageService.getSignedUrl({
-      publicId: order.invoiceFile,
-    });
+    return this.fileStorageService.getSignedUrl(
+      parseFileReference(order.invoiceFile),
+    );
   }
 }
