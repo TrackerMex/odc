@@ -1,8 +1,11 @@
 import {
   AlertTriangleIcon,
   ArrowRightIcon,
+  CalendarDaysIcon,
   CircleAlertIcon,
+  Clock3Icon,
   FilePenLineIcon,
+  ListChecksIcon,
   PlusIcon,
   ReceiptTextIcon,
   WalletCardsIcon,
@@ -93,10 +96,7 @@ function PriorityAction({
       <Link
         to="/odcs/$id"
         params={{ id: task.id }}
-        className={cn(
-          buttonVariants({ variant: 'outline', size: 'sm' }),
-          'shrink-0',
-        )}
+        className={cn(buttonVariants({ variant: 'outline', size: 'sm' }))}
       >
         <Icon aria-hidden="true" />
         {action.label}
@@ -105,12 +105,50 @@ function PriorityAction({
   }
 
   return (
-    <p className="shrink-0 text-right text-sm text-muted-foreground">
-      <span className="block text-xs font-semibold tracking-[0.12em] uppercase">
-        Siguiente acción
-      </span>
-      <span className="text-foreground">{actionLabel[task.nextAction]}</span>
-    </p>
+    <span className="text-sm font-medium text-foreground">
+      {actionLabel[task.nextAction]}
+    </span>
+  )
+}
+
+function DashboardHeader({
+  userName,
+  dashboard,
+}: {
+  userName: string
+  dashboard: ExecutiveDashboardResponse
+}) {
+  const copy = roleCopy[dashboard.role]
+  return (
+    <section
+      aria-label="Resumen ejecutivo"
+      className="flex flex-col gap-5 border-b border-border/70 pb-6 sm:flex-row sm:items-end sm:justify-between"
+    >
+      <div className="max-w-2xl">
+        <p className="text-xs font-semibold tracking-[0.14em] text-muted-foreground uppercase">
+          {copy.label}
+        </p>
+        <h1
+          id="dashboard-title"
+          className="mt-2 text-3xl font-semibold tracking-tight sm:text-4xl"
+        >
+          Buen día, {userName}
+        </h1>
+        <p className="mt-2 text-muted-foreground">{copy.description}</p>
+      </div>
+      <div className="flex flex-wrap items-center gap-2 sm:justify-end">
+        <span className="inline-flex h-8 items-center gap-2 rounded-2xl bg-muted px-3 text-sm text-muted-foreground">
+          <CalendarDaysIcon className="size-4" aria-hidden="true" />
+          {formatMonth(dashboard.month)}
+        </span>
+        {dashboard.role === 'DIRECTOR_OPS' ? (
+          <Link to="/odcs/new" className={buttonVariants({ size: 'sm' })}>
+            <PlusIcon aria-hidden="true" />
+            Crear ODC
+          </Link>
+        ) : null}
+      </div>
+    </section>
   )
 }
 
@@ -122,8 +160,8 @@ function PriorityQueue({
   const { priority } = dashboard
   return (
     <section aria-labelledby="priority-title" className="min-w-0">
-      <Card className="h-full">
-        <CardHeader className="border-b border-border/60">
+      <Card>
+        <CardHeader className="border-b border-border/60 bg-muted/30">
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div>
               <CardDescription>Atención inmediata</CardDescription>
@@ -136,12 +174,9 @@ function PriorityQueue({
                   : `${priority.total} ${priority.total === 1 ? 'tarea requiere' : 'tareas requieren'} atención.`}
               </p>
             </div>
-            {dashboard.role === 'DIRECTOR_OPS' ? (
-              <Link to="/odcs/new" className={buttonVariants({ size: 'sm' })}>
-                <PlusIcon aria-hidden="true" />
-                Crear ODC
-              </Link>
-            ) : null}
+            <span className="tabular-nums text-3xl font-semibold tracking-tight">
+              {priority.total}
+            </span>
           </div>
         </CardHeader>
         <CardContent>
@@ -150,13 +185,23 @@ function PriorityQueue({
               Cuando haya una orden que requiera tu intervención aparecerá aquí.
             </div>
           ) : (
-            <ul
-              className="divide-y divide-border/70"
-              aria-label="Tareas prioritarias"
-            >
-              {priority.items.map((task) => (
-                <li key={task.id} className="py-4 first:pt-0 last:pb-0">
-                  <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <>
+              <div className="hidden grid-cols-[minmax(0,1.8fr)_minmax(8rem,0.8fr)_minmax(6rem,0.55fr)_minmax(7rem,0.7fr)_minmax(9rem,0.9fr)] gap-4 border-b border-border/60 pb-3 text-xs font-semibold tracking-[0.1em] text-muted-foreground uppercase lg:grid">
+                <span>Orden / proveedor</span>
+                <span>Estado</span>
+                <span>Antigüedad</span>
+                <span className="text-right">Importe</span>
+                <span className="text-right">Siguiente acción</span>
+              </div>
+              <ul
+                className="divide-y divide-border/70"
+                aria-label="Tareas prioritarias"
+              >
+                {priority.items.map((task) => (
+                  <li
+                    key={task.id}
+                    className="grid gap-3 py-4 first:pt-0 last:pb-0 lg:grid-cols-[minmax(0,1.8fr)_minmax(8rem,0.8fr)_minmax(6rem,0.55fr)_minmax(7rem,0.7fr)_minmax(9rem,0.9fr)] lg:items-center lg:gap-4"
+                  >
                     <Link
                       to="/odcs/$id"
                       params={{ id: task.id }}
@@ -166,26 +211,47 @@ function PriorityQueue({
                         <span className="font-medium group-hover:underline group-hover:underline-offset-4">
                           {task.odcNumber}
                         </span>
-                        <OdcStatusBadge status={task.status} />
-                        <span className="text-xs text-muted-foreground">
-                          {task.ageDays} {task.ageDays === 1 ? 'día' : 'días'}
-                        </span>
                       </div>
                       <p className="mt-1 truncate text-sm text-muted-foreground">
-                        {task.description} · {task.supplier}
+                        {task.description}
                       </p>
-                      <p className="mt-1 text-sm font-medium tabular-nums">
-                        {formatCurrency(task.totalCents)}
+                      <p className="mt-1 truncate text-sm text-muted-foreground">
+                        Proveedor: {task.supplier}
                       </p>
                     </Link>
-                    <PriorityAction role={dashboard.role} task={task} />
-                  </div>
-                </li>
-              ))}
-            </ul>
+                    <div className="lg:contents">
+                      <div className="lg:justify-self-start">
+                        <span className="mr-2 text-xs font-semibold tracking-[0.1em] text-muted-foreground uppercase lg:hidden">
+                          Estado
+                        </span>
+                        <OdcStatusBadge status={task.status} />
+                      </div>
+                      <p className="text-sm tabular-nums lg:text-muted-foreground">
+                        <span className="mr-2 text-xs font-semibold tracking-[0.1em] text-muted-foreground uppercase lg:hidden">
+                          Antigüedad
+                        </span>
+                        {task.ageDays} {task.ageDays === 1 ? 'día' : 'días'}
+                      </p>
+                      <p className="text-sm font-medium tabular-nums lg:text-right">
+                        <span className="mr-2 text-xs font-semibold tracking-[0.1em] text-muted-foreground uppercase lg:hidden">
+                          Importe
+                        </span>
+                        {formatCurrency(task.totalCents)}
+                      </p>
+                      <div className="lg:text-right">
+                        <span className="mr-2 text-xs font-semibold tracking-[0.1em] text-muted-foreground uppercase lg:hidden">
+                          Siguiente acción
+                        </span>
+                        <PriorityAction role={dashboard.role} task={task} />
+                      </div>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            </>
           )}
           {priority.total > priority.items.length ? (
-            <div className="mt-4 flex flex-wrap items-center justify-between gap-3 text-sm text-muted-foreground">
+            <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-border/60 pt-4 text-sm text-muted-foreground">
               <p>
                 Se muestran las {priority.items.length} tareas más antiguas de{' '}
                 {priority.total}.
@@ -204,50 +270,83 @@ function PriorityQueue({
   )
 }
 
+function Metric({
+  icon: Icon,
+  label,
+  value,
+  detail,
+}: {
+  icon: typeof ListChecksIcon
+  label: string
+  value: string
+  detail: string
+}) {
+  return (
+    <div className="min-w-0 rounded-2xl bg-muted/55 p-4 ring-1 ring-foreground/5 dark:ring-foreground/10">
+      <div className="flex items-center justify-between gap-3">
+        <p className="text-xs font-semibold tracking-[0.1em] text-muted-foreground uppercase">
+          {label}
+        </p>
+        <Icon className="size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
+      </div>
+      <p className="mt-3 truncate text-2xl font-semibold tracking-tight tabular-nums">
+        {value}
+      </p>
+      <p className="mt-1 min-h-5 text-sm text-muted-foreground">{detail}</p>
+    </div>
+  )
+}
+
 function Pulse({ dashboard }: { dashboard: ExecutiveDashboardResponse }) {
-  const { pulse } = dashboard
-  const metrics = [
-    {
-      label: 'Compras pagadas',
-      value: String(pulse.current.purchaseCount),
-      change: pulse.purchaseCountChangePercent,
-    },
-    {
-      label: 'Importe pagado',
-      value: formatCurrency(pulse.current.totalCents),
-      change: pulse.totalCentsChangePercent,
-    },
-  ]
+  const { pulse, priority } = dashboard
+  const oldestOrder = dashboard.oldestActiveOrders[0]
   return (
     <section aria-labelledby="pulse-title" className="min-w-0">
-      <Card className="h-full">
-        <CardHeader className="border-b border-border/60">
-          <CardDescription>
-            Comparado con {formatMonth(pulse.previous.month)}
-          </CardDescription>
-          <CardTitle id="pulse-title" className="mt-1 text-xl">
-            Pulso del periodo
-          </CardTitle>
+      <div className="mb-3 flex flex-wrap items-end justify-between gap-3">
+        <div>
           <p className="text-sm text-muted-foreground">
-            {formatMonth(dashboard.month)}
+            Comparado con {formatMonth(pulse.previous.month)}
           </p>
-        </CardHeader>
-        <CardContent className="grid gap-4 sm:grid-cols-2">
-          {metrics.map((metric) => (
-            <div key={metric.label} className="min-w-0">
-              <p className="text-xs font-semibold tracking-[0.1em] text-muted-foreground uppercase">
-                {metric.label}
-              </p>
-              <p className="mt-1 text-2xl font-semibold tracking-tight tabular-nums">
-                {metric.value}
-              </p>
-              <p className="mt-1 text-sm text-muted-foreground">
-                {formatPercentChange(metric.change)} vs. mes anterior
-              </p>
-            </div>
-          ))}
-        </CardContent>
-      </Card>
+          <h2 id="pulse-title" className="mt-1 text-xl font-semibold tracking-tight">
+            Pulso operativo
+          </h2>
+        </div>
+        <p className="text-sm text-muted-foreground">
+          {formatMonth(dashboard.month)}
+        </p>
+      </div>
+      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        <Metric
+          icon={ListChecksIcon}
+          label="Tareas prioritarias"
+          value={String(priority.total)}
+          detail={
+            priority.total === 0
+              ? 'Sin tareas pendientes'
+              : priority.total === 1
+              ? 'requiere atención'
+              : 'requieren atención'
+          }
+        />
+        <Metric
+          icon={WalletCardsIcon}
+          label="Compras pagadas"
+          value={String(pulse.current.purchaseCount)}
+          detail={`${formatPercentChange(pulse.purchaseCountChangePercent)} vs. mes anterior`}
+        />
+        <Metric
+          icon={ReceiptTextIcon}
+          label="Importe pagado"
+          value={formatCurrency(pulse.current.totalCents)}
+          detail={`${formatPercentChange(pulse.totalCentsChangePercent)} vs. mes anterior`}
+        />
+        <Metric
+          icon={Clock3Icon}
+          label="Mayor antigüedad"
+          value={oldestOrder ? `${oldestOrder.ageDays} días` : 'Sin órdenes'}
+          detail={oldestOrder ? oldestOrder.odcNumber : 'No hay órdenes activas'}
+        />
+      </div>
     </section>
   )
 }
@@ -259,7 +358,7 @@ function AgeingAlerts({
 }) {
   return (
     <section aria-labelledby="ageing-alerts-title" className="min-w-0">
-      <Card className="border-amber-200 dark:border-amber-900/60">
+      <Card className="h-full border-amber-200 dark:border-amber-900/60">
         <CardHeader>
           <div className="flex items-center gap-2">
             <AlertTriangleIcon
@@ -321,7 +420,7 @@ function TopSuppliers({
 }) {
   return (
     <section aria-labelledby="suppliers-title" className="min-w-0">
-      <Card>
+      <Card className="h-full">
         <CardHeader>
           <CardTitle id="suppliers-title">Proveedores del periodo</CardTitle>
           <CardDescription>
@@ -367,26 +466,17 @@ export function ExecutiveDashboard({
   userName: string
   dashboard: ExecutiveDashboardResponse
 }) {
-  const copy = roleCopy[dashboard.role]
   return (
     <main className="min-w-0 flex-1 p-4 sm:p-6 lg:p-8">
-      <div className="mx-auto max-w-7xl">
-        <header className="mb-6 max-w-3xl">
-          <p className="text-xs font-semibold tracking-[0.18em] text-muted-foreground uppercase">
-            {copy.label}
-          </p>
-          <h1 className="mt-2 text-3xl font-semibold tracking-tight sm:text-4xl">
-            Buen día, {userName}
-          </h1>
-          <p className="mt-2 text-muted-foreground">{copy.description}</p>
-        </header>
-        <div className="space-y-4 transition-opacity duration-200 motion-reduce:transition-none">
-          <AgeingAlerts dashboard={dashboard} />
-          <div className="grid min-w-0 gap-4 sm:grid-cols-[minmax(0,1.45fr)_minmax(19rem,0.9fr)]">
-            <PriorityQueue dashboard={dashboard} />
-            <Pulse dashboard={dashboard} />
+      <div className="mx-auto max-w-7xl space-y-6">
+        <DashboardHeader userName={userName} dashboard={dashboard} />
+        <div className="space-y-6 transition-opacity duration-200 motion-reduce:transition-none">
+          <PriorityQueue dashboard={dashboard} />
+          <Pulse dashboard={dashboard} />
+          <div className="grid min-w-0 gap-4 md:grid-cols-2">
+            <AgeingAlerts dashboard={dashboard} />
+            <TopSuppliers dashboard={dashboard} />
           </div>
-          <TopSuppliers dashboard={dashboard} />
         </div>
       </div>
     </main>
@@ -400,11 +490,14 @@ export function ExecutiveDashboardLoading() {
       aria-label="Cargando resumen ejecutivo"
       aria-busy="true"
     >
-      <div className="mx-auto max-w-7xl space-y-4">
-        <Skeleton className="h-24 w-full max-w-xl motion-reduce:animate-none" />
-        <div className="grid gap-4 sm:grid-cols-[minmax(0,1.45fr)_minmax(19rem,0.9fr)]">
-          <Skeleton className="h-96 w-full motion-reduce:animate-none" />
-          <Skeleton className="h-96 w-full motion-reduce:animate-none" />
+      <div className="mx-auto max-w-7xl space-y-6">
+        <Skeleton className="h-32 w-full motion-reduce:animate-none" />
+        <Skeleton className="h-96 w-full motion-reduce:animate-none" />
+        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          <Skeleton className="h-32 w-full motion-reduce:animate-none" />
+          <Skeleton className="h-32 w-full motion-reduce:animate-none" />
+          <Skeleton className="h-32 w-full motion-reduce:animate-none" />
+          <Skeleton className="h-32 w-full motion-reduce:animate-none" />
         </div>
       </div>
     </main>
