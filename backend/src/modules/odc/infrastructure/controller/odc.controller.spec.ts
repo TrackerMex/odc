@@ -578,6 +578,44 @@ describe('R2: approve-budget responds 404 for an unknown id and 409 outside PEND
   });
 });
 
+describe('R3: approve-budget and approve-purchase translate self-approval OdcAccessDeniedError into 403 (odc-approval-self-check)', () => {
+  it('translates approve-budget OdcAccessDeniedError into a 403 ForbiddenException', async () => {
+    const controller = createController({
+      approveBudgetUseCase: {
+        execute: jest
+          .fn()
+          .mockRejectedValue(
+            new OdcAccessDeniedError(
+              'The creator cannot approve the budget of their own ODC',
+            ),
+          ),
+      },
+    });
+
+    await expect(
+      controller.approveBudget(ODC_ID, sessionUser('ADMINISTRACION')),
+    ).rejects.toBeInstanceOf(ForbiddenException);
+  });
+
+  it('translates approve-purchase OdcAccessDeniedError into a 403 ForbiddenException', async () => {
+    const controller = createController({
+      approvePurchaseUseCase: {
+        execute: jest
+          .fn()
+          .mockRejectedValue(
+            new OdcAccessDeniedError(
+              'The creator cannot approve the purchase of their own ODC',
+            ),
+          ),
+      },
+    });
+
+    await expect(
+      controller.approvePurchase(ODC_ID, sessionUser('DIRECTOR_GENERAL')),
+    ).rejects.toBeInstanceOf(ForbiddenException);
+  });
+});
+
 describe('R4: POST /api/odcs/:id/reject rejects an ODC with 200 restricted to ADMINISTRACION', () => {
   it("exposes the handler as POST on ':id/reject' with HTTP 200 restricted to ADMINISTRACION", () => {
     const handler = getHandler('reject');
