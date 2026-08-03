@@ -7,6 +7,7 @@ import {
 import { InvalidRoleTransitionError } from '../../domain/errors/invalid-role-transition.error';
 import { InvalidStatusTransitionError } from '../../domain/errors/invalid-status-transition.error';
 import { MissingTransitionDataError } from '../../domain/errors/missing-transition-data.error';
+import { OdcAccessDeniedError } from '../../domain/errors/odc-access-denied.error';
 import { OdcNotFoundError } from '../../domain/errors/odc-not-found.error';
 import { RejectOdcUseCase } from './reject-odc.usecase';
 
@@ -329,4 +330,39 @@ describe('R7: reject rejects unknown ids and non-rejectable statuses for a DIREC
       expect(repository.update).not.toHaveBeenCalled();
     },
   );
+});
+
+describe('R4: reject rejects self-action by the ODC creator (odc-approval-self-check)', () => {
+  it('throws OdcAccessDeniedError without transitioning or persisting when an ADMINISTRACION actor created the ODC (T4)', async () => {
+    const repository = createRepositoryMock();
+    const order = buildOrder({ createdById: ADMIN_ID });
+    repository.findById.mockResolvedValue(order);
+    const useCase = createUseCase(repository);
+
+    await expect(
+      useCase.execute(ODC_ID, adminActor, {
+        rejectionReason: REJECTION_REASON,
+      }),
+    ).rejects.toBeInstanceOf(OdcAccessDeniedError);
+    expect(order.status).toBe('PENDIENTE_ADMIN');
+    expect(repository.update).not.toHaveBeenCalled();
+  });
+
+  it('throws OdcAccessDeniedError without transitioning or persisting when a DIRECTOR_GENERAL actor created the ODC (T6)', async () => {
+    const repository = createRepositoryMock();
+    const order = buildOrder({
+      status: 'PRESUPUESTO_APROBADO',
+      createdById: DIRECTOR_GENERAL_ID,
+    });
+    repository.findById.mockResolvedValue(order);
+    const useCase = createUseCase(repository);
+
+    await expect(
+      useCase.execute(ODC_ID, directorGeneralActor, {
+        rejectionReason: REJECTION_REASON,
+      }),
+    ).rejects.toBeInstanceOf(OdcAccessDeniedError);
+    expect(order.status).toBe('PRESUPUESTO_APROBADO');
+    expect(repository.update).not.toHaveBeenCalled();
+  });
 });

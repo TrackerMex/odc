@@ -616,6 +616,28 @@ describe('R3: approve-budget and approve-purchase translate self-approval OdcAcc
   });
 });
 
+describe('R4: reject translates self-action OdcAccessDeniedError into 403 (odc-approval-self-check)', () => {
+  it('translates the reject OdcAccessDeniedError into a 403 ForbiddenException', async () => {
+    const controller = createController({
+      rejectOdcUseCase: {
+        execute: jest
+          .fn()
+          .mockRejectedValue(
+            new OdcAccessDeniedError('The creator cannot reject their own ODC'),
+          ),
+      },
+    });
+
+    await expect(
+      controller.reject(
+        ODC_ID,
+        { rejectionReason: 'Presupuesto excedido' },
+        sessionUser('ADMINISTRACION'),
+      ),
+    ).rejects.toBeInstanceOf(ForbiddenException);
+  });
+});
+
 describe('R4: POST /api/odcs/:id/reject rejects an ODC with 200 restricted to ADMINISTRACION', () => {
   it("exposes the handler as POST on ':id/reject' with HTTP 200 restricted to ADMINISTRACION", () => {
     const handler = getHandler('reject');
