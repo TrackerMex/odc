@@ -5,13 +5,16 @@ import {
   PurchaseOrder,
   TransitionData,
 } from '../../domain/entities/purchase-order.entity';
+import { OdcAccessDeniedError } from '../../domain/errors/odc-access-denied.error';
 import { OdcNotFoundError } from '../../domain/errors/odc-not-found.error';
 import type { PurchaseOrderRepository } from '../../domain/repositories/purchase-order.repository';
 
 // T4 (PENDIENTE_ADMIN -> RECHAZADA) via the shared 'reject' domain action;
 // the domain also models T6 (PRESUPUESTO_APROBADO -> RECHAZADA, role
 // DIRECTOR_GENERAL) under the same action, mechanically reachable once
-// feature 5 widens the controller's @Roles metadata (R4, R5).
+// feature 5 widens the controller's @Roles metadata (R4, R5). Neither T4 nor
+// T6 may be executed by the ODC's own creator (segregation of duties, R4 of
+// odc-approval-self-check).
 @Injectable()
 export class RejectOdcUseCase {
   constructor(
@@ -27,6 +30,9 @@ export class RejectOdcUseCase {
     const order = await this.purchaseOrderRepository.findById(odcId);
     if (order === null) {
       throw new OdcNotFoundError(odcId);
+    }
+    if (order.createdById === actor.userId) {
+      throw new OdcAccessDeniedError('The creator cannot reject their own ODC');
     }
     const record = order.transition('reject', actor.role, data);
     const entry = new OdcStatusHistoryEntry(
