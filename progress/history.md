@@ -397,3 +397,11 @@ _El historial comenzará aquí cuando se complete la primera sesión._
 - **Cloudinary:** no se requirió cambiar el dashboard ni el plan; la corrección fue exclusivamente de construcción y resolución de URL en la aplicación.
 - **Commit:** `6874bf4 feat(completed-odc-document-review): repair signed previews (R1-R8)`.
 - **Estado final:** done.
+
+## Sesión 2026-08-02 — odc-approval-self-check (id: 22)
+
+- **Feature:** cierre de un hueco de segregación de funciones sobre T3 (`approve_budget`) y T5 (`approve_purchase`): el creador de una ODC ya no puede aprobar su propia orden.
+- **Acciones:** `ApproveBudgetUseCase` y `ApprovePurchaseUseCase` ganan un chequeo `order.createdById === actor.userId` → `OdcAccessDeniedError`, ejecutado justo después de `findById`/`OdcNotFoundError` y antes de `order.transition(...)`, replicando el patrón ya aprobado en `SubmitOdcUseCase`/`UpdateDraftUseCase` (odc-create-draft R9/R11). No se creó endpoint, DTO, guard ni entidad de dominio nuevos; no hay diff en `purchase-order.entity.ts`, `TRANSITIONS`, `RolesGuard` ni dependencias. R3 confirma sin cambios en `odc.controller.ts` que `rethrowDomainError` ya traducía `OdcAccessDeniedError` a 403 desde odc-create-draft.
+- **Resultado:** reviewer verificó los 6 commits contra la spec línea por línea (orden del chequeo, ausencia de diff en dominio/guard/dependencias, R-ids en cada test, sin mezcla test+impl de requisitos distintos) y corrió `./init.sh` de forma independiente: build backend/frontend ok, 59 suites/468 tests backend, 32 archivos/214 tests frontend, lint sin errores. Regresión de éxito (`odc-budget-validation` R1, `odc-purchase-approval` R1) confirmada como test ya existente en los mismos archivos. `traceability.md` sin filas pendientes, hashes verificados con `git log`. Aprobado.
+- **Commits:** `f4c5fde3 test(odc-approval-self-check): specify approve-budget rejects self-approval (R1)`; `6d55280e feat(odc-approval-self-check): reject approve-budget self-approval (R1)`; `1659f983 test(odc-approval-self-check): specify approve-purchase rejects self-approval (R2)`; `915736dd feat(odc-approval-self-check): reject approve-purchase self-approval (R2)`; `089eb640 test(odc-approval-self-check): confirm self-approval OdcAccessDeniedError maps to 403 (R3)`; `7461e56a docs(odc-approval-self-check): trace R1,R2,R3 to tests and commits`.
+- **Estado final:** done.
