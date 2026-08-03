@@ -26,3 +26,9 @@ tags: [harness, spec]
 - [ ] (1) Escribir test que falla para R3
 - [ ] (2) Implementación mínima que lo pasa
 - [ ] (3) Refactor con tests verdes
+
+## R4 — reject-odc (T4, T6): 403 si el actor es el creador de la ODC
+
+- [ ] (1) Escribir test que falla para R4
+- [ ] (2) Implementación mínima que lo pasa
+- [ ] (3) Refactor con tests verdes

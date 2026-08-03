@@ -41,6 +41,15 @@ tags: [harness, spec]
   nuevo vs. regla en use-case existente" en [[requirements]]. Las rutas
   `POST :id/approve-budget` y `POST :id/approve-purchase` no cambian su forma
   HTTP; solo cambia lo que hace el use-case que invocan.
+- **Extensión R4 — mismo patrón en `RejectOdcUseCase`**: se replica
+  literalmente el mismo chequeo (`if (order.createdById === actor.userId) throw new OdcAccessDeniedError(...)`)
+  en `RejectOdcUseCase.execute()`, insertado en el mismo punto relativo del
+  flujo que R1/R2: justo después de `findById`/el null-check
+  (`OdcNotFoundError`) y antes de `order.transition('reject', actor.role, data)`.
+  Un único use-case cubre T4 y T6 (comparten la acción de dominio `reject`),
+  así que un solo diff en `RejectOdcUseCase` satisface ambas transiciones de
+  R4 — no hace falta bifurcar por estado ni por rol. Sin cambios en la firma
+  `execute(odcId, actor, data)`: `actor.userId` ya está disponible.
 
 ## Archivos afectados
 
@@ -50,6 +59,10 @@ tags: [harness, spec]
 - `backend/src/modules/odc/application/use-cases/approve-purchase.usecase.ts`
   (modificado) — añade el chequeo de auto-aprobación antes de
   `order.transition('approve_purchase', actor.role)` (R2). Capa application.
+- `backend/src/modules/odc/application/use-cases/reject-odc.usecase.ts`
+  (modificado) — añade el chequeo de auto-acción antes de
+  `order.transition('reject', actor.role, data)`, cubriendo T4 y T6 (R4).
+  Capa application.
 
 Sin cambios: `domain/entities/purchase-order.entity.ts` (incluida
 `transition()` y `TRANSITIONS`), `domain/errors/odc-access-denied.error.ts`

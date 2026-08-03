@@ -11,6 +11,7 @@ tags: [harness, spec]
 | R1 | `approve-budget.usecase.spec.ts::R1: approve-budget rejects self-approval by the ODC creator (odc-approval-self-check)` | `f4c5fde` test(odc-approval-self-check): specify approve-budget rejects self-approval (R1); `6d55280` feat(odc-approval-self-check): reject approve-budget self-approval (R1) |
 | R2 | `approve-purchase.usecase.spec.ts::R2: approve-purchase rejects self-approval by the ODC creator (odc-approval-self-check)` | `1659f98` test(odc-approval-self-check): specify approve-purchase rejects self-approval (R2); `915736d` feat(odc-approval-self-check): reject approve-purchase self-approval (R2) |
 | R3 | `odc.controller.spec.ts::R3: approve-budget and approve-purchase translate self-approval OdcAccessDeniedError into 403 (odc-approval-self-check)` | `089eb64` test(odc-approval-self-check): confirm self-approval OdcAccessDeniedError maps to 403 (R3) |
+| R4 | pendiente | pendiente |
 
 Regla: el reviewer no aprueba si alguna fila queda "pendiente".
 Convención de commit: `feat(<scope>): <desc> (R1,R2)`.
