@@ -30,7 +30,12 @@ export function OdcStatusBadge({
   return (
     <Badge
       variant="secondary"
-      className={cn('border-0 font-medium', statusStyles[status], className)}
+      data-status={status}
+      className={cn(
+        'border-0 font-medium transition-[background-color,color] duration-150 ease-out motion-reduce:transition-none',
+        statusStyles[status],
+        className,
+      )}
     >
       {statusLabel(status)}
     </Badge>

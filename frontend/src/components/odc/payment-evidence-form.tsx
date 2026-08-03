@@ -12,6 +12,7 @@ import {
 } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { toast } from '@/components/ui/toast'
 
 const MAX_FILE_SIZE = 10_485_760
 const ALLOWED_FILE_TYPES = new Set([
@@ -59,7 +60,13 @@ export function PaymentEvidenceForm({
     setSubmitting(true)
     setError(null)
     try {
-      onSuccess(await upload(file, reference.trim() || undefined))
+      const nextOdc = await upload(file, reference.trim() || undefined)
+      toast.add({
+        type: 'success',
+        title: 'Comprobante subido',
+        description: 'La orden ya está lista para completar la factura.',
+      })
+      onSuccess(nextOdc)
     } catch {
       setError('No pudimos subir el comprobante. Intenta nuevamente.')
     } finally {

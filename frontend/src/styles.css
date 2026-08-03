@@ -1,5 +1,5 @@
-@import "tailwindcss";
-@import "tw-animate-css";
+@import 'tailwindcss';
+@import 'tw-animate-css';
 
 @custom-variant dark (&:is(.dark *));
 
@@ -131,4 +131,79 @@ body,
 
 body {
   margin: 0;
+}
+
+@keyframes odc-filter-settle {
+  from {
+    opacity: 0.55;
+    clip-path: inset(0 0 12% 0);
+  }
+
+  to {
+    opacity: 1;
+    clip-path: inset(0);
+  }
+}
+
+.odc-filter-results {
+  animation: odc-filter-settle 240ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.odc-route-content {
+  view-transition-name: odc-route-content;
+}
+
+@keyframes odc-route-enter {
+  from {
+    opacity: 0;
+    transform: translateY(0.5rem);
+    clip-path: inset(4% 0 0 0);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+    clip-path: inset(0);
+  }
+}
+
+@keyframes odc-route-exit {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  to {
+    opacity: 0;
+    transform: translateY(-0.25rem);
+  }
+}
+
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+}
+
+::view-transition-group(odc-route-content) {
+  animation-duration: 220ms;
+  animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+::view-transition-old(odc-route-content) {
+  animation: odc-route-exit 120ms ease-out both;
+}
+
+::view-transition-new(odc-route-content) {
+  animation: odc-route-enter 220ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  mix-blend-mode: normal;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .odc-filter-results,
+  ::view-transition-old(root),
+  ::view-transition-new(root),
+  ::view-transition-old(odc-route-content),
+  ::view-transition-new(odc-route-content) {
+    animation: none;
+  }
 }

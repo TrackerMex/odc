@@ -1,10 +1,13 @@
 import {
+  BadGatewayException,
   BadRequestException,
   ConflictException,
   ForbiddenException,
   NotFoundException,
   RequestMethod,
 } from '@nestjs/common';
+import { FileStorageUnavailableError } from '../../../files/domain/errors/file-storage-unavailable.error';
+import { StoredFileNotFoundError } from '../../../files/domain/errors/stored-file-not-found.error';
 import { ROLES_KEY } from '../../../auth/infrastructure/decorators/roles.decorator';
 import { PurchaseOrder } from '../../domain/entities/purchase-order.entity';
 import { InvalidRoleTransitionError } from '../../domain/errors/invalid-role-transition.error';
@@ -572,6 +575,44 @@ describe('R2: approve-budget responds 404 for an unknown id and 409 outside PEND
     await expect(
       controller.approveBudget(ODC_ID, sessionUser('ADMINISTRACION')),
     ).rejects.toBeInstanceOf(ConflictException);
+  });
+});
+
+describe('R3: approve-budget and approve-purchase translate self-approval OdcAccessDeniedError into 403 (odc-approval-self-check)', () => {
+  it('translates approve-budget OdcAccessDeniedError into a 403 ForbiddenException', async () => {
+    const controller = createController({
+      approveBudgetUseCase: {
+        execute: jest
+          .fn()
+          .mockRejectedValue(
+            new OdcAccessDeniedError(
+              'The creator cannot approve the budget of their own ODC',
+            ),
+          ),
+      },
+    });
+
+    await expect(
+      controller.approveBudget(ODC_ID, sessionUser('ADMINISTRACION')),
+    ).rejects.toBeInstanceOf(ForbiddenException);
+  });
+
+  it('translates approve-purchase OdcAccessDeniedError into a 403 ForbiddenException', async () => {
+    const controller = createController({
+      approvePurchaseUseCase: {
+        execute: jest
+          .fn()
+          .mockRejectedValue(
+            new OdcAccessDeniedError(
+              'The creator cannot approve the purchase of their own ODC',
+            ),
+          ),
+      },
+    });
+
+    await expect(
+      controller.approvePurchase(ODC_ID, sessionUser('DIRECTOR_GENERAL')),
+    ).rejects.toBeInstanceOf(ForbiddenException);
   });
 });
 
@@ -1496,5 +1537,34 @@ describe('R6: files/invoice responds 404 for an unknown id, 404 without invoice 
     await expect(
       controller.getOdcFile(ODC_ID, 'invoice', sessionUser()),
     ).rejects.toBeInstanceOf(ForbiddenException);
+  });
+});
+
+describe('R3/R4: file delivery maps Cloudinary failures without leaking references', () => {
+  it('maps a confirmed missing stored asset to 404', async () => {
+    const controller = createController({
+      getInvoiceFileUseCase: {
+        execute: jest.fn().mockRejectedValue(new StoredFileNotFoundError()),
+      },
+    });
+
+    await expect(
+      controller.getOdcFile(ODC_ID, 'invoice', sessionUser()),
+    ).rejects.toMatchObject({
+      constructor: NotFoundException,
+      message: 'The stored file was not found',
+    });
+  });
+
+  it('maps a recoverable storage failure to 502 without exposing a publicId', async () => {
+    const controller = createController({
+      getPaymentEvidenceFileUseCase: {
+        execute: jest.fn().mockRejectedValue(new FileStorageUnavailableError()),
+      },
+    });
+
+    const request = controller.getOdcFile(ODC_ID, 'evidence', sessionUser());
+    await expect(request).rejects.toBeInstanceOf(BadGatewayException);
+    await expect(request).rejects.not.toThrow(/odc\//i);
   });
 });

@@ -94,6 +94,8 @@ describe('R2: upload-payment-evidence transitions PAGO_REGISTRADO to EVIDENCIA_P
     const fileStorageService = createFileStorageServiceMock();
     fileStorageService.upload.mockResolvedValue({
       publicId: 'odc/ODC-2026-00001/evidence/abc123',
+      resourceType: 'image',
+      format: 'pdf',
     });
     const useCase = createUseCase(repository, fileStorageService);
 
@@ -115,7 +117,7 @@ describe('R2: upload-payment-evidence transitions PAGO_REGISTRADO to EVIDENCIA_P
     ];
     expect(order.status).toBe('EVIDENCIA_PAGO_SUBIDA');
     expect(order.paymentEvidenceFile).toBe(
-      'odc/ODC-2026-00001/evidence/abc123',
+      'cloudinary:v1:image:pdf:odc/ODC-2026-00001/evidence/abc123',
     );
     expect(order.paymentEvidenceFile).not.toMatch(/^https?:\/\//);
     expect(entry).toBeInstanceOf(OdcStatusHistoryEntry);

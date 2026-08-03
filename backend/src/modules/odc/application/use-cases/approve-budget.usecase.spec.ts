@@ -6,6 +6,7 @@ import {
 } from '../../domain/entities/purchase-order.entity';
 import { InvalidRoleTransitionError } from '../../domain/errors/invalid-role-transition.error';
 import { InvalidStatusTransitionError } from '../../domain/errors/invalid-status-transition.error';
+import { OdcAccessDeniedError } from '../../domain/errors/odc-access-denied.error';
 import { OdcNotFoundError } from '../../domain/errors/odc-not-found.error';
 import { ApproveBudgetUseCase } from './approve-budget.usecase';
 
@@ -146,4 +147,19 @@ describe('R2: approve-budget rejects unknown ids and non-PENDIENTE_ADMIN statuse
       expect(repository.update).not.toHaveBeenCalled();
     },
   );
+});
+
+describe('R1: approve-budget rejects self-approval by the ODC creator (odc-approval-self-check)', () => {
+  it('throws OdcAccessDeniedError without transitioning or persisting when the actor created the ODC', async () => {
+    const repository = createRepositoryMock();
+    const order = buildOrder({ createdById: ADMIN_ID });
+    repository.findById.mockResolvedValue(order);
+    const useCase = createUseCase(repository);
+
+    await expect(useCase.execute(ODC_ID, adminActor)).rejects.toBeInstanceOf(
+      OdcAccessDeniedError,
+    );
+    expect(order.status).toBe('PENDIENTE_ADMIN');
+    expect(repository.update).not.toHaveBeenCalled();
+  });
 });

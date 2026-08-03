@@ -6,6 +6,7 @@ import {
   FilePlus2Icon,
   LayoutDashboardIcon,
 } from 'lucide-react'
+import { Link } from '@tanstack/react-router'
 
 import { NavUser } from '@/components/nav-user'
 import { ThemeToggle } from '@/lib/theme'
@@ -43,7 +44,7 @@ function NavigationItem({
   return (
     <SidebarMenuItem>
       <SidebarMenuButton
-        render={<a href={href} />}
+        render={<Link to={href} viewTransition />}
         isActive={isActive}
         tooltip={title}
       >

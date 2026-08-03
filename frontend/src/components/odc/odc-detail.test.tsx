@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest'
-import { render, screen, within } from '@testing-library/react'
+import {
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+  within,
+} from '@testing-library/react'
 import { odcFileUrl } from '@/lib/odc'
 import type { Odc } from '@/lib/odc'
 import { OdcDetail } from './odc-detail'
@@ -122,8 +128,8 @@ describe('R9: COMPLETADA badge and invoice information block', () => {
   })
 })
 
-describe('R10: evidence and invoice download links', () => {
-  it('shows both links pointing to the file routes, opening in a new tab', () => {
+describe('R6: protected evidence and invoice previews', () => {
+  it('loads the evidence endpoint only after opening its dialog', () => {
     render(
       <OdcDetail
         odc={{
@@ -136,24 +142,56 @@ describe('R10: evidence and invoice download links', () => {
       />,
     )
 
-    const evidenceLink = screen.getByRole('link', {
-      name: /descargar comprobante de pago/i,
+    expect(
+      screen.queryByTitle(/vista previa del comprobante de pago/i),
+    ).toBeNull()
+
+    fireEvent.click(
+      screen.getByRole('button', {
+        name: /ver comprobante de pago/i,
+      }),
+    )
+
+    const dialog = screen.getByRole('dialog')
+    expect(
+      within(dialog).getByRole('heading', { name: /comprobante de pago/i }),
+    ).toBeTruthy()
+    const frame = within(dialog).getByTitle(
+      /vista previa del comprobante de pago/i,
+    )
+    expect(frame.getAttribute('src')).toBe('/api/odcs/o1/files/evidence')
+    expect(within(dialog).getByText(/cargando documento/i)).toBeTruthy()
+
+    const externalLink = within(dialog).getByRole('link', {
+      name: /abrir en otra pestaña/i,
     })
-    expect(evidenceLink.getAttribute('href')).toBe(
+    expect(externalLink.getAttribute('href')).toBe(
       '/api/odcs/o1/files/evidence',
     )
-    expect(evidenceLink.getAttribute('target')).toBe('_blank')
-    expect(evidenceLink.getAttribute('rel')).toMatch(/noopener/)
-
-    const invoiceLink = screen.getByRole('link', {
-      name: /descargar factura/i,
-    })
-    expect(invoiceLink.getAttribute('href')).toBe('/api/odcs/o1/files/invoice')
-    expect(invoiceLink.getAttribute('target')).toBe('_blank')
-    expect(invoiceLink.getAttribute('rel')).toMatch(/noopener/)
+    expect(externalLink.getAttribute('target')).toBe('_blank')
+    expect(externalLink.getAttribute('rel')).toMatch(/noopener/)
   })
 
-  it('hides each link when its indicator is false', () => {
+  it('opens the invoice preview with the invoice endpoint', () => {
+    render(
+      <OdcDetail
+        odc={{
+          ...odc,
+          status: 'COMPLETADA',
+          rejectionReason: null,
+          hasPaymentEvidence: true,
+          hasInvoice: true,
+        }}
+      />,
+    )
+
+    fireEvent.click(screen.getByRole('button', { name: /ver factura/i }))
+    expect(
+      screen.getByTitle(/vista previa de la factura/i).getAttribute('src'),
+    ).toBe('/api/odcs/o1/files/invoice')
+  })
+
+  it('hides each preview action when its indicator is false', () => {
     render(
       <OdcDetail
         odc={{
@@ -167,11 +205,9 @@ describe('R10: evidence and invoice download links', () => {
     )
 
     expect(
-      screen.queryByRole('link', { name: /descargar comprobante de pago/i }),
+      screen.queryByRole('button', { name: /ver comprobante de pago/i }),
     ).toBeNull()
-    expect(
-      screen.queryByRole('link', { name: /descargar factura/i }),
-    ).toBeNull()
+    expect(screen.queryByRole('button', { name: /ver factura/i })).toBeNull()
   })
 })
 
@@ -189,12 +225,45 @@ describe('R12: responsive layout of the download links row', () => {
       />,
     )
 
-    const evidenceLink = screen.getByRole('link', {
-      name: /descargar comprobante de pago/i,
+    const evidenceAction = screen.getByRole('button', {
+      name: /ver comprobante de pago/i,
     })
-    expect(evidenceLink.getAttribute('href')).toBe(
-      odcFileUrl(odc.id ?? '', 'evidence'),
+    expect(odcFileUrl(odc.id ?? '', 'evidence')).toBe(
+      '/api/odcs/o1/files/evidence',
     )
-    expect(evidenceLink.parentElement?.className).toMatch(/flex-wrap/)
+    expect(evidenceAction.parentElement?.className).toMatch(/flex-wrap/)
+  })
+})
+
+describe('R7: resilient and accessible document preview', () => {
+  it('shows a recoverable error and keeps the external fallback when rendering fails', async () => {
+    render(
+      <OdcDetail
+        odc={{
+          ...odc,
+          status: 'COMPLETADA',
+          rejectionReason: null,
+          hasPaymentEvidence: true,
+        }}
+      />,
+    )
+
+    fireEvent.click(
+      screen.getByRole('button', { name: /ver comprobante de pago/i }),
+    )
+    fireEvent.error(screen.getByTitle(/vista previa del comprobante de pago/i))
+
+    const dialog = screen.getByRole('dialog')
+    await waitFor(() =>
+      expect(within(dialog).getByRole('alert').textContent).toMatch(
+        /no pudimos mostrar el documento/i,
+      ),
+    )
+    expect(
+      within(dialog).getByRole('button', { name: /reintentar/i }),
+    ).toBeTruthy()
+    expect(
+      within(dialog).getByRole('link', { name: /abrir en otra pestaña/i }),
+    ).toBeTruthy()
   })
 })

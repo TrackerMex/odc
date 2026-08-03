@@ -12,6 +12,7 @@ import { GetInvoiceFileUseCase } from './get-invoice-file.usecase';
 const VIEWER_ID = 'a3d1c9a2-0000-4000-8000-000000000001';
 const ODC_ID = 'b4e2d8b3-0000-4000-8000-000000000010';
 const INVOICE_PUBLIC_ID = 'odc/ODC-2026-00001/invoice/xyz789';
+const INVOICE_REFERENCE = `cloudinary:v1:image:pdf:${INVOICE_PUBLIC_ID}`;
 const SIGNED_URL =
   'https://res.cloudinary.com/odc-cloud/raw/authenticated/s--signature--/xyz789';
 
@@ -84,6 +85,24 @@ describe('R5: GET files/invoice resolves a short-lived signed Cloudinary URL', (
       publicId: INVOICE_PUBLIC_ID,
     });
     expect(url).toBe(SIGNED_URL);
+  });
+});
+
+describe('R2: GET files/invoice passes real delivery metadata to the storage port', () => {
+  it('parses a versioned reference before requesting the signed URL', async () => {
+    const order = buildOrder({ invoiceFile: INVOICE_REFERENCE });
+    const getOdcUseCase = { execute: jest.fn().mockResolvedValue(order) };
+    const fileStorageService = createFileStorageServiceMock();
+    fileStorageService.getSignedUrl.mockResolvedValue(SIGNED_URL);
+    const useCase = createUseCase(getOdcUseCase, fileStorageService);
+
+    await useCase.execute(ODC_ID, viewer);
+
+    expect(fileStorageService.getSignedUrl).toHaveBeenCalledWith({
+      publicId: INVOICE_PUBLIC_ID,
+      resourceType: 'image',
+      format: 'pdf',
+    });
   });
 });
 

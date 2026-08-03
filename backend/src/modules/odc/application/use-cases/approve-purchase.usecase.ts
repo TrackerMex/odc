@@ -4,11 +4,13 @@ import {
   OdcActor,
   PurchaseOrder,
 } from '../../domain/entities/purchase-order.entity';
+import { OdcAccessDeniedError } from '../../domain/errors/odc-access-denied.error';
 import { OdcNotFoundError } from '../../domain/errors/odc-not-found.error';
 import type { PurchaseOrderRepository } from '../../domain/repositories/purchase-order.repository';
 
 // T5: PRESUPUESTO_APROBADO -> COMPRA_APROBADA. Any DIRECTOR_GENERAL user may
-// approve the purchase of any ODC visible to them, without a creator check.
+// approve the purchase of any ODC visible to them, except their own
+// (segregation of duties, R2 of odc-approval-self-check).
 @Injectable()
 export class ApprovePurchaseUseCase {
   constructor(
@@ -20,6 +22,11 @@ export class ApprovePurchaseUseCase {
     const order = await this.purchaseOrderRepository.findById(odcId);
     if (order === null) {
       throw new OdcNotFoundError(odcId);
+    }
+    if (order.createdById === actor.userId) {
+      throw new OdcAccessDeniedError(
+        'The creator cannot approve the purchase of their own ODC',
+      );
     }
     const record = order.transition('approve_purchase', actor.role);
     const entry = new OdcStatusHistoryEntry(

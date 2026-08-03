@@ -109,7 +109,11 @@ export function ExecutiveTasks({
           </Alert>
         ) : null}
 
-        <section aria-labelledby="all-tasks-title" aria-busy={loading}>
+        <section
+          aria-labelledby="all-tasks-title"
+          aria-busy={loading}
+          className="transition-opacity duration-150 motion-reduce:transition-none"
+        >
           <Card>
             <CardHeader className="border-b border-border/60">
               <CardTitle id="all-tasks-title">Tareas accionables</CardTitle>
@@ -123,7 +127,11 @@ export function ExecutiveTasks({
                   Cuando haya una orden que requiera tu intervención aparecerá aquí.
                 </div>
               ) : (
-                <ul className="divide-y divide-border/70" aria-label="Todas las tareas accionables">
+                <ul
+                  key={taskPage.page}
+                  className="odc-filter-results divide-y divide-border/70"
+                  aria-label="Todas las tareas accionables"
+                >
                   {taskPage.items.map((task) => (
                     <li key={task.id} className="py-4 first:pt-0 last:pb-0">
                       <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">

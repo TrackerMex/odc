@@ -20,6 +20,7 @@ import {
 } from '@/components/ui/dialog'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
+import { toast } from '@/components/ui/toast'
 
 interface GeneralApprovalActionsProps {
   odc: Odc
@@ -56,7 +57,13 @@ export function GeneralApprovalActions({
     setSubmitting('approve')
     setError(null)
     try {
-      onSuccess(await approve())
+      const nextOdc = await approve()
+      toast.add({
+        type: 'success',
+        title: 'Compra aprobada',
+        description: 'La orden está lista para registrar el pago.',
+      })
+      onSuccess(nextOdc)
     } catch {
       setError('No pudimos aprobar la compra. Intenta nuevamente.')
     } finally {
@@ -75,7 +82,13 @@ export function GeneralApprovalActions({
     setSubmitting('reject')
     setError(null)
     try {
-      onSuccess(await reject(trimmedReason))
+      const nextOdc = await reject(trimmedReason)
+      toast.add({
+        type: 'success',
+        title: 'Compra rechazada',
+        description: 'La orden volvió con observaciones al solicitante.',
+      })
+      onSuccess(nextOdc)
       setDialogOpen(false)
       setReason('')
     } catch {
@@ -179,9 +192,7 @@ export function GeneralApprovalActions({
                 variant="destructive"
                 disabled={submitting !== null}
               >
-                {submitting === 'reject'
-                  ? 'Rechazando…'
-                  : 'Confirmar rechazo'}
+                {submitting === 'reject' ? 'Rechazando…' : 'Confirmar rechazo'}
               </Button>
             </DialogFooter>
           </form>

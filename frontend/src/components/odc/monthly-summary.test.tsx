@@ -1,5 +1,12 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react'
+import {
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+  within,
+} from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import type * as RouterModule from '@tanstack/react-router'
 import { MonthlySummary } from './monthly-summary'
 
 const { getMonthlyPurchaseSummary, exportMonthlySummarySlide } = vi.hoisted(
@@ -11,6 +18,17 @@ const { getMonthlyPurchaseSummary, exportMonthlySummarySlide } = vi.hoisted(
 
 vi.mock('@/lib/api', () => ({ getMonthlyPurchaseSummary }))
 vi.mock('@/lib/monthly-summary-export', () => ({ exportMonthlySummarySlide }))
+vi.mock('@tanstack/react-router', async (importOriginal) => {
+  const actual = await importOriginal<typeof RouterModule>()
+  return {
+    ...actual,
+    Link: ({ children, params, ...props }: any) => (
+      <a href={`/odcs/${params.id}`} {...props}>
+        {children}
+      </a>
+    ),
+  }
+})
 
 const summary = {
   month: '2026-07',
@@ -43,8 +61,23 @@ const summary = {
   ],
 }
 
+function summaryWithPurchases(month: string, count: number) {
+  return {
+    ...summary,
+    month,
+    purchaseCount: count,
+    purchases: Array.from({ length: count }, (_, index) => ({
+      ...summary.purchases[0],
+      id: `o${index + 1}`,
+      odcNumber: `ODC-2026-${String(index + 1).padStart(5, '0')}`,
+      description: `Compra ${index + 1}`,
+    })),
+  }
+}
+
 describe('R3,R5,R6,R7,R8,R9: monthly operations summary', () => {
   beforeEach(() => {
+    window.history.replaceState({}, '', '/monthly-summary')
     getMonthlyPurchaseSummary.mockResolvedValue(summary)
     exportMonthlySummarySlide.mockResolvedValue(undefined)
   })
@@ -65,8 +98,49 @@ describe('R3,R5,R6,R7,R8,R9: monthly operations summary', () => {
     expect(screen.getByText('Ingreso a almacén')).toBeTruthy()
   })
 
-  it('loads the selected month and exports the same report as image or PDF', async () => {
+  it('R5: links a completed ODC to its detail without changing the export slide', async () => {
     render(<MonthlySummary initialSummary={summary} />)
+
+    const detailTable = await screen.findByTestId('monthly-summary-detail')
+    const detailLink = within(detailTable).getByRole('link', {
+      name: 'ODC-2026-00001',
+    })
+    expect(detailLink.getAttribute('href')).toBe('/odcs/o1')
+
+    const exportedSlide = screen
+      .getAllByText('ODC-2026-00001')
+      .find((element) => element.closest('[aria-hidden="true"]'))
+    expect(exportedSlide?.closest('a')).toBeNull()
+  })
+
+  it('R5: restores the selected month and page from the URL', async () => {
+    const julySummary = summaryWithPurchases('2026-07', 12)
+    window.history.replaceState({}, '', '/monthly-summary?month=2026-07&page=2')
+    getMonthlyPurchaseSummary.mockResolvedValue(julySummary)
+
+    render(
+      <MonthlySummary initialSummary={summaryWithPurchases('2026-06', 1)} />,
+    )
+
+    await waitFor(() =>
+      expect(screen.getByText('Mostrando 11–12 de 12 compras')).toBeTruthy(),
+    )
+    expect(window.location.search).toContain('month=2026-07')
+    expect(window.location.search).toContain('page=2')
+  })
+
+  it('loads the selected month and exports the same report as image or PDF', async () => {
+    getMonthlyPurchaseSummary.mockImplementation((month: string) =>
+      Promise.resolve(month === '2026-08' ? { ...summary, month } : summary),
+    )
+    render(<MonthlySummary initialSummary={summary} />)
+
+    await waitFor(() =>
+      expect(screen.getByTestId('monthly-summary-results').className).toContain(
+        'odc-filter-results',
+      ),
+    )
+
     fireEvent.change(screen.getByLabelText('Mes de pago'), {
       target: { value: '2026-08' },
     })
@@ -78,7 +152,7 @@ describe('R3,R5,R6,R7,R8,R9: monthly operations summary', () => {
     await waitFor(() =>
       expect(exportMonthlySummarySlide).toHaveBeenCalledWith(
         expect.any(HTMLElement),
-        '2026-07',
+        '2026-08',
         'png',
       ),
     )
@@ -86,10 +160,60 @@ describe('R3,R5,R6,R7,R8,R9: monthly operations summary', () => {
     await waitFor(() =>
       expect(exportMonthlySummarySlide).toHaveBeenCalledWith(
         expect.any(HTMLElement),
-        '2026-07',
+        '2026-08',
         'pdf',
       ),
     )
+  })
+
+  it('R5,R7,R8: paginates the detail, resets for a new month, and exports the complete current summary', async () => {
+    const julySummary = summaryWithPurchases('2026-07', 12)
+    const augustSummary = summaryWithPurchases('2026-08', 2)
+    getMonthlyPurchaseSummary.mockImplementation((month: string) =>
+      Promise.resolve(month === '2026-08' ? augustSummary : julySummary),
+    )
+
+    render(<MonthlySummary initialSummary={julySummary} />)
+
+    await waitFor(() =>
+      expect(screen.getByText('Mostrando 1–10 de 12 compras')).toBeTruthy(),
+    )
+    expect(
+      within(screen.getByTestId('monthly-summary-detail')).queryByText(
+        'Compra 11',
+      ),
+    ).toBeNull()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Página siguiente' }))
+    expect(screen.getByText('Mostrando 11–12 de 12 compras')).toBeTruthy()
+    expect(
+      within(screen.getByTestId('monthly-summary-detail')).getByText(
+        'Compra 11',
+      ),
+    ).toBeTruthy()
+
+    fireEvent.change(screen.getByLabelText('Mes de pago'), {
+      target: { value: '2026-08' },
+    })
+    await waitFor(() =>
+      expect(
+        within(screen.getByTestId('monthly-summary-detail')).getByText(
+          'Compra 1',
+        ),
+      ).toBeTruthy(),
+    )
+
+    fireEvent.click(screen.getByRole('button', { name: 'Imagen' }))
+    await waitFor(() =>
+      expect(exportMonthlySummarySlide).toHaveBeenCalledWith(
+        expect.any(HTMLElement),
+        '2026-08',
+        'png',
+      ),
+    )
+    const exportedElement = exportMonthlySummarySlide.mock.calls.at(-1)?.[0]
+    expect(exportedElement.textContent).toContain('Compra 1')
+    expect(exportedElement.textContent).toContain('Compra 2')
   })
 
   it('communicates an API failure and preserves an accessible recovery state', async () => {

@@ -14,6 +14,8 @@ import {
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
+import { DatePicker } from '@/components/ui/date-picker'
+import { toast } from '@/components/ui/toast'
 
 export function RegisterPaymentForm({
   odc,
@@ -55,14 +57,18 @@ export function RegisterPaymentForm({
     try {
       const trimmedReference = paymentReference.trim()
       const trimmedNotes = paymentNotes.trim()
-      onSuccess(
-        await register({
-          paymentDate,
-          paymentMethod: trimmedMethod,
-          ...(trimmedReference ? { paymentReference: trimmedReference } : {}),
-          ...(trimmedNotes ? { paymentNotes: trimmedNotes } : {}),
-        }),
-      )
+      const nextOdc = await register({
+        paymentDate,
+        paymentMethod: trimmedMethod,
+        ...(trimmedReference ? { paymentReference: trimmedReference } : {}),
+        ...(trimmedNotes ? { paymentNotes: trimmedNotes } : {}),
+      })
+      toast.add({
+        type: 'success',
+        title: 'Pago registrado',
+        description: 'Administración ya puede adjuntar el comprobante.',
+      })
+      onSuccess(nextOdc)
     } catch {
       setError('No pudimos registrar el pago. Intenta nuevamente.')
     } finally {
@@ -87,11 +93,11 @@ export function RegisterPaymentForm({
           >
             <div className="space-y-2">
               <Label htmlFor="payment-date">Fecha de pago</Label>
-              <Input
+              <DatePicker
                 id="payment-date"
-                type="date"
+                label="Fecha de pago"
                 value={paymentDate}
-                onChange={(event) => setPaymentDate(event.target.value)}
+                onChange={setPaymentDate}
                 disabled={submitting}
               />
             </div>

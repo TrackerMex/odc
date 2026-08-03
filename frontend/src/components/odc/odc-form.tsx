@@ -41,6 +41,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
+import { toast } from '@/components/ui/toast'
 
 type FieldErrors = Partial<Record<OdcFormField, string>>
 
@@ -141,12 +142,22 @@ export function OdcForm({
       setValues(valuesFromOdc(saved))
 
       if (action === 'save') {
+        toast.add({
+          type: 'success',
+          title: 'ODC guardada',
+          description: 'La orden quedó como borrador.',
+        })
         onSuccess(saved)
         return
       }
 
       if (!saved.id) throw new Error('Created ODC has no id')
       const sent = await submit(saved.id)
+      toast.add({
+        type: 'success',
+        title: 'ODC enviada',
+        description: 'Administración ya puede validar el presupuesto.',
+      })
       onSuccess(sent)
     } catch (error) {
       setOperationError(operationErrorMessage(error))

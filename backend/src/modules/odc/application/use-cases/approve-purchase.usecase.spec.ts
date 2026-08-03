@@ -6,6 +6,7 @@ import {
 } from '../../domain/entities/purchase-order.entity';
 import { InvalidRoleTransitionError } from '../../domain/errors/invalid-role-transition.error';
 import { InvalidStatusTransitionError } from '../../domain/errors/invalid-status-transition.error';
+import { OdcAccessDeniedError } from '../../domain/errors/odc-access-denied.error';
 import { OdcNotFoundError } from '../../domain/errors/odc-not-found.error';
 import { ApprovePurchaseUseCase } from './approve-purchase.usecase';
 
@@ -149,4 +150,19 @@ describe('R2: approve-purchase rejects unknown ids and non-PRESUPUESTO_APROBADO 
       expect(repository.update).not.toHaveBeenCalled();
     },
   );
+});
+
+describe('R2: approve-purchase rejects self-approval by the ODC creator (odc-approval-self-check)', () => {
+  it('throws OdcAccessDeniedError without transitioning or persisting when the actor created the ODC', async () => {
+    const repository = createRepositoryMock();
+    const order = buildOrder({ createdById: DIRECTOR_GENERAL_ID });
+    repository.findById.mockResolvedValue(order);
+    const useCase = createUseCase(repository);
+
+    await expect(
+      useCase.execute(ODC_ID, directorGeneralActor),
+    ).rejects.toBeInstanceOf(OdcAccessDeniedError);
+    expect(order.status).toBe('PRESUPUESTO_APROBADO');
+    expect(repository.update).not.toHaveBeenCalled();
+  });
 });

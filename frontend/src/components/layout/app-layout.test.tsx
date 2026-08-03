@@ -16,7 +16,19 @@ vi.mock('@/lib/api', async (importOriginal) => {
 
 vi.mock('@tanstack/react-router', async (importOriginal) => {
   const actual = await importOriginal<typeof RouterModule>()
-  return { ...actual, useNavigate: () => navigateMock }
+  return {
+    ...actual,
+    Link: ({ children, to, viewTransition, ...props }: any) => (
+      <a
+        href={to}
+        data-view-transition={viewTransition ? 'true' : undefined}
+        {...props}
+      >
+        {children}
+      </a>
+    ),
+    useNavigate: () => navigateMock,
+  }
 })
 
 const user = {
@@ -54,6 +66,22 @@ describe('R11: authenticated layout shows fullName/role and a logout control, no
 
     expect(screen.queryByText(/proyectos/i)).toBeNull()
     expect(screen.queryByText(/equipos/i)).toBeNull()
+  })
+})
+
+describe('route navigation', () => {
+  it('uses SPA links with view transitions while keeping the work area isolated', () => {
+    renderAppLayout()
+
+    expect(
+      screen.getByRole('link', { name: 'Nueva orden' }).getAttribute('href'),
+    ).toBe('/odcs/new')
+    expect(
+      screen
+        .getByRole('link', { name: 'Nueva orden' })
+        .getAttribute('data-view-transition'),
+    ).toBe('true')
+    expect(document.querySelector('.odc-route-content')).toBeTruthy()
   })
 })
 
