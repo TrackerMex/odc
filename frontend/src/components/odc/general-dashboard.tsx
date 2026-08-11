@@ -22,7 +22,7 @@ export function GeneralDashboard({
     <main className="min-w-0 flex-1 p-4 sm:p-6">
       <div className="mx-auto max-w-[1400px]">
         <header className="mb-8">
-          <p className="text-xs font-semibold tracking-[0.18em] text-muted-foreground uppercase">
+          <p className="text-xs font-semibold tracking-[0.06em] text-muted-foreground uppercase">
             Dirección General
           </p>
           <h1 className="mt-2 text-2xl font-semibold tracking-tight">
@@ -37,7 +37,7 @@ export function GeneralDashboard({
                 <div className="min-w-0">
                   <div className="mb-2 flex items-center gap-2 text-muted-foreground">
                     <BadgeCheckIcon className="size-4" aria-hidden="true" />
-                    <span className="text-xs font-semibold tracking-[0.12em] uppercase">
+                    <span className="text-xs font-semibold tracking-[0.06em] uppercase">
                       Dirección General
                     </span>
                   </div>

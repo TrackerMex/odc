@@ -77,7 +77,7 @@ function QueueCard({
           <div className="min-w-0">
             <div className="mb-2 flex items-center gap-2 text-muted-foreground">
               <Icon className="size-4" aria-hidden="true" />
-              <span className="text-xs font-semibold tracking-[0.12em] uppercase">
+              <span className="text-xs font-semibold tracking-[0.06em] uppercase">
                 Flujo de compra
               </span>
             </div>
@@ -141,7 +141,7 @@ export function OdcDashboard({
       <div className="mx-auto max-w-[1400px]">
         <header className="mb-8 flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <p className="text-xs font-semibold tracking-[0.18em] text-muted-foreground uppercase">
+            <p className="text-xs font-semibold tracking-[0.06em] text-muted-foreground uppercase">
               Operaciones
             </p>
             <h1 className="mt-2 text-2xl font-semibold tracking-tight">
@@ -151,12 +151,12 @@ export function OdcDashboard({
           <div className="flex flex-wrap gap-2 self-start">
             <Link
               to="/monthly-summary"
-              className={buttonVariants({ variant: 'outline', size: 'lg' })}
+              className={buttonVariants({ variant: 'outline', size: 'sm' })}
             >
               <ChartNoAxesCombinedIcon />
               Resumen mensual
             </Link>
-            <Link to="/odcs/new" className={cn(buttonVariants({ size: 'lg' }))}>
+            <Link to="/odcs/new" className={cn(buttonVariants({ size: 'sm' }))}>
               <PlusIcon />
               Nueva ODC
             </Link>

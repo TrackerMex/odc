@@ -111,7 +111,7 @@ function DashboardHeader({
       className="flex flex-col gap-5 border-b border-border/70 pb-6 sm:flex-row sm:items-end sm:justify-between"
     >
       <div className="max-w-2xl">
-        <p className="text-xs font-semibold tracking-[0.14em] text-muted-foreground uppercase">
+        <p className="text-xs font-semibold tracking-[0.06em] text-muted-foreground uppercase">
           {copy.label}
         </p>
         <h1
@@ -171,7 +171,7 @@ function PriorityQueue({
             </div>
           ) : (
             <>
-              <div className="hidden grid-cols-[minmax(0,1.8fr)_minmax(8rem,0.8fr)_minmax(6rem,0.55fr)_minmax(7rem,0.7fr)_minmax(9rem,0.9fr)] gap-4 border-b border-border/60 pb-3 text-xs font-semibold tracking-[0.1em] text-muted-foreground uppercase lg:grid">
+              <div className="hidden grid-cols-[minmax(0,1.8fr)_minmax(8rem,0.8fr)_minmax(6rem,0.55fr)_minmax(7rem,0.7fr)_minmax(9rem,0.9fr)] gap-4 border-b border-border/60 pb-3 text-xs font-semibold tracking-[0.06em] text-muted-foreground uppercase lg:grid">
                 <span>Orden / proveedor</span>
                 <span>Estado</span>
                 <span>Antigüedad</span>
@@ -206,25 +206,25 @@ function PriorityQueue({
                     </Link>
                     <div className="lg:contents">
                       <div className="lg:justify-self-start">
-                        <span className="mr-2 text-xs font-semibold tracking-[0.1em] text-muted-foreground uppercase lg:hidden">
+                        <span className="mr-2 text-xs font-semibold tracking-[0.06em] text-muted-foreground uppercase lg:hidden">
                           Estado
                         </span>
                         <OdcStatusBadge status={task.status} />
                       </div>
                       <p className="text-sm tabular-nums lg:text-muted-foreground">
-                        <span className="mr-2 text-xs font-semibold tracking-[0.1em] text-muted-foreground uppercase lg:hidden">
+                        <span className="mr-2 text-xs font-semibold tracking-[0.06em] text-muted-foreground uppercase lg:hidden">
                           Antigüedad
                         </span>
                         {task.ageDays} {task.ageDays === 1 ? 'día' : 'días'}
                       </p>
                       <p className="text-sm font-medium tabular-nums lg:text-right">
-                        <span className="mr-2 text-xs font-semibold tracking-[0.1em] text-muted-foreground uppercase lg:hidden">
+                        <span className="mr-2 text-xs font-semibold tracking-[0.06em] text-muted-foreground uppercase lg:hidden">
                           Importe
                         </span>
                         {formatCurrency(task.totalCents)}
                       </p>
                       <div className="lg:text-right">
-                        <span className="mr-2 text-xs font-semibold tracking-[0.1em] text-muted-foreground uppercase lg:hidden">
+                        <span className="mr-2 text-xs font-semibold tracking-[0.06em] text-muted-foreground uppercase lg:hidden">
                           Siguiente acción
                         </span>
                         <PriorityAction role={dashboard.role} task={task} />
@@ -269,7 +269,7 @@ function Metric({
   return (
     <div className="min-w-0 rounded-2xl bg-muted/55 p-4 ring-1 ring-foreground/5 dark:ring-foreground/10">
       <div className="flex items-center justify-between gap-3">
-        <p className="text-xs font-semibold tracking-[0.1em] text-muted-foreground uppercase">
+        <p className="text-xs font-semibold tracking-[0.06em] text-muted-foreground uppercase">
           {label}
         </p>
         <Icon className="size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
