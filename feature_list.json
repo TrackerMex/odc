@@ -171,7 +171,7 @@
   {
     "id": 30,
     "name": "ui-dead-surfaces-audit",
-    "status": "spec_ready",
+    "status": "in_progress",
     "priority": "P1"
   }
 ]
