@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { FileTextIcon } from 'lucide-react'
 import type { UploadInvoicePayload } from '@/lib/api'
 import type { SessionUser } from '@/lib/session'
@@ -8,6 +8,7 @@ import {
   Card,
   CardContent,
   CardDescription,
+  CardFooter,
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
@@ -15,6 +16,14 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { DatePicker } from '@/components/ui/date-picker'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
 import { toast } from '@/components/ui/toast'
 
 const MAX_FILE_SIZE = 10_485_760
@@ -40,35 +49,61 @@ export function UploadInvoiceForm({
   const [invoiceDate, setInvoiceDate] = useState('')
   const [warehouseEntryDate, setWarehouseEntryDate] = useState('')
   const [observations, setObservations] = useState('')
-  const [error, setError] = useState<string | null>(null)
+  const [fileError, setFileError] = useState<string | null>(null)
+  const [warehouseEntryDateError, setWarehouseEntryDateError] = useState<
+    string | null
+  >(null)
+  const [apiError, setApiError] = useState<string | null>(null)
+  const [dialogOpen, setDialogOpen] = useState(false)
   const [submitting, setSubmitting] = useState(false)
+  const fileRef = useRef<HTMLInputElement>(null)
+  const warehouseEntryDateRef = useRef<HTMLInputElement>(null)
 
   if (role !== 'DIRECTOR_OPS' || odc.status !== 'EVIDENCIA_PAGO_SUBIDA') {
     return null
   }
 
+  function fileValidationMessage(selectedFile: File | null) {
+    if (!selectedFile) return 'El archivo de la factura es obligatorio.'
+    if (!ALLOWED_FILE_TYPES.has(selectedFile.type)) {
+      return 'Selecciona un archivo PDF, JPG o PNG.'
+    }
+    if (selectedFile.size > MAX_FILE_SIZE) {
+      return 'El archivo no puede superar 10 MB.'
+    }
+    return null
+  }
+
+  function validateWarehouseEntryDate() {
+    const message = warehouseEntryDate
+      ? null
+      : 'La fecha de entrada a almacén es obligatoria.'
+    setWarehouseEntryDateError(message)
+    return message
+  }
+
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
     if (submitting) return
-    if (!file) {
-      setError('El archivo de la factura es obligatorio.')
-      return
-    }
-    if (!ALLOWED_FILE_TYPES.has(file.type)) {
-      setError('Selecciona un archivo PDF, JPG o PNG.')
-      return
-    }
-    if (file.size > MAX_FILE_SIZE) {
-      setError('El archivo no puede superar 10 MB.')
-      return
-    }
-    if (!warehouseEntryDate) {
-      setError('La fecha de entrada a almacén es obligatoria.')
+    const nextFileError = fileValidationMessage(file)
+    const nextWarehouseEntryDateError = warehouseEntryDate
+      ? null
+      : 'La fecha de entrada a almacén es obligatoria.'
+    setFileError(nextFileError)
+    setWarehouseEntryDateError(nextWarehouseEntryDateError)
+    if (nextFileError || nextWarehouseEntryDateError) {
+      ;(nextFileError ? fileRef : warehouseEntryDateRef).current?.focus()
       return
     }
 
+    setApiError(null)
+    setDialogOpen(true)
+  }
+
+  async function handleConfirm() {
+    if (submitting || !file) return
     setSubmitting(true)
-    setError(null)
+    setApiError(null)
     try {
       const nextOdc = await upload(file, {
         warehouseEntryDate,
@@ -82,8 +117,9 @@ export function UploadInvoiceForm({
         description: 'La orden de compra se completó correctamente.',
       })
       onSuccess(nextOdc)
+      setDialogOpen(false)
     } catch {
-      setError('No pudimos subir la factura. Intenta nuevamente.')
+      setApiError('No pudimos subir la factura. Intenta nuevamente.')
     } finally {
       setSubmitting(false)
     }
@@ -98,24 +134,38 @@ export function UploadInvoiceForm({
             Adjunta un PDF, JPG o PNG de hasta 10 MB.
           </CardDescription>
         </CardHeader>
-        <CardContent>
-          <form
-            onSubmit={handleSubmit}
-            className="space-y-5"
-            aria-busy={submitting}
-          >
+        <form
+          className="contents"
+          onSubmit={handleSubmit}
+          aria-busy={submitting}
+        >
+          <CardContent className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="invoice-file">Archivo de la factura</Label>
               <Input
+                ref={fileRef}
                 id="invoice-file"
                 type="file"
                 accept="application/pdf,image/jpeg,image/png"
                 onChange={(event) => {
-                  setFile(event.target.files?.[0] ?? null)
-                  setError(null)
+                  const nextFile = event.target.files?.[0] ?? null
+                  setFile(nextFile)
+                  setFileError(fileValidationMessage(nextFile))
+                  setApiError(null)
                 }}
                 disabled={submitting}
+                aria-invalid={Boolean(fileError)}
+                aria-describedby={fileError ? 'invoice-file-error' : undefined}
               />
+              {fileError ? (
+                <p
+                  id="invoice-file-error"
+                  role="alert"
+                  className="text-sm text-destructive"
+                >
+                  {fileError}
+                </p>
+              ) : null}
             </div>
             <div className="space-y-2">
               <Label htmlFor="invoice-number">Número de factura</Label>
@@ -145,9 +195,30 @@ export function UploadInvoiceForm({
                 id="warehouse-entry-date"
                 label="Fecha de entrada a almacén"
                 value={warehouseEntryDate}
-                onChange={setWarehouseEntryDate}
+                onChange={(value) => {
+                  setWarehouseEntryDate(value)
+                  setWarehouseEntryDateError(null)
+                  setApiError(null)
+                }}
+                onBlur={validateWarehouseEntryDate}
                 disabled={submitting}
+                aria-invalid={Boolean(warehouseEntryDateError)}
+                aria-describedby={
+                  warehouseEntryDateError
+                    ? 'warehouse-entry-date-error'
+                    : undefined
+                }
+                inputRef={warehouseEntryDateRef}
               />
+              {warehouseEntryDateError ? (
+                <p
+                  id="warehouse-entry-date-error"
+                  role="alert"
+                  className="text-sm text-destructive"
+                >
+                  {warehouseEntryDateError}
+                </p>
+              ) : null}
             </div>
             <div className="space-y-2">
               <Label htmlFor="invoice-observations">Observaciones</Label>
@@ -159,18 +230,55 @@ export function UploadInvoiceForm({
                 placeholder="Opcional"
               />
             </div>
-            {error ? (
-              <p role="alert" className="text-sm text-destructive">
-                {error}
-              </p>
-            ) : null}
+          </CardContent>
+          <CardFooter className="border-t flex flex-col items-stretch sm:flex-row sm:items-center">
             <Button type="submit" disabled={submitting}>
               <FileTextIcon aria-hidden="true" />
-              {submitting ? 'Subiendo…' : 'Subir factura'}
+              Subir factura
             </Button>
-          </form>
-        </CardContent>
+          </CardFooter>
+        </form>
       </Card>
+
+      <Dialog
+        open={dialogOpen}
+        onOpenChange={(open) => {
+          if (!submitting) setDialogOpen(open)
+        }}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Completar orden</DialogTitle>
+            <DialogDescription>
+              La factura se adjuntará y la orden quedará completada. Confirma
+              que los datos son correctos.
+            </DialogDescription>
+          </DialogHeader>
+          {apiError ? (
+            <p role="alert" className="mt-4 text-sm text-destructive">
+              {apiError}
+            </p>
+          ) : null}
+          <DialogFooter className="mt-6">
+            <Button
+              type="button"
+              variant="outline"
+              disabled={submitting}
+              onClick={() => setDialogOpen(false)}
+            >
+              Cancelar
+            </Button>
+            <Button
+              type="button"
+              variant="confirm"
+              disabled={submitting}
+              onClick={() => void handleConfirm()}
+            >
+              {submitting ? 'Completando…' : 'Completar orden'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </section>
   )
 }

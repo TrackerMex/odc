@@ -228,6 +228,7 @@ describe('R6: file and warehouse entry date validation', () => {
         target: { value: '2026-07-23' },
       })
       fireEvent.click(screen.getByRole('button', { name: /subir factura/i }))
+      fireEvent.click(screen.getByRole('button', { name: /completar orden/i }))
 
       await waitFor(() => expect(upload).toHaveBeenCalledOnce())
     },
@@ -264,7 +265,10 @@ describe('R7: invoice submission and confirmed transition', () => {
     })
     const submit = screen.getByRole('button', { name: /subir factura/i })
     fireEvent.click(submit)
-    fireEvent.click(submit)
+    expect(upload).not.toHaveBeenCalled()
+    const confirm = screen.getByRole('button', { name: /completar orden/i })
+    fireEvent.click(confirm)
+    fireEvent.click(confirm)
 
     expect(upload).toHaveBeenCalledOnce()
     expect(upload).toHaveBeenCalledWith(file, {
@@ -273,7 +277,7 @@ describe('R7: invoice submission and confirmed transition', () => {
       invoiceDate: undefined,
       observations: undefined,
     })
-    expect(submit.hasAttribute('disabled')).toBe(true)
+    expect(confirm.hasAttribute('disabled')).toBe(true)
 
     resolveUpload({
       ...evidenceUploadedOdc(),
@@ -308,22 +312,21 @@ describe('R8: recoverable errors on upload invoice', () => {
       target: { value: '2026-07-23' },
     })
     fireEvent.click(screen.getByRole('button', { name: /subir factura/i }))
+    fireEvent.click(screen.getByRole('button', { name: /completar orden/i }))
 
     await waitFor(() =>
       expect(screen.getByRole('alert').textContent).toMatch(
         /no pudimos subir/i,
       ),
     )
-    expect(
-      (screen.getByLabelText(/número de factura/i) as HTMLInputElement).value,
-    ).toBe('FAC-200')
+    expect(screen.getByLabelText(/número de factura/i).value).toBe('FAC-200')
     expect(
       (screen.getByLabelText(/fecha de entrada a almacén/i) as HTMLInputElement)
         .value,
     ).toBe('2026-07-23')
     expect(
       screen
-        .getByRole('button', { name: /subir factura/i })
+        .getByRole('button', { name: /completar orden/i })
         .hasAttribute('disabled'),
     ).toBe(false)
   })
@@ -353,12 +356,18 @@ describe('R11: loading state and accessibility of upload invoice', () => {
     fireEvent.change(screen.getByLabelText(/fecha de entrada a almacén/i), {
       target: { value: '2026-07-23' },
     })
-    fireEvent.click(screen.getByRole('button', { name: /subir factura/i }))
-
     const form = screen
-      .getByRole('button', { name: /subiendo/i })
+      .getByRole('button', { name: /subir factura/i })
       .closest('form')
+    fireEvent.click(screen.getByRole('button', { name: /subir factura/i }))
+    fireEvent.click(screen.getByRole('button', { name: /completar orden/i }))
+
     expect(form?.getAttribute('aria-busy')).toBe('true')
+    expect(
+      screen
+        .getByRole('button', { name: /completando/i })
+        .hasAttribute('disabled'),
+    ).toBe(true)
     expect(
       (screen.getByLabelText(/número de factura/i) as HTMLInputElement)
         .disabled,
@@ -491,9 +500,9 @@ describe('R6,R11: invoice field validation and focus order', () => {
     const file = screen.getByLabelText(/archivo de la factura/i)
     setFile(file, new File(['text'], 'notes.txt', { type: 'text/plain' }))
     expect(file.getAttribute('aria-describedby')).toBe('invoice-file-error')
-    expect(screen.getByText(/pdf.*jpg.*png/i).getAttribute('role')).toBe(
-      'alert',
-    )
+    expect(
+      document.getElementById('invoice-file-error')?.getAttribute('role'),
+    ).toBe('alert')
 
     const warehouseDate = screen.getByLabelText(/fecha de entrada a almacén/i)
     fireEvent.blur(warehouseDate)

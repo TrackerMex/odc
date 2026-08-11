@@ -70,6 +70,7 @@ describe('R2,R3,R4,R5,R6: ODC form metadata, fields and live total', () => {
     expect(screen.getByLabelText(/unidad/i)).toBeTruthy()
     expect(screen.getByLabelText(/precio unitario/i)).toBeTruthy()
     expect(screen.getByLabelText(/proveedor/i)).toBeTruthy()
+    fireEvent.click(screen.getByRole('button', { name: /añadir comentarios/i }))
     expect(screen.getByLabelText(/comentarios/i)).toBeTruthy()
 
     fireEvent.change(screen.getByLabelText(/cantidad/i), {
@@ -379,9 +380,7 @@ describe('R8: progressive comments, dense fields and total hierarchy', () => {
     fireEvent.change(comments, { target: { value: 'Entrega urgente' } })
     fireEvent.click(trigger)
     fireEvent.click(trigger)
-    expect(
-      (screen.getByLabelText('Comentarios') as HTMLTextAreaElement).value,
-    ).toBe('Entrega urgente')
+    expect(screen.getByLabelText('Comentarios').value).toBe('Entrega urgente')
   })
 
   it('opens existing comments and renders the dense grid, breakdown and footer', () => {

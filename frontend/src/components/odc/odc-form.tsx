@@ -1,5 +1,10 @@
-import { useState } from 'react'
-import { LoaderCircleIcon, SaveIcon, SendIcon } from 'lucide-react'
+import { useRef, useState } from 'react'
+import {
+  ChevronDownIcon,
+  LoaderCircleIcon,
+  SaveIcon,
+  SendIcon,
+} from 'lucide-react'
 import type { SessionUser } from '@/lib/session'
 import { ApiError } from '@/lib/api'
 import {
@@ -22,6 +27,7 @@ import {
   Card,
   CardContent,
   CardDescription,
+  CardFooter,
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
@@ -42,6 +48,11 @@ import {
 } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
 import { toast } from '@/components/ui/toast'
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from '@/components/ui/collapsible'
 
 type FieldErrors = Partial<Record<OdcFormField, string>>
 
@@ -102,14 +113,34 @@ export function OdcForm({
   const [pendingAction, setPendingAction] = useState<'save' | 'send' | null>(
     null,
   )
+  const [commentsOpen, setCommentsOpen] = useState(
+    Boolean(initialOdc?.comments),
+  )
+  const descriptionRef = useRef<HTMLTextAreaElement>(null)
+  const quantityRef = useRef<HTMLInputElement>(null)
+  const unitRef = useRef<HTMLInputElement>(null)
+  const unitPriceRef = useRef<HTMLInputElement>(null)
+  const supplierRef = useRef<HTMLButtonElement>(null)
 
   const totalCents = computeTotalCents(values.quantity, values.unitPrice)
+  const unitPriceCents = Number.isFinite(Number(values.unitPrice))
+    ? Math.round(Number(values.unitPrice) * 100)
+    : 0
   const disabled = pendingAction !== null || suppliers.length === 0
 
   function updateField(field: OdcFormField, value: string) {
     setValues((current) => ({ ...current, [field]: value }))
     setFieldErrors((current) => ({ ...current, [field]: undefined }))
     setOperationError(null)
+  }
+
+  function validateField(field: OdcFormField) {
+    const result = odcFormSchema.safeParse(values)
+    const message = result.success
+      ? undefined
+      : result.error.flatten().fieldErrors[field]?.[0]
+    setFieldErrors((current) => ({ ...current, [field]: message }))
+    return message
   }
 
   function validatedPayload(): OdcPayload | null {
@@ -124,6 +155,19 @@ export function OdcForm({
         supplier: flattened.supplier?.[0],
         comments: flattened.comments?.[0],
       })
+      const refs = {
+        description: descriptionRef,
+        quantity: quantityRef,
+        unit: unitRef,
+        unitPrice: unitPriceRef,
+        supplier: supplierRef,
+      }
+      const firstInvalid = (
+        ['description', 'quantity', 'unit', 'unitPrice', 'supplier'] as const
+      ).find((field) => flattened[field]?.[0])
+      if (firstInvalid) {
+        refs[firstInvalid].current?.focus()
+      }
       return null
     }
     setFieldErrors({})
@@ -195,6 +239,7 @@ export function OdcForm({
             <Field data-invalid={!!fieldErrors.description}>
               <FieldLabel htmlFor="description">Descripción *</FieldLabel>
               <Textarea
+                ref={descriptionRef}
                 id="description"
                 value={values.description}
                 onChange={(event) =>
@@ -202,15 +247,23 @@ export function OdcForm({
                 }
                 placeholder="Describe el bien o servicio"
                 disabled={pendingAction !== null}
+                onBlur={() => validateField('description')}
                 aria-invalid={!!fieldErrors.description}
+                aria-describedby={
+                  fieldErrors.description ? 'description-error' : undefined
+                }
               />
-              <FieldError errors={errorFor('description')} />
+              <FieldError
+                id="description-error"
+                errors={errorFor('description')}
+              />
             </Field>
 
-            <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               <Field data-invalid={!!fieldErrors.quantity}>
                 <FieldLabel htmlFor="quantity">Cantidad *</FieldLabel>
                 <Input
+                  ref={quantityRef}
                   id="quantity"
                   inputMode="numeric"
                   value={values.quantity}
@@ -219,27 +272,35 @@ export function OdcForm({
                   }
                   placeholder="1"
                   disabled={pendingAction !== null}
+                  onBlur={() => validateField('quantity')}
                   aria-invalid={!!fieldErrors.quantity}
+                  aria-describedby={
+                    fieldErrors.quantity ? 'quantity-error' : undefined
+                  }
                 />
-                <FieldError errors={errorFor('quantity')} />
+                <FieldError id="quantity-error" errors={errorFor('quantity')} />
               </Field>
               <Field data-invalid={!!fieldErrors.unit}>
                 <FieldLabel htmlFor="unit">Unidad *</FieldLabel>
                 <Input
+                  ref={unitRef}
                   id="unit"
                   value={values.unit}
                   onChange={(event) => updateField('unit', event.target.value)}
                   placeholder="pieza, servicio, lote…"
                   disabled={pendingAction !== null}
+                  onBlur={() => validateField('unit')}
                   aria-invalid={!!fieldErrors.unit}
+                  aria-describedby={fieldErrors.unit ? 'unit-error' : undefined}
                 />
-                <FieldError errors={errorFor('unit')} />
+                <FieldError id="unit-error" errors={errorFor('unit')} />
               </Field>
               <Field data-invalid={!!fieldErrors.unitPrice}>
                 <FieldLabel htmlFor="unit-price">
                   Precio unitario (MXN) *
                 </FieldLabel>
                 <Input
+                  ref={unitPriceRef}
                   id="unit-price"
                   inputMode="decimal"
                   value={values.unitPrice}
@@ -248,9 +309,16 @@ export function OdcForm({
                   }
                   placeholder="0.00"
                   disabled={pendingAction !== null}
+                  onBlur={() => validateField('unitPrice')}
                   aria-invalid={!!fieldErrors.unitPrice}
+                  aria-describedby={
+                    fieldErrors.unitPrice ? 'unit-price-error' : undefined
+                  }
                 />
-                <FieldError errors={errorFor('unitPrice')} />
+                <FieldError
+                  id="unit-price-error"
+                  errors={errorFor('unitPrice')}
+                />
               </Field>
             </div>
 
@@ -259,12 +327,20 @@ export function OdcForm({
               <Select
                 value={values.supplier || null}
                 onValueChange={(value) => updateField('supplier', value ?? '')}
+                onOpenChange={(open) => {
+                  if (!open) validateField('supplier')
+                }}
                 disabled={pendingAction !== null || suppliers.length === 0}
               >
                 <SelectTrigger
+                  ref={supplierRef}
                   id="supplier"
                   aria-label="Proveedor"
                   aria-invalid={!!fieldErrors.supplier}
+                  aria-describedby={
+                    fieldErrors.supplier ? 'supplier-error' : undefined
+                  }
+                  onBlur={() => validateField('supplier')}
                   className="w-full"
                 >
                   <SelectValue placeholder="Selecciona un proveedor" />
@@ -287,25 +363,66 @@ export function OdcForm({
                   No hay proveedores disponibles.
                 </FieldDescription>
               ) : null}
-              <FieldError errors={errorFor('supplier')} />
+              <FieldError id="supplier-error" errors={errorFor('supplier')} />
             </Field>
 
-            <Field data-invalid={!!fieldErrors.comments}>
-              <FieldLabel htmlFor="comments">Comentarios</FieldLabel>
-              <Textarea
-                id="comments"
-                value={values.comments}
-                onChange={(event) =>
-                  updateField('comments', event.target.value)
-                }
-                placeholder="Información adicional para la compra"
-                disabled={pendingAction !== null}
-                aria-invalid={!!fieldErrors.comments}
-              />
-              <FieldError errors={errorFor('comments')} />
-            </Field>
+            <Collapsible open={commentsOpen} onOpenChange={setCommentsOpen}>
+              <CollapsibleTrigger
+                render={<Button type="button" variant="ghost" />}
+              >
+                <ChevronDownIcon aria-hidden="true" />
+                {commentsOpen ? 'Ocultar comentarios' : 'Añadir comentarios'}
+              </CollapsibleTrigger>
+              <CollapsibleContent className="pt-3">
+                <Field data-invalid={!!fieldErrors.comments}>
+                  <FieldLabel htmlFor="comments">Comentarios</FieldLabel>
+                  <Textarea
+                    id="comments"
+                    value={values.comments}
+                    onChange={(event) =>
+                      updateField('comments', event.target.value)
+                    }
+                    placeholder="Información adicional para la compra"
+                    disabled={pendingAction !== null}
+                    aria-invalid={!!fieldErrors.comments}
+                  />
+                  <FieldError
+                    id="comments-error"
+                    errors={errorFor('comments')}
+                  />
+                </Field>
+              </CollapsibleContent>
+            </Collapsible>
           </FieldGroup>
         </CardContent>
+        <CardFooter className="flex flex-col items-stretch gap-2 border-t sm:flex-row sm:items-center">
+          <Button type="submit" variant="outline" disabled={disabled}>
+            {pendingAction === 'save' ? (
+              <LoaderCircleIcon
+                className="animate-spin motion-reduce:animate-none"
+                aria-hidden="true"
+              />
+            ) : (
+              <SaveIcon aria-hidden="true" />
+            )}
+            {pendingAction === 'save' ? 'Guardando…' : 'Guardar como Borrador'}
+          </Button>
+          <Button
+            type="button"
+            disabled={disabled}
+            onClick={() => void runAction('send')}
+          >
+            {pendingAction === 'send' ? (
+              <LoaderCircleIcon
+                className="animate-spin motion-reduce:animate-none"
+                aria-hidden="true"
+              />
+            ) : (
+              <SendIcon aria-hidden="true" />
+            )}
+            {pendingAction === 'send' ? 'Enviando…' : 'Enviar a Administración'}
+          </Button>
+        </CardFooter>
       </Card>
 
       <aside className="space-y-5 xl:sticky xl:top-6 xl:self-start">
@@ -337,8 +454,14 @@ export function OdcForm({
                 <dd className="text-right font-medium">{user.fullName}</dd>
               </div>
             </dl>
-            <div className="rounded-2xl bg-foreground p-4 text-background">
-              <p className="text-xs font-medium tracking-[0.12em] uppercase opacity-70">
+            <div className="border-t pt-4">
+              <p
+                data-testid="odc-total-breakdown"
+                className="text-sm text-muted-foreground tabular-nums"
+              >
+                {values.quantity || '0'} × {formatCurrency(unitPriceCents)}
+              </p>
+              <p className="mt-3 text-xs font-medium tracking-[0.06em] text-muted-foreground uppercase">
                 Total estimado
               </p>
               <p
@@ -354,7 +477,7 @@ export function OdcForm({
         {operationError ? (
           <div
             role="alert"
-            className="rounded-2xl border border-destructive/20 bg-destructive/10 p-4 text-sm text-destructive"
+            className="rounded-card border border-destructive/20 bg-destructive/3 p-4 text-sm text-destructive"
           >
             <p className="font-medium">No se completó la operación</p>
             <p className="mt-1">{operationError}</p>
@@ -365,30 +488,6 @@ export function OdcForm({
             ) : null}
           </div>
         ) : null}
-
-        <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-1">
-          <Button type="submit" variant="outline" size="lg" disabled={disabled}>
-            {pendingAction === 'save' ? (
-              <LoaderCircleIcon className="animate-spin" aria-hidden="true" />
-            ) : (
-              <SaveIcon aria-hidden="true" />
-            )}
-            {pendingAction === 'save' ? 'Guardando…' : 'Guardar como Borrador'}
-          </Button>
-          <Button
-            type="button"
-            size="lg"
-            disabled={disabled}
-            onClick={() => void runAction('send')}
-          >
-            {pendingAction === 'send' ? (
-              <LoaderCircleIcon className="animate-spin" aria-hidden="true" />
-            ) : (
-              <SendIcon aria-hidden="true" />
-            )}
-            {pendingAction === 'send' ? 'Enviando…' : 'Enviar a Administración'}
-          </Button>
-        </div>
       </aside>
     </form>
   )

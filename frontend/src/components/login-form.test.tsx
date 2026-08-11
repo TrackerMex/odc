@@ -153,12 +153,8 @@ describe('R6,R12: login blur validation, focus and pending state', () => {
     expect(screen.getByTestId('login-form').getAttribute('aria-busy')).toBe(
       'true',
     )
-    expect((screen.getByLabelText('Email') as HTMLInputElement).disabled).toBe(
-      true,
-    )
-    expect(
-      (screen.getByLabelText('Password') as HTMLInputElement).disabled,
-    ).toBe(true)
+    expect(screen.getByLabelText('Email').disabled).toBe(true)
+    expect(screen.getByLabelText('Password').disabled).toBe(true)
     expect(
       screen
         .getByRole('button', { name: /ingresando/i })

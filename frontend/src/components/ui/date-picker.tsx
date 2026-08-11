@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import type { Ref } from 'react'
 import { CalendarDaysIcon } from 'lucide-react'
 import { es } from 'react-day-picker/locale'
 
@@ -38,6 +39,10 @@ export function DatePicker({
   onChange,
   disabled = false,
   mode = 'date',
+  onBlur,
+  'aria-invalid': ariaInvalid,
+  'aria-describedby': ariaDescribedBy,
+  inputRef,
 }: {
   id: string
   label: string
@@ -45,6 +50,10 @@ export function DatePicker({
   onChange: (value: string) => void
   disabled?: boolean
   mode?: DatePickerMode
+  onBlur?: React.FocusEventHandler<HTMLInputElement>
+  'aria-invalid'?: React.AriaAttributes['aria-invalid']
+  'aria-describedby'?: string
+  inputRef?: Ref<HTMLInputElement>
 }) {
   const [open, setOpen] = useState(false)
   const selected = dateFromValue(value, mode)
@@ -52,6 +61,7 @@ export function DatePicker({
   return (
     <div className="flex gap-2">
       <Input
+        ref={inputRef}
         id={id}
         type="text"
         inputMode="numeric"
@@ -59,6 +69,9 @@ export function DatePicker({
         onChange={(event) => onChange(event.target.value)}
         placeholder={mode === 'month' ? 'AAAA-MM' : 'AAAA-MM-DD'}
         disabled={disabled}
+        onBlur={onBlur}
+        aria-invalid={ariaInvalid}
+        aria-describedby={ariaDescribedBy}
       />
       <Button
         type="button"

@@ -6,8 +6,7 @@ import {
   waitFor,
   within,
 } from '@testing-library/react'
-import { odcFileUrl } from '@/lib/odc'
-import { ODC_STATUSES } from '@/lib/odc'
+import { ODC_STATUSES, odcFileUrl } from '@/lib/odc'
 import type { Odc, OdcStatus } from '@/lib/odc'
 import { OdcDetail } from './odc-detail'
 
@@ -368,7 +367,7 @@ describe('R3: semantic rejection and protected preview surfaces', () => {
       .getByText('Esta orden necesita correcciones')
       .closest('[data-rejection-banner]')
     expect(banner?.className).toMatch(/rounded-card/)
-    expect(banner?.className).toMatch(/bg-destructive\/10.*text-destructive/)
+    expect(banner?.className).toMatch(/bg-destructive\/3.*text-destructive/)
     expect(banner?.querySelector('svg')?.getAttribute('class')).toMatch(
       /size-4/,
     )

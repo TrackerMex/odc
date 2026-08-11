@@ -133,7 +133,9 @@ describe('R1: Inter Variable cargada y --font-sans declarada', () => {
       ...readFileSync(file, 'utf8').matchAll(/@fontsource[\w-]*\/([\w-]+)/g),
     ])
     expect(fontImports.length).toBeGreaterThan(0)
-    expect([...new Set(fontImports.map((match) => match[1]))]).toEqual(['inter'])
+    expect([...new Set(fontImports.map((match) => match[1]))]).toEqual([
+      'inter',
+    ])
   })
 })
 
@@ -307,6 +309,21 @@ describe('R5: contraste WCAG 2.1 >= 4.5:1 en los pares auditados', () => {
   })
 })
 
+describe('ui-surfaces-detail-forms R3: contraste del banner destructivo', () => {
+  it.each(['light', 'dark'] as const)(
+    '%s --destructive sobre --destructive/3 compuesto sobre --card',
+    (themeName) => {
+      const destructive = oklchToLinearRgb(themes[themeName]['--destructive'])
+      const surface = compositeOver(
+        destructive,
+        oklchToLinearRgb(themes[themeName]['--card']),
+        0.03,
+      )
+      expect(contrastRatio(destructive, surface)).toBeGreaterThanOrEqual(4.5)
+    },
+  )
+})
+
 describe('R6: radios y escala de espaciado', () => {
   it('declara los tres radios del MASTER §4', () => {
     expect(root['--radius']).toBe('0.375rem')
@@ -340,9 +357,7 @@ describe('R14: prefers-reduced-motion respetado y transiciones de 150-300ms', ()
     expect(cut).toBeGreaterThan(-1)
     const reducedBlock = css.slice(cut)
     const selectors = [
-      ...css
-        .slice(0, cut)
-        .matchAll(/([^{}]+)\{[^{}]*?\banimation:[^{}]*?\}/g),
+      ...css.slice(0, cut).matchAll(/([^{}]+)\{[^{}]*?\banimation:[^{}]*?\}/g),
     ].flatMap((match) => match[1].split(',').map((part) => part.trim()))
     expect(selectors.length).toBeGreaterThan(0)
     expect(
@@ -420,7 +435,9 @@ describe('ui-dark-mode-chroma R1: techo de saturación s = C/L congelado', () =>
 
   it(':root --primary está sujeto al techo como cualquier otro token', () => {
     expect(CEILING_EXEMPT.test('--primary')).toBe(false)
-    expect(saturation(root['--primary'])).toBeLessThanOrEqual(SATURATION_CEILING)
+    expect(saturation(root['--primary'])).toBeLessThanOrEqual(
+      SATURATION_CEILING,
+    )
   })
 })
 
@@ -551,7 +568,9 @@ describe('ui-dark-mode-chroma R9: la verificación en navegador existe', () => {
     '## 3. Las 8 badges de estado en dark',
     '## 4. Veredicto humano',
   ])('el informe declara la sección "%s"', (heading) => {
-    expect(readFileSync(`${repoRoot}progress/verify_ui-dark-mode-chroma.md`, 'utf8')).toContain(heading)
+    expect(
+      readFileSync(`${repoRoot}progress/verify_ui-dark-mode-chroma.md`, 'utf8'),
+    ).toContain(heading)
   })
 })
 
