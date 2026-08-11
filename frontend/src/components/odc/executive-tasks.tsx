@@ -122,7 +122,7 @@ export function ExecutiveTasks({
             </CardHeader>
             <CardContent>
               {taskPage.items.length === 0 ? (
-                <div className="flex min-h-20 items-center rounded-2xl border border-dashed px-5 text-sm text-muted-foreground">
+                <div className="flex min-h-20 items-center rounded-card border border-dashed px-5 text-sm text-muted-foreground">
                   Cuando haya una orden que requiera tu intervención aparecerá aquí.
                 </div>
               ) : (
@@ -132,9 +132,9 @@ export function ExecutiveTasks({
                   aria-label="Todas las tareas accionables"
                 >
                   {taskPage.items.map((task) => (
-                    <li key={task.id} className="py-4 first:pt-0 last:pb-0">
+                    <li key={task.id} className="py-3 first:pt-0 last:pb-0">
                       <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                        <Link to="/odcs/$id" params={{ id: task.id }} className="group min-w-0 rounded-xl outline-none focus-visible:ring-3 focus-visible:ring-ring/30">
+                        <Link to="/odcs/$id" params={{ id: task.id }} className="group min-w-0 rounded-(--radius) outline-none focus-visible:ring-3 focus-visible:ring-ring/30">
                           <div className="flex flex-wrap items-center gap-2"><span className="font-medium group-hover:underline group-hover:underline-offset-4">{task.odcNumber}</span><OdcStatusBadge status={task.status} /><span className="text-xs text-muted-foreground">{task.ageDays} {task.ageDays === 1 ? 'día' : 'días'}</span></div>
                           <p className="mt-1 text-sm text-muted-foreground sm:truncate">{task.description} · {task.supplier}</p>
                           <p className="mt-1 text-sm font-medium tabular-nums">{formatCurrency(task.totalCents)}</p>

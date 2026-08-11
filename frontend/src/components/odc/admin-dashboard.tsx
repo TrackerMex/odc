@@ -81,17 +81,17 @@ function AdminQueue({
       </CardHeader>
       <CardContent>
         {page.items.length === 0 ? (
-          <div className="flex min-h-20 items-center justify-center rounded-2xl border border-dashed px-5 text-center text-sm text-muted-foreground">
+          <div className="flex min-h-20 items-center justify-center rounded-card border border-dashed px-5 text-center text-sm text-muted-foreground">
             No hay órdenes en esta etapa.
           </div>
         ) : (
           <ul className="divide-y divide-border/70" aria-label={title}>
             {page.items.map((odc) => (
-              <li key={odc.id} className="py-3 first:pt-0 last:pb-0">
+              <li key={odc.id} className="py-2 first:pt-0 last:pb-0">
                 <Link
                   to="/odcs/$id"
                   params={{ id: odc.id ?? '' }}
-                  className="group flex min-w-0 items-center justify-between gap-4 rounded-xl outline-none focus-visible:ring-3 focus-visible:ring-ring/30"
+                  className="group flex min-w-0 items-center justify-between gap-4 rounded-(--radius) outline-none focus-visible:ring-3 focus-visible:ring-ring/30"
                 >
                   <div className="min-w-0">
                     <div className="flex flex-wrap items-center gap-2">

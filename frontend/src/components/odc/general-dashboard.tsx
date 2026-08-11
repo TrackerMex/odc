@@ -62,7 +62,7 @@ export function GeneralDashboard({
             </CardHeader>
             <CardContent>
               {page.items.length === 0 ? (
-                <div className="flex min-h-20 items-center justify-center rounded-2xl border border-dashed px-5 text-center text-sm text-muted-foreground">
+                <div className="flex min-h-20 items-center justify-center rounded-card border border-dashed px-5 text-center text-sm text-muted-foreground">
                   No hay órdenes esperando tu aprobación.
                 </div>
               ) : (
@@ -71,11 +71,11 @@ export function GeneralDashboard({
                   aria-label="Esperando mi aprobación"
                 >
                   {page.items.map((odc) => (
-                    <li key={odc.id} className="py-3 first:pt-0 last:pb-0">
+                    <li key={odc.id} className="py-2 first:pt-0 last:pb-0">
                       <Link
                         to="/odcs/$id"
                         params={{ id: odc.id ?? '' }}
-                        className="group flex min-w-0 flex-col gap-3 rounded-xl outline-none focus-visible:ring-3 focus-visible:ring-ring/30 sm:flex-row sm:items-center sm:justify-between"
+                        className="group flex min-w-0 flex-col gap-3 rounded-(--radius) outline-none focus-visible:ring-3 focus-visible:ring-ring/30 sm:flex-row sm:items-center sm:justify-between"
                       >
                         <div className="min-w-0">
                           <div className="flex flex-wrap items-center gap-2">

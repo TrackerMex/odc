@@ -122,7 +122,7 @@ function DashboardHeader({
         </h1>
       </div>
       <div className="flex flex-wrap items-center gap-2 sm:justify-end">
-        <span className="inline-flex h-8 items-center gap-2 rounded-2xl bg-muted px-3 text-sm text-muted-foreground">
+        <span className="inline-flex h-8 items-center gap-2 rounded-(--radius) bg-muted px-3 text-sm text-muted-foreground">
           <CalendarDaysIcon className="size-4" aria-hidden="true" />
           {formatMonth(dashboard.month)}
         </span>
@@ -166,7 +166,7 @@ function PriorityQueue({
         </CardHeader>
         <CardContent>
           {priority.items.length === 0 ? (
-            <div className="flex min-h-20 items-center rounded-2xl border border-dashed px-5 text-sm text-muted-foreground">
+            <div className="flex min-h-20 items-center rounded-card border border-dashed px-5 text-sm text-muted-foreground">
               Cuando haya una orden que requiera tu intervención aparecerá aquí.
             </div>
           ) : (
@@ -185,12 +185,12 @@ function PriorityQueue({
                 {priority.items.map((task) => (
                   <li
                     key={task.id}
-                    className="grid gap-3 py-4 first:pt-0 last:pb-0 lg:grid-cols-[minmax(0,1.8fr)_minmax(8rem,0.8fr)_minmax(6rem,0.55fr)_minmax(7rem,0.7fr)_minmax(9rem,0.9fr)] lg:items-center lg:gap-4"
+                    className="grid gap-3 py-3 first:pt-0 last:pb-0 lg:grid-cols-[minmax(0,1.8fr)_minmax(8rem,0.8fr)_minmax(6rem,0.55fr)_minmax(7rem,0.7fr)_minmax(9rem,0.9fr)] lg:items-center lg:gap-4"
                   >
                     <Link
                       to="/odcs/$id"
                       params={{ id: task.id }}
-                      className="group min-w-0 rounded-xl outline-none focus-visible:ring-3 focus-visible:ring-ring/30"
+                      className="group min-w-0 rounded-(--radius) outline-none focus-visible:ring-3 focus-visible:ring-ring/30"
                     >
                       <div className="flex flex-wrap items-center gap-2">
                         <span className="font-medium group-hover:underline group-hover:underline-offset-4">
@@ -267,7 +267,7 @@ function Metric({
   detail: string
 }) {
   return (
-    <div className="min-w-0 rounded-2xl bg-muted/55 p-4 ring-1 ring-foreground/5 dark:ring-foreground/10">
+    <div className="min-w-0 rounded-card bg-muted/55 p-4 ring-1 ring-foreground/5 dark:ring-foreground/10">
       <div className="flex items-center justify-between gap-3">
         <p className="text-xs font-semibold tracking-[0.06em] text-muted-foreground uppercase">
           {label}
@@ -343,11 +343,11 @@ function AgeingAlerts({
 }) {
   return (
     <section aria-labelledby="ageing-alerts-title" className="min-w-0">
-      <Card className="h-full border-amber-200 dark:border-amber-900/60">
+      <Card className="h-full border-status-pending/50">
         <CardHeader>
           <div className="flex items-center gap-2">
             <AlertTriangleIcon
-              className="size-5 shrink-0 text-amber-600 dark:text-amber-400"
+              className="size-5 shrink-0 text-status-pending"
               aria-hidden="true"
             />
             <CardTitle id="ageing-alerts-title">
@@ -361,7 +361,7 @@ function AgeingAlerts({
         </CardHeader>
         <CardContent>
           {dashboard.oldestActiveOrders.length === 0 ? (
-            <p className="rounded-2xl border border-dashed p-4 text-sm text-muted-foreground">
+            <p className="rounded-card border border-dashed p-4 text-sm text-muted-foreground">
               No hay órdenes activas con antigüedad para mostrar.
             </p>
           ) : (
@@ -374,7 +374,7 @@ function AgeingAlerts({
                   <Link
                     to="/odcs/$id"
                     params={{ id: order.id }}
-                    className="group flex min-w-0 items-center justify-between gap-3 rounded-xl outline-none focus-visible:ring-3 focus-visible:ring-ring/30"
+                    className="group flex min-w-0 items-center justify-between gap-3 rounded-(--radius) outline-none focus-visible:ring-3 focus-visible:ring-ring/30"
                   >
                     <span className="min-w-0">
                       <span className="block font-medium group-hover:underline group-hover:underline-offset-4">
@@ -414,7 +414,7 @@ function TopSuppliers({
         </CardHeader>
         <CardContent>
           {dashboard.topSuppliers.length === 0 ? (
-            <p className="rounded-2xl border border-dashed p-4 text-sm text-muted-foreground">
+            <p className="rounded-card border border-dashed p-4 text-sm text-muted-foreground">
               No hay compras pagadas en este periodo.
             </p>
           ) : (
