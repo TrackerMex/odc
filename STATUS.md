@@ -2,7 +2,8 @@
 
 **Última actualización**: 2026-08-11
 **Features completadas**: 26/30 (`feature_list.json`)
-**Pendientes**: 4; siguiente recomendada: #26 `ui-surfaces-detail-forms`
+**Pendientes**: 4; #26 `ui-surfaces-detail-forms` en `spec_ready`, esperando
+aprobación humana
 **En producción**: no
 
 ---

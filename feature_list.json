@@ -147,7 +147,7 @@
   {
     "id": 26,
     "name": "ui-surfaces-detail-forms",
-    "status": "pending",
+    "status": "spec_ready",
     "priority": "P2"
   },
   {

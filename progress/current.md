@@ -1,33 +1,32 @@
-# Sesión activa
-
-> Este archivo describe el estado de la sesión en curso.
-> Al cerrar la sesión, mueve este contenido a progress/history.md y deja solo esta plantilla.
-
----
-
-## Plantilla (sesión sin iniciar)
+# Sesion en curso — 2026-08-11
 
 ```
-feature: —
-inicio: —
-agentes lanzados: —
-estado: sin sesión activa
+feature: ui-surfaces-detail-forms
+id: 26
+inicio: 2026-08-11 13:43 -06:00
+plan: fases 3b + 3c del refactor visual — detalle, acciones y formularios;
+      revisar la deuda heredada de CardHeader y toast
+estado: spec_ready; implementacion bloqueada por gate humano
+bloqueos: ninguno
+spec_author: hecho -> specs/ui-surfaces-detail-forms/ (14 requisitos)
+gate humano: pendiente
+implementer: no lanzado
+reviewer: no lanzado
 ```
 
----
+## Contexto
 
-_Cuando inicies una sesión, reemplaza la plantilla con:_
+- La feature 30 confirmo que detalle, formularios, login y resumen mensual
+  tienen caminos desde rutas de produccion.
+- El alcance visual se rige por `design-system/odc/MASTER.md` y los overrides
+  `pages/odc-detail.md` y `pages/odc-form.md`.
+- La skill `ui-styling` aporta las guardas de accesibilidad de formularios,
+  foco visible, errores asociados y composicion responsive. Las primitivas
+  existentes sobre `@base-ui/react` y el sistema de diseno local siguen siendo
+  autoritativos; no se regeneran componentes shadcn.
+- La feature esta en `spec_ready`; el siguiente paso es la aprobacion humana
+  de `requirements.md`.
 
-```
-feature: <nombre de la feature>
-id: <id en feature_list.json>
-inicio: <fecha y hora>
-plan:
-  - <paso 1>
-  - <paso 2>
-estado: pending / spec_ready / in_progress / done
-bloqueos: —
-spec_author: pendiente / en curso / done
-implementer: pendiente / en curso / done
-reviewer: pendiente / en curso / aprobado / rechazado
-```
+## Verificacion inicial
+
+`./init.sh` verde: 471 tests backend, 419 frontend, builds y lint correctos.
