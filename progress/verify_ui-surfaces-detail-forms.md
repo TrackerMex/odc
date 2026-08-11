@@ -1,6 +1,6 @@
 # Verificación visual — ui-surfaces-detail-forms
 
-Fecha: 2026-08-11  
+Fecha: 2026-08-11
 Fixture: seed local, `DIRECTOR_OPS`, Chromium headless contra el stack Docker.
 
 ## Light

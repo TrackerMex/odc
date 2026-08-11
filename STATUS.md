@@ -1,8 +1,8 @@
 # ODC — Status
 
 **Última actualización**: 2026-08-11
-**Features completadas**: 26/30 (`feature_list.json`)
-**Pendientes**: 4; #26 `ui-surfaces-detail-forms` en implementación
+**Features completadas**: 27/30 (`feature_list.json`)
+**Pendientes**: 3; siguientes #28, #27 y #29
 **En producción**: no
 
 ---
@@ -81,12 +81,12 @@ Requiere `.env` en la raíz (plantilla en `.env.example`): `DATABASE_URL`,
 - **#24, #25 y #30 done** (2026-08-11): corrección cromática de dark mode,
   refactor de dashboards activos y eliminación auditada de tres dashboards
   sustituidos. Una guarda transitiva impide nuevas superficies ODC sin ruta.
-- Siguiente: #26 `ui-surfaces-detail-forms`; después #28, #27 y #29. Cada una
+- **#26 `ui-surfaces-detail-forms` done** (2026-08-11): detalle y timeline
+  semánticos, acciones integradas en la columna principal, confirmación de
+  cierre y validación accesible con blur/foco en los cinco formularios.
+- Siguientes: #28, #27 y #29. Cada una
   sigue el pipeline `spec_author` → aprobación humana → `implementer` →
   `reviewer`.
-- Deuda anotada (frontend, 2026-08-10): `ui/toast.tsx` fija `rounded-2xl!` con
-  `!` y quedó fuera del alcance de la #23, así que es la única superficie con
-  el radio viejo. Arreglo de una línea, pendiente de feature.
 - Deuda anotada (tests): `general-approval-actions.test.tsx:163` es flaky —
   solo falla con la suite completa, por una carrera de render (`waitFor`
   seguido de `getByText` síncrono). Re-correr antes de culpar a un cambio.
@@ -95,13 +95,15 @@ Requiere `.env` en la raíz (plantilla en `.env.example`): `DATABASE_URL`,
 
 ## Última sesión
 
-**2026-08-11** — Cierre de `ui-dead-surfaces-audit` (#30) → **26/30**.
+**2026-08-11** — Cierre de `ui-surfaces-detail-forms` (#26) → **27/30**.
 
-- Eliminados `OdcDashboard`, `AdminDashboard` y `GeneralDashboard`, ya
-  sustituidos por la portada ejecutiva común.
-- Confirmado que detalle, formularios, login y resumen mensual siguen montados.
-- Añadida guarda transitiva de alcanzabilidad desde rutas de producción.
-- Reviewer aprobado; `./init.sh` verde con 471 tests backend y 419 frontend.
+- Detalle convertido a filas `dt`/`dd`, timeline por tokens de estado y
+  acciones ubicadas antes del sidebar sticky.
+- Validación accesible por blur/change, foco al primer inválido, comentarios
+  colapsables y diálogo explícito para completar la orden.
+- Primera revisión rechazó la atribución ARIA de errores API; la regresión R6
+  se escribió roja y quedó corregida antes de la aprobación final.
+- Reviewer aprobado; `./init.sh` verde con 471 tests backend y 455 frontend.
 
 ---
 
