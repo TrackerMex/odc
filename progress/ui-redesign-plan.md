@@ -2,7 +2,8 @@
 
 > Generado: 2026-08-10 · Fuente: `design-system/odc/MASTER.md` + overrides en
 > `design-system/odc/pages/`
-> Estado: **propuesta, sin aprobar**. Ninguna línea de `frontend/src/` ha sido tocada.
+> Estado: fases 1–2 **implementadas y revisadas en navegador** (feature 23, done
+> 2026-08-10). Fases 3a–3e pendientes. Ver §Revisión en navegador al final.
 
 ## Diagnóstico
 
@@ -129,17 +130,21 @@ La fase 3 son cinco superficies independientes que pueden ir por separado.
 
 | id | name | priority | alcance | estado |
 |---|---|---|---|---|
-| 23 | `ui-design-tokens` | P1 | Fases 1 + 2 | **añadida a `feature_list.json` como `pending`** |
-| 24 | `ui-surfaces-dashboards` | P2 | 3a + 3e | propuesta, sin añadir |
-| 25 | `ui-surfaces-detail-forms` | P2 | 3b + 3c | propuesta, sin añadir |
-| 26 | `ui-surfaces-monthly-summary` | P3 | 3d | propuesta, sin añadir |
+| 23 | `ui-design-tokens` | P1 | Fases 1 + 2 | **done** (2026-08-10) |
+| 24 | `ui-dark-mode-chroma` | P1 | Corrección de dark, ver §Revisión en navegador | **pending** — añadida tras la revisión visual |
+| 25 | `ui-surfaces-dashboards` | P2 | 3a + 3e | propuesta, sin añadir |
+| 26 | `ui-surfaces-detail-forms` | P2 | 3b + 3c | propuesta, sin añadir |
+| 27 | `ui-surfaces-monthly-summary` | P3 | 3d | propuesta, sin añadir |
+
+La 24 no estaba prevista: sale de mirar el resultado de la 23 en un navegador. Va **antes**
+que las superficies, para que 25–27 se diseñen sobre un dark ya correcto.
 
 Cada una pasa por el ciclo SDD normal: `spec_author` → gate humano → `implementer` con TDD
 → `reviewer`. Una feature a la vez.
 
-Las 24–26 se especifican **después** de ver la 23 corriendo: las fases 1 y 2 cambian tanto
-la lectura de la app que las decisiones de la fase 3 conviene tomarlas mirando el
-resultado, no este documento.
+La 23 ya se vio corriendo (§Revisión en navegador), y esa revisión es la que produjo la 24.
+Las 25–27 se especifican después de cerrar la 24, por el mismo motivo: conviene decidir las
+superficies mirando el resultado, no este documento.
 
 ---
 
@@ -179,3 +184,74 @@ Registradas aquí para que sean auditables:
 `.impeccable/design.json` es una caché generada de `/DESIGN.md` (`generatedAt`
 2026-07-27) y quedó obsoleta con esta sincronización. La regenera la propia skill; no se
 edita a mano.
+
+---
+
+## Revisión en navegador (2026-08-10, tras cerrar la #23)
+
+Ejecutada sobre `pnpm vite dev --port 3005` contra el backend del contenedor, sesión
+`ops@odc.local` (DIRECTOR_OPS), 1440×900. Valores tomados con `getComputedStyle` en vivo,
+no deducidos del código.
+
+### Confirmado correcto (light)
+
+Las cuatro causas del diagnóstico inicial están resueltas y verificadas en el navegador:
+
+| Token | Valor computado |
+|---|---|
+| `body` background | `oklch(0.9842 0.0034 247.86)` — frío, ya no blanco |
+| card background | `oklch(1 0 0)` — se separa del fondo por tono, no solo por borde |
+| card border-radius | `10px` (`--radius-card`) |
+| `font-family` | `"Inter Variable", ui-sans-serif, system-ui` — **la fuente carga de verdad** |
+| `--primary` | `oklch(0.3462 0.0736 256.04)` — navy |
+| `--radius` / `--radius-card` / `--radius-badge` | `0.375rem` / `0.625rem` / `0.25rem` |
+
+### D-V1 — dark mode lava la acción primaria (motiva la feature 24)
+
+`--primary` en `.dark` resuelve a `oklch(0.7137 0.0692 254.62)`. A lightness 0.71, un
+chroma de 0.069 no lee como color: el botón primario parece deshabilitado. Se ve peor en
+`odc-form.tsx`, donde "Enviar a Administración" queda al lado de un outline que pesa más
+que él.
+
+**La causa es la regla, no el valor.** El techo de chroma `0.10` de R3 es correcto en
+light, donde el navy vive a lightness 0.35, pero se aplicó igual a `.dark`, donde el token
+sube a 0.71. R3 se redactó mirando solo light. Ningún test lo detecta: el contraste pasa
+de sobra (es un problema de saturación percibida, no de luminancia).
+
+Dirección propuesta para la spec de la 24: que el techo de chroma dependa de la lightness
+del token en lugar de ser un número plano, o que se declare por tema. No fijar el valor
+nuevo en el requisito sin comprobarlo antes en pantalla — es el error que produjo D-V1.
+
+### D-V2 — el verde unificado no lo está en dark
+
+En `:root`, `--accent-action` y `--status-done` son idénticos
+(`oklch(0.5081 0.1049 165.61)`), que es justo lo que buscaba la enmienda firmada. En
+`.dark` divergen: `--accent-action` es `oklch(0.7227 0.1394 165.61)` y `--status-done` es
+`oklch(0.8200 0.0630 165.61)`. `MASTER.md` §1 afirma que comparten color sin acotarlo a
+light. Entra en el alcance de la 24.
+
+### D-V3 — la densidad no llegó a los botones que se usan
+
+Los CTA principales de `odc-form.tsx:370,380` y `odc-dashboard.tsx:158,163` usan
+`size="lg"` → 36px computados. La primitiva por defecto sí mide 32px y cumple R7: son las
+superficies las que la sobreescriben. No es defecto de la #23; es trabajo de las fases
+3a/3c. Anotado para que nadie concluya que el dial de densidad no funcionó.
+
+### D-V4 — el anidamiento de cajas del detalle sigue intacto
+
+Confirmado visualmente: `odc-detail.tsx` renderiza hasta 9 `DetailItem` como cajas grises
+dentro de secciones que a su vez son cajas dentro de una `Card`. Previsto y fuera del
+alcance de la #23. Verlo confirma que la fase 3b es la de mayor impacto de lo que queda.
+
+### No verificado
+
+**Responsive a 375px.** `resize_window` no tuvo efecto: tras pedir 390px, `innerWidth`
+seguía en 1864. A ancho de escritorio no hay scroll horizontal
+(`scrollWidth == clientWidth == 1849`). El punto correspondiente del checklist de
+`MASTER.md` §10 **sigue sin comprobar** y no debe darse por bueno.
+
+### Ajenos al refactor visual
+
+- `login-form.tsx` rotula `Email` y `Password` en inglés en una aplicación que es toda en
+  español.
+- El `<title>` del documento sigue siendo `TanStack Start Starter`.

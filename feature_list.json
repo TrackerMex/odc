@@ -131,5 +131,11 @@
     "name": "ui-design-tokens",
     "status": "done",
     "priority": "P1"
+  },
+  {
+    "id": 24,
+    "name": "ui-dark-mode-chroma",
+    "status": "pending",
+    "priority": "P1"
   }
 ]
