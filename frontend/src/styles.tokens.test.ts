@@ -19,7 +19,8 @@ function ruleBody(selector: string): string {
 
 function declarations(selector: string): Record<string, string> {
   const out: Record<string, string> = {}
-  for (const chunk of ruleBody(selector).split(';')) {
+  const body = ruleBody(selector).replace(/\/\*[\s\S]*?\*\//g, '')
+  for (const chunk of body.split(';')) {
     const match = /^\s*(--[\w-]+)\s*:\s*(.+)$/s.exec(chunk)
     if (match) out[match[1]] = match[2].trim()
   }
