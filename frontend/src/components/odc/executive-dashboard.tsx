@@ -41,24 +41,10 @@ import type {
 import { cn } from '@/lib/utils'
 import { OdcStatusBadge } from './odc-status-badge'
 
-const roleCopy: Record<
-  ExecutiveDashboardRole,
-  { label: string; description: string }
-> = {
-  DIRECTOR_OPS: {
-    label: 'Operaciones',
-    description:
-      'Revisa lo que bloquea el flujo y continúa la siguiente acción.',
-  },
-  ADMINISTRACION: {
-    label: 'Administración',
-    description: 'Revisa las tareas que requieren tu validación o evidencia.',
-  },
-  DIRECTOR_GENERAL: {
-    label: 'Dirección General',
-    description:
-      'Consulta las decisiones de compra que requieren tu aprobación.',
-  },
+const roleCopy: Record<ExecutiveDashboardRole, { label: string }> = {
+  DIRECTOR_OPS: { label: 'Operaciones' },
+  ADMINISTRACION: { label: 'Administración' },
+  DIRECTOR_GENERAL: { label: 'Dirección General' },
 }
 
 const actionLabel: Record<ExecutiveTaskNextAction, string> = {
@@ -130,11 +116,10 @@ function DashboardHeader({
         </p>
         <h1
           id="dashboard-title"
-          className="mt-2 text-3xl font-semibold tracking-tight sm:text-4xl"
+          className="mt-2 text-2xl font-semibold tracking-tight"
         >
           Buen día, {userName}
         </h1>
-        <p className="mt-2 text-muted-foreground">{copy.description}</p>
       </div>
       <div className="flex flex-wrap items-center gap-2 sm:justify-end">
         <span className="inline-flex h-8 items-center gap-2 rounded-2xl bg-muted px-3 text-sm text-muted-foreground">
@@ -467,8 +452,8 @@ export function ExecutiveDashboard({
   dashboard: ExecutiveDashboardResponse
 }) {
   return (
-    <main className="min-w-0 flex-1 p-4 sm:p-6 lg:p-8">
-      <div className="mx-auto max-w-7xl space-y-6">
+    <main className="min-w-0 flex-1 p-4 sm:p-6">
+      <div className="mx-auto max-w-[1400px] space-y-6">
         <DashboardHeader userName={userName} dashboard={dashboard} />
         <div className="space-y-6 transition-opacity duration-200 motion-reduce:transition-none">
           <PriorityQueue dashboard={dashboard} />
@@ -486,11 +471,11 @@ export function ExecutiveDashboard({
 export function ExecutiveDashboardLoading() {
   return (
     <main
-      className="min-w-0 flex-1 p-4 sm:p-6 lg:p-8"
+      className="min-w-0 flex-1 p-4 sm:p-6"
       aria-label="Cargando resumen ejecutivo"
       aria-busy="true"
     >
-      <div className="mx-auto max-w-7xl space-y-6">
+      <div className="mx-auto max-w-[1400px] space-y-6">
         <Skeleton className="h-32 w-full motion-reduce:animate-none" />
         <Skeleton className="h-96 w-full motion-reduce:animate-none" />
         <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">

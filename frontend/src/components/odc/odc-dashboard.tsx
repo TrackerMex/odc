@@ -137,20 +137,16 @@ export function OdcDashboard({
   sections: DashboardSections
 }) {
   return (
-    <main className="min-w-0 flex-1 p-4 sm:p-6 lg:p-8">
-      <div className="mx-auto max-w-7xl">
+    <main className="min-w-0 flex-1 p-4 sm:p-6">
+      <div className="mx-auto max-w-[1400px]">
         <header className="mb-8 flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <p className="text-xs font-semibold tracking-[0.18em] text-muted-foreground uppercase">
               Operaciones
             </p>
-            <h1 className="mt-2 text-3xl font-semibold tracking-tight sm:text-4xl">
+            <h1 className="mt-2 text-2xl font-semibold tracking-tight">
               Buen día, {userName}
             </h1>
-            <p className="mt-2 max-w-2xl text-muted-foreground">
-              Consulta tus órdenes activas y continúa cada compra desde donde
-              quedó.
-            </p>
           </div>
           <div className="flex flex-wrap gap-2 self-start">
             <Link

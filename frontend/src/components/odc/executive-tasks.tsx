@@ -87,13 +87,12 @@ export function ExecutiveTasks({
   const last = Math.min(taskPage.page * taskPage.pageSize, taskPage.total)
 
   return (
-    <main className="min-w-0 flex-1 p-4 sm:p-6 lg:p-8">
-      <div className="mx-auto max-w-5xl">
+    <main className="min-w-0 flex-1 p-4 sm:p-6">
+      <div className="mx-auto max-w-[1400px]">
         <header className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div className="max-w-2xl">
             <p className="text-sm font-medium text-muted-foreground">Bandeja de trabajo</p>
-            <h1 className="mt-2 text-3xl font-semibold tracking-tight sm:text-4xl">Todas las tareas</h1>
-            <p className="mt-2 text-muted-foreground">Prioriza las órdenes más antiguas y continúa su siguiente acción.</p>
+            <h1 className="mt-2 text-2xl font-semibold tracking-tight">Todas las tareas</h1>
           </div>
           <Link to="/" className={buttonVariants({ variant: 'outline' })}>
             <ArrowLeftIcon aria-hidden="true" /> Volver a la bandeja

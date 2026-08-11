@@ -112,19 +112,15 @@ export function AdminDashboard({
   sections: AdminDashboardSections
 }) {
   return (
-    <main className="min-w-0 flex-1 p-4 sm:p-6 lg:p-8">
-      <div className="mx-auto max-w-7xl">
+    <main className="min-w-0 flex-1 p-4 sm:p-6">
+      <div className="mx-auto max-w-[1400px]">
         <header className="mb-8">
           <p className="text-xs font-semibold tracking-[0.18em] text-muted-foreground uppercase">
             Administración
           </p>
-          <h1 className="mt-2 text-3xl font-semibold tracking-tight sm:text-4xl">
+          <h1 className="mt-2 text-2xl font-semibold tracking-tight">
             Buen día, {userName}
           </h1>
-          <p className="mt-2 max-w-2xl text-muted-foreground">
-            Valida presupuestos y adjunta los comprobantes de las compras
-            pagadas.
-          </p>
         </header>
 
         <section

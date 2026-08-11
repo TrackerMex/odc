@@ -19,19 +19,15 @@ export function GeneralDashboard({
   page: OdcPage
 }) {
   return (
-    <main className="min-w-0 flex-1 p-4 sm:p-6 lg:p-8">
-      <div className="mx-auto max-w-7xl">
+    <main className="min-w-0 flex-1 p-4 sm:p-6">
+      <div className="mx-auto max-w-[1400px]">
         <header className="mb-8">
           <p className="text-xs font-semibold tracking-[0.18em] text-muted-foreground uppercase">
             Dirección General
           </p>
-          <h1 className="mt-2 text-3xl font-semibold tracking-tight sm:text-4xl">
+          <h1 className="mt-2 text-2xl font-semibold tracking-tight">
             Buen día, {userName}
           </h1>
-          <p className="mt-2 max-w-2xl text-muted-foreground">
-            Revisa las órdenes validadas por Administración y decide si la
-            compra puede continuar.
-          </p>
         </header>
 
         <section aria-label="Resumen de Dirección General">
