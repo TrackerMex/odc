@@ -139,7 +139,9 @@ describe('R2: paleta navy del MASTER §1 en :root', () => {
     '--border': 'oklch(0.9268 0.0063 255.48)',
     '--destructive': 'oklch(0.5771 0.2152 27.33)',
     '--ring': 'oklch(0.3462 0.0736 256.04)',
-    '--accent-action': 'oklch(0.5960 0.1274 163.23)',
+    // Enmienda firmada 2026-08-10: #059669 -> #047857 (emerald-700).
+    '--accent-action': 'oklch(0.5081 0.1049 165.61)',
+    '--accent-action-foreground': 'oklch(0.985 0 0)',
   }
 
   it.each(Object.entries(MASTER))('%s vale %s', (token, value) => {
@@ -150,13 +152,9 @@ describe('R2: paleta navy del MASTER §1 en :root', () => {
     expect(root['--background']).not.toBe(root['--card'])
   })
 
-  // Desviación documentada: R2 pide --accent-action-foreground:
-  // oklch(0.985 0 0), pero blanco sobre el verde #059669 del MASTER da 3.61:1
-  // y R5 exige >= 4.5:1. --accent-action-foreground no aparece en el MASTER §1,
-  // así que se conserva el verde exacto y se oscurece el texto.
-  // Ver progress/impl_ui-design-tokens.md.
-  it('--accent-action-foreground usa el foreground del sistema (conflicto R2/R5)', () => {
-    expect(root['--accent-action-foreground']).toBe(root['--foreground'])
+  // La enmienda unifica el verde de confirmar con el del estado al que lleva.
+  it('--accent-action es el mismo verde que --status-done en tema claro', () => {
+    expect(root['--accent-action']).toBe(root['--status-done'])
   })
 })
 
