@@ -76,9 +76,10 @@ haciendo falta tras cambiar los tokens.
 ## Fase 3 — Superficies
 
 ### 3a. Dashboards
-`components/odc/odc-dashboard.tsx`, `admin-dashboard.tsx`, `general-dashboard.tsx`,
-`executive-dashboard.tsx`, `executive-tasks.tsx` — ver `pages/dashboard.md`.
-Header compacto, `max-w-[1400px]`, barra de acento por cola, contadores a `text-2xl`.
+`components/odc/executive-dashboard.tsx`, `executive-tasks.tsx` — ver
+`pages/dashboard.md`. Header compacto y ancho adaptado al resumen compuesto o
+a la lista de una columna. Los tres dashboards sustituidos se eliminaron en la
+feature 30.
 
 ### 3b. Detalle
 `components/odc/odc-detail.tsx` — ver `pages/odc-detail.md`.
@@ -105,16 +106,14 @@ estado en el timeline y en las barras del resumen.
 
 ## Tests en riesgo
 
-Seis tests consultan `className`. Ninguno se borra; se conserva la clase o se actualiza la
-aserción con justificación.
+Cuatro tests de superficies activas consultan `className`. Se conserva la clase
+o se actualiza la aserción con justificación.
 
 | Test | Aserción | Fase | Acción |
 |---|---|---|---|
 | `executive-dashboard.test.tsx:272` | link contiene `focus-visible:ring` | 3a | **Conservar la clase.** El foco no se toca |
 | `executive-dashboard.test.tsx:274` | existe algún `[class*="motion-reduce"]` | 3a | Conservar |
 | `general-approval-actions.test.tsx:342` | `flex-col.*sm:flex-row` | 3b | Conservar el patrón responsive |
-| `general-dashboard.test.tsx:84` | `main` contiene `min-w-0` | 3a | Conservar |
-| `general-dashboard.test.tsx:86` | link contiene `flex-col.*sm:flex-row` | 3a | Conservar |
 | `monthly-summary.test.tsx:139` | contiene `odc-filter-results` | 3d | Conservar clase y keyframe |
 
 Riesgo adicional, **fase 3c**: añadir validación en `blur` puede hacer que aparezcan
@@ -169,18 +168,16 @@ Efecto sobre la 25: las 7 barras de acento de su R7 no las ve ningun usuario, y
 los CTA que originaron D-V3 (`odc-dashboard.tsx:158,163`) tambien viven en codigo
 no montado. Los tests pasan porque montan el componente directamente.
 
-**Que debe responder la 30, antes de especificar la 26 y la 27:**
+**Resultado de la 30 (2026-08-11):**
 
-1. Si esas 3 superficies deben montarse — es decir, si hubo un diseño por rol que
-   quedo a medias — o si son restos de una iteracion anterior que hay que borrar.
-2. Que otros componentes de `components/odc/` estan en la misma situacion. En
-   particular **los que las features 26 y 27 tienen previsto tocar**: si
-   `odc-detail.tsx`, los formularios o `monthly-summary.tsx` tampoco estuvieran
-   montados, sus specs estarian apuntando a codigo muerto.
-3. Si conviene una guarda automatica que detecte componentes de superficie sin
-   importador fuera de sus tests, para que esto no vuelva a pasar en silencio.
+1. Las tres superficies sustituidas se eliminan; la portada común de la feature
+   19 sigue siendo la única portada para los tres roles.
+2. Detalle, formularios, login y resumen mensual sí son alcanzables desde rutas
+   de producción y conservan el alcance previsto de las features 26 y 27.
+3. Una guarda transitiva desde rutas de producción evita que un test aislado o
+   una lectura de fuente vuelva a ocultar superficies huérfanas.
 
-No se especifican la 26 ni la 27 hasta tener esas respuestas.
+La 26 y la 27 pueden especificarse después de cerrar y revisar la 30.
 
 ### Encargo heredado por la 26 (decision humana del 2026-08-11)
 
@@ -198,10 +195,11 @@ existia es `ui/toast.tsx:43` con `rounded-2xl!`, que este mismo plan ya anotaba
 como pendiente de revisar tras el cambio de tokens de la 23 y que nadie ha
 revisado.
 
-Lo que debe hacer la 26: corregir la primitiva para que la superficie pueda fijar
-su padding sin `!`, retirar los 3 usos nuevos, y de paso resolver si el de
-`toast.tsx` sigue haciendo falta. Si al especificar la 26 se ve que esto no
-encaja en su alcance, sale como feature propia — pero no se deja sin dueño.
+Actualización de la feature 30: los tres usos nuevos desaparecieron junto con
+los dashboards sustituidos, así que la 26 ya no debe retirarlos. Conserva el
+encargo de revisar la especificidad de `CardHeader` y resolver si el override de
+`toast.tsx` sigue haciendo falta. Si al especificar la 26 se ve que esa revisión
+no encaja en su alcance, sale como feature propia — pero no se deja sin dueño.
 
 **28 `ui-responsive-375`.** El checklist de `MASTER.md` §10 tiene un punto de
 responsive a 375px que **nunca se ha comprobado**: en la revisión del 2026-08-10
