@@ -247,14 +247,10 @@ describe('R8: reject purchase with trimmed reason and server state', () => {
       rejectionReason: 'Compra no prioritaria',
     })
 
-    await waitFor(() =>
-      expect(screen.queryByRole('dialog')).toBeNull(),
-    )
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull())
     expect(screen.getByText('Esta orden necesita correcciones')).toBeTruthy()
     expect(screen.getByText('Compra no prioritaria')).toBeTruthy()
-    expect(
-      screen.queryByRole('button', { name: /aprobar compra/i }),
-    ).toBeNull()
+    expect(screen.queryByRole('button', { name: /aprobar compra/i })).toBeNull()
   })
 })
 
@@ -341,10 +337,27 @@ describe('R10: loading semantics and responsive actions', () => {
     expect(busy).toBeTruthy()
     expect(busy?.className).toMatch(/flex-col.*sm:flex-row/)
     expect(
-      screen.getByRole('button', { name: /aprobando/i }).hasAttribute('disabled'),
+      screen
+        .getByRole('button', { name: /aprobando/i })
+        .hasAttribute('disabled'),
     ).toBe(true)
     expect(
-      screen.getByRole('button', { name: /^rechazar$/i }).hasAttribute('disabled'),
+      screen
+        .getByRole('button', { name: /^rechazar$/i })
+        .hasAttribute('disabled'),
     ).toBe(true)
+  })
+})
+
+describe('R4: general approval footer hierarchy', () => {
+  it('keeps the required responsive footer and semantic variants', () => {
+    renderActions()
+
+    const approve = screen.getByRole('button', { name: /aprobar compra/i })
+    const reject = screen.getByRole('button', { name: /^rechazar$/i })
+    const footer = approve.closest('[data-slot="card-footer"]')
+    expect(footer?.className).toMatch(/border-t.*flex-col.*sm:flex-row/)
+    expect(approve.className).toMatch(/bg-primary/)
+    expect(reject.className).toMatch(/bg-destructive/)
   })
 })

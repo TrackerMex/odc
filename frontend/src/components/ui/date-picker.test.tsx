@@ -31,3 +31,34 @@ describe('DatePicker', () => {
     ).toBeTruthy()
   })
 })
+
+describe('R9: DatePicker blur, ARIA and focus passthrough', () => {
+  it('forwards input accessibility props, blur and an imperative ref', () => {
+    const onBlur = vi.fn()
+    const inputRef = { current: null as HTMLInputElement | null }
+    render(
+      <>
+        <label htmlFor="warehouse-date">Fecha de almacén</label>
+        <p id="warehouse-date-error">La fecha es obligatoria.</p>
+        <DatePicker
+          id="warehouse-date"
+          label="Fecha de almacén"
+          value=""
+          onChange={vi.fn()}
+          onBlur={onBlur}
+          aria-invalid="true"
+          aria-describedby="warehouse-date-error"
+          inputRef={inputRef}
+        />
+      </>,
+    )
+
+    const input = screen.getByLabelText('Fecha de almacén')
+    fireEvent.blur(input)
+
+    expect(onBlur).toHaveBeenCalledOnce()
+    expect(input.getAttribute('aria-invalid')).toBe('true')
+    expect(input.getAttribute('aria-describedby')).toBe('warehouse-date-error')
+    expect(inputRef.current).toBe(input)
+  })
+})

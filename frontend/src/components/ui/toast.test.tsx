@@ -21,3 +21,17 @@ describe('Toaster', () => {
     ).toBeTruthy()
   })
 })
+
+describe('R13: semantic toast radius', () => {
+  it('uses rounded-card without important or oversized radius classes', async () => {
+    const toastManager = createToastManager()
+    render(<Toaster toastManager={toastManager} />)
+
+    toastManager.add({ title: 'Guardado' })
+
+    const root = await screen.findByText('Guardado')
+    const toastRoot = root.closest('[data-slot="toast"]')
+    expect(toastRoot?.className).toMatch(/rounded-card/)
+    expect(toastRoot?.className).not.toMatch(/rounded-2xl|!important|\w+!\b/)
+  })
+})

@@ -182,3 +182,24 @@ describe('R10: approval errors remain recoverable', () => {
     ).toBe(false)
   })
 })
+
+describe('R4: administrative action footer hierarchy', () => {
+  it('separates responsive actions in a card footer with semantic variants', () => {
+    render(
+      <AdminBudgetActions
+        odc={pendingOdc()}
+        role="ADMINISTRACION"
+        approve={vi.fn()}
+        reject={vi.fn()}
+        onSuccess={vi.fn()}
+      />,
+    )
+
+    const approve = screen.getByRole('button', { name: /aprobar presupuesto/i })
+    const reject = screen.getByRole('button', { name: /^rechazar$/i })
+    const footer = approve.closest('[data-slot="card-footer"]')
+    expect(footer?.className).toMatch(/border-t.*flex-col.*sm:flex-row/)
+    expect(approve.className).toMatch(/bg-primary/)
+    expect(reject.className).toMatch(/bg-destructive/)
+  })
+})

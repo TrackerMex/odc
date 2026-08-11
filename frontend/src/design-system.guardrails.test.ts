@@ -32,8 +32,7 @@ const SURFACES = [
   'executive-tasks',
 ] as const
 
-const surfaceSource = (name: string) =>
-  read(`src/components/odc/${name}.tsx`)
+const surfaceSource = (name: string) => read(`src/components/odc/${name}.tsx`)
 
 describe('ui-surfaces-dashboards R1: el badge deja de pintar paleta cruda', () => {
   const badge = () => surfaceSource('odc-status-badge')
@@ -49,7 +48,9 @@ describe('ui-surfaces-dashboards R1: el badge deja de pintar paleta cruda', () =
     'rejected',
   ])('declara el par de tokens de status-%s', (token) => {
     expect(badge()).toContain(`bg-status-${token}-surface`)
-    expect(badge()).toMatch(new RegExp(`\\btext-status-${token}\\b(?!-surface)`))
+    expect(badge()).toMatch(
+      new RegExp(`\\btext-status-${token}\\b(?!-surface)`),
+    )
   })
 
   it('no conserva ninguna clase de paleta Tailwind', () => {
@@ -229,6 +230,46 @@ describe('R15: sin dependencias nuevas y sin color literal en las primitivas', (
   })
 })
 
+describe('ui-surfaces-detail-forms R14: preservación transversal', () => {
+  const affectedSurfaces = [
+    'admin-budget-actions',
+    'general-approval-actions',
+    'odc-detail',
+    'odc-document-preview',
+    'odc-form',
+    'payment-evidence-form',
+    'register-payment-form',
+    'upload-invoice-form',
+  ] as const
+
+  it.each(affectedSurfaces)('%s usa solo colores semánticos', (surface) => {
+    expect([...surfaceSource(surface).matchAll(LITERAL_COLOR)]).toEqual([])
+  })
+
+  it('mantiene layouts apilados, anchos mínimos y breakpoints acotados', () => {
+    expect(surfaceSource('odc-detail')).toContain('grid min-w-0')
+    expect(surfaceSource('odc-detail')).toContain('sm:grid-cols-2')
+    expect(surfaceSource('general-approval-actions')).toMatch(
+      /flex flex-col.*sm:flex-row/,
+    )
+    expect(surfaceSource('odc-form')).toContain('min-w-0')
+  })
+
+  it('protege indicadores de carga añadidos frente a reduced motion', () => {
+    for (const surface of [
+      'odc-form',
+      'payment-evidence-form',
+      'register-payment-form',
+      'upload-invoice-form',
+    ] as const) {
+      const source = surfaceSource(surface)
+      if (source.includes('animate-spin')) {
+        expect(source).toContain('motion-reduce:animate-none')
+      }
+    }
+  })
+})
+
 // Las guardas de R12, R13 y R15 nacen en verde por construcción: afirman que
 // algo que ya está bien sigue estando bien. Se ponen rojas si esta feature —
 // o la siguiente — rompe lo que debía quedar intacto.
@@ -323,7 +364,9 @@ describe('ui-surfaces-dashboards R15: alcance cerrado, sin tokens ni dependencia
   })
 
   it('no declara tokens de estado nuevos en styles.css', () => {
-    expect([...read('src/styles.css').matchAll(/--color-status-[\w-]+:/g)]).toHaveLength(16)
+    expect([
+      ...read('src/styles.css').matchAll(/--color-status-[\w-]+:/g),
+    ]).toHaveLength(16)
   })
 
   it('no añade dependencias a frontend/package.json', () => {

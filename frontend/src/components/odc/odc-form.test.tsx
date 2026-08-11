@@ -311,3 +311,111 @@ describe('R2,R3,R4: saved BORRADOR editing and status transition', () => {
     expect(screen.getByDisplayValue('Guardado antes del error')).toBeTruthy()
   })
 })
+
+describe('R6,R7: adjacent field errors, blur validation and focus order', () => {
+  it('validates only the blurred field and associates its stable alert', () => {
+    render(
+      <OdcForm
+        user={user}
+        suppliers={suppliers}
+        persist={vi.fn()}
+        submit={vi.fn()}
+        onSuccess={vi.fn()}
+      />,
+    )
+
+    const description = screen.getByLabelText(/descripción/i)
+    fireEvent.blur(description)
+
+    const alert = screen.getByRole('alert')
+    expect(alert.id).toBe('description-error')
+    expect(description.getAttribute('aria-invalid')).toBe('true')
+    expect(description.getAttribute('aria-describedby')).toBe(alert.id)
+    expect(screen.queryByText(/cantidad.*obligatoria/i)).toBeNull()
+  })
+
+  it('focuses the first invalid control and clears only the corrected error', () => {
+    render(
+      <OdcForm
+        user={user}
+        suppliers={suppliers}
+        persist={vi.fn()}
+        submit={vi.fn()}
+        onSuccess={vi.fn()}
+      />,
+    )
+
+    fireEvent.click(
+      screen.getByRole('button', { name: /guardar como borrador/i }),
+    )
+
+    const description = screen.getByLabelText(/descripción/i)
+    const quantity = screen.getByLabelText(/cantidad/i)
+    expect(document.activeElement).toBe(description)
+    expect(quantity.getAttribute('aria-describedby')).toBe('quantity-error')
+
+    fireEvent.change(description, { target: { value: 'Sensores GPS' } })
+    expect(description.getAttribute('aria-describedby')).toBeNull()
+    expect(quantity.getAttribute('aria-describedby')).toBe('quantity-error')
+  })
+})
+
+describe('R8: progressive comments, dense fields and total hierarchy', () => {
+  it('keeps optional comments collapsed and preserves text across toggles', () => {
+    render(
+      <OdcForm
+        user={user}
+        suppliers={suppliers}
+        persist={vi.fn()}
+        submit={vi.fn()}
+        onSuccess={vi.fn()}
+      />,
+    )
+
+    const trigger = screen.getByRole('button', { name: /añadir comentarios/i })
+    expect(trigger.getAttribute('aria-expanded')).toBe('false')
+    fireEvent.click(trigger)
+    const comments = screen.getByLabelText('Comentarios')
+    fireEvent.change(comments, { target: { value: 'Entrega urgente' } })
+    fireEvent.click(trigger)
+    fireEvent.click(trigger)
+    expect(
+      (screen.getByLabelText('Comentarios') as HTMLTextAreaElement).value,
+    ).toBe('Entrega urgente')
+  })
+
+  it('opens existing comments and renders the dense grid, breakdown and footer', () => {
+    const { container } = render(
+      <OdcForm
+        user={user}
+        suppliers={suppliers}
+        initialOdc={rejectedOdc()}
+        persist={vi.fn()}
+        submit={vi.fn()}
+        onSuccess={vi.fn()}
+      />,
+    )
+
+    expect(
+      screen
+        .getByRole('button', { name: /comentarios/i })
+        .getAttribute('aria-expanded'),
+    ).toBe('true')
+    expect(
+      container.querySelector('[data-slot="field-group"]')?.className,
+    ).toMatch(/gap-4/)
+    const shortFields = screen.getByLabelText(/cantidad/i).closest('.grid')
+    expect(shortFields?.className).toMatch(/gap-4.*lg:grid-cols-3/)
+    const breakdown = screen.getByTestId('odc-total-breakdown')
+    expect(breakdown.textContent).toMatch(/3.*×.*149[.,]90/)
+    expect(breakdown.className).toMatch(/text-muted-foreground/)
+    const total = screen.getByTestId('odc-total')
+    expect(total.parentElement?.className).toMatch(/border-t/)
+    expect(total.className).toMatch(/text-2xl.*font-semibold.*tabular-nums/)
+    expect(
+      screen
+        .getByRole('button', { name: /guardar como borrador/i })
+        .closest('[data-slot="card-footer"]'),
+    ).toBeTruthy()
+  })
+})

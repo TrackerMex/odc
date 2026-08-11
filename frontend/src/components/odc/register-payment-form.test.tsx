@@ -356,3 +356,48 @@ describe('R12: role x status boundary for register payment', () => {
     expect(screen.queryByLabelText(/fecha de pago/i)).toBeNull()
   })
 })
+
+describe('R6,R9: payment field validation, focus and confirm footer', () => {
+  it('validates required fields on blur with stable associations', () => {
+    render(
+      <RegisterPaymentForm
+        odc={approvedOdc()}
+        role="DIRECTOR_OPS"
+        register={vi.fn()}
+        onSuccess={vi.fn()}
+      />,
+    )
+
+    const date = screen.getByLabelText(/fecha de pago/i)
+    fireEvent.blur(date)
+    const dateError = screen.getByRole('alert')
+    expect(dateError.id).toBe('payment-date-error')
+    expect(date.getAttribute('aria-invalid')).toBe('true')
+    expect(date.getAttribute('aria-describedby')).toBe(dateError.id)
+
+    fireEvent.change(date, { target: { value: '2026-07-22' } })
+    const method = screen.getByLabelText(/método de pago/i)
+    fireEvent.blur(method)
+    expect(method.getAttribute('aria-describedby')).toBe('payment-method-error')
+  })
+
+  it('focuses date before method and uses the confirm card footer', () => {
+    render(
+      <RegisterPaymentForm
+        odc={approvedOdc()}
+        role="DIRECTOR_OPS"
+        register={vi.fn()}
+        onSuccess={vi.fn()}
+      />,
+    )
+
+    const submit = screen.getByRole('button', { name: /registrar pago/i })
+    fireEvent.click(submit)
+
+    expect(document.activeElement).toBe(screen.getByLabelText(/fecha de pago/i))
+    expect(submit.className).toMatch(/bg-accent-action/)
+    expect(submit.closest('[data-slot="card-footer"]')?.className).toMatch(
+      /border-t.*flex-col.*sm:flex-row/,
+    )
+  })
+})

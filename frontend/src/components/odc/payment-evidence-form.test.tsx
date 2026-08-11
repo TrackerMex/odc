@@ -107,10 +107,7 @@ describe('R9,R10,R11: evidence upload lifecycle', () => {
     const file = new File(['pdf'], 'comprobante.pdf', {
       type: 'application/pdf',
     })
-    setFile(
-      screen.getByLabelText(/archivo del comprobante/i),
-      file,
-    )
+    setFile(screen.getByLabelText(/archivo del comprobante/i), file)
     fireEvent.change(screen.getByLabelText(/referencia del comprobante/i), {
       target: { value: '  SPEI-100  ' },
     })
@@ -157,5 +154,46 @@ describe('R9,R10,R11: evidence upload lifecycle', () => {
         .getByRole('button', { name: /subir comprobante/i })
         .hasAttribute('disabled'),
     ).toBe(false)
+  })
+})
+
+describe('R6,R10: immediate evidence validation and accessible focus', () => {
+  it('validates MIME on change and associates the adjacent field error', () => {
+    render(
+      <PaymentEvidenceForm
+        odc={paidOdc()}
+        role="ADMINISTRACION"
+        upload={vi.fn()}
+        onSuccess={vi.fn()}
+      />,
+    )
+    const input = screen.getByLabelText(/archivo del comprobante/i)
+    setFile(input, new File(['text'], 'notes.txt', { type: 'text/plain' }))
+
+    const error = screen.getByRole('alert')
+    expect(error.id).toBe('payment-evidence-file-error')
+    expect(error.textContent).toMatch(/pdf.*jpg.*png/i)
+    expect(input.getAttribute('aria-invalid')).toBe('true')
+    expect(input.getAttribute('aria-describedby')).toBe(error.id)
+  })
+
+  it('focuses the file on invalid submit and keeps the navy footer action', () => {
+    render(
+      <PaymentEvidenceForm
+        odc={paidOdc()}
+        role="ADMINISTRACION"
+        upload={vi.fn()}
+        onSuccess={vi.fn()}
+      />,
+    )
+    const input = screen.getByLabelText(/archivo del comprobante/i)
+    const submit = screen.getByRole('button', { name: /subir comprobante/i })
+    fireEvent.click(submit)
+
+    expect(document.activeElement).toBe(input)
+    expect(submit.className).toMatch(/bg-primary/)
+    expect(submit.closest('[data-slot="card-footer"]')?.className).toMatch(
+      /border-t.*flex-col.*sm:flex-row/,
+    )
   })
 })

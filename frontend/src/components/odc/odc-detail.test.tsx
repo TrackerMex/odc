@@ -7,7 +7,8 @@ import {
   within,
 } from '@testing-library/react'
 import { odcFileUrl } from '@/lib/odc'
-import type { Odc } from '@/lib/odc'
+import { ODC_STATUSES } from '@/lib/odc'
+import type { Odc, OdcStatus } from '@/lib/odc'
 import { OdcDetail } from './odc-detail'
 
 const odc: Odc = {
@@ -264,6 +265,148 @@ describe('R7: resilient and accessible document preview', () => {
     ).toBeTruthy()
     expect(
       within(dialog).getByRole('link', { name: /abrir en otra pestaña/i }),
+    ).toBeTruthy()
+  })
+})
+
+describe('R1: definition rows and a single emphasized total', () => {
+  it('uses semantic rows, two responsive columns and full-width detail sections', () => {
+    const { container } = render(
+      <OdcDetail
+        odc={{
+          ...odc,
+          status: 'COMPLETADA',
+          rejectionReason: null,
+          paymentDate: '2026-07-22',
+          paymentMethod: 'Transferencia',
+          invoiceNumber: 'FAC-100',
+          warehouseEntryDate: '2026-07-23',
+        }}
+      />,
+    )
+
+    const details = container.querySelector('dl')
+    expect(details?.className).toMatch(/sm:grid-cols-2/)
+    expect(details?.className).not.toMatch(/lg:grid-cols-3/)
+    expect(screen.getByText('Descripción').tagName).toBe('DT')
+    expect(screen.getByText(odc.description).tagName).toBe('DD')
+
+    const total = screen.getByText('Total').closest('[data-detail-row]')
+    expect(total?.className).toMatch(/col-span-full/)
+    expect(total?.className).toMatch(/border-t-2/)
+    expect(within(total!).getByText(/449[.,]70/).className).toMatch(
+      /text-xl.*font-semibold.*tabular-nums/,
+    )
+
+    for (const heading of [
+      'Comentarios',
+      'Información de pago',
+      'Información de factura',
+    ]) {
+      const section = screen.getByText(heading).closest('[data-detail-section]')
+      expect(section?.className).toMatch(/border-t/)
+      expect(section?.className).not.toMatch(/rounded-|bg-muted/)
+    }
+  })
+})
+
+describe('R2: semantic ODC timeline', () => {
+  it('maps every status token and distinguishes the latest point', () => {
+    const tokenByStatus: Record<OdcStatus, string> = {
+      BORRADOR: 'status-draft',
+      PENDIENTE_ADMIN: 'status-pending',
+      PRESUPUESTO_APROBADO: 'status-budget',
+      COMPRA_APROBADA: 'status-approved',
+      PAGO_REGISTRADO: 'status-paid',
+      EVIDENCIA_PAGO_SUBIDA: 'status-evidence',
+      COMPLETADA: 'status-done',
+      RECHAZADA: 'status-rejected',
+    }
+    const history = ODC_STATUSES.map((toStatus, index) => ({
+      id: `h-${index}`,
+      odcId: 'o1',
+      fromStatus: index === 0 ? null : ODC_STATUSES[index - 1],
+      toStatus,
+      userId: 'u1',
+      note: index === 1 ? 'Revisión administrativa' : null,
+      createdAt: `2026-07-${String(index + 10).padStart(2, '0')}T12:00:00.000Z`,
+    }))
+
+    render(<OdcDetail odc={{ ...odc, history }} />)
+
+    const entries = within(screen.getByTestId('odc-history')).getAllByRole(
+      'listitem',
+    )
+    entries.forEach((entry, index) => {
+      const point = entry.querySelector('[data-timeline-point]')
+      expect(point?.className).toMatch(
+        new RegExp(tokenByStatus[history[index].toStatus]),
+      )
+      if (index === entries.length - 1) {
+        expect(point?.className).toMatch(/bg-status-.*ring-4/)
+      } else {
+        expect(point?.className).toMatch(/border-\[1\.5px\].*bg-background/)
+      }
+    })
+
+    const note = screen.getByText('Revisión administrativa')
+    expect(note.className).toMatch(/border-l-2.*pl-3/)
+    expect(note.className).not.toMatch(/rounded-|bg-muted/)
+    expect(entries[0].className).toMatch(/pb-4/)
+  })
+})
+
+describe('R3: semantic rejection and protected preview surfaces', () => {
+  it('uses the card radius and preserves the sticky history and preview behavior', () => {
+    const { container } = render(
+      <OdcDetail
+        odc={{ ...odc, hasPaymentEvidence: true, hasInvoice: true }}
+      />,
+    )
+
+    const banner = screen
+      .getByText('Esta orden necesita correcciones')
+      .closest('[data-rejection-banner]')
+    expect(banner?.className).toMatch(/rounded-card/)
+    expect(banner?.className).toMatch(/bg-destructive\/10.*text-destructive/)
+    expect(banner?.querySelector('svg')?.getAttribute('class')).toMatch(
+      /size-4/,
+    )
+
+    const historyCard = screen
+      .getByText('Historial')
+      .closest('[data-slot="card"]')
+    expect(historyCard?.className).toMatch(/xl:sticky.*xl:top-6.*xl:self-start/)
+    expect(container.firstElementChild?.className).toMatch(/_22rem/)
+
+    fireEvent.click(
+      screen.getByRole('button', { name: /ver comprobante de pago/i }),
+    )
+    const frame = screen.getByTitle(/vista previa del comprobante de pago/i)
+    const surface = frame.parentElement
+    expect(surface?.className).toMatch(/rounded-card/)
+    expect(surface?.className).not.toMatch(/rounded-xl|rounded-2xl/)
+  })
+})
+
+describe('R4: action surface belongs to the detail main column', () => {
+  it('renders actions after the detail card and before the history sidebar', () => {
+    render(
+      <OdcDetail
+        odc={odc}
+        actions={
+          <section aria-label="Acciones de la orden">Acción permitida</section>
+        }
+      />,
+    )
+
+    const action = screen.getByRole('region', { name: /acciones de la orden/i })
+    const mainColumn = action.closest('[data-detail-main]')
+    expect(mainColumn).toBeTruthy()
+    expect(mainColumn?.contains(screen.getByText(odc.description))).toBe(true)
+    expect(
+      action.compareDocumentPosition(screen.getByText('Historial')) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
     ).toBeTruthy()
   })
 })

@@ -204,9 +204,7 @@ describe('R6: file and warehouse entry date validation', () => {
     )
     fireEvent.click(screen.getByRole('button', { name: /subir factura/i }))
 
-    expect(screen.getByRole('alert').textContent).toMatch(
-      /entrada a almacén/i,
-    )
+    expect(screen.getByRole('alert').textContent).toMatch(/entrada a almacén/i)
     expect(upload).not.toHaveBeenCalled()
   })
 
@@ -317,15 +315,11 @@ describe('R8: recoverable errors on upload invoice', () => {
       ),
     )
     expect(
-      (screen.getByLabelText(/número de factura/i) as HTMLInputElement)
-        .value,
+      (screen.getByLabelText(/número de factura/i) as HTMLInputElement).value,
     ).toBe('FAC-200')
     expect(
-      (
-        screen.getByLabelText(
-          /fecha de entrada a almacén/i,
-        ) as HTMLInputElement
-      ).value,
+      (screen.getByLabelText(/fecha de entrada a almacén/i) as HTMLInputElement)
+        .value,
     ).toBe('2026-07-23')
     expect(
       screen
@@ -370,11 +364,8 @@ describe('R11: loading state and accessibility of upload invoice', () => {
         .disabled,
     ).toBe(true)
     expect(
-      (
-        screen.getByLabelText(
-          /fecha de entrada a almacén/i,
-        ) as HTMLInputElement
-      ).disabled,
+      (screen.getByLabelText(/fecha de entrada a almacén/i) as HTMLInputElement)
+        .disabled,
     ).toBe(true)
 
     resolveUpload(evidenceUploadedOdc())
@@ -392,7 +383,9 @@ describe('R12: role x status boundary for upload invoice', () => {
     allRoles.flatMap((role) =>
       ODC_STATUSES.filter(
         (status) =>
-          !(role === validCombination.role && status === validCombination.status),
+          !(
+            role === validCombination.role && status === validCombination.status
+          ),
       ).map((status) => [role, status] as const),
     ),
   )('hides the form for role %s and status %s', (role, status) => {
@@ -405,5 +398,122 @@ describe('R12: role x status boundary for upload invoice', () => {
       />,
     )
     expect(screen.queryByLabelText(/archivo de la factura/i)).toBeNull()
+  })
+})
+
+describe('R5: explicit completion confirmation', () => {
+  function fillValidInvoice() {
+    setFile(
+      screen.getByLabelText(/archivo de la factura/i),
+      new File(['pdf'], 'factura.pdf', { type: 'application/pdf' }),
+    )
+    fireEvent.change(screen.getByLabelText(/fecha de entrada a almacén/i), {
+      target: { value: '2026-07-23' },
+    })
+  }
+
+  it('cancels without upload and confirms completion only once', () => {
+    const upload = vi.fn(() => new Promise<Odc>(() => undefined))
+    render(
+      <UploadInvoiceForm
+        odc={evidenceUploadedOdc()}
+        role="DIRECTOR_OPS"
+        upload={upload}
+        onSuccess={vi.fn()}
+      />,
+    )
+    fillValidInvoice()
+    fireEvent.click(screen.getByRole('button', { name: /subir factura/i }))
+
+    const dialog = screen.getByRole('dialog', { name: /completar orden/i })
+    expect(dialog.textContent).toMatch(/completa.*orden/i)
+    fireEvent.click(screen.getByRole('button', { name: /cancelar/i }))
+    expect(upload).not.toHaveBeenCalled()
+
+    fireEvent.click(screen.getByRole('button', { name: /subir factura/i }))
+    const confirm = screen.getByRole('button', { name: /completar orden/i })
+    expect(confirm.className).toMatch(/bg-accent-action/)
+    fireEvent.click(confirm)
+    fireEvent.click(confirm)
+    expect(upload).toHaveBeenCalledOnce()
+    expect(screen.getByRole('dialog')).toBeTruthy()
+    expect(
+      screen
+        .getByRole('button', { name: /completando/i })
+        .hasAttribute('disabled'),
+    ).toBe(true)
+  })
+
+  it('keeps the API error, form data and retry inside the active dialog', async () => {
+    const upload = vi.fn().mockRejectedValue(new Error('Network'))
+    render(
+      <UploadInvoiceForm
+        odc={evidenceUploadedOdc()}
+        role="DIRECTOR_OPS"
+        upload={upload}
+        onSuccess={vi.fn()}
+      />,
+    )
+    fillValidInvoice()
+    fireEvent.change(screen.getByLabelText(/número de factura/i), {
+      target: { value: 'FAC-200' },
+    })
+    fireEvent.click(screen.getByRole('button', { name: /subir factura/i }))
+    fireEvent.click(screen.getByRole('button', { name: /completar orden/i }))
+
+    const dialog = screen.getByRole('dialog')
+    await waitFor(() =>
+      expect(dialog.querySelector('[role="alert"]')?.textContent).toMatch(
+        /no pudimos subir/i,
+      ),
+    )
+    expect(
+      (screen.getByLabelText(/número de factura/i) as HTMLInputElement).value,
+    ).toBe('FAC-200')
+    expect(
+      screen
+        .getByRole('button', { name: /completar orden/i })
+        .hasAttribute('disabled'),
+    ).toBe(false)
+  })
+})
+
+describe('R6,R11: invoice field validation and focus order', () => {
+  it('validates the file on change and warehouse date on blur', () => {
+    render(
+      <UploadInvoiceForm
+        odc={evidenceUploadedOdc()}
+        role="DIRECTOR_OPS"
+        upload={vi.fn()}
+        onSuccess={vi.fn()}
+      />,
+    )
+    const file = screen.getByLabelText(/archivo de la factura/i)
+    setFile(file, new File(['text'], 'notes.txt', { type: 'text/plain' }))
+    expect(file.getAttribute('aria-describedby')).toBe('invoice-file-error')
+    expect(screen.getByText(/pdf.*jpg.*png/i).getAttribute('role')).toBe(
+      'alert',
+    )
+
+    const warehouseDate = screen.getByLabelText(/fecha de entrada a almacén/i)
+    fireEvent.blur(warehouseDate)
+    expect(warehouseDate.getAttribute('aria-describedby')).toBe(
+      'warehouse-entry-date-error',
+    )
+  })
+
+  it('focuses the file before the required warehouse date', () => {
+    render(
+      <UploadInvoiceForm
+        odc={evidenceUploadedOdc()}
+        role="DIRECTOR_OPS"
+        upload={vi.fn()}
+        onSuccess={vi.fn()}
+      />,
+    )
+    fireEvent.click(screen.getByRole('button', { name: /subir factura/i }))
+    expect(document.activeElement).toBe(
+      screen.getByLabelText(/archivo de la factura/i),
+    )
   })
 })
