@@ -74,7 +74,11 @@
   --card-foreground: oklch(0.9842 0.0034 247.86);
   --popover: oklch(0.2274 0.0338 264.66);
   --popover-foreground: oklch(0.9842 0.0034 247.86);
-  --primary: oklch(0.7137 0.0692 254.62);
+  /* Saturación s = C/L = 0.2059, el 97% del navy de :root. El chroma anterior
+     (0.0692) igualaba al del navy claro, pero a esta lightness se percibe como
+     la mitad de color: defecto D-V1. --ring y los dos alias del sidebar
+     comparten este valor por invariante (feature 24, R2-R4). */
+  --primary: oklch(0.6800 0.1400 254.62);
   --primary-foreground: oklch(0.1822 0.0362 265.75);
   --secondary: oklch(0.2795 0.0368 260.03);
   --secondary-foreground: oklch(0.9842 0.0034 247.86);
@@ -87,7 +91,7 @@
   --destructive: oklch(0.7049 0.1867 22.22);
   --border: oklch(1 0 0 / 10%);
   --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.7137 0.0692 254.62);
+  --ring: oklch(0.6800 0.1400 254.62);
   --status-draft: oklch(0.8200 0.0220 257.28);
   --status-draft-surface: oklch(0.2900 0.0120 257.28);
   --status-pending: oklch(0.8200 0.0870 49.00);
@@ -111,12 +115,12 @@
   --chart-5: oklch(0.269 0 0);
   --sidebar: oklch(0.2274 0.0338 264.66);
   --sidebar-foreground: oklch(0.9842 0.0034 247.86);
-  --sidebar-primary: oklch(0.7137 0.0692 254.62);
+  --sidebar-primary: oklch(0.6800 0.1400 254.62);
   --sidebar-primary-foreground: oklch(0.1822 0.0362 265.75);
   --sidebar-accent: oklch(0.2795 0.0368 260.03);
   --sidebar-accent-foreground: oklch(0.9842 0.0034 247.86);
   --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.7137 0.0692 254.62);
+  --sidebar-ring: oklch(0.6800 0.1400 254.62);
 }
 
 @theme inline {
