@@ -79,7 +79,13 @@ describe('ui-surfaces-dashboards R7: la tarjeta heterogénea no miente con un co
 })
 
 describe('ui-surfaces-dashboards R3,R4: consola de trabajo densa, no landing', () => {
-  it('usa el ancho y el padding de página de la superficie de dashboard', () => {
+  // Excepción firmada: enmienda 2026-08-11 de `design-system/odc/pages/dashboard.md`,
+  // "el ancho de consola no aplica a listas de una columna". Los 1400px son para
+  // las superficies de rejilla de colas; esta es una lista de una sola columna y
+  // a ese ancho deja 663px de hueco entre el importe y su acción (medido en vivo
+  // con el viewport a 1466px). Va a `max-w-4xl`, ni a 1400px ni al `max-w-5xl`
+  // original.
+  it('usa el ancho de lista de una columna y el padding de página', () => {
     const { container } = render(
       <ExecutiveTasks initialPage={taskPage} role="DIRECTOR_OPS" />,
     )
@@ -90,7 +96,8 @@ describe('ui-surfaces-dashboards R3,R4: consola de trabajo densa, no landing', (
     expect(main.className).toContain('p-4')
     expect(main.className).toContain('sm:p-6')
     expect(main.className).not.toContain('lg:p-8')
-    expect(container.querySelector('.max-w-\\[1400px\\]')).toBeTruthy()
+    expect(container.querySelector('.max-w-4xl')).toBeTruthy()
+    expect(container.querySelector('.max-w-\\[1400px\\]')).toBeNull()
     expect(container.querySelector('.max-w-5xl')).toBeNull()
   })
 
