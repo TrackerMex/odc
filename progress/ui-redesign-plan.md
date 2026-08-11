@@ -3,7 +3,9 @@
 > Generado: 2026-08-10 · Fuente: `design-system/odc/MASTER.md` + overrides en
 > `design-system/odc/pages/`
 > Estado: fases 1–2 **implementadas y revisadas en navegador** (feature 23, done
-> 2026-08-10). Fases 3a–3e pendientes. Ver §Revisión en navegador al final.
+> 2026-08-10) y la corrección de dark que salió de esa revisión también (feature 24,
+> done 2026-08-11). Fases 3a–3e pendientes, ya como features 25–27 en
+> `feature_list.json`. Ver §Revisión en navegador al final y §Cómo ejecutarlo.
 
 ## Diagnóstico
 
@@ -131,13 +133,50 @@ La fase 3 son cinco superficies independientes que pueden ir por separado.
 | id | name | priority | alcance | estado |
 |---|---|---|---|---|
 | 23 | `ui-design-tokens` | P1 | Fases 1 + 2 | **done** (2026-08-10) |
-| 24 | `ui-dark-mode-chroma` | P1 | Corrección de dark, ver §Revisión en navegador | **pending** — añadida tras la revisión visual |
-| 25 | `ui-surfaces-dashboards` | P2 | 3a + 3e | propuesta, sin añadir |
-| 26 | `ui-surfaces-detail-forms` | P2 | 3b + 3c | propuesta, sin añadir |
-| 27 | `ui-surfaces-monthly-summary` | P3 | 3d | propuesta, sin añadir |
+| 24 | `ui-dark-mode-chroma` | P1 | Corrección de dark, ver §Revisión en navegador | **done** (2026-08-11) |
+| 25 | `ui-surfaces-dashboards` | P2 | 3a + 3e | `pending` en `feature_list.json` desde 2026-08-11 |
+| 26 | `ui-surfaces-detail-forms` | P2 | 3b + 3c | `pending` desde 2026-08-11 |
+| 27 | `ui-surfaces-monthly-summary` | P3 | 3d | `pending` desde 2026-08-11 |
+| 28 | `ui-responsive-375` | P2 | El punto sin verificar del checklist, ver abajo | `pending` desde 2026-08-11 |
+| 29 | `ui-copy-es-and-title` | P3 | Los dos ajenos al refactor, ver abajo | `pending` desde 2026-08-11 |
 
-La 24 no estaba prevista: sale de mirar el resultado de la 23 en un navegador. Va **antes**
-que las superficies, para que 25–27 se diseñen sobre un dark ya correcto.
+La 24 no estaba prevista: sale de mirar el resultado de la 23 en un navegador. Fue **antes**
+que las superficies, para que 25–29 se diseñen sobre un dark ya correcto.
+
+### Orden recomendado
+
+**25 → 26 → 28 → 27 → 29.** La 25 lleva 3e (`odc-status-badge.tsx`), que es un
+archivo pequeño y desbloquea el uso del color de estado en el timeline de la 26 y en
+las barras de la 27: hacerla primero evita rehacer trabajo. La 28 va después de la
+26 porque los formularios son la superficie donde más probable es que 375px rompa, y
+no tiene sentido auditar responsive sobre un layout que se va a reescribir.
+
+### Alcance de las dos features nuevas
+
+**28 `ui-responsive-375`.** El checklist de `MASTER.md` §10 tiene un punto de
+responsive a 375px que **nunca se ha comprobado**: en la revisión del 2026-08-10
+`resize_window` no tuvo efecto (tras pedir 390px, `innerWidth` seguía en 1864), así
+que no hay evidencia ni a favor ni en contra. No es una feature de implementación
+sino de verificación: auditar las superficies a 375px, registrar lo que se rompa y
+arreglarlo. Si no se rompe nada, el entregable es la evidencia de que se miró.
+Alternativa a `resize_window` si vuelve a fallar: `chrome://` device emulation, o
+medir con `matchMedia` y los breakpoints reales en vez de redimensionar.
+
+**29 `ui-copy-es-and-title`.** Los dos defectos ajenos al refactor visual que la
+revisión del 2026-08-10 dejó anotados y que nadie ha recogido: `login-form.tsx`
+rotula `Email` y `Password` en inglés en una app que es toda en español, y el
+`<title>` del documento sigue siendo `TanStack Start Starter`. Son dos cambios de
+una línea cada uno, pero los ve todo el que abre la app o mira la pestaña.
+
+### Fuera de `feature_list.json` a propósito
+
+**Re-saturar la familia de las 8 badges de dark.** Se dejó fuera del alcance de la 24
+y sigue sin feature. Motivo: 6 de las 8 no alcanzan el suelo del 85% de saturación
+dentro de sRGB a su lightness actual de `0.82`, así que no es un ajuste de chroma —
+exige bajarle la lightness a la familia entera y re-auditar los 16 pares de contraste
+de estado. Antes de convertirlo en feature hace falta una decisión de diseño sobre si
+las badges de dark deben ser más oscuras, y esa decisión se toma mirando las
+superficies de la 25, no antes.
 
 Cada una pasa por el ciclo SDD normal: `spec_author` → gate humano → `implementer` con TDD
 → `reviewer`. Una feature a la vez.

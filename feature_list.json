@@ -137,5 +137,35 @@
     "name": "ui-dark-mode-chroma",
     "status": "done",
     "priority": "P1"
+  },
+  {
+    "id": 25,
+    "name": "ui-surfaces-dashboards",
+    "status": "pending",
+    "priority": "P2"
+  },
+  {
+    "id": 26,
+    "name": "ui-surfaces-detail-forms",
+    "status": "pending",
+    "priority": "P2"
+  },
+  {
+    "id": 27,
+    "name": "ui-surfaces-monthly-summary",
+    "status": "pending",
+    "priority": "P3"
+  },
+  {
+    "id": 28,
+    "name": "ui-responsive-375",
+    "status": "pending",
+    "priority": "P2"
+  },
+  {
+    "id": 29,
+    "name": "ui-copy-es-and-title",
+    "status": "pending",
+    "priority": "P3"
   }
 ]
