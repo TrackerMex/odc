@@ -6,12 +6,13 @@ id: 30
 inicio: 2026-08-11 12:52 -06:00
 plan: auditar superficies ODC sin importadores de produccion, decidir si se
       montan o eliminan y definir una guarda contra nuevas superficies muertas
-estado: in_progress; implementer en curso
+estado: in_progress; implementacion entregada, reviewer por iniciar
 bloqueos: ninguno
 spec_author: hecho -> specs/ui-dead-surfaces-audit/ (4 requisitos)
 gate humano: aprobado 2026-08-11
-implementer: en curso
-reviewer: no lanzado
+implementer: hecho -> progress/impl_ui-dead-surfaces-audit.md
+             test 6153dd6 -> feat 4f60a9b -> docs 206bbfd
+reviewer: por lanzar
 ```
 
 ## Contexto
@@ -37,3 +38,12 @@ reviewer: no lanzado
 ## Verificacion inicial
 
 `./init.sh` verde: 471 tests backend, 472 frontend, builds y lint correctos.
+
+## Entrega del implementer
+
+- Guarda transitiva de rutas creada y validada primero en rojo contra los tres
+  dashboards huerfanos.
+- Tres componentes y sus tests aislados eliminados.
+- Documentacion normativa y plan activo de la feature 26 actualizados.
+- Verificacion reportada: 471 tests backend, 419 frontend, builds y lint
+  correctos. Pendiente de repeticion independiente por `reviewer`.
