@@ -61,7 +61,9 @@ function parseOklch(value: string): [number, number, number] {
   return [Number(match[1]), Number(match[2]), Number(match[3])]
 }
 
-function oklchToLinearRgb(value: string): Rgb {
+// Sin recortar: un canal fuera de [0,1] significa que el color declarado no
+// existe en sRGB y que el navegador pinta otro (gamut mapping de CSS Color 4).
+function oklchToRawLinearRgb(value: string): Rgb {
   const [L, C, H] = parseOklch(value)
   const hRad = (H * Math.PI) / 180
   const a = C * Math.cos(hRad)
@@ -73,7 +75,13 @@ function oklchToLinearRgb(value: string): Rgb {
     4.0767416621 * l - 3.3077115913 * m + 0.2309699292 * s,
     -1.2684380046 * l + 2.6097574011 * m - 0.3413193965 * s,
     -0.0041960863 * l - 0.7034186147 * m + 1.707614701 * s,
-  ].map((channel) => Math.min(1, Math.max(0, channel))) as Rgb
+  ] as Rgb
+}
+
+function oklchToLinearRgb(value: string): Rgb {
+  return oklchToRawLinearRgb(value).map((channel) =>
+    Math.min(1, Math.max(0, channel)),
+  ) as Rgb
 }
 
 const encodeSrgb = (v: number) =>
@@ -449,6 +457,43 @@ describe('ui-dark-mode-chroma R4: .dark --primary es una superficie clara', () =
       expect(parseOklch(dark['--primary'])[0]).toBeGreaterThan(
         parseOklch(dark[token])[0],
       )
+    },
+  )
+})
+
+describe('ui-dark-mode-chroma R5: ningún token declarado fuera del gamut sRGB', () => {
+  // El recorte por canal de la conversión enmascaraba el problema: para un token
+  // fuera de gamut, el color que audita el test no es el que pinta el navegador.
+  const GAMUT_TOLERANCE = 1e-4
+
+  it.each(byTheme)(
+    'los tres canales de cada oklch de %s caen en [0, 1]',
+    (_selector, tokens) => {
+      const offenders = oklchTokens(tokens)
+        .filter(([, value]) =>
+          oklchToRawLinearRgb(value).some(
+            (channel) =>
+              channel < -GAMUT_TOLERANCE || channel > 1 + GAMUT_TOLERANCE,
+          ),
+        )
+        .map(([token]) => token)
+      expect(offenders).toEqual([])
+    },
+  )
+})
+
+describe('ui-dark-mode-chroma R6: el primario de dark contrasta con sus fondos', () => {
+  // Dos pares que la auditoría de la feature 23 no cubría: en dark el primario
+  // es superficie, no texto, así que nadie medía si se despega del fondo.
+  it.each(['--background', '--card'])(
+    '.dark --primary sobre .dark %s alcanza 4.5:1',
+    (token) => {
+      expect(
+        contrastRatio(
+          oklchToLinearRgb(themes.dark['--primary']),
+          oklchToLinearRgb(themes.dark[token]),
+        ),
+      ).toBeGreaterThanOrEqual(4.5)
     },
   )
 })
