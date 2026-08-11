@@ -301,6 +301,24 @@ timeline de la feature 26 y las barras de la 27. Va primero (ver [[tasks]]).
 - Virtualizar las listas: el MASTER §6 la condiciona a superar 100 filas
   renderizadas, y hoy hay paginación.
 
+## Decisiones humanas (2026-08-11)
+
+Las tres preguntas que el `spec_author` dejó abiertas se respondieron confirmando
+lo que la spec ya proponía, así que **ningún requisito cambia**. Se registran aquí
+para que el implementer y el reviewer no las reabran:
+
+1. **R3, `executive-tasks.tsx` a `max-w-[1400px]`**: se aplica. La fuente normativa
+   manda, y la comprobación en pantalla de R14 es la que decide si el riesgo de las
+   filas estiradas es real. Si lo es, la salida correcta es **enmendar
+   `pages/dashboard.md`**, nunca saltarse el requisito en silencio.
+2. **R7, barra de acento en las tarjetas heterogéneas**: se quedan **sin** barra.
+   "Prioridad inmediata" de `executive-dashboard` y "Tareas accionables" de
+   `executive-tasks` mezclan estados, y un solo color mentiría sobre su contenido.
+   El SHALL NOT de R7 queda tal cual.
+3. **Re-saturación de las 8 badges de dark**: esta feature **solo registra la
+   observación** en la sesión de navegador de R14, no cambia ningún token. El
+   veredicto humano de esa acta decide si nace una feature nueva antes de la 26/27.
+
 ## Aprobación
 
 - [ ] Aprobado por humano (fecha: ____) ← gate obligatorio antes de implementar

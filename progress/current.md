@@ -8,7 +8,8 @@ plan: fases 3a + 3e del refactor visual — las 5 superficies de dashboard
       y odc-status-badge.tsx. Ver progress/ui-redesign-plan.md
 estado: pending con spec escrita — BLOQUEADA en el gate humano
         (spec_ready exige aprobacion humana, ver AGENTS.md §3)
-bloqueos: tres decisiones abiertas al humano (abajo)
+bloqueos: ninguno pendiente de decision; las tres preguntas se respondieron
+          el 2026-08-11 y estan registradas en la spec. Falta SOLO la casilla
 spec_author: hecho -> specs/ui-surfaces-dashboards/ (15 requisitos)
 implementer: —
 reviewer: —
@@ -25,26 +26,24 @@ anterior: D-V1 resuelto y firmado por el humano en
 Features **25-29 anadidas** a `feature_list.json` (commit `0e0953e`) con su alcance
 escrito en §Como ejecutarlo del plan. Orden recomendado: 25 → 26 → 28 → 27 → 29.
 
-## Para retomar: tres decisiones esperando respuesta humana
+## Las tres decisiones del gate: respondidas 2026-08-11
 
-1. **`executive-tasks.tsx` a `max-w-[1400px]` (R3).** `pages/dashboard.md` lo lista
-   entre sus 5 componentes y MASTER §3 prohibe su `max-w-5xl` (1024px) actual, pero
-   es una lista de una sola columna y a 1400px las filas se estiran. El spec_author
-   lo redacto como requisito porque la fuente normativa lo exige, con el riesgo
-   anotado en `design.md` y la comprobacion en R14. Si no se sostiene en pantalla,
-   la salida correcta es enmendar `pages/dashboard.md`, no saltarse el requisito.
-2. **Barra de acento en las dos tarjetas heterogeneas.** Propuesta del spec_author:
-   "Prioridad inmediata" de `executive-dashboard` y "Tareas accionables" de
-   `executive-tasks` se quedan **sin** barra, porque mezclan estados y un solo color
-   mentiria. Esta redactado como SHALL NOT en R7. Si el humano prefiere otra cosa,
-   se cambia aqui.
-3. **Re-saturacion de las 8 badges de dark.** R14 obliga a registrar la observacion
-   en la sesion de navegador, no a ejecutar el cambio. El veredicto del humano ahi
-   decide si las features 26/27 heredan una feature nueva o no.
+Las tres confirmaron lo que la spec ya proponia, asi que **ningun requisito
+cambio**. Quedan registradas en la seccion "Decisiones humanas" de
+`specs/ui-surfaces-dashboards/requirements.md` para que nadie las reabra:
 
-Hasta que las tres se respondan y la casilla de
-`specs/ui-surfaces-dashboards/requirements.md` (linea 306) este marcada por un
-humano, **no se lanza el implementer**.
+1. **R3, `executive-tasks.tsx` a `max-w-[1400px]`** → se aplica. La comprobacion en
+   pantalla de R14 decide si el riesgo de filas estiradas es real; si lo es, la
+   salida es enmendar `pages/dashboard.md`, no saltarse el requisito en silencio.
+2. **R7, barra de acento en las tarjetas heterogeneas** → **sin** barra. El SHALL
+   NOT queda tal cual.
+3. **Re-saturacion de las 8 badges de dark** → esta feature solo **registra la
+   observacion** en el acta de R14. El veredicto humano de esa acta decide si nace
+   una feature nueva antes de la 26/27.
+
+Falta **solo** que un humano marque la casilla de
+`specs/ui-surfaces-dashboards/requirements.md` (linea 324) y ponga
+`status: approved` en los 4 archivos. Hasta entonces **no se lanza el implementer**.
 
 ## Verificado por el leader antes de pausar
 
