@@ -118,6 +118,29 @@ describe('ui-surfaces-dashboards R3,R4: consola de trabajo densa, no landing', (
   })
 })
 
+describe('ui-surfaces-dashboards R7,R8: la tarjeta heterogénea no miente con un color', () => {
+  it('Prioridad inmediata se queda sin barra de acento', () => {
+    render(<ExecutiveDashboard userName="Ana Pérez" dashboard={dashboard} />)
+
+    const header = screen
+      .getByText('Prioridad inmediata')
+      .closest('[data-slot="card-header"]')!
+    expect(header.className).not.toMatch(/border-l-/)
+  })
+
+  it('su contador baja de escalón y se queda en el gris de metadatos', () => {
+    render(<ExecutiveDashboard userName="Ana Pérez" dashboard={dashboard} />)
+
+    const counter = screen
+      .getByText('Prioridad inmediata')
+      .closest('[data-slot="card-header"]')!
+      .querySelector('.tabular-nums')!
+    expect(counter.className).toContain('text-2xl')
+    expect(counter.className).not.toContain('text-3xl')
+    expect(counter.className).toContain('text-muted-foreground')
+  })
+})
+
 describe('R3: executive priority makes the oldest actionable work visible first', () => {
   it('renders task context, total overflow and detail links before secondary metrics', () => {
     render(<ExecutiveDashboard userName="Ana Pérez" dashboard={dashboard} />)

@@ -47,6 +47,17 @@ const taskPage: ExecutiveTaskPage = {
   ],
 }
 
+describe('ui-surfaces-dashboards R7: la tarjeta heterogénea no miente con un color', () => {
+  it('Tareas accionables se queda sin barra de acento', () => {
+    render(<ExecutiveTasks initialPage={taskPage} role="DIRECTOR_OPS" />)
+
+    const header = screen
+      .getByText('Tareas accionables')
+      .closest('[data-slot="card-header"]')!
+    expect(header.className).not.toMatch(/border-l-/)
+  })
+})
+
 describe('ui-surfaces-dashboards R3,R4: consola de trabajo densa, no landing', () => {
   it('usa el ancho y el padding de página de la superficie de dashboard', () => {
     const { container } = render(

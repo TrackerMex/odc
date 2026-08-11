@@ -84,6 +84,43 @@ describe('ui-surfaces-dashboards R3,R4: consola de trabajo densa, no landing', (
   })
 })
 
+function queueHeader(title: string) {
+  return screen.getByText(title).closest('[data-slot="card-header"]')!
+}
+
+describe('ui-surfaces-dashboards R7,R8: cada cola se distingue de un vistazo', () => {
+  it.each([
+    ['Pendientes de validar', 'border-l-status-pending'],
+    ['Compras pagadas', 'border-l-status-paid'],
+  ])('la tarjeta %s lleva la barra de acento de su estado', (title, accent) => {
+    render(<AdminDashboard userName="María Admin" sections={sections} />)
+
+    const header = queueHeader(title)
+    expect(header.className).toContain('border-l-2')
+    expect(header.className).toContain(accent)
+    expect(header.className).toContain('pb-3')
+  })
+
+  it('el contador baja de escalón y se queda en el gris de metadatos', () => {
+    render(<AdminDashboard userName="María Admin" sections={sections} />)
+
+    for (const title of ['Pendientes de validar', 'Compras pagadas']) {
+      const counter = queueHeader(title).querySelector('.tabular-nums')!
+      expect(counter.className).toContain('text-2xl')
+      expect(counter.className).not.toContain('text-3xl')
+      expect(counter.className).toContain('text-muted-foreground')
+    }
+  })
+
+  it('el estado vacío baja de alto sin perder su borde discontinuo ni su mensaje', () => {
+    render(<AdminDashboard userName="María Admin" sections={sections} />)
+
+    const empty = screen.getByText(/no hay órdenes en esta etapa/i)
+    expect(empty.className).toContain('min-h-20')
+    expect(empty.className).toContain('border-dashed')
+  })
+})
+
 describe('R2,R12: ADMINISTRACION dashboard queues', () => {
   it('renders counters, detail links and explicit empty states without create action', () => {
     render(

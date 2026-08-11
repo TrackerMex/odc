@@ -122,6 +122,57 @@ describe('ui-surfaces-dashboards R3,R4: consola de trabajo densa, no landing', (
   })
 })
 
+// Mapa de [[design]]: cada cola es un solo estado, así que la barra puede
+// llevar su color sin mentir sobre el contenido.
+const QUEUE_ACCENT: Array<[string, string]> = [
+  ['Rechazadas', 'border-l-status-rejected'],
+  ['Borradores', 'border-l-status-draft'],
+  ['Listas para comprar', 'border-l-status-approved'],
+  ['Pendientes de factura', 'border-l-status-evidence'],
+]
+
+function queueHeader(title: string) {
+  return screen.getByText(title).closest('[data-slot="card-header"]')!
+}
+
+describe('ui-surfaces-dashboards R7,R8: cada cola se distingue de un vistazo', () => {
+  it.each(QUEUE_ACCENT)(
+    'la tarjeta %s lleva la barra de acento de su estado',
+    (title, accent) => {
+      render(<OdcDashboard userName="Ana Pérez" sections={sections} />)
+
+      const header = queueHeader(title)
+      expect(header.className).toContain('border-l-2')
+      expect(header.className).toContain(accent)
+      expect(header.className).toContain('pb-3')
+    },
+  )
+
+  it('el contador baja de escalón y solo se tiñe cuando la cola está bloqueada', () => {
+    render(<OdcDashboard userName="Ana Pérez" sections={sections} />)
+
+    for (const [title] of QUEUE_ACCENT) {
+      const counter = queueHeader(title).querySelector('.tabular-nums')!
+      expect(counter.className).toContain('text-2xl')
+      expect(counter.className).not.toContain('text-3xl')
+    }
+    expect(
+      queueHeader('Rechazadas').querySelector('.tabular-nums')!.className,
+    ).toContain('text-status-rejected')
+    expect(
+      queueHeader('Borradores').querySelector('.tabular-nums')!.className,
+    ).toContain('text-muted-foreground')
+  })
+
+  it('el estado vacío baja de alto sin perder su borde discontinuo ni su mensaje', () => {
+    render(<OdcDashboard userName="Ana Pérez" sections={sections} />)
+
+    const empty = screen.getAllByText(/no hay órdenes en esta etapa/i)[0]
+    expect(empty.className).toContain('min-h-20')
+    expect(empty.className).toContain('border-dashed')
+  })
+})
+
 describe('ui-surfaces-dashboards R6: los CTA del header cierran D-V3', () => {
   it('no sube la altura de la primitiva y conserva el anillo de foco', () => {
     render(<OdcDashboard userName="Ana Pérez" sections={sections} />)
