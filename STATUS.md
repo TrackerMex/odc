@@ -1,8 +1,8 @@
 # ODC — Status
 
 **Última actualización**: 2026-08-11
-**Features completadas**: 25/30 (`feature_list.json`)
-**Pendientes**: 5; #30 `ui-dead-surfaces-audit` en `in_progress`
+**Features completadas**: 26/30 (`feature_list.json`)
+**Pendientes**: 4; siguiente recomendada: #26 `ui-surfaces-detail-forms`
 **En producción**: no
 
 ---
@@ -76,14 +76,14 @@ Requiere `.env` en la raíz (plantilla en `.env.example`): `DATABASE_URL`,
 - **#23 `ui-design-tokens` done** (2026-08-10): fases 1-2 del refactor visual.
   Tokens navy + 8 pares `--status-*`, Inter importada (nunca lo había estado
   pese a llevar dos años en `package.json`), radios cerrados y las 9 primitivas
-  de `ui/` reestiladas. Los `--status-*` se declaran pero **aún no se
-  consumen**: `odc-status-badge.tsx` es fase 3e.
-- Siguiente: fases 3a-3e del refactor visual, propuestas en
-  `progress/ui-redesign-plan.md` como features 24-26 (dashboards, detalle +
-  formularios, resumen mensual). **No están en `feature_list.json` todavía**;
-  se especifican tras evaluar visualmente el resultado de la #23. Cualquier
-  otro trabajo entra como entrada nueva y sigue el pipeline normal
-  (`spec_author` → aprobación humana → `implementer` → `reviewer`).
+  de `ui/` reestiladas. Los `--status-*` ya se consumen desde
+  `odc-status-badge.tsx` tras la feature 25.
+- **#24, #25 y #30 done** (2026-08-11): corrección cromática de dark mode,
+  refactor de dashboards activos y eliminación auditada de tres dashboards
+  sustituidos. Una guarda transitiva impide nuevas superficies ODC sin ruta.
+- Siguiente: #26 `ui-surfaces-detail-forms`; después #28, #27 y #29. Cada una
+  sigue el pipeline `spec_author` → aprobación humana → `implementer` →
+  `reviewer`.
 - Deuda anotada (frontend, 2026-08-10): `ui/toast.tsx` fija `rounded-2xl!` con
   `!` y quedó fuera del alcance de la #23, así que es la única superficie con
   el radio viejo. Arreglo de una línea, pendiente de feature.
@@ -94,6 +94,16 @@ Requiere `.env` en la raíz (plantilla en `.env.example`): `DATABASE_URL`,
 ---
 
 ## Última sesión
+
+**2026-08-11** — Cierre de `ui-dead-surfaces-audit` (#30) → **26/30**.
+
+- Eliminados `OdcDashboard`, `AdminDashboard` y `GeneralDashboard`, ya
+  sustituidos por la portada ejecutiva común.
+- Confirmado que detalle, formularios, login y resumen mensual siguen montados.
+- Añadida guarda transitiva de alcanzabilidad desde rutas de producción.
+- Reviewer aprobado; `./init.sh` verde con 471 tests backend y 419 frontend.
+
+---
 
 **2026-08-11** — UI/UX Pro Max inicializado para Codex.
 

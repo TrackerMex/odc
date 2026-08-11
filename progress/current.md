@@ -1,49 +1,33 @@
-# Sesion en curso — 2026-08-11
+# Sesión activa
+
+> Este archivo describe el estado de la sesión en curso.
+> Al cerrar la sesión, mueve este contenido a progress/history.md y deja solo esta plantilla.
+
+---
+
+## Plantilla (sesión sin iniciar)
 
 ```
-feature: ui-dead-surfaces-audit
-id: 30
-inicio: 2026-08-11 12:52 -06:00
-plan: auditar superficies ODC sin importadores de produccion, decidir si se
-      montan o eliminan y definir una guarda contra nuevas superficies muertas
-estado: in_progress; reviewer en curso
-bloqueos: ninguno
-spec_author: hecho -> specs/ui-dead-surfaces-audit/ (4 requisitos)
-gate humano: aprobado 2026-08-11
-implementer: hecho -> progress/impl_ui-dead-surfaces-audit.md
-             test 6153dd6 -> feat 4f60a9b -> docs 206bbfd
-reviewer: en curso
+feature: —
+inicio: —
+agentes lanzados: —
+estado: sin sesión activa
 ```
 
-## Contexto
+---
 
-- La feature 25 confirmo que `OdcDashboard`, `AdminDashboard` y
-  `GeneralDashboard` no tienen importadores de produccion.
-- La ruta `/` monta `ExecutiveDashboard` para los tres roles.
-- La auditoria debe cubrir tambien las superficies previstas por las features
-  26 y 27 antes de especificarlas.
-- `feature_list.json` esta en `in_progress`; el gate fue aprobado por el humano
-  el 2026-08-11 y queda registrado antes de lanzar implementacion.
+_Cuando inicies una sesión, reemplaza la plantilla con:_
 
-## Decision propuesta por la spec
-
-- Eliminar `OdcDashboard`, `AdminDashboard` y `GeneralDashboard`, sustituidos
-  explicitamente por la portada comun de la feature 19.
-- Conservar detalle, formularios, login y resumen mensual: todos tienen camino
-  desde rutas de produccion y siguen siendo objetivos validos de las features
-  26 y 27.
-- Añadir una guarda transitiva de alcanzabilidad desde rutas de produccion para
-  detectar futuras superficies ODC huerfanas.
-
-## Verificacion inicial
-
-`./init.sh` verde: 471 tests backend, 472 frontend, builds y lint correctos.
-
-## Entrega del implementer
-
-- Guarda transitiva de rutas creada y validada primero en rojo contra los tres
-  dashboards huerfanos.
-- Tres componentes y sus tests aislados eliminados.
-- Documentacion normativa y plan activo de la feature 26 actualizados.
-- Verificacion reportada: 471 tests backend, 419 frontend, builds y lint
-  correctos. Pendiente de repeticion independiente por `reviewer`.
+```
+feature: <nombre de la feature>
+id: <id en feature_list.json>
+inicio: <fecha y hora>
+plan:
+  - <paso 1>
+  - <paso 2>
+estado: pending / spec_ready / in_progress / done
+bloqueos: —
+spec_author: pendiente / en curso / done
+implementer: pendiente / en curso / done
+reviewer: pendiente / en curso / aprobado / rechazado
+```

@@ -1,6 +1,6 @@
 ---
 feature: "ui-dead-surfaces-audit"
-status: draft        # draft | approved
+status: approved     # draft | approved
 tags: [harness, spec, frontend, audit, routes]
 ---
 

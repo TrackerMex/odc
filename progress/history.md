@@ -433,3 +433,27 @@ _El historial comenzará aquí cuando se complete la primera sesión._
 - **Verificación:** `./init.sh` exit 0 — 471 tests backend, 328 frontend (35 archivos), builds cliente+SSR y lint sin errores. **Sin verificación visual en navegador**: cambian densidades en cascada y nadie ha visto correr el resultado.
 - **Commits:** `a2ee557`..`32b4628` en rama `ui-design-system-docs`, sin push. Docs del sistema (`ce2fbef`), spec aprobada (`3212483`), 4 pares test→feat (`aa31027`+`f038a70`→`e9401d9`, `e677d90`→`31c88a7`, `81f7ee7`, `6e20170`→`a48404a`), docs de cierre (`d35bce8`, `694385f`, `32b4628`).
 - **Estado final:** done.
+
+## Sesión 2026-08-11 — ui-dead-surfaces-audit (id: 30)
+
+- **Origen:** la verificación de la feature 25 confirmó que `OdcDashboard`,
+  `AdminDashboard` y `GeneralDashboard` no tenían importadores de producción,
+  aunque sus tests y guardas de fuente seguían pasando.
+- **Decisión:** la feature 19 ya había sustituido explícitamente esos paneles
+  por `ExecutiveDashboard`; se eliminaron los tres componentes y sus tests
+  aislados. Detalle, formularios, login y resumen mensual se conservaron porque
+  sí tienen caminos desde rutas de producción y siguen siendo objetivos válidos
+  de las features 26 y 27.
+- **Guarda:** `production-reachability.test.ts` recorre imports locales de forma
+  transitiva desde rutas de producción y falla ante cualquier archivo `*.tsx`
+  huérfano bajo `components/odc/`, sin contar tests, fuentes leídas por guardas
+  ni `routeTree.gen.ts`.
+- **TDD:** `6153dd6` dejó la guarda roja nombrando exactamente los tres
+  dashboards; `4f60a9b` eliminó producción sin tocar tests. El reviewer reprodujo
+  el rojo en worktree aislado y aprobó C2–C6 sin observaciones.
+- **Verificación:** `./init.sh` verde: 59 suites/471 tests backend, 35
+  archivos/419 tests frontend, builds y lint correctos.
+- **Commits principales:** `3fa89c1` spec, `70ce3e9` gate humano,
+  `6153dd6` test, `4f60a9b` feat, `206bbfd` trazabilidad.
+- **Estado final:** done. Siguiente feature recomendada: #26
+  `ui-surfaces-detail-forms`.
