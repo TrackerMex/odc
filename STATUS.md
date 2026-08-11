@@ -2,7 +2,8 @@
 
 **Última actualización**: 2026-08-11
 **Features completadas**: 25/30 (`feature_list.json`)
-**Pendientes**: 5; siguiente recomendada: #30 `ui-dead-surfaces-audit`
+**Pendientes**: 5; #30 `ui-dead-surfaces-audit` en `spec_ready`, esperando
+aprobación humana
 **En producción**: no
 
 ---
