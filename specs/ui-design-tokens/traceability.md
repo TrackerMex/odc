@@ -9,10 +9,10 @@ tags: [harness, spec, frontend, design-system, tokens]
 | Requisito | Test (archivo::nombre) | Commit (hash + mensaje) |
 |---|---|---|
 | R1 | `frontend/src/styles.tokens.test.ts::R1: Inter Variable cargada y --font-sans declarada` | test `aa31027` test(ui-design-tokens): audit stylesheet tokens, contrast and motion (R1,R2,R3,R4,R5,R6,R14) · feat `e9401d9` feat(ui-design-tokens): navy palette, status tokens, radii and Inter (R1,R2,R3,R4,R5,R6,R14) |
-| R2 | `frontend/src/styles.tokens.test.ts::R2: paleta navy del MASTER §1 en :root` | test `aa31027` (+ `f038a70` test(ui-design-tokens): ignore CSS comments when parsing token blocks) · feat `e9401d9` |
+| R2 | `frontend/src/styles.tokens.test.ts::R2: paleta navy del MASTER §1 en :root` | test `aa31027` (+ `f038a70` test(ui-design-tokens): ignore CSS comments when parsing token blocks) · feat `e9401d9` · **enmienda**: test `6e20170` test(ui-design-tokens): expect the amended emerald-700 accent-action (R2,R5) · feat `a48404a` feat(ui-design-tokens): adopt amended emerald-700 accent-action (R2,R5) |
 | R3 | `frontend/src/styles.tokens.test.ts::R3: dark conserva roles, corrige --sidebar-primary y acota el chroma` | test `aa31027` · feat `e9401d9` |
 | R4 | `frontend/src/styles.tokens.test.ts::R4: 8 pares --status-* / --status-*-surface en light y dark` | test `aa31027` · feat `e9401d9` |
-| R5 | `frontend/src/styles.tokens.test.ts::R5: contraste WCAG 2.1 >= 4.5:1 en los pares auditados` | test `aa31027` (+ `f038a70`) · feat `e9401d9` |
+| R5 | `frontend/src/styles.tokens.test.ts::R5: contraste WCAG 2.1 >= 4.5:1 en los pares auditados` | test `aa31027` (+ `f038a70`) · feat `e9401d9` · **enmienda**: test `6e20170` · feat `a48404a` |
 | R6 | `frontend/src/styles.tokens.test.ts::R6: radios y escala de espaciado` | test `aa31027` · feat `e9401d9` |
 | R7 | `frontend/src/components/ui/primitives.tokens.test.tsx::R7: botón h-8, radio --radius, peso 500 y variante confirm` | test `e677d90` test(ui-design-tokens): shape, size and focus of the 9 primitives (R7,R8,R9,R10,R11,R12) · feat `31c88a7` feat(ui-design-tokens): restyle the 9 primitives onto the design tokens (R7,R8,R9,R10,R11,R12) |
 | R8 | `frontend/src/components/ui/primitives.tokens.test.tsx::R8: input, select y textarea con radio y foco del sistema` | test `e677d90` · feat `31c88a7` |
@@ -45,10 +45,12 @@ se anota aquí el archivo y la razón.
   guardan. R15 incluye un test de calibración
   (`el detector de color literal no es vacuo`) para que la guarda no pueda pasar
   por no detectar nada.
-- **Desviación de R2 en `--accent-action-foreground`.** R2 y R5 son
-  incompatibles en ese par: `oklch(0.985 0 0)` sobre el verde
-  `oklch(0.5960 0.1274 163.23)` del MASTER §1 da 3.61:1 y R5 exige ≥ 4.5:1.
-  Se conservó el verde del MASTER byte a byte y se cambió el texto al
-  `--foreground` navy (4.74:1). `--accent-action-foreground` no aparece en la
-  tabla del MASTER §1, así que es el eslabón menos normativo de los dos.
-  Detalle y aritmética en `progress/impl_ui-design-tokens.md`.
+- **Enmienda firmada de R2 (2026-08-10), aplicada en `6e20170` + `a48404a`.**
+  R2 y R5 eran contradictorios tal como se aprobaron. El humano resolvió por el
+  lado del verde: `--accent-action` pasa de `oklch(0.5960 0.1274 163.23)`
+  (#059669) a `oklch(0.5081 0.1049 165.61)` (#047857) y
+  `--accent-action-foreground` vuelve a blanco `oklch(0.985 0 0)`. El verde
+  nuevo es idéntico a `--status-done`, así que el botón de confirmar y el estado
+  al que conduce comparten color; hay un test que fija esa igualdad. En `.dark`
+  el par no lo fija nadie: se recalculó a `oklch(0.7227 0.1394 165.61)` sobre
+  texto `oklch(0.1822 0.0362 265.75)` (8.13:1), conservando el rol invertido.

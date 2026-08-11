@@ -258,3 +258,76 @@ Baseline antes de la feature: 32 ficheros / 214 tests en frontend. Ahora 35 /
    el padding de tarjeta baja de `1.25rem` a `1rem`, la fila de tabla de `2.5rem`
    a `2.25rem`, y la tarjeta cambia `ring-1` por `border`, lo que suma 1px de
    caja. Ningún test se rompió, pero es el tipo de cambio que se juzga mirando.
+
+---
+
+## Adenda 2026-08-10 — enmienda firmada de R2 aplicada
+
+El conflicto R2/R5 que escalé arriba lo resolvió el humano **por el lado del
+verde, no del texto** — al revés de lo que había parcheado yo. La enmienda está
+firmada en `specs/ui-design-tokens/requirements.md` ("Enmiendas posteriores a la
+aprobación", casilla marcada) y en `design-system/odc/MASTER.md` §1.
+
+| Token | Antes (mi parche) | Ahora (enmienda) |
+|---|---|---|
+| `:root --accent-action` | `oklch(0.5960 0.1274 163.23)` #059669 | `oklch(0.5081 0.1049 165.61)` #047857 |
+| `:root --accent-action-foreground` | `oklch(0.2077 0.0398 265.75)` navy | `oklch(0.985 0 0)` blanco |
+| `.dark --accent-action` | `oklch(0.7227 0.1394 163.23)` | `oklch(0.7227 0.1394 165.61)` |
+| `.dark --accent-action-foreground` | `oklch(0.1822 0.0362 265.75)` | sin cambio |
+
+- **Light**: blanco sobre #047857 mide **5.25:1** con el conversor del test
+  (la enmienda cita 5.48:1, calculado desde el hex; ambos muy por encima de
+  4.5). El verde nuevo es **exactamente `--status-done`**, así que confirmar y
+  el estado al que lleva comparten color. Añadí un test que fija esa igualdad
+  (`--accent-action es el mismo verde que --status-done en tema claro`) para que
+  no se despareje en silencio en la fase 3e.
+- **Dark**: el par no lo fija ni la spec ni el MASTER. Lo recalculé con las
+  mismas invariantes que el resto: sólo desplacé el hue a `165.61` para seguir
+  al verde enmendado y conservé L/C. Con el texto navy da **8.13:1**. El rol
+  invertido se mantiene (superficie verde clara, texto oscuro), igual que
+  `--primary` en dark.
+- **Chroma**: `0.1049` supera el tope de `0.10`, así que la invariante de R3
+  sólo pasa por la **exención** de `--accent-action`. Ya estaba en el test
+  (`/^--(status-|destructive|accent-action)/`) desde el primer commit, no hizo
+  falta tocarla — pero es margen estrecho y load-bearing: si alguien quita esa
+  exención, el token cae.
+
+Commits (misma disciplina: test rojo primero, `feat` después, nunca mezclados):
+
+```
+a48404a feat(ui-design-tokens): adopt amended emerald-700 accent-action (R2,R5)
+6e20170 test(ui-design-tokens): expect the amended emerald-700 accent-action (R2,R5)
+```
+
+`6e20170` es el **único** test ya escrito que edité en toda la feature, y sólo
+porque el requisito que lo respaldaba cambió por enmienda firmada. Dejó 3 casos
+rojos (`--accent-action`, `--accent-action-foreground` y la igualdad con
+`--status-done`) antes de `a48404a`.
+
+Verificación tras la enmienda, desde `frontend/`:
+
+```
+> frontend@ build
+> vite build
+✓ built in 1.01s
+
+--accent-action:oklch(50.81% .1049 165.61)     (:root)
+--accent-action:oklch(72.27% .1394 165.61)     (.dark)
+
+> frontend@ test
+> vitest run
+
+ Test Files  35 passed (35)
+      Tests  328 passed (328)
+   Duration  23.24s
+```
+
+328 tests (uno más que antes: el de igualdad con `--status-done`), verde a la
+primera. El flake preexistente de `general-approval-actions.test.tsx:163` no
+apareció en esta corrida.
+
+**Pendiente para el leader, no para mí**: la enmienda vive en el working tree
+sin commitear (`specs/ui-design-tokens/requirements.md` y
+`design-system/odc/MASTER.md` salen como modificados). No los commiteo porque
+son la edición del humano y territorio del leader, pero si se cierra la sesión
+sin ellos el rastro de la enmienda se pierde del historial.
