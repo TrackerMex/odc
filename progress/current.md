@@ -67,7 +67,9 @@ Verificado en pantalla (sesiones `DIRECTOR_OPS` y `ADMINISTRACION`, ambos temas)
 
 ## Estado del entorno
 
-- Rama `ui-design-system-docs`, **sin push**.
+- Rama `ui-design-system-docs` **mergeada a `main`** por el humano vía PR #12
+  (`2dc2021`) al cerrar la sesion. El repo local quedo en `main`, arbol limpio.
+  Los 26 commits del refactor estan dentro.
 - Features 23, 24 y 25 `done`. **26-30 `pending`.**
 - **La feature 30 `ui-dead-surfaces-audit` (P1) va antes que la 26 y la 27**:
   debe decidir si esas 3 superficies se montan o se borran, y comprobar si la 26
