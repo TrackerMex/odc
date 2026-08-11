@@ -1,10 +1,8 @@
 # ODC — Status
 
-**Última actualización**: 2026-07-23
-**Features completadas**: 14/14 (`feature_list.json`) — backlog del plan
-maestro completo
-**Pendientes**: ninguna del plan original; próximo trabajo requiere una
-nueva feature añadida a `feature_list.json`
+**Última actualización**: 2026-08-11
+**Features completadas**: 25/30 (`feature_list.json`)
+**Pendientes**: 5; siguiente recomendada: #30 `ui-dead-surfaces-audit`
 **En producción**: no
 
 ---
@@ -96,6 +94,14 @@ Requiere `.env` en la raíz (plantilla en `.env.example`): `DATABASE_URL`,
 ---
 
 ## Última sesión
+
+**2026-08-11** — UI/UX Pro Max inicializado para Codex.
+
+- El CLI oficial generó las skills locales bajo `.agents/skills/`.
+- No cambió el estado de ninguna feature.
+- `./init.sh` verde: 471 tests backend, 472 frontend, builds y lint.
+
+---
 
 **2026-08-10** — Sistema de diseño + cierre de `ui-design-tokens` (#23) →
 **23/23 completadas**.
