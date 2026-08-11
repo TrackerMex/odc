@@ -87,6 +87,41 @@ describe('R1,R12: DIRECTOR_OPS dashboard exposes four responsive workflow queues
   })
 })
 
+const sections = {
+  BORRADOR: page([odc('BORRADOR', '1')], 3),
+  RECHAZADA: page([], 0),
+  COMPRA_APROBADA: page([odc('COMPRA_APROBADA', '2')], 1),
+  EVIDENCIA_PAGO_SUBIDA: page([], 2),
+}
+
+describe('ui-surfaces-dashboards R3,R4: consola de trabajo densa, no landing', () => {
+  it('usa el ancho y el padding de página de la superficie de dashboard', () => {
+    const { container } = render(
+      <OdcDashboard userName="Ana Pérez" sections={sections} />,
+    )
+
+    const main = container.querySelector('main')!
+    expect(main.className).toContain('min-w-0')
+    expect(main.className).toContain('flex-1')
+    expect(main.className).toContain('p-4')
+    expect(main.className).toContain('sm:p-6')
+    expect(main.className).not.toContain('lg:p-8')
+    expect(container.querySelector('.max-w-\\[1400px\\]')).toBeTruthy()
+    expect(container.querySelector('.max-w-7xl')).toBeNull()
+  })
+
+  it('reduce el header a un escalón tipográfico y suelta el párrafo de onboarding', () => {
+    render(<OdcDashboard userName="Ana Pérez" sections={sections} />)
+
+    const heading = screen.getByRole('heading', { level: 1 })
+    expect(heading.className).toContain('text-2xl')
+    expect(heading.className).not.toContain('text-3xl')
+    expect(heading.className).not.toContain('sm:text-4xl')
+    expect(screen.queryByText(/consulta tus órdenes activas/i)).toBeNull()
+    expect(screen.getByText('Operaciones')).toBeTruthy()
+  })
+})
+
 describe('R13: DIRECTOR_OPS dashboard orders sections by visual priority', () => {
   it('places Rechazadas, Borradores, Listas para comprar and Pendientes de factura in that DOM order', () => {
     render(

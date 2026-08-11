@@ -51,6 +51,39 @@ function page(items: Odc[], total = items.length): OdcPage {
   return { items, total, page: 1, pageSize: 20 }
 }
 
+const sections = {
+  PENDIENTE_ADMIN: page([odc('PENDIENTE_ADMIN', '1')], 4),
+  PAGO_REGISTRADO: page([], 0),
+}
+
+describe('ui-surfaces-dashboards R3,R4: consola de trabajo densa, no landing', () => {
+  it('usa el ancho y el padding de página de la superficie de dashboard', () => {
+    const { container } = render(
+      <AdminDashboard userName="María Admin" sections={sections} />,
+    )
+
+    const main = container.querySelector('main')!
+    expect(main.className).toContain('min-w-0')
+    expect(main.className).toContain('flex-1')
+    expect(main.className).toContain('p-4')
+    expect(main.className).toContain('sm:p-6')
+    expect(main.className).not.toContain('lg:p-8')
+    expect(container.querySelector('.max-w-\\[1400px\\]')).toBeTruthy()
+    expect(container.querySelector('.max-w-7xl')).toBeNull()
+  })
+
+  it('reduce el header a un escalón tipográfico y suelta el párrafo de onboarding', () => {
+    render(<AdminDashboard userName="María Admin" sections={sections} />)
+
+    const heading = screen.getByRole('heading', { level: 1 })
+    expect(heading.className).toContain('text-2xl')
+    expect(heading.className).not.toContain('text-3xl')
+    expect(heading.className).not.toContain('sm:text-4xl')
+    expect(screen.queryByText(/valida presupuestos y adjunta/i)).toBeNull()
+    expect(screen.getAllByText('Administración').length).toBeGreaterThan(0)
+  })
+})
+
 describe('R2,R12: ADMINISTRACION dashboard queues', () => {
   it('renders counters, detail links and explicit empty states without create action', () => {
     render(

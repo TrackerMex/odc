@@ -75,6 +75,33 @@ describe('R2: Dirección General approval dashboard', () => {
   })
 })
 
+describe('ui-surfaces-dashboards R3,R4: consola de trabajo densa, no landing', () => {
+  it('usa el ancho y el padding de página de la superficie de dashboard', () => {
+    const { container } = render(
+      <GeneralDashboard userName="Laura" page={page([odc])} />,
+    )
+
+    const main = container.querySelector('main')!
+    expect(main.className).toContain('min-w-0')
+    expect(main.className).toContain('flex-1')
+    expect(main.className).toContain('p-4')
+    expect(main.className).toContain('sm:p-6')
+    expect(main.className).not.toContain('lg:p-8')
+    expect(container.querySelector('.max-w-\\[1400px\\]')).toBeTruthy()
+    expect(container.querySelector('.max-w-7xl')).toBeNull()
+  })
+
+  it('reduce el header a un escalón tipográfico y suelta el párrafo de onboarding', () => {
+    render(<GeneralDashboard userName="Laura" page={page([odc])} />)
+
+    const heading = screen.getByRole('heading', { level: 1 })
+    expect(heading.className).toContain('text-2xl')
+    expect(heading.className).not.toContain('text-3xl')
+    expect(heading.className).not.toContain('sm:text-4xl')
+    expect(screen.queryByText(/revisa las órdenes validadas/i)).toBeNull()
+  })
+})
+
 describe('R10: responsive Dirección General dashboard', () => {
   it('keeps the queue and links constrained on narrow screens', () => {
     const { container } = render(
