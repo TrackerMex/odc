@@ -6,12 +6,12 @@ id: 26
 inicio: 2026-08-11 13:43 -06:00
 plan: fases 3b + 3c del refactor visual — detalle, acciones y formularios;
       revisar la deuda heredada de CardHeader y toast
-estado: in_progress; correcciones R6 verdes, pendiente de segunda revisión
+estado: in_progress; reviewer aprobado, pendiente de cierre por leader
 bloqueos: ninguno
 spec_author: hecho -> specs/ui-surfaces-detail-forms/ (14 requisitos)
 gate humano: aprobado por el usuario el 2026-08-11
 implementer: corrección -> commits aea3c7b y 631fb5a
-reviewer: primera revisión rechazada; segunda revisión pendiente
+reviewer: aprobado -> progress/review_ui-surfaces-detail-forms.md
 ```
 
 ## Contexto
@@ -81,3 +81,16 @@ reviewer: primera revisión rechazada; segunda revisión pendiente
 - Suite frontend completa verde: 35 archivos y 455/455 tests.
 - `./init.sh` final verde: build backend/frontend, 471 tests backend, 455 tests
   frontend y lint backend. Corrección lista para segunda revisión.
+
+## Segunda revisión
+
+- Reviewer confirmó `aea3c7b` como test-only y reprodujo el rojo aislado: 2
+  fallos R6 exactos y 62 tests circundantes verdes.
+- La separación de errores locales, de aprobación y de rechazo cumple R5/R6;
+  conserva el motivo, el diálogo activo y el retry sin atribuir el fallo API al
+  `Textarea`.
+- Lint dirigido verde sobre las dos superficies y los tres tests tocados.
+- Suite dirigida 331/331 verde; `./init.sh` independiente verde con 471 tests
+  backend y 455 frontend.
+- Acta `APROBADO` en `progress/review_ui-surfaces-detail-forms.md`. La feature
+  permanece `in_progress` hasta el cierre del leader.
