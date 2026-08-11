@@ -1,6 +1,6 @@
 ---
 feature: "ui-surfaces-dashboards"
-status: draft        # draft | approved
+status: approved     # draft | approved
 tags: [harness, spec, frontend, design-system, surfaces, dashboards]
 ---
 
@@ -321,4 +321,4 @@ para que el implementer y el reviewer no las reabran:
 
 ## Aprobación
 
-- [ ] Aprobado por humano (fecha: ____) ← gate obligatorio antes de implementar
+- [X] Aprobado por humano (fecha: 2026-08-11) ← gate obligatorio antes de implementar
