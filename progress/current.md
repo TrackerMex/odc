@@ -6,11 +6,11 @@ id: 26
 inicio: 2026-08-11 13:43 -06:00
 plan: fases 3b + 3c del refactor visual — detalle, acciones y formularios;
       revisar la deuda heredada de CardHeader y toast
-estado: spec_ready; implementacion bloqueada por gate humano
+estado: in_progress; implementacion TDD por iniciar
 bloqueos: ninguno
 spec_author: hecho -> specs/ui-surfaces-detail-forms/ (14 requisitos)
-gate humano: pendiente
-implementer: no lanzado
+gate humano: aprobado por el usuario el 2026-08-11
+implementer: por lanzar
 reviewer: no lanzado
 ```
 
@@ -24,8 +24,8 @@ reviewer: no lanzado
   foco visible, errores asociados y composicion responsive. Las primitivas
   existentes sobre `@base-ui/react` y el sistema de diseno local siguen siendo
   autoritativos; no se regeneran componentes shadcn.
-- La feature esta en `spec_ready`; el siguiente paso es la aprobacion humana
-  de `requirements.md`.
+- La spec fue aprobada por el usuario el 2026-08-11 y la feature paso a
+  `in_progress`; el siguiente paso es la implementacion TDD de R1-R14.
 
 ## Verificacion inicial
 

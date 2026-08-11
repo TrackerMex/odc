@@ -1,6 +1,6 @@
 ---
 feature: "ui-surfaces-detail-forms"
-status: draft        # draft | approved
+status: approved     # draft | approved
 tags: [harness, spec, frontend, ui, detail, forms, accessibility]
 ---
 
@@ -178,4 +178,4 @@ tags: [harness, spec, frontend, ui, detail, forms, accessibility]
 
 ## Aprobación
 
-- [ ] Aprobado por humano (fecha: ____)
+- [X] Aprobado por humano (fecha: 2026-08-11)
