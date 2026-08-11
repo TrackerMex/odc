@@ -135,7 +135,7 @@
   {
     "id": 24,
     "name": "ui-dark-mode-chroma",
-    "status": "pending",
+    "status": "spec_ready",
     "priority": "P1"
   }
 ]
