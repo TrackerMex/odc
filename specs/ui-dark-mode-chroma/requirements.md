@@ -1,6 +1,6 @@
 ---
 feature: "ui-dark-mode-chroma"
-status: draft        # draft | approved
+status: approved     # draft | approved
 tags: [harness, spec, frontend, design-system, tokens, dark-mode]
 ---
 
@@ -27,7 +27,10 @@ Esta feature **no reabre** la 23: la enmienda en un punto y extiende en otro.
 | R2 (valores de `:root`), R4 (los 8 pares de estado), R6 (radios y espaciado), R7–R14 (primitivas, no regresión, motion) | **Intactos.** Esta feature no toca `:root` salvo los 3 tokens fuera de gamut de R5, y no toca ningún archivo de `components/`. |
 
 R10 obliga a registrar la sustitución de R3 en la propia spec 23, siguiendo el
-patrón de enmienda firmada que ya usa ese archivo.
+patrón de enmienda firmada que ya usa ese archivo. **Autorizado por el humano el
+2026-08-11**: tocar `specs/ui-design-tokens/requirements.md` queda limitado a
+añadir esa fila de enmienda; el resto del archivo, incluidas sus casillas de
+aprobación, no se toca.
 
 **Definición usada en toda esta spec.** Para un token declarado como
 `oklch(L C H)` con `L > 0`, su **saturación** es `s = C / L`. Es la magnitud que
@@ -40,14 +43,18 @@ en dark. Valores actuales relevantes: `:root --primary` → `s = 0.0736 / 0.3462
 
 - **R1**: WHEN se audita `frontend/src/styles.css`, THE SYSTEM SHALL calcular la
   saturación `s = C / L` de cada token declarado en `:root` y en `.dark` cuyo
-  valor sea `oklch(...)`, y SHALL cumplir `s ≤ s(:root --primary)` en todo token
-  cuyo nombre no empiece por `--status-`, ni sea `--destructive` ni
-  `--accent-action` (misma lista de exenciones que la R3 de la 23, sin añadir ni
-  quitar nombres). El techo SHALL derivarse en tiempo de test del propio
-  `:root --primary` — "nada fuera de estado, destructive y accent-action puede
-  saturar más que el navy institucional" — y SHALL NOT escribirse como constante
-  numérica literal en el test. Esta cláusula sustituye al techo plano de chroma
-  `0.10` de la R3 de la feature 23.
+  valor sea `oklch(...)`, y SHALL cumplir `s ≤ 0.2126` en todo token cuyo nombre
+  no empiece por `--status-`, ni sea `--destructive` ni `--accent-action` (misma
+  lista de exenciones que la R3 de la 23, sin añadir ni quitar nombres). El techo
+  `0.2126` SHALL escribirse en el test como **constante documentada** —
+  originalmente la saturación del navy institucional, `0.0736 / 0.3462 =
+  0.21259` — y SHALL NOT derivarse en tiempo de test de `:root --primary`.
+  `:root --primary` SHALL estar sujeto al techo como cualquier otro token no
+  exento. Motivo (decisión humana, 2026-08-11): un techo leído del navy es
+  autorreferencial — el navy no puede violar su propio límite, y subirle el
+  chroma subiría el techo para todos los demás sin que ningún test lo detecte.
+  Esta cláusula sustituye al techo plano de chroma `0.10` de la R3 de la
+  feature 23.
 
 - **R2**: WHILE el tema oscuro (`.dark`) está activo, THE SYSTEM SHALL declarar
   `--primary` y `--accent-action` con una saturación de al menos el **85%** de la
@@ -183,4 +190,4 @@ en dark. Valores actuales relevantes: `:root --primary` → `s = 0.0736 / 0.3462
 
 ## Aprobación
 
-- [ ] Aprobado por humano (fecha: ____) ← gate obligatorio antes de implementar
+- [X] Aprobado por humano (fecha: 11/10/2026) ← gate obligatorio antes de implementar

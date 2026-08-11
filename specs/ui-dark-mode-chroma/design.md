@@ -1,6 +1,6 @@
 ---
 feature: "ui-dark-mode-chroma"
-status: draft        # draft | approved
+status: approved     # draft | approved
 tags: [harness, spec, frontend, design-system, tokens, dark-mode]
 ---
 
@@ -28,11 +28,16 @@ de `frontend/src/styles.css`. Son reproducibles; ninguna es una estimación.
   chroma. Ningún test de contraste puede verlo: la luminancia no cambia. Por eso
   R1 y R2 se expresan sobre `s` y no sobre `C` (R1, R2).
 
-- **El techo se deriva del navy, no se inventa.** R1 fija el techo en
-  `s ≤ s(:root --primary)`, leído del propio token en tiempo de test. Se lee como
-  la Two-Color Rule del MASTER §9: *nada fuera de estado, `--destructive` y
-  `--accent-action` puede saturar más que el navy institucional*. En chroma, ese
-  techo ya no es plano:
+- **El techo sale del navy, pero se congela.** R1 fija el techo en `s ≤ 0.2126`,
+  constante documentada cuyo origen es la saturación del navy institucional
+  (`0.0736 / 0.3462 = 0.21259`). Se lee como la Two-Color Rule del MASTER §9:
+  *nada fuera de estado, `--destructive` y `--accent-action` puede saturar más
+  que el navy institucional*. Se congela en vez de leerse del token en tiempo de
+  test (decisión humana, 2026-08-11) porque un techo derivado es
+  autorreferencial: exime al navy de su propio límite y se mueve solo si alguien
+  le sube el chroma. Congelado, `:root --primary` queda sujeto al techo como
+  cualquier otro token — con margen de `0.00001`, así que subirle el chroma
+  rompe el test, que es justo lo que se quiere. En chroma, ese techo no es plano:
 
   | Lightness | Techo antiguo (plano) | Techo nuevo (`0.2126 · L`) |
   |---|---|---|
