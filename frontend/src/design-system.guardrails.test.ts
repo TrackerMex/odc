@@ -22,6 +22,47 @@ const PRIMITIVES = [
   'dialog',
 ] as const
 
+// ui-surfaces-dashboards (fases 3a + 3e): los seis archivos del alcance de R15.
+const SURFACES = [
+  'odc-status-badge',
+  'odc-dashboard',
+  'admin-dashboard',
+  'general-dashboard',
+  'executive-dashboard',
+  'executive-tasks',
+] as const
+
+const surfaceSource = (name: string) =>
+  read(`src/components/odc/${name}.tsx`)
+
+describe('ui-surfaces-dashboards R1: el badge deja de pintar paleta cruda', () => {
+  const badge = () => surfaceSource('odc-status-badge')
+
+  it.each([
+    'draft',
+    'pending',
+    'budget',
+    'approved',
+    'paid',
+    'evidence',
+    'done',
+    'rejected',
+  ])('declara el par de tokens de status-%s', (token) => {
+    expect(badge()).toContain(`bg-status-${token}-surface`)
+    expect(badge()).toMatch(new RegExp(`\\btext-status-${token}\\b(?!-surface)`))
+  })
+
+  it('no conserva ninguna clase de paleta Tailwind', () => {
+    expect(badge()).not.toMatch(
+      /\b(?:bg|text)-(?:slate|amber|sky|blue|violet|cyan|emerald|red)-\d{2,3}\b/,
+    )
+  })
+
+  it('no duplica la inversión de tema con variantes dark:', () => {
+    expect(badge()).not.toContain('dark:')
+  })
+})
+
 describe('R13: las 6 aserciones sobre className siguen intactas', () => {
   it.each([
     [
