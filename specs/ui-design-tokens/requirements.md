@@ -40,7 +40,7 @@ Alcance: **fases 1 y 2** de `progress/ui-redesign-plan.md`, ni más ni menos.
   | `--border` | `oklch(0.9268 0.0063 255.48)` |
   | `--destructive` | `oklch(0.5771 0.2152 27.33)` |
   | `--ring` | `oklch(0.3462 0.0736 256.04)` |
-  | `--accent-action` | `oklch(0.5960 0.1274 163.23)` |
+  | `--accent-action` | `oklch(0.5081 0.1049 165.61)` |
   | `--accent-action-foreground` | `oklch(0.985 0 0)` |
 
   `--background` y `--card` SHALL tener valores distintos entre sí.
@@ -196,6 +196,22 @@ Alcance: **fases 1 y 2** de `progress/ui-redesign-plan.md`, ni más ni menos.
   compra.
 - Añadir librería de gráficas, de iconos o de animación (MASTER §5, §7).
 
+## Enmiendas posteriores a la aprobación
+
+| Fecha | Requisito | Cambio | Autoriza |
+|---|---|---|---|
+| 2026-08-10 | R2 | `--accent-action` de `oklch(0.5960 0.1274 163.23)` (#059669) a `oklch(0.5081 0.1049 165.61)` (#047857) | Humano, en sesión |
+
+Motivo: R2 y R5 eran **contradictorios tal como se aprobaron**. R2 fijaba
+`--accent-action-foreground` en blanco sobre `--accent-action` #059669, combinación que da
+3.77:1 y viola el mínimo de 4.5:1 que exige R5. No existía implementación que cumpliera
+ambos. Se corrige por el lado del verde, no del texto: #047857 da 5.48:1 con blanco y
+coincide con `--status-done`, unificando el color de la acción de confirmar con el del
+estado al que conduce. `--accent-action-foreground` vuelve a blanco, como fijaba R2.
+
+El chroma resultante (0.1049) sigue cumpliendo la restricción de R2 de `> 0.10`.
+
 ## Aprobación
 
 - [X] Aprobado por humano (fecha: 2026-08-10) ← gate obligatorio antes de implementar
+- [X] Enmienda de R2 aprobada por humano (fecha: 2026-08-10)

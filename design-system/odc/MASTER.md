@@ -46,7 +46,8 @@ Paleta semántica navy + verde pagado + rojo excepción sobre neutros fríos. Co
 | `--primary` | `oklch(0.3462 0.0736 256.04)` | `#1E3A5F` | Acción primaria, ring de foco, texto de énfasis |
 | `--primary-foreground` | `oklch(0.985 0 0)` | `#FFFFFF` | Texto sobre primary |
 | `--secondary` | `oklch(0.9632 0.0034 247.86)` | `#F1F3F5` | Superficie secundaria neutra |
-| `--accent-action` | `oklch(0.5960 0.1274 163.23)` | `#059669` | **Solo** confirmación de pago/cierre. No es el color de todos los CTA |
+| `--accent-action` | `oklch(0.5081 0.1049 165.61)` | `#047857` | **Solo** confirmación de pago/cierre. No es el color de todos los CTA |
+| `--accent-action-foreground` | `oklch(0.985 0 0)` | `#FFFFFF` | Texto sobre accent-action |
 | `--background` | `oklch(0.9842 0.0034 247.86)` | `#F8FAFC` | Fondo de app |
 | `--card` | `oklch(1 0 0)` | `#FFFFFF` | Superficie de tarjeta (contraste contra el fondo, no igual) |
 | `--foreground` | `oklch(0.2077 0.0398 265.75)` | `#0F172A` | Texto principal |
@@ -58,6 +59,15 @@ Paleta semántica navy + verde pagado + rojo excepción sobre neutros fríos. Co
 Cambio clave frente al estado actual: hoy `--background` y `--card` son ambos
 `oklch(1 0 0)` y `--primary` es gris `oklch(0.205 0 0)`. Card sobre fondo idéntico +
 primary acromático es la causa mecánica de que la UI lea como shadcn sin tematizar.
+
+> **Enmienda 2026-08-10 (decisión humana).** `--accent-action` era `#059669`
+> (emerald-600), tomado de `colors.csv`. Da **3.77:1** con texto blanco, por debajo del
+> mínimo de 4.5:1 de §10. Se sustituye por `#047857` (emerald-700), que da **5.48:1** con
+> blanco. Efecto lateral deseado: es el mismo valor que `--status-done`, así que el botón
+> que confirma y el estado al que lleva comparten verde, y desaparece un verde
+> casi-duplicado del sistema. La alternativa descartada era conservar `#059669` con texto
+> navy (4.74:1): pasa el mínimo, pero rompe la convención de texto claro sobre superficie
+> de acción y se lee turbio.
 
 ### Tokens de estado ODC (nuevos)
 
