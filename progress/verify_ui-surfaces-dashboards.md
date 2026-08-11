@@ -226,7 +226,9 @@ entera y re-auditar los 16 pares. **Recomendación:** no abrir feature por esto
 todavía y volver a mirarlo cuando la 26 o la 27 pongan varias badges juntas en
 pantalla, que es cuando el defecto sería visible.
 
-Observación: PENDIENTE.
+Observación registrada: **sin abrir feature.** Con las badges que llegaron a
+verse en oscuro no hay base para afirmar que la familia se vea lavada, y la
+corrección real es cara. Se revisa cuando varias coincidan en pantalla.
 
 ## 4. Las barras de acento de las tarjetas de cola
 

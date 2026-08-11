@@ -588,3 +588,294 @@ Tests:       471 passed, 471 total
 
 EXIT=0
 ```
+
+---
+---
+
+# Cierre de la review — validación del delta (2026-08-11)
+
+Segunda pasada, **solo sobre lo posterior a `064ff4c`**. No repito la revisión
+completa: lo de arriba sigue vigente tal cual.
+
+Rango del delta: `064ff4c..db1bd6c` — 8 commits.
+
+| Commit | Qué |
+|---|---|
+| `ec38ae7` | docs: registra la review y cierra D3 |
+| `0299139` | **test**: guarda de regresión del `pb-3!` (R7) — cierra D1 |
+| `3f2ab86` | docs: registra la guarda de D1 |
+| `7539be5` | docs: registra las decisiones de D1 y D2 |
+| `a6fdfc4` | docs: enmienda del ancho de `/tasks` + abre la feature 30 |
+| `35edbe2` | **test**: ancho de lista de una columna para `executive-tasks` (R3) |
+| `81ec0c3` | **feat**: `executive-tasks.tsx` a `max-w-4xl` (R3) |
+| `db1bd6c` | docs: cierra R14 con el veredicto humano firmado |
+
+Par `test → feat` limpio en la enmienda (`35edbe2` → `81ec0c3`), y el commit de
+guarda (`0299139`) es `test(...)` y solo toca el archivo de tests. **C4 sigue
+pasando: ningún `feat` del delta toca un `*.test.ts(x)`.**
+
+## Verificación independiente del delta
+
+| Comando | Resultado |
+|---|---|
+| `pnpm test` (frontend) | **37 archivos / 472 tests, 472 passed** |
+| `pnpm build` (frontend) | **✓ built in 707ms** |
+| `git status` | limpio tras mis pruebas de mutación (ver abajo) |
+
+## D1 — CERRADO. La guarda discrimina y muerde: verificado por mutación
+
+`design-system.guardrails.test.ts:132-144`, sobre las tres superficies que llevan
+barra de acento:
+
+```js
+expect(source).toContain('pb-3!')
+expect(source).not.toMatch(/\bpb-3(?!!)/)
+```
+
+**Ámbito correcto**: `it.each(['odc-dashboard', 'admin-dashboard', 'general-dashboard'])`
+son exactamente los tres archivos que contienen `border-l-2`, ni uno más ni uno
+menos (verificado con `grep -l`).
+
+**El lookahead discrimina de verdad.** Ejecuté el regex contra los dos casos, en
+las dos formas sintácticas que usa el código (`cn()` con comilla simple y template
+literal de `general-dashboard.tsx`):
+
+```
+no-match | not.toMatch => pasa                  | 'border-border/60 pb-3!'          CORRECTO
+MATCH    | not.toMatch => FALLA (guarda muerde) | 'border-border/60 pb-3'           REGRESIÓN
+no-match | not.toMatch => pasa                  | `border-b pb-3! ${QUEUE_ACCENT}`  CORRECTO template
+MATCH    | not.toMatch => FALLA (guarda muerde) | `border-b pb-3 ${QUEUE_ACCENT}`   REGRESIÓN template
+MATCH    | not.toMatch => FALLA (guarda muerde) | 'pb-3! y luego pb-3 suelto'       MIXTO
+'pb-3!'.includes('pb-3') = true   ← por esto el toContain viejo no servía
+```
+
+**La guarda muerde de verdad, no solo en teoría.** Hice la mutación end-to-end que
+pedía el brief, en vez de creerme el mensaje de commit: quité el `!` de
+`admin-dashboard.tsx:62` con `sed` y corrí vitest.
+
+```
+❯ src/design-system.guardrails.test.ts:141:22
+   141|       expect(source).toContain('pb-3!')
+      |                      ^
+ Test Files  2 failed (2)
+```
+
+Restaurado con `git checkout --` y `git status` verificado vacío después.
+
+Matiz técnico que conviene dejar escrito: en esta mutación quien falló fue el
+`toContain('pb-3!')` de la línea 141, no el lookahead de la 142. Es correcto —
+las dos aserciones se reparten el trabajo: `toContain` cubre la desaparición
+total del marcador, y el lookahead cubre el caso mixto (un `pb-3!` presente más
+un `pb-3` plano en otra parte del mismo archivo), que es el que el `toContain`
+solo dejaría pasar. Mi caso 5 de arriba lo demuestra. **El par es correcto y
+suficiente. D1 queda cerrado.**
+
+## Enmienda de R3 — código nuevo, validado
+
+**Solo cambió `executive-tasks.tsx`.** El diff de `81ec0c3` es de una línea de
+`className` más un comentario. Verificado por inventario, no por diff:
+
+```
+odc-dashboard.tsx:162        mx-auto max-w-[1400px]
+admin-dashboard.tsx:129      mx-auto max-w-[1400px]
+general-dashboard.tsx:28     mx-auto max-w-[1400px]
+executive-dashboard.tsx:456  mx-auto max-w-[1400px]   (superficie)
+executive-dashboard.tsx:478  mx-auto max-w-[1400px]   (Loading)
+executive-tasks.tsx:93       mx-auto max-w-4xl        ← el único que cambia
+```
+
+**Las otras cuatro superficies siguen en 1400px**, incluido el estado de carga.
+`max-w-2xl` (`executive-dashboard:113`, `executive-tasks:95`) y `max-w-lg`
+(`executive-dashboard:495`) son contenedores internos preexistentes, no el
+contenedor de página.
+
+**El padding no se tocó.** Las 6 apariciones de `min-w-0 flex-1 p-4 sm:p-6` siguen
+intactas. `lg:p-8` solo sobrevive en `monthly-summary.tsx`, que es de la feature 27
+y nunca estuvo en el alcance.
+
+**El test nuevo es una guarda real, no un `expect` que pasa siempre.** Además de
+la aserción positiva añade dos negativas —`max-w-[1400px]` nulo y `max-w-5xl`
+nulo—, así que cierra tanto la vuelta atrás a la enmienda como la vuelta al valor
+original. Contrastado por mutación, no por confianza: revertí
+`executive-tasks.tsx` a `max-w-[1400px]` con `sed` y corrí vitest.
+
+```
+FAIL  executive-tasks.test.tsx > …R3,R4… > usa el ancho de lista de una columna y el padding de página
+AssertionError: expected null to be truthy
+   99|     expect(container.querySelector('.max-w-4xl')).toBeTruthy()
+```
+
+Restaurado y verificado limpio.
+
+**Trazabilidad documental de la enmienda: correcta y en el orden correcto.**
+`design-system/odc/pages/dashboard.md` —la fuente normativa— se enmendó primero,
+con la medición registrada (611 / 1274 / **663px** de hueco a viewport 1466), y
+`requirements.md` estrena una tabla "Enmiendas posteriores a la aprobación" que
+la sigue. **El texto de R3 no se editó**: el diff de `requirements.md` es `+6/-0`.
+Es exactamente la salida que la decisión humana 1 dejaba prevista —enmendar la
+fuente normativa, nunca saltarse el requisito en silencio— y la más limpia
+posible respecto de C6: el requisito aprobado queda inmutable y la excepción vive
+en una tabla firmada y fechada, enlazada desde `traceability.md`.
+
+Nota menor de documentación, sin acción: el cuerpo literal de R3 sigue diciendo
+`max-w-[1400px]` para las cinco superficies, así que quien lea R3 aislado sin
+llegar a la tabla de enmiendas verá una contradicción con el código. La tabla y
+la fila de trazabilidad lo resuelven; lo dejo anotado por si la 26 hereda el
+patrón.
+
+## R14 — CERRADO, y el acta es honesta
+
+Revisé `progress/verify_ui-surfaces-dashboards.md` entero. Las 5 secciones están
+rellenadas con lecturas en vivo y el veredicto humano está firmado:
+
+> **AFIRMATIVO.** […] — Alexis, 2026-08-11.
+
+Lo que sostiene el veredicto, y que sí se midió:
+
+- **§2, D-V3 cerrado**: `getComputedStyle().height` de **32px** y **28px** en los
+  dos CTA del header, frente a los 36px de `size="lg"`. Lecturas en vivo.
+- **§1**: header a **81px**, `h1` computando **24px** (`text-2xl`), `innerText` del
+  header sin el párrafo descriptivo, un solo contenedor a `max-width: 1400px` y
+  `scrollWidth == clientWidth` (sin scroll horizontal).
+- **§3**: cuatro lecturas de badge que coinciden **carácter a carácter** con los
+  tokens de `styles.css` en los dos temas — incluidas dos superficies con los
+  chromas `0.012` / `0.011` **corregidos por la feature 24**, lo que demuestra de
+  paso que la corrección de gamut de la 24 llega al render.
+- **§4**: barrido del DOM buscando elementos de ≤3px de alto con fondo no
+  transparente → **cero barras de acento** en las dos tarjetas heterogéneas. El
+  SHALL NOT de R7 verificado por observación, no por deducción.
+- **§4**: la tarjeta de alertas usando `--status-pending` en pantalla. R11 llega
+  al usuario.
+
+**Lo que más valoro del acta es lo que admite que no pudo comprobar**, y lo dice
+sin adornos en vez de rellenar la casilla: el alto del header "antes" no se midió
+en vivo; 7 de las 8 badges no tienen datos en el dataset de desarrollo; los CTA
+literales de `odc-dashboard.tsx` no se midieron en pantalla; y las 7 barras de
+acento son directamente inverificables. El humano firmó **con esas lagunas
+explícitas delante**. Eso es lo contrario de fabricar evidencia, y es la razón por
+la que doy el gate por bueno.
+
+Cobertura frente al texto literal de R14 §1: el acta cubre `DIRECTOR_OPS` en los
+dos temas, `ADMINISTRACION` en claro, y no cubre `DIRECTOR_GENERAL`. R14 pedía los
+tres roles en ambos temas. **La laguna es consecuencia directa del hallazgo de
+superficies muertas** —tres de las cuatro superficies no se pueden abrir— y está
+declarada en el propio acta antes de la firma. La acepto: el gate de R14 es
+"veredicto humano afirmativo", el veredicto existe, es informado, y lo que falta
+tiene dueño en la feature 30.
+
+## Hallazgo de superficies muertas — CONFIRMADO por mi cuenta
+
+Lo verifiqué yo, como pedía el brief, y **el leader no se equivoca**.
+
+Búsqueda exhaustiva en todo `frontend/src` de los tres símbolos y de los tres
+nombres de archivo:
+
+- `OdcDashboard`, `AdminDashboard`, `GeneralDashboard`: **los únicos importadores
+  son sus propios `*.test.tsx`**. Cero importadores de producción.
+- Los tres nombres de archivo solo aparecen en sus tests y en la lista `SURFACES`
+  de la auditoría de fuente.
+- `routes/_authenticated/index.tsx` importa **solo** `executive-dashboard`, y su
+  `loader` (líneas 15-24) admite `DIRECTOR_OPS`, `ADMINISTRACION` y
+  `DIRECTOR_GENERAL` contra el mismo endpoint, devolviendo el mismo
+  `ExecutiveDashboardResponse`. La línea 41 renderiza `<ExecutiveDashboard>` para
+  los tres roles sin ramificar.
+
+**Consecuencia, que dejo constando en el veredicto**: las 7 barras de acento de R7
+y los dos CTA que originaron D-V3 viven en código que ninguna ruta monta. Sus
+tests pasan porque montan el componente directamente, no porque la aplicación lo
+use. **La feature 25 está correctamente implementada y aun así entrega al usuario
+bastante menos de lo que su spec suponía**: de los 15 requisitos, los que llegan
+hoy a pantalla son los que tocan `executive-dashboard.tsx` y `executive-tasks.tsx`
+—R1, R2 en las badges que se renderizan, R3 (con su enmienda), R4, R5, R6 medido
+sobre los CTA que sí existen, R8, R9, R10 y R11—, mientras que **las 7 barras de
+acento de R7 no las ve nadie**.
+
+Esto **no es defecto del implementer**: hizo exactamente lo que la spec aprobada
+pedía. Es un fallo de la fase de especificación, que enumeró seis archivos sin
+comprobar cuáles monta la aplicación. La **feature 30 `ui-dead-surfaces-audit`**
+está abierta a **P1** en `feature_list.json` con ese encargo, más el de comprobar
+si las features 26 y 27 apuntan a más código muerto **antes** de especificarse.
+Eso último es lo importante: sin ese chequeo previo, la 26 y la 27 pueden repetir
+el mismo gasto.
+
+## D2 — aceptado con dueño, verificado
+
+`progress/ui-redesign-plan.md:185-204`, §"Encargo heredado por la 26": la feature
+26 hereda arreglar la primitiva `CardHeader`, retirar los 3 `!important` nuevos y
+resolver el `rounded-2xl!` de `toast.tsx:43`. La deuda queda con dueño y con
+fecha, que es lo que pedía la reserva. Nada que objetar.
+
+## D3 — cerrado y vuelto a abrir
+
+Se cerró en `ec38ae7`, pero `progress/current.md` **ha vuelto a quedar obsoleto**
+tras el trabajo de R14 y D1. Ver **D4** abajo.
+
+## Defectos nuevos del delta
+
+### D4 — MENOR (bookkeeping del leader). `progress/current.md` obsoleto otra vez
+
+Es la reaparición de D3, no un defecto de código. El archivo describe un estado
+que dejó de ser cierto hace ~30 minutos:
+
+- Encabezado: `PAUSADA en la verificacion de navegador`, y
+  `estado: … BLOQUEADA en R14, la sesion de navegador y el veredicto humano`.
+  **R14 está cerrado** con veredicto afirmativo desde `db1bd6c`.
+- `**D1 (moderado, EN CURSO).** … El implementer esta escribiendo una auditoria`.
+  **D1 está cerrado** desde `0299139`.
+- `Features 23 y 24 done. 25-29 pending` — la 25 está `in_progress` y existe una
+  feature 30.
+- Bloque final: `Falta solo que un humano marque la casilla … Hasta entonces no se
+  lanza el implementer`. El gate se firmó y el implementer ya entregó.
+
+Es la **tercera** vez en esta feature que `current.md` va por detrás del estado
+real. No bloquea el cierre, pero conviene actualizarlo **antes** de marcar la 25
+como `done`, o el arranque de la 26 leerá un estado falso. C2 sigue sin pasar por
+este ítem.
+
+### D5 — TRIVIAL. Línea muerta en el acta de R14
+
+`progress/verify_ui-surfaces-dashboards.md:229` sigue diciendo
+`Observación: PENDIENTE.`, justo debajo de un párrafo que **sí** registra la
+observación y da una recomendación concreta ("no abrir feature por esto todavía y
+volver a mirarlo cuando la 26 o la 27 pongan varias badges juntas en pantalla").
+Es un resto del esqueleto que contradice el texto que tiene encima. La decisión
+humana 3 está sustantivamente cumplida —la observación consta y el veredicto de no
+abrir feature está dado—, así que es cosmético, pero conviene borrar la línea para
+que nadie lea el acta y crea que quedó una sección sin rellenar.
+
+## Checkpoints, estado final
+
+| Checkpoint | Estado | Nota |
+|---|---|---|
+| C1 harness | **PASS** | no aplica (no es la primera feature); `./init.sh` exit 0 en la primera pasada |
+| C2 estado | **PARCIAL** | una sola feature `in_progress` ✓; `current.md` obsoleto ✗ (**D4**) |
+| C3 arquitectura | **PASS** | el delta solo toca presentación y documentación |
+| C4 TDD | **PASS** | par `test → feat` en la enmienda; la guarda de D1 es `test(...)` pura; ningún `feat` toca tests |
+| C5 trazabilidad | **PASS** | **ninguna fila pendiente**: R14 pasó de "Abierto" a "Cerrado el 2026-08-11"; R3 registra su enmienda; R7 registra la guarda `0299139` |
+| C6 spec aprobada | **PASS** | `status: approved` y casilla firmada intactos; el texto de R3 **no** se editó; la excepción vive en la tabla de enmiendas con autorización humana fechada |
+
+## Veredicto del delta
+
+**DELTA APROBADO.** Las tres reservas están resueltas: D1 cerrado con una guarda
+que verifiqué por mutación —no por el mensaje de commit—, D2 aceptado con dueño
+explícito en la feature 26, D3 cerrado en su momento. La enmienda de R3 es
+correcta en el código, correcta en el alcance (un solo archivo, padding intacto,
+las otras cuatro superficies en 1400px), correcta en el procedimiento (fuente
+normativa primero, medición registrada, texto del requisito sin tocar) y su test
+es una guarda que muerde. R14 está cerrado con lecturas en vivo reales y un
+veredicto humano informado que declara sus propias lagunas.
+
+**Los dos defectos nuevos son bookkeeping y cosmética** (`current.md` obsoleto,
+línea muerta en el acta). Ninguno bloquea.
+
+**La feature 25 puede marcarse `done`**, con dos condiciones de higiene antes de
+arrancar la 26: actualizar `current.md` (**D4**) y limpiar la línea 229 del acta
+(**D5**).
+
+Y con una constancia que quiero que sobreviva al cierre: **tres de las seis
+superficies de esta feature no las monta ninguna ruta**, así que las 7 barras de
+acento de R7 y los CTA que originaron D-V3 no llegan hoy a ningún usuario.
+Confirmado por mí, no heredado. El trabajo es correcto y el problema es de la
+fase de especificación, pero cerrar la 25 como `done` **no** significa que su
+valor esté entregado. Eso depende de la feature 30, y por eso está en P1.
+

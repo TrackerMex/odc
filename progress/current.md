@@ -1,91 +1,85 @@
-# Sesion activa — PAUSADA en la verificacion de navegador 2026-08-11
+# Sesion cerrada — 2026-08-11
 
 ```
 feature: ui-surfaces-dashboards
 id: 25
 inicio: 2026-08-11
+cierre: 2026-08-11
 plan: fases 3a + 3e del refactor visual — las 5 superficies de dashboard
       y odc-status-badge.tsx. Ver progress/ui-redesign-plan.md
-estado: in_progress — codigo entregado y revisado; BLOQUEADA en R14,
-        la sesion de navegador y el veredicto humano
-bloqueos: R14 abierto (sesion de navegador sin ejecutar) + dos defectos
-          del reviewer esperando decision (D1 y D2, abajo)
+estado: done — reviewer aprobo, delta posterior validado, R14 firmado
+bloqueos: ninguno
 spec_author: hecho -> specs/ui-surfaces-dashboards/ (15 requisitos)
 gate humano: aprobado 2026-08-11, commiteado aparte en 1f4884b
-implementer: hecho -> progress/impl_ui-surfaces-dashboards.md (14 commits)
+implementer: hecho -> progress/impl_ui-surfaces-dashboards.md
 reviewer:    hecho -> progress/review_ui-surfaces-dashboards.md
-             APROBADO CON RESERVAS, 3 defectos
+             APROBADO CON RESERVAS + delta aprobado
 ```
 
-## Defectos del reviewer
+## Resultado
 
-- **D1 (moderado, EN CURSO).** El fix `879624d` no dejo guarda de regresion.
-  Los tests de R7 afirman `toContain('pb-3')`, y `'pb-3!'.includes('pb-3')` es
-  `true`: la suite esta igual de verde con el `pb-3!` correcto que con un `pb-3`
-  inerte. Nadie impide revertir R7 en silencio. **Decision humana 2026-08-11:
-  cerrarlo ahora.** El implementer esta escribiendo una auditoria de fuente en
-  `design-system.guardrails.test.ts` que discrimine `pb-3` de `pb-3!` y que nazca
-  roja.
-- **D2 (menor, ACEPTADO con dueno).** `pb-3!` sube la deuda de `!important` de 1
-  uso (`ui/toast.tsx:43`) a 4. El diagnostico del implementer es correcto y la
-  salida defendible — R15 le prohibia tocar `components/ui/`. **Decision humana
-  2026-08-11: se acepta en la 25 y la feature 26 hereda el encargo** de arreglar
-  la primitiva `CardHeader`, retirar los 3 usos nuevos y resolver si el de
-  `toast.tsx` sigue haciendo falta. Escrito en §Encargo heredado por la 26 de
-  `progress/ui-redesign-plan.md`.
-- **D3 (menor, CERRADO).** `progress/current.md` desactualizado. Este bloque.
+R1-R15 completos. `pnpm test` 472/472, `pnpm build` e `init.sh` en verde.
+C4 limpio: ningun `feat(...)` toca un archivo de test, por segunda feature
+consecutiva.
 
-## Cerrado antes en esta misma sesion
+Verificado en pantalla (sesiones `DIRECTOR_OPS` y `ADMINISTRACION`, ambos temas):
 
-Feature 24 `ui-dark-mode-chroma` **done** (commit `6520d59`). Reviewer aprobo con
-reservas, todas bookkeeping del leader y todas cerradas. `.dark --primary` quedo en
-`oklch(0.6800 0.1400 254.62)`, saturacion al 96.8% del navy claro frente al 46%
-anterior: D-V1 resuelto y firmado por el humano en
-`progress/verify_ui-dark-mode-chroma.md`.
+- **D-V3 cerrado**: los CTA del header computan 32px y 28px, frente a los 36px de
+  `size="lg"`.
+- **R4**: header de 81px, `h1` a 24px, sin parrafo descriptivo.
+- **R1/R2**: cuatro lecturas de badge coinciden caracter a caracter con sus pares
+  de tokens. De rebote se confirmo que la correccion de gamut de la feature 24
+  llega al render (chroma `0.012` y `0.011`, no los originales).
+- **R11**: la tarjeta de alertas usa `--status-pending` en vez del ambar
+  hardcodeado.
+- **R7 SHALL NOT**: cero barras de acento en las dos tarjetas heterogeneas.
 
-Features **25-29 anadidas** a `feature_list.json` (commit `0e0953e`) con su alcance
-escrito en §Como ejecutarlo del plan. Orden recomendado: 25 → 26 → 28 → 27 → 29.
+## Los cinco defectos del reviewer, todos cerrados
 
-## Las tres decisiones del gate: respondidas 2026-08-11
+- **D1** — el fix `879624d` no dejaba guarda: `toContain('pb-3')` casaba igual con
+  un `pb-3` inerte. Cerrado en `0299139` con una auditoria de fuente que usa
+  `not.toMatch(/\bpb-3(?!!)/)`. El reviewer la valido **por mutacion**: quito el
+  `!` con sed, vitest fallo, restauro.
+- **D2** — el `pb-3!` sube la deuda de `!important` de 1 uso a 4. Aceptado por el
+  humano; la **feature 26 hereda** arreglar la primitiva `CardHeader`, retirar los
+  3 usos nuevos y resolver el `rounded-2xl!` de `toast.tsx:43`. Escrito en
+  §"Encargo heredado por la 26" del plan.
+- **D3, D4** — `progress/current.md` desactualizado, dos veces. Este bloque.
+- **D5** — linea `Observacion: PENDIENTE` residual en el acta, contradiciendo al
+  parrafo de encima. Corregida.
 
-Las tres confirmaron lo que la spec ya proponia, asi que **ningun requisito
-cambio**. Quedan registradas en la seccion "Decisiones humanas" de
-`specs/ui-surfaces-dashboards/requirements.md` para que nadie las reabra:
+## Lo que este gate encontro y ningun test verde habria encontrado
 
-1. **R3, `executive-tasks.tsx` a `max-w-[1400px]`** → se aplica. La comprobacion en
-   pantalla de R14 decide si el riesgo de filas estiradas es real; si lo es, la
-   salida es enmendar `pages/dashboard.md`, no saltarse el requisito en silencio.
-2. **R7, barra de acento en las tarjetas heterogeneas** → **sin** barra. El SHALL
-   NOT queda tal cual.
-3. **Re-saturacion de las 8 badges de dark** → esta feature solo **registra la
-   observacion** en el acta de R14. El veredicto humano de esa acta decide si nace
-   una feature nueva antes de la 26/27.
-
-Falta **solo** que un humano marque la casilla de
-`specs/ui-surfaces-dashboards/requirements.md` (linea 324) y ponga
-`status: approved` en los 4 archivos. Hasta entonces **no se lanza el implementer**.
-
-## Verificado por el leader antes de pausar
-
-- Gate limpio: `status: draft` en los 4 archivos, linea 306 `- [ ] Aprobado por
-  humano`, cero casillas marcadas. Verificado a mano, no por reporte del subagente.
-- `git status` solo muestra `specs/ui-surfaces-dashboards/` como nuevo: el
-  spec_author no toco codigo de aplicacion.
-- **Los dos tests en riesgo que el plan no enumeraba son reales**, comprobados en el
-  archivo: `executive-dashboard.test.tsx:143` exige que `header.textContent` siga
-  casando `/operaciones/i` despues de que R4 borre el parrafo descriptivo, y
-  `general-dashboard.test.tsx:88` exige `getAllByText('Direccion General')` con
-  longitud **exactamente 2**, asi que el eyebrow de la tarjeta no se puede quitar.
-  Ambos entran en la tabla de R12.
+1. **El ancho de consola no aguanta una lista de una columna.** `/tasks` con
+   `max-w-[1400px]` dejaba 663px de hueco entre el importe y su boton de accion a
+   un viewport de 1466px, y mas de 880px a ancho completo. El humano firmo la
+   enmienda de `design-system/odc/pages/dashboard.md`: el ancho de consola aplica a
+   **rejillas de colas**, y una **lista de una sola columna** usa `max-w-4xl`.
+   Aplicado en `35edbe2` + `81ec0c3`. El hueco baja a 406px y **queda acotado**;
+   no desaparece — cerrarlo del todo seria un cambio de layout de fila, no de
+   ancho, y es trabajo de otra feature.
+2. **Tres de las seis superficies no las monta ninguna ruta.** Confirmado por el
+   reviewer: `OdcDashboard`, `AdminDashboard` y `GeneralDashboard` no tienen un
+   solo importador de produccion, y `routes/_authenticated/index.tsx` renderiza
+   `ExecutiveDashboard` para los tres roles sin ramificar. Las 7 barras de acento
+   de R7 y los CTA de D-V3 **no llegan hoy a ningun usuario**. No es defecto del
+   implementer sino de la fase de especificacion.
 
 ## Estado del entorno
 
 - Rama `ui-design-system-docs`, **sin push**.
-- Features 23 y 24 `done`. 25-29 `pending`.
-- Dev server detenido. Para la verificacion visual:
-  `cd frontend && pnpm vite dev --port 3005 --host 127.0.0.1`, backend y DB con
-  `docker start odc-db-1 odc-backend-1` (puertos 3001 y 5432).
+- Features 23, 24 y 25 `done`. **26-30 `pending`.**
+- **La feature 30 `ui-dead-surfaces-audit` (P1) va antes que la 26 y la 27**:
+  debe decidir si esas 3 superficies se montan o se borran, y comprobar si la 26
+  y la 27 apuntan a mas codigo no montado antes de especificarse.
+- Orden recomendado revisado: **30 → 26 → 28 → 27 → 29**.
+- `pet-tracker-postgres` (otro proyecto) quedo **parado** para liberar el 5432 que
+  necesitaba `odc-db-1`. Devolverlo con `docker start pet-tracker-postgres`.
+- Para levantar el entorno: `docker compose up -d db backend` y
+  `cd frontend && pnpm vite dev --port 3005 --host 127.0.0.1`. Ojo: reiniciar el
+  backend con la DB caida le hace perder la red de compose (`ENOTFOUND db`); se
+  arregla con `docker compose up -d`.
 - Nota de navegador: puede haber mas de un Chrome conectado a la extension. Si
-  `localhost` da `ERR_CONNECTION_REFUSED` no es la app — es que esta seleccionado el
-  de otro equipo. `list_connected_browsers` + `select_browser` lo arreglan.
-- **Sin verificar todavia: responsive a 375px.** Ya tiene feature propia, la 28.
+  `localhost` da `ERR_CONNECTION_REFUSED` no es la app — es que esta seleccionado
+  el de otro equipo. `list_connected_browsers` + `select_browser` lo arreglan.
+- **Sin verificar todavia: responsive a 375px.** Tiene feature propia, la 28.
