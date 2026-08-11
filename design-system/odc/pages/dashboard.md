@@ -7,8 +7,34 @@
 ## Layout
 
 - Ancho: `max-w-[1400px]`, no `max-w-7xl`. Es una consola de trabajo, no una landing.
+  **Excepción, `executive-tasks.tsx`: `max-w-4xl` (896px)** — ver enmienda de abajo.
 - Padding de página: `1.5rem` (hoy `p-4 sm:p-6 lg:p-8` → dejar en `p-4 sm:p-6`).
 - Grid de colas: se mantiene `lg:grid-cols-2`. Con 4 colas, 2×2 es correcto.
+
+### Enmienda 2026-08-11 — el ancho de consola no aplica a listas de una columna
+
+Autorizada por el humano tras verla en pantalla, en la sesión de verificación de
+la feature 25 (`progress/verify_ui-surfaces-dashboards.md` §1).
+
+`executive-tasks.tsx` es la única de las cinco superficies que renderiza una
+**lista de una sola columna**, no una rejilla de colas. Aplicarle el ancho de
+consola la deja así, medido en vivo con el viewport a 1466px:
+
+| Medida | Valor |
+|---|---|
+| Borde derecho del importe | x = 611 |
+| Borde izquierdo de su botón de acción | x = 1274 |
+| **Hueco vacío entre el dato y la acción que opera sobre él** | **663px** |
+
+A 1400px completos el hueco pasaría de 880px. El ojo tiene que cruzar la fila
+entera para ligar un importe con su botón, que es justo el tipo de fricción que
+el ancho de consola pretendía evitar en las rejillas.
+
+**Regla resultante:** el `max-w-[1400px]` de esta página aplica a las superficies
+de **rejilla de colas**. Una superficie de lista de una sola columna usa
+`max-w-4xl` (896px), que mantiene la relación entre el dato y su acción a una
+distancia legible. Si en el futuro `executive-tasks.tsx` deja de ser una lista de
+una columna, vuelve a la regla general.
 
 ## Header
 

@@ -34,106 +34,217 @@ Cambios implementados a verificar:
 
 ## 1. Las cuatro superficies en los dos temas
 
-PENDIENTE — sesión de navegador no ejecutada.
+Sesión del **2026-08-11**, Chrome real, app en `http://localhost:3006` (el 3005
+estaba ocupado), backend y DB en contenedor. Tema conmutado con el `ThemeToggle`
+de `lib/theme.tsx`. Viewport `innerWidth` 1482 / `clientWidth` 1466.
 
-Qué hay que registrar aquí: `/` con los tres roles (`DIRECTOR_OPS`,
-`ADMINISTRACION`, `DIRECTOR_GENERAL`) y `/tasks`, en tema claro y en tema
-oscuro, con el **alto computado del header antes y después** del cambio.
+### Hallazgo que cambia el alcance real de esta feature
 
-| Superficie | Rol | Tema | Alto del header (antes) | Alto del header (después) | Captura |
-|---|---|---|---|---|---|
-| `/` | `DIRECTOR_OPS` | claro | PENDIENTE | PENDIENTE | PENDIENTE |
-| `/` | `DIRECTOR_OPS` | oscuro | PENDIENTE | PENDIENTE | PENDIENTE |
-| `/` | `ADMINISTRACION` | claro | PENDIENTE | PENDIENTE | PENDIENTE |
-| `/` | `ADMINISTRACION` | oscuro | PENDIENTE | PENDIENTE | PENDIENTE |
-| `/` | `DIRECTOR_GENERAL` | claro | PENDIENTE | PENDIENTE | PENDIENTE |
-| `/` | `DIRECTOR_GENERAL` | oscuro | PENDIENTE | PENDIENTE | PENDIENTE |
-| `/tasks` | `DIRECTOR_OPS` | claro | PENDIENTE | PENDIENTE | PENDIENTE |
-| `/tasks` | `DIRECTOR_OPS` | oscuro | PENDIENTE | PENDIENTE | PENDIENTE |
+**Tres de las seis superficies no están montadas en la aplicación.**
+`admin-dashboard.tsx`, `general-dashboard.tsx` y `odc-dashboard.tsx` no los
+importa ninguna ruta ni ningún otro componente: sus únicos importadores son sus
+propios archivos de test y la auditoría de fuente de
+`design-system.guardrails.test.ts`. Verificado por búsqueda exhaustiva de los
+tres símbolos y de los tres nombres de archivo en todo `frontend/src`.
 
-Riesgo abierto que esta sección decide (decisión humana 1 del gate):
+Lo que sí ocurre: `routes/_authenticated/index.tsx:41` renderiza
+`<ExecutiveDashboard>` para **los tres roles**, y su loader (líneas 18-23) admite
+`DIRECTOR_OPS`, `ADMINISTRACION` y `DIRECTOR_GENERAL` contra el mismo endpoint.
+Confirmado en pantalla: con sesión `ADMINISTRACION`, `/` renderiza el mismo
+`executive-dashboard` que con `DIRECTOR_OPS`, solo que con sus datos.
+
+Consecuencias, que no son culpa del implementer — hizo lo que la spec pedía —
+sino de que nadie comprobó qué se monta antes de especificar:
+
+- **Las 7 barras de acento de R7 no las ve ningún usuario hoy.** Las tres
+  superficies que las contienen no se renderizan.
+- Los CTA literales que R6 nombraba (`odc-dashboard.tsx:158,163`), origen del
+  defecto D-V3, también están en código no montado.
+- Los tests de esos tres archivos pasan porque montan el componente directamente,
+  no porque la app lo use.
+
+Esto **no invalida** el trabajo: el código es correcto y quedará bien el día que
+esas superficies se monten. Pero el valor entregado al usuario por esta feature es
+menor de lo que la spec suponía, y conviene decirlo antes de firmar.
+
+**Cobertura real, dicha sin adornos:**
+
+| Superficie | Rol | Tema | Alto del header | Verificado |
+|---|---|---|---|---|
+| `/` (`executive-dashboard`) | `DIRECTOR_OPS` | oscuro | **81px** | sí |
+| `/` (`executive-dashboard`) | `DIRECTOR_OPS` | claro | 81px | sí |
+| `/tasks` (`executive-tasks`) | `DIRECTOR_OPS` | oscuro | — | sí |
+| `/tasks` (`executive-tasks`) | `DIRECTOR_OPS` | claro | — | sí |
+| `/` (`executive-dashboard`) | `ADMINISTRACION` | claro | — | sí |
+| `admin-dashboard.tsx` | — | — | — | **no montado en la app** |
+| `general-dashboard.tsx` | — | — | — | **no montado en la app** |
+| `odc-dashboard.tsx` | — | — | — | **no montado en la app** |
+
+El "alto del header antes" no se midió en vivo: habría exigido revertir el
+código con el servidor corriendo. Lo que sí consta es que el `innerText` del
+header hoy es `OPERACIONES | Buen día, Director de Operaciones | agosto de 2026 |
+Crear ODC` — **el párrafo descriptivo ya no está**, que es lo que R4 pedía. El
+`h1` computa `24px` (`text-2xl`) en los dos temas. La captura previa al cambio,
+de la sesión de verificación de la feature 24, muestra el mismo header con el
+párrafo "Revisa lo que bloquea el flujo y continúa la siguiente acción." y un
+título visiblemente mayor.
+
+R3 verificado en vivo en las dos superficies: existe exactamente **un**
+contenedor con `max-width: 1400px`, y `scrollWidth == clientWidth` — sin scroll
+horizontal.
+
+### Riesgo de R3 en `/tasks`: medido, no opinado
+
 `executive-tasks.tsx` pasó de `max-w-5xl` (1024px) a `max-w-[1400px]` porque lo
-manda la fuente normativa, pero es una lista de una sola columna. Si las filas
-estiradas no se sostienen en pantalla, la salida correcta es **enmendar
-`design-system/odc/pages/dashboard.md`** con firma humana, nunca saltarse R3.
+manda la fuente normativa, siendo una lista de una sola columna. Medición de la
+única fila del dataset:
 
-Veredicto de si las filas estiradas de `/tasks` se sostienen: PENDIENTE.
+| Medida | Valor |
+|---|---|
+| Ancho real del contenedor a este viewport | 1178px |
+| Borde derecho del importe `$45,000.00` | x = 611 |
+| Borde izquierdo de "Completar factura" | x = 1274 |
+| **Hueco horizontal vacío entre el dato y su acción** | **663px** |
+| Alto de la fila | 28px |
+
+663px de vacío entre el importe y el botón que actúa sobre él, y eso con el
+viewport a 1466px. En una pantalla que aproveche los 1400px completos el hueco
+pasaría de 880px. El riesgo que anticipaba la decisión humana 1 **es real y
+medible**: el ojo tiene que cruzar toda la fila para ligar el dato con su acción.
+
+Capturas: `screenshot-1786470916669-3.jpg` (oscuro) y
+`screenshot-1786470947632-4.jpg` (claro).
+
+Veredicto de si las filas estiradas de `/tasks` se sostienen: **ver §5**. La
+salida correcta si no se sostienen es enmendar
+`design-system/odc/pages/dashboard.md` con firma humana, nunca saltarse R3.
 
 ## 2. Altura computada de los CTA del header
 
-PENDIENTE — sesión de navegador no ejecutada.
-
-Cierre de **D-V3**. Los valores se leen en vivo con
-`getComputedStyle(el).height` sobre los CTA del header de `odc-dashboard.tsx`,
-**no** se deducen del código: jsdom no computa layout y el test solo puede
-afirmar que `size="lg"` no aparece en el archivo.
+Leído en vivo con `getComputedStyle(el).height` el 2026-08-11, tema oscuro.
 
 | CTA | `getComputedStyle().height` | ≤ 32px |
 |---|---|---|
-| "Resumen mensual" (outline) | PENDIENTE | PENDIENTE |
-| "Nueva ODC" (primario) | PENDIENTE | PENDIENTE |
+| "agosto de 2026" (selector de periodo) | **32px** | sí |
+| "+ Crear ODC" (primario) | **28px** | sí |
+
+**D-V3 cerrado.** Antes de esta feature los CTA usaban `size="lg"`, que computa
+36px. Los dos que renderiza el header de `DIRECTOR_OPS` están hoy en 32px y 28px,
+ambos dentro del techo. Ningún control del header supera los 32px.
+
+Nota de cobertura: los CTA que la spec nombraba textualmente ("Resumen mensual",
+"Nueva ODC") son los de `odc-dashboard.tsx`, la superficie del rol de compras.
+Con la sesión `DIRECTOR_OPS` abierta, `/` renderiza `executive-dashboard.tsx`,
+cuyos CTA son los dos medidos arriba. La medición vale igual para R6 —es el mismo
+requisito y el mismo techo— pero **los CTA literales de `odc-dashboard.tsx` no se
+midieron en pantalla**; su cumplimiento hoy solo está atado por la auditoría de
+fuente `ui-surfaces-dashboards R6` y por `odc-dashboard.test.tsx`.
 
 Área táctil: el MASTER §6 la resuelve con padding, nunca subiendo la altura del
-control. Comprobación de que el foco sigue visible tras el cambio: PENDIENTE.
+control. El foco no se tocó: las dos aserciones de `focus-visible:ring` y
+`motion-reduce` siguen intactas y verdes (R12, confirmado por el reviewer con
+`-0` líneas borradas).
 
 ## 3. Las 8 badges con los tokens nuevos
 
-PENDIENTE — sesión de navegador no ejecutada.
+**El dataset de desarrollo tiene una sola orden**, en estado
+`EVIDENCIA_PAGO_SUBIDA`, así que las 8 badges no coexisten en pantalla. Solo esa
+se pudo leer renderizada; las otras 7 quedan sin comprobar visualmente.
 
-Las 8 badges pasaron de clases de paleta Tailwind **sin auditar** a los pares de
-tokens ya auditados por contraste (feature 23 R5 + feature 24 R6). Hay que
-mirarlas en los dos temas y decir si alguna **perdió legibilidad** respecto de la
-clase que sustituye.
+Lo verificado en vivo el 2026-08-11 sobre la badge que sí renderiza:
 
-| `OdcStatus` | Par de tokens | Claro | Oscuro | ¿Pierde legibilidad? |
+| `OdcStatus` | Tema | `color` computado | `background-color` computado | Par de tokens |
 |---|---|---|---|---|
-| `BORRADOR` | `status-draft` | PENDIENTE | PENDIENTE | PENDIENTE |
-| `PENDIENTE_ADMIN` | `status-pending` | PENDIENTE | PENDIENTE | PENDIENTE |
-| `PRESUPUESTO_APROBADO` | `status-budget` | PENDIENTE | PENDIENTE | PENDIENTE |
-| `COMPRA_APROBADA` | `status-approved` | PENDIENTE | PENDIENTE | PENDIENTE |
-| `PAGO_REGISTRADO` | `status-paid` | PENDIENTE | PENDIENTE | PENDIENTE |
-| `EVIDENCIA_PAGO_SUBIDA` | `status-evidence` | PENDIENTE | PENDIENTE | PENDIENTE |
-| `COMPLETADA` | `status-done` | PENDIENTE | PENDIENTE | PENDIENTE |
-| `RECHAZADA` | `status-rejected` | PENDIENTE | PENDIENTE | PENDIENTE |
+| `EVIDENCIA_PAGO_SUBIDA` | oscuro | `oklch(0.82 0.056 223.13)` | `oklch(0.29 0.03 223.13)` | `--status-evidence` / `-surface` de `.dark`, exactos |
+| `EVIDENCIA_PAGO_SUBIDA` | claro | `oklch(0.5198 0.0936 223.13)` | `oklch(0.974 0.011 223.13)` | `--status-evidence` / `-surface` de `:root`, exactos |
+| `PAGO_REGISTRADO` | claro | `oklch(0.4907 0.2412 292.58)` | `oklch(0.974 0.012 292.58)` | `--status-paid` / `-surface` de `:root`, exactos |
+| `PENDIENTE_ADMIN` | claro | `oklch(0.5553 0.1455 49)` | `oklch(0.978 0.011 49)` | `--status-pending` / `-surface` de `:root`, exactos |
 
-Nota de contexto para juzgar: `--status-pending` en claro tiene 4.70:1, el par
-con menos margen de los 16.
+Las dos últimas se leyeron con sesión `ADMINISTRACION` el mismo día. Detalle que
+vale la pena anotar: sus superficies computan `0.012` y `0.011` de chroma, que son
+los **valores corregidos por la feature 24** al sacarlos del gamut sRGB, no los
+originales `0.018` y `0.014`. La corrección de gamut de la 24 llega al render.
+
+Los cuatro valores coinciden **carácter a carácter** con los tokens declarados en
+`styles.css`: R1 se cumple de verdad en el navegador, no solo en la auditoría de
+fuente. R2 también: `data-status="EVIDENCIA_PAGO_SUBIDA"` presente, etiqueta
+textual "Pendiente de factura" visible, `border-width: 0px` y `border-radius:
+4px` (`--radius-badge`).
+
+Legibilidad de esa badge en los dos temas: correcta, sin pérdida respecto de la
+clase Tailwind que sustituye.
+
+| `OdcStatus` | Par de tokens | Estado |
+|---|---|---|
+| `BORRADOR` | `status-draft` | sin datos en el dataset |
+| `PENDIENTE_ADMIN` | `status-pending` | **verificado en claro** |
+| `PRESUPUESTO_APROBADO` | `status-budget` | sin datos en el dataset |
+| `COMPRA_APROBADA` | `status-approved` | sin datos en el dataset |
+| `PAGO_REGISTRADO` | `status-paid` | **verificado en claro** |
+| `EVIDENCIA_PAGO_SUBIDA` | `status-evidence` | **verificado en los dos temas** |
+| `COMPLETADA` | `status-done` | sin datos en el dataset |
+| `RECHAZADA` | `status-rejected` | sin datos en el dataset |
+
+Atenuante para las 7 sin comprobar: los 16 pares de estado ya tienen su contraste
+auditado por test desde las features 23 y 24, y el mapeo del componente está atado
+por la auditoría de fuente de R1. Lo que no se ha visto es el render, no la
+corrección del color. Nota de contexto que sigue vigente: `--status-pending` en
+claro tiene 4.70:1, el par con menos margen de los 16.
 
 ### Observación: saturación de las badges de dark
 
-PENDIENTE — sesión de navegador no ejecutada.
-
 **Observación sin efecto sobre el código de esta feature** (decisión humana 3 del
-gate). Hay que registrar si la familia de 8 badges de `.dark` se ve lavada sobre
-las superficies de esta feature. No se cambia ningún token aquí: 6 de las 8 no
-alcanzan el suelo del 85% de saturación dentro de sRGB a su lightness actual de
-`0.82`, así que no es un ajuste de chroma sino bajarle la lightness a la familia
-entera y re-auditar los 16 pares de contraste. El veredicto humano de esta acta
-decide si nace una feature nueva antes de la 26/27.
+gate). Con una sola badge en pantalla no hay base para juzgar si la **familia**
+de 8 se ve lavada en oscuro: eso se aprecia viéndolas juntas. La badge de
+`EVIDENCIA_PAGO_SUBIDA` en oscuro, aislada, se lee bien.
+
+Sigue en pie el dato que motivaba la observación: 6 de las 8 no alcanzan el suelo
+del 85% de saturación dentro de sRGB a su lightness actual de `0.82`, así que
+corregirlo no es un ajuste de chroma sino bajarle la lightness a la familia
+entera y re-auditar los 16 pares. **Recomendación:** no abrir feature por esto
+todavía y volver a mirarlo cuando la 26 o la 27 pongan varias badges juntas en
+pantalla, que es cuando el defecto sería visible.
 
 Observación: PENDIENTE.
 
 ## 4. Las barras de acento de las tarjetas de cola
 
-PENDIENTE — sesión de navegador no ejecutada.
+**Lo que sí se comprobó: el SHALL NOT.** Barrido del DOM de las dos superficies de
+`DIRECTOR_OPS` buscando cualquier elemento de ≤3px de alto, >40px de ancho y con
+fondo no transparente. Resultado en `/`: **cero barras de acento**. El único
+elemento que casa es un separador de 1px con fondo `oklab(1 0 0 / 0.05)`, que es
+un borde neutro, no un token de estado.
 
-Siete tarjetas de cola homogénea recibieron una barra de 2px con el token de su
-estado. Hay que decir si **distinguen las colas de un vistazo o son ruido**.
+Es decir: "Prioridad inmediata" de `executive-dashboard` y "Tareas accionables"
+de `executive-tasks` **efectivamente no llevan barra**, tal como exige la
+decisión humana 2 del gate — mezclan estados y un solo color mentiría.
+
+**Las 7 barras que sí deben existir son inverificables en pantalla, y no por
+falta de credenciales.** Las siete tarjetas de cola homogénea viven en
+`odc-dashboard`, `admin-dashboard` y `general-dashboard`, los tres componentes
+que **ninguna ruta monta** (ver el hallazgo de §1). Se comprobó con sesión
+`ADMINISTRACION` real: `/` renderiza `executive-dashboard`, y el barrido del DOM
+devuelve **cero** elementos de barra de acento en toda la página.
 
 | Superficie | Tarjeta | Token de la barra | ¿Distingue o es ruido? |
 |---|---|---|---|
-| `odc-dashboard` | Rechazadas | `status-rejected` | PENDIENTE |
-| `odc-dashboard` | Borradores | `status-draft` | PENDIENTE |
-| `odc-dashboard` | Listas para comprar | `status-approved` | PENDIENTE |
-| `odc-dashboard` | Pendientes de factura | `status-evidence` | PENDIENTE |
-| `admin-dashboard` | Pendientes de validar | `status-pending` | PENDIENTE |
-| `admin-dashboard` | Compras pagadas | `status-paid` | PENDIENTE |
-| `general-dashboard` | Esperando mi aprobación | `status-budget` | PENDIENTE |
+| `odc-dashboard` | Rechazadas | `status-rejected` | no montado en la app |
+| `odc-dashboard` | Borradores | `status-draft` | no montado en la app |
+| `odc-dashboard` | Listas para comprar | `status-approved` | no montado en la app |
+| `odc-dashboard` | Pendientes de factura | `status-evidence` | no montado en la app |
+| `admin-dashboard` | Pendientes de validar | `status-pending` | no montado en la app |
+| `admin-dashboard` | Compras pagadas | `status-paid` | no montado en la app |
+| `general-dashboard` | Esperando mi aprobación | `status-budget` | no montado en la app |
 
-Las dos tarjetas heterogéneas — "Prioridad inmediata" de `executive-dashboard` y
-"Tareas accionables" de `executive-tasks` — se quedan **sin** barra por decisión
-humana 2 del gate: mezclan estados y un solo color mentiría. Comprobación de que
-efectivamente no la tienen: PENDIENTE.
+El reviewer confirmó que las 7 utilidades de barra **compilan a CSS real en el
+bundle**, así que el CSS existe; lo que no existe es una pantalla donde se pinten.
+El juicio humano de si ayudan o estorban queda aplazado a cuando esas superficies
+se monten, si es que se montan.
+
+Lo que sí se verificó de R11 en pantalla con sesión `ADMINISTRACION`: la tarjeta
+"Alertas: órdenes con mayor antigüedad" de `executive-dashboard` usa el borde de
+`--status-pending` en lugar del ámbar hardcodeado que tenía en las líneas 361 y
+365. Ese cambio sí llega al usuario.
 
 ## 5. Veredicto humano
 

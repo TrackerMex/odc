@@ -301,6 +301,12 @@ timeline de la feature 26 y las barras de la 27. Va primero (ver [[tasks]]).
 - Virtualizar las listas: el MASTER §6 la condiciona a superar 100 filas
   renderizadas, y hoy hay paginación.
 
+## Enmiendas posteriores a la aprobación
+
+| Fecha | Qué cambia | Autorización |
+|---|---|---|
+| 2026-08-11 | **R3, excepción para `executive-tasks.tsx`.** Su contenedor pasa a `max-w-4xl` (896px) en vez de `max-w-[1400px]`. El resto de R3 queda intacto: las otras cuatro superficies mantienen los 1400px y las 6 apariciones del padding `p-4 sm:p-6` no se tocan. Motivo: la comprobación en pantalla que la propia decisión humana 1 exigía dejó 663px de hueco entre el importe y su botón de acción, con el viewport a 1466px, y pasaría de 880px a 1400px completos. La fuente normativa `design-system/odc/pages/dashboard.md` se enmendó primero, con la medición registrada; esta fila solo la sigue. | Humano, en la sesión de verificación de R14 del 2026-08-11. Es exactamente la salida que la decisión humana 1 dejaba prevista: enmendar la fuente normativa, nunca saltarse R3 en silencio. |
+
 ## Decisiones humanas (2026-08-11)
 
 Las tres preguntas que el `spec_author` dejó abiertas se respondieron confirmando

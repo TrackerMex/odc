@@ -151,6 +151,37 @@ las barras de la 27: hacerla primero evita rehacer trabajo. La 28 va después de
 26 porque los formularios son la superficie donde más probable es que 375px rompa, y
 no tiene sentido auditar responsive sobre un layout que se va a reescribir.
 
+### Feature 30 `ui-dead-surfaces-audit` — P1, bloquea el alcance de la 26 y la 27
+
+Abierta el 2026-08-11 por decision humana, a raiz de un hallazgo de la sesion de
+verificacion de la 25 (`progress/verify_ui-surfaces-dashboards.md` §1).
+
+**Tres de las seis superficies que la feature 25 refactorizo no las monta ninguna
+ruta.** `admin-dashboard.tsx`, `general-dashboard.tsx` y `odc-dashboard.tsx` no
+los importa ni una ruta ni otro componente: sus unicos importadores son sus
+propios tests y la auditoria de fuente de `design-system.guardrails.test.ts`. Lo
+que la app renderiza en `/` es `executive-dashboard.tsx`, **para los tres roles**
+(`routes/_authenticated/index.tsx:41`, y su loader admite `DIRECTOR_OPS`,
+`ADMINISTRACION` y `DIRECTOR_GENERAL` contra el mismo endpoint). Confirmado en
+pantalla con sesion `ADMINISTRACION` real.
+
+Efecto sobre la 25: las 7 barras de acento de su R7 no las ve ningun usuario, y
+los CTA que originaron D-V3 (`odc-dashboard.tsx:158,163`) tambien viven en codigo
+no montado. Los tests pasan porque montan el componente directamente.
+
+**Que debe responder la 30, antes de especificar la 26 y la 27:**
+
+1. Si esas 3 superficies deben montarse — es decir, si hubo un diseño por rol que
+   quedo a medias — o si son restos de una iteracion anterior que hay que borrar.
+2. Que otros componentes de `components/odc/` estan en la misma situacion. En
+   particular **los que las features 26 y 27 tienen previsto tocar**: si
+   `odc-detail.tsx`, los formularios o `monthly-summary.tsx` tampoco estuvieran
+   montados, sus specs estarian apuntando a codigo muerto.
+3. Si conviene una guarda automatica que detecte componentes de superficie sin
+   importador fuera de sus tests, para que esto no vuelva a pasar en silencio.
+
+No se especifican la 26 ni la 27 hasta tener esas respuestas.
+
 ### Encargo heredado por la 26 (decision humana del 2026-08-11)
 
 **Arreglar la primitiva `CardHeader` en `components/ui/` para poder retirar los

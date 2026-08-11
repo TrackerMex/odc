@@ -167,5 +167,11 @@
     "name": "ui-copy-es-and-title",
     "status": "pending",
     "priority": "P3"
+  },
+  {
+    "id": 30,
+    "name": "ui-dead-surfaces-audit",
+    "status": "pending",
+    "priority": "P1"
   }
 ]
