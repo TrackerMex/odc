@@ -171,6 +171,14 @@ ejecución de esta sesión.
 
 ## Notas para el reviewer
 
+- **D1 de la review, cerrado (`0299139`).** El `fix` `879624d` no dejaba guarda:
+  los tests de R7 afirman `toContain('pb-3')` y `'pb-3!'.includes('pb-3')` es
+  `true`, así que la suite quedaba igual de verde con el `!` que sin él. Ahora
+  `design-system.guardrails.test.ts::ui-surfaces-dashboards R7: el pb-3 del
+  CardHeader gana a la primitiva` audita el fuente de las tres superficies con
+  `not.toMatch(/pb-3(?!!)/)`, que sí distingue `pb-3` de `pb-3!`. Verificada
+  roja quitándole el `!` a `admin-dashboard.tsx` antes de commitear. No hizo
+  falta `feat`: las tres superficies ya lo tenían bien puesto.
 - **Mirar el `879624d` con lupa.** Es el único commit que no nace de un ciclo
   rojo-verde: corrige un `pb-3` que los tests daban por bueno (la clase estaba
   presente) pero que el CSS compilado dejaba inerte. jsdom no computa cascada, así
