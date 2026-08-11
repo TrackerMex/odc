@@ -108,11 +108,13 @@ tags: [harness, spec, frontend, design-system, surfaces, dashboards]
 - [X] (1) Escribir test que falla para R14 — existencia y estructura mínima de
       `progress/verify_ui-surfaces-dashboards.md` (las 5 secciones); el contenido
       visual lo juzga el humano, no el test
-- [ ] (2) Ejecutar la sesión en navegador y redactar el archivo, con lecturas en
-      vivo de `getComputedStyle` (el implementer **no** rellena valores que no ha
-      medido ni redacta veredictos humanos)
-- [ ] (3) Recoger el veredicto humano con fecha, y la observación sobre la
-      saturación de las badges de dark
+- [X] (2) Ejecutar la sesión en navegador y redactar el archivo, con lecturas en
+      vivo de `getComputedStyle` — hecho por el leader el 2026-08-11, sesiones
+      `DIRECTOR_OPS` y `ADMINISTRACION`, ambos temas
+- [X] (3) Recoger el veredicto humano con fecha, y la observación sobre la
+      saturación de las badges de dark — veredicto **afirmativo** de Alexis,
+      2026-08-11, §5 del acta; la observación de las badges queda en §3 sin abrir
+      feature, a revisar cuando varias coincidan en pantalla
 
 ## R15 — Alcance cerrado, sin dependencias nuevas, build y tests en verde
 

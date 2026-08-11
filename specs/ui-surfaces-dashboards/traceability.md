@@ -14,7 +14,7 @@ Las auditorías de código fuente viven en
 |---|---|---|
 | R1 | `odc-status-badge.test.tsx::R1: el badge toma su color de los 8 pares de tokens --status-*` + `design-system.guardrails.test.ts::ui-surfaces-dashboards R1: el badge deja de pintar paleta cruda` | test `5ddeca0` + feat `1811136` |
 | R2 | `odc-status-badge.test.tsx::R2: el badge conserva su contrato accesible y su transición` | test `5ddeca0` + feat `1811136` |
-| R3 | `{odc,admin,general,executive}-dashboard.test.tsx` y `executive-tasks.test.tsx`, los cinco `::ui-surfaces-dashboards R3,R4: consola de trabajo densa, no landing` | test `f1373cc` + feat `4240a1d` |
+| R3 | `{odc,admin,general,executive}-dashboard.test.tsx` y `executive-tasks.test.tsx`, los cinco `::ui-surfaces-dashboards R3,R4: consola de trabajo densa, no landing` | test `f1373cc` + feat `4240a1d`; **enmienda**: test `35edbe2` + feat `81ec0c3` (`executive-tasks` a `max-w-4xl`, ver tabla de enmiendas de [[requirements]]) |
 | R4 | mismos cinco bloques `::ui-surfaces-dashboards R3,R4: consola de trabajo densa, no landing` | test `f1373cc` + feat `4240a1d` |
 | R5 | `design-system.guardrails.test.ts::ui-surfaces-dashboards R5: las etiquetas usan el tracking de label del MASTER` | test `384162e` + feat `9994dd9` |
 | R6 | `design-system.guardrails.test.ts::ui-surfaces-dashboards R6: las acciones no sobreescriben la densidad de la primitiva` + `odc-dashboard.test.tsx::ui-surfaces-dashboards R6: los CTA del header cierran D-V3` | test `384162e` + feat `9994dd9` |
@@ -25,8 +25,8 @@ Las auditorías de código fuente viven en
 | R11 | `design-system.guardrails.test.ts::ui-surfaces-dashboards R11: cero color literal en las seis superficies` | test `494fdf7` + feat `fe84b91` |
 | R12 | `design-system.guardrails.test.ts::ui-surfaces-dashboards R12: las 6 aserciones en riesgo siguen intactas` | test `99036cd` (guarda de no regresión; sin implementación asociada) |
 | R13 | `design-system.guardrails.test.ts::ui-surfaces-dashboards R13: los tests no fijan valores visuales inventados` | test `99036cd` (auditoría del propio código de test) |
-| R14 | `design-system.guardrails.test.ts::ui-surfaces-dashboards R14: la verificación en navegador existe` | test `99036cd` + feat `595158f` (esqueleto). **Abierto**: las 5 secciones y el veredicto humano |
-| R15 | `design-system.guardrails.test.ts::ui-surfaces-dashboards R15: alcance cerrado, sin tokens ni dependencias nuevas` | test `99036cd` (`pnpm test` 469/469 y `pnpm build` en verde tras `595158f`) |
+| R14 | `design-system.guardrails.test.ts::ui-surfaces-dashboards R14: la verificación en navegador existe` | test `99036cd` + feat `595158f` (esqueleto). **Cerrado el 2026-08-11**: las 5 secciones rellenadas con lecturas en vivo por el leader y veredicto humano afirmativo de Alexis, en `progress/verify_ui-surfaces-dashboards.md` |
+| R15 | `design-system.guardrails.test.ts::ui-surfaces-dashboards R15: alcance cerrado, sin tokens ni dependencias nuevas` | test `99036cd` (`pnpm test` 472/472 y `pnpm build` en verde tras `81ec0c3`) |
 
 > Nota (2026-08-11): esta tabla la rellenó primero el leader, cuando el subagente
 > quedó detenido justo después de commitear `595158f`. El implementer se reanudó

@@ -112,12 +112,33 @@ viewport a 1466px. En una pantalla que aproveche los 1400px completos el hueco
 pasaría de 880px. El riesgo que anticipaba la decisión humana 1 **es real y
 medible**: el ojo tiene que cruzar toda la fila para ligar el dato con su acción.
 
-Capturas: `screenshot-1786470916669-3.jpg` (oscuro) y
+Capturas antes de la enmienda: `screenshot-1786470916669-3.jpg` (oscuro) y
 `screenshot-1786470947632-4.jpg` (claro).
 
-Veredicto de si las filas estiradas de `/tasks` se sostienen: **ver §5**. La
-salida correcta si no se sostienen es enmendar
-`design-system/odc/pages/dashboard.md` con firma humana, nunca saltarse R3.
+**Veredicto: no se sostiene.** El humano firmó el 2026-08-11 la enmienda de
+`design-system/odc/pages/dashboard.md`, que es la salida que la decisión 1 del
+gate dejaba prevista. Regla nueva: el ancho de consola aplica a las superficies de
+**rejilla de colas**; una **lista de una sola columna** usa `max-w-4xl` (896px).
+Registrada también en la tabla de enmiendas de `requirements.md`.
+
+### Medición después de la enmienda
+
+Aplicada en `81ec0c3`, releída en vivo con 6 tareas en pantalla (sesión
+`ADMINISTRACION`) y captura `screenshot-1786471889031-6.jpg`:
+
+| Medida | Antes | Después |
+|---|---|---|
+| Ancho del contenedor | 1178px (tope 1400) | **896px** (tope 896) |
+| Hueco entre el importe y su acción | 663px | **406px** |
+
+El hueco baja un 39% y, más importante, **queda acotado**: antes crecía con la
+pantalla hasta pasar de 880px, y ahora tiene techo en el ancho del contenedor.
+Dicho sin adornos: 406px sigue siendo un salto apreciable, no es cero. La mejora
+es real y la regla es la correcta, pero si alguien quiere el dato y la acción
+verdaderamente juntos, eso es un cambio de layout de la fila —no de ancho— y
+sería trabajo de otra feature.
+
+Sin scroll horizontal después del cambio.
 
 ## 2. Altura computada de los CTA del header
 
@@ -248,7 +269,17 @@ Lo que sí se verificó de R11 en pantalla con sesión `ADMINISTRACION`: la tarj
 
 ## 5. Veredicto humano
 
-PENDIENTE — sin firmar.
+**AFIRMATIVO.** D-V3 queda cerrado —los CTA del header computan 32px y 28px,
+frente a los 36px de `size="lg"`—, la densidad y los tokens de estado se ven
+correctos en pantalla en los dos temas, y la enmienda de ancho de `/tasks` está
+aplicada y verificada. — Alexis, 2026-08-11.
 
-Debe ser una línea afirmativa o negativa, con fecha y nombre. Si es negativa, o
-si queda en PENDIENTE, el reviewer no aprueba el cierre de la feature.
+Firmado sabiendo lo que **no** se pudo comprobar, que está detallado en §1 y §4:
+las 7 barras de acento de R7 no las juzga nadie porque sus tres superficies no
+las monta ninguna ruta. Ese problema tiene dueño: la **feature 30
+`ui-dead-surfaces-audit`**, abierta a P1 el mismo día, que además debe comprobar
+si las features 26 y 27 apuntan a más código no montado antes de especificarse.
+
+Las dos cosas que este gate encontró y que ningún test verde habría encontrado:
+el ancho de 1400px sobre una lista de una columna, y las tres superficies
+muertas. Es exactamente la razón de ser de R14.
