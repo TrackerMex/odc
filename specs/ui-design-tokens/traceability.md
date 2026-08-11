@@ -41,8 +41,14 @@ se anota aquí el archivo y la razón.
 - **R13, R14 y R15 son los requisitos de "no regresión" de la spec.** Sus tests
   son guardas: nacen en verde y sólo se ponen rojos si el rediseño rompe algo
   que debía quedar intacto, así que no existe un ciclo rojo→verde para ellos.
-  Su commit de test es igualmente previo al commit de implementación que
-  guardan. R15 incluye un test de calibración
+  **Corrección (2026-08-10, hallazgo D1 del reviewer):** una versión anterior de
+  esta nota afirmaba que su commit de test precedía a la implementación que
+  guardan. Es falso y `git log` lo desmiente: `81f7ee7` es **posterior** a
+  `e9401d9` y `31c88a7`. Solo R14 cumple el orden test-primero (`aa31027` antes
+  de `e9401d9`). No altera el poder de la guarda —el reviewer la ejecutó sobre
+  el árbol pre-feature `3212483` y pasa 18/18, o sea es verde a ambos lados—
+  pero este archivo es el registro auditable y no puede contradecir el
+  historial. R15 incluye un test de calibración
   (`el detector de color literal no es vacuo`) para que la guarda no pueda pasar
   por no detectar nada.
 - **Enmienda firmada de R2 (2026-08-10), aplicada en `6e20170` + `a48404a`.**

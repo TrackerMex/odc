@@ -239,8 +239,10 @@ Baseline antes de la feature: 32 ficheros / 214 tests en frontend. Ahora 35 /
    `--accent-action-foreground` a `oklch(0.985 0 0)` en `styles.css` y viendo
    fallar `R5 ... light --accent-action-foreground sobre --accent-action`.
 2. **R13, R14 y R15 nacen en verde.** Son la sección "No regresión" de la spec:
-   son guardas, no ciclos rojo→verde. Sus commits de test son igualmente
-   previos a la implementación que guardan. Para que R15 no fuera una guarda
+   son guardas, no ciclos rojo→verde. **Corrección (D1 del reviewer):** la
+   redacción original decía que sus commits de test preceden a la
+   implementación que guardan. Es falso para R13 y R15 — `81f7ee7` va después
+   de `e9401d9` y `31c88a7`. Solo se cumple en R14. Para que R15 no fuera una guarda
    vacua se añadió un caso que calibra el detector de color literal contra
    `monthly-summary-slide.tsx`.
 3. **`f038a70` es un segundo commit de test antes del primer `feat`.** El parser

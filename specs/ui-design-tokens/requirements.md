@@ -209,7 +209,13 @@ ambos. Se corrige por el lado del verde, no del texto: #047857 da 5.48:1 con bla
 coincide con `--status-done`, unificando el color de la acción de confirmar con el del
 estado al que conduce. `--accent-action-foreground` vuelve a blanco, como fijaba R2.
 
-El chroma resultante (0.1049) sigue cumpliendo la restricción de R2 de `> 0.10`.
+Sobre el chroma resultante (0.1049), corrigiendo lo que decía una versión anterior de esta
+nota (hallazgo D2 del reviewer): la restricción de chroma la impone **R3**, no R2, y es un
+**techo** de `0.10`, no un suelo. `--accent-action` está **exento** de ese techo por
+nombre, junto a `--status-*` y `--destructive`, tal como R3 se aprobó. Es decir: el nuevo
+valor no "cumple" el límite, está fuera de su alcance por diseño. La exención es anterior
+a esta enmienda —figura en el test desde `aa31027`— así que no se introdujo para dar
+cabida al color nuevo.
 
 ## Aprobación
 
