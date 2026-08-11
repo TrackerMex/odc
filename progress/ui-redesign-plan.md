@@ -151,7 +151,26 @@ las barras de la 27: hacerla primero evita rehacer trabajo. La 28 va después de
 26 porque los formularios son la superficie donde más probable es que 375px rompa, y
 no tiene sentido auditar responsive sobre un layout que se va a reescribir.
 
-### Alcance de las dos features nuevas
+### Encargo heredado por la 26 (decision humana del 2026-08-11)
+
+**Arreglar la primitiva `CardHeader` en `components/ui/` para poder retirar los
+`!important`.** Sale del defecto D2 de `progress/review_ui-surfaces-dashboards.md`.
+La feature 25 tuvo que escribir `pb-3!` en `odc-dashboard.tsx`,
+`admin-dashboard.tsx` y `general-dashboard.tsx` porque la primitiva trae
+`[.border-b]:pb-(--card-spacing)` con especificidad (0,2,0), que gana al `pb-3`
+plano y lo deja inerte — verificado en el CSS compilado por el implementer y
+confirmado por el reviewer. Su R15 le prohibia tocar `components/ui/`, asi que no
+tenia otra salida limpia.
+
+Efecto: la deuda de `!important` del sistema pasa de **1 uso a 4**. El que ya
+existia es `ui/toast.tsx:43` con `rounded-2xl!`, que este mismo plan ya anotaba
+como pendiente de revisar tras el cambio de tokens de la 23 y que nadie ha
+revisado.
+
+Lo que debe hacer la 26: corregir la primitiva para que la superficie pueda fijar
+su padding sin `!`, retirar los 3 usos nuevos, y de paso resolver si el de
+`toast.tsx` sigue haciendo falta. Si al especificar la 26 se ve que esto no
+encaja en su alcance, sale como feature propia — pero no se deja sin dueño.
 
 **28 `ui-responsive-375`.** El checklist de `MASTER.md` §10 tiene un punto de
 responsive a 375px que **nunca se ha comprobado**: en la revisión del 2026-08-10

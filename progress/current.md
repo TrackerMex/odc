@@ -19,15 +19,20 @@ reviewer:    hecho -> progress/review_ui-surfaces-dashboards.md
 
 ## Defectos del reviewer
 
-- **D1 (moderado, sin cerrar).** El fix `879624d` no dejo guarda de regresion.
+- **D1 (moderado, EN CURSO).** El fix `879624d` no dejo guarda de regresion.
   Los tests de R7 afirman `toContain('pb-3')`, y `'pb-3!'.includes('pb-3')` es
   `true`: la suite esta igual de verde con el `pb-3!` correcto que con un `pb-3`
-  inerte. Nadie impide revertir R7 en silencio. Era testeable con una auditoria
-  de fuente en `design-system.guardrails.test.ts`, que habria nacido roja.
-- **D2 (menor, sin cerrar).** `pb-3!` sube la deuda de `!important` de 1 uso
-  (`ui/toast.tsx:43`) a 4. El diagnostico del implementer es correcto y la salida
-  defendible — R15 le prohibia tocar `components/ui/` — pero merece decision
-  explicita en el gate de R14 o en la feature 26.
+  inerte. Nadie impide revertir R7 en silencio. **Decision humana 2026-08-11:
+  cerrarlo ahora.** El implementer esta escribiendo una auditoria de fuente en
+  `design-system.guardrails.test.ts` que discrimine `pb-3` de `pb-3!` y que nazca
+  roja.
+- **D2 (menor, ACEPTADO con dueno).** `pb-3!` sube la deuda de `!important` de 1
+  uso (`ui/toast.tsx:43`) a 4. El diagnostico del implementer es correcto y la
+  salida defendible — R15 le prohibia tocar `components/ui/`. **Decision humana
+  2026-08-11: se acepta en la 25 y la feature 26 hereda el encargo** de arreglar
+  la primitiva `CardHeader`, retirar los 3 usos nuevos y resolver si el de
+  `toast.tsx` sigue haciendo falta. Escrito en §Encargo heredado por la 26 de
+  `progress/ui-redesign-plan.md`.
 - **D3 (menor, CERRADO).** `progress/current.md` desactualizado. Este bloque.
 
 ## Cerrado antes en esta misma sesion
