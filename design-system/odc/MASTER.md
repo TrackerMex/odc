@@ -69,6 +69,16 @@ primary acromático es la causa mecánica de que la UI lea como shadcn sin temat
 > navy (4.74:1): pasa el mínimo, pero rompe la convención de texto claro sobre superficie
 > de acción y se lee turbio.
 
+> **Acotación 2026-08-11 (feature 24, `ui-dark-mode-chroma`, R7).** La identidad de valor
+> entre `--accent-action` y `--status-done` que fija la enmienda de arriba es **solo en
+> tema claro**. En `.dark` los dos tokens comparten el **hue** (`165.61`) pero **no** la
+> lightness, y eso es deliberado: `--accent-action` es una superficie de acción con texto
+> oscuro encima, mientras `--status-done` es texto de badge sobre una superficie oscura, a
+> la lightness común de las 8 badges. Forzar un único valor en oscuro obligaría a elegir
+> entre sacar `--status-done` de su familia de badges o restarle peso al botón de
+> confirmar. Siguen siendo **un verde en dos papeles**, no dos verdes: lo que los une es el
+> hue compartido en ambos temas, no el hex.
+
 ### Tokens de estado ODC (nuevos)
 
 Hoy los colores de estado viven hardcodeados como clases Tailwind en

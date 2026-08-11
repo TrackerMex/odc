@@ -201,6 +201,7 @@ Alcance: **fases 1 y 2** de `progress/ui-redesign-plan.md`, ni más ni menos.
 | Fecha | Requisito | Cambio | Autoriza |
 |---|---|---|---|
 | 2026-08-10 | R2 | `--accent-action` de `oklch(0.5960 0.1274 163.23)` (#059669) a `oklch(0.5081 0.1049 165.61)` (#047857) | Humano, en sesión |
+| 2026-08-11 | R3 | La cláusula "ningún token … chroma oklch mayor que `0.10`" queda **sustituida** por la R1 de [[../ui-dark-mode-chroma/requirements\|ui-dark-mode-chroma]] (feature 24): techo sobre la saturación `s = C/L ≤ 0.2126`, misma lista de exenciones. Motivo: el techo plano se redactó mirando solo el tema claro, y a la lightness de `.dark` deja pasar la mitad de saturación (defecto D-V1). El resto de R3 sigue vigente. | Humano, 2026-08-11 |
 
 Motivo: R2 y R5 eran **contradictorios tal como se aprobaron**. R2 fijaba
 `--accent-action-foreground` en blanco sobre `--accent-action` #059669, combinación que da
