@@ -1,4 +1,4 @@
-# Sesion activa — PAUSADA en el gate humano 2026-08-11
+# Sesion activa — PAUSADA en la verificacion de navegador 2026-08-11
 
 ```
 feature: ui-surfaces-dashboards
@@ -6,14 +6,29 @@ id: 25
 inicio: 2026-08-11
 plan: fases 3a + 3e del refactor visual — las 5 superficies de dashboard
       y odc-status-badge.tsx. Ver progress/ui-redesign-plan.md
-estado: pending con spec escrita — BLOQUEADA en el gate humano
-        (spec_ready exige aprobacion humana, ver AGENTS.md §3)
-bloqueos: ninguno pendiente de decision; las tres preguntas se respondieron
-          el 2026-08-11 y estan registradas en la spec. Falta SOLO la casilla
+estado: in_progress — codigo entregado y revisado; BLOQUEADA en R14,
+        la sesion de navegador y el veredicto humano
+bloqueos: R14 abierto (sesion de navegador sin ejecutar) + dos defectos
+          del reviewer esperando decision (D1 y D2, abajo)
 spec_author: hecho -> specs/ui-surfaces-dashboards/ (15 requisitos)
-implementer: —
-reviewer: —
+gate humano: aprobado 2026-08-11, commiteado aparte en 1f4884b
+implementer: hecho -> progress/impl_ui-surfaces-dashboards.md (14 commits)
+reviewer:    hecho -> progress/review_ui-surfaces-dashboards.md
+             APROBADO CON RESERVAS, 3 defectos
 ```
+
+## Defectos del reviewer
+
+- **D1 (moderado, sin cerrar).** El fix `879624d` no dejo guarda de regresion.
+  Los tests de R7 afirman `toContain('pb-3')`, y `'pb-3!'.includes('pb-3')` es
+  `true`: la suite esta igual de verde con el `pb-3!` correcto que con un `pb-3`
+  inerte. Nadie impide revertir R7 en silencio. Era testeable con una auditoria
+  de fuente en `design-system.guardrails.test.ts`, que habria nacido roja.
+- **D2 (menor, sin cerrar).** `pb-3!` sube la deuda de `!important` de 1 uso
+  (`ui/toast.tsx:43`) a 4. El diagnostico del implementer es correcto y la salida
+  defendible — R15 le prohibia tocar `components/ui/` — pero merece decision
+  explicita en el gate de R14 o en la feature 26.
+- **D3 (menor, CERRADO).** `progress/current.md` desactualizado. Este bloque.
 
 ## Cerrado antes en esta misma sesion
 
