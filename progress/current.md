@@ -6,12 +6,12 @@ id: 26
 inicio: 2026-08-11 13:43 -06:00
 plan: fases 3b + 3c del refactor visual — detalle, acciones y formularios;
       revisar la deuda heredada de CardHeader y toast
-estado: in_progress; implementación R1-R14 terminada, pendiente de reviewer
+estado: in_progress; correcciones R6 verdes, pendiente de segunda revisión
 bloqueos: ninguno
 spec_author: hecho -> specs/ui-surfaces-detail-forms/ (14 requisitos)
 gate humano: aprobado por el usuario el 2026-08-11
-implementer: terminado -> commits 66d55d8 y b04d3d0
-reviewer: no lanzado
+implementer: corrección -> commits aea3c7b y 631fb5a
+reviewer: primera revisión rechazada; segunda revisión pendiente
 ```
 
 ## Contexto
@@ -62,3 +62,22 @@ reviewer: no lanzado
 - `./init.sh` final verde: build backend/frontend, 471 tests backend, 455 tests
   frontend y lint backend. Se entrega al reviewer sin cambiar el estado de la
   feature a `done`.
+
+## Corrección solicitada por reviewer
+
+- El reviewer detectó que el error API de rechazo compartía estado con la
+  validación local y atribuía incorrectamente la alerta al textarea en los dos
+  diálogos de aprobación.
+- Regresiones R6 escritas primero en ambos componentes. Rojo confirmado: 2
+  fallos exactos porque los textareas tenían `aria-invalid="true"`; 62 tests
+  circundantes verdes. Commit test-only: `aea3c7b`.
+- `AdminBudgetActions` y `GeneralApprovalActions` separan ahora el error local
+  del motivo, el error API de aprobar y el error API de rechazar. Solo el error
+  local usa `aria-describedby`; el fallo API permanece como alerta dentro del
+  diálogo y conserva motivo y retry. Commit de corrección: `631fb5a`.
+- Se eliminaron las aserciones de tipo innecesarias de
+  `upload-invoice-form.test.tsx`; ESLint dirigido sobre producción y los tres
+  tests tocados queda verde.
+- Suite frontend completa verde: 35 archivos y 455/455 tests.
+- `./init.sh` final verde: build backend/frontend, 471 tests backend, 455 tests
+  frontend y lint backend. Corrección lista para segunda revisión.
