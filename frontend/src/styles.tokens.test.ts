@@ -158,7 +158,7 @@ describe('R2: paleta navy del MASTER §1 en :root', () => {
   })
 })
 
-describe('R3: dark conserva roles, corrige --sidebar-primary y acota el chroma', () => {
+describe('R3: dark conserva roles y corrige --sidebar-primary', () => {
   it('.dark redeclara todos los tokens semánticos de R2', () => {
     const semantic = [
       '--background',
@@ -185,20 +185,12 @@ describe('R3: dark conserva roles, corrige --sidebar-primary y acota el chroma',
     expect(css).not.toContain('oklch(0.488 0.243 264.376)')
   })
 
-  it.each([
-    [':root', root],
-    ['.dark', dark],
-  ])(
-    'ningún token de %s fuera de status/destructive/accent-action pasa de chroma 0.10',
-    (_selector, tokens) => {
-      const exempt = /^--(status-|destructive|accent-action)/
-      const offenders = Object.entries(tokens)
-        .filter(([token]) => !exempt.test(token))
-        .filter(([, value]) => value.startsWith('oklch('))
-        .filter(([, value]) => parseOklch(value)[1] > 0.1)
-      expect(offenders).toEqual([])
-    },
-  )
+  // La cláusula de chroma plano <= 0.10 de este requisito queda sustituida por
+  // la R1 de ui-dark-mode-chroma (feature 24), que la expresa sobre la
+  // saturación s = C/L. Un techo plano de chroma se comporta distinto en light
+  // y en dark porque el mismo token vive a lightness distinta: es la causa
+  // mecánica del defecto D-V1. Ver la enmienda registrada en
+  // specs/ui-design-tokens/requirements.md.
 })
 
 describe('R4: 8 pares --status-* / --status-*-surface en light y dark', () => {
@@ -374,4 +366,89 @@ describe('R14: prefers-reduced-motion respetado y transiciones de 150-300ms', ()
       .filter((duration) => duration < 150 || duration > 300)
     expect(offenders).toEqual([])
   })
+})
+
+// --- feature 24: ui-dark-mode-chroma ---
+// El chroma oklch es absoluto; "cuánto color se percibe" a una lightness dada
+// se aproxima con s = C / L. Es la métrica que hace medible el defecto D-V1:
+// el primario de dark tenía el mismo chroma que el de light a el doble de
+// lightness, y por eso se veía lavado sin que ningún test de contraste lo viera.
+const saturation = (value: string) => {
+  const [L, C] = parseOklch(value)
+  return L > 0 ? C / L : 0
+}
+
+// Techo congelado por decisión humana (2026-08-11). Su origen es la saturación
+// del navy institucional de :root --primary, 0.0736 / 0.3462 = 0.21259, pero se
+// escribe como constante y NO se deriva del token en tiempo de test: un techo
+// derivado es autorreferencial — eximiría al navy de su propio límite y subiría
+// solo para todos los demás si alguien le subiera el chroma. Congelado, :root
+// --primary queda sujeto a él con un margen de 0.00001.
+const SATURATION_CEILING = 0.2126
+
+const CEILING_EXEMPT = /^--(status-|destructive|accent-action)/
+
+const oklchTokens = (tokens: Record<string, string>) =>
+  Object.entries(tokens).filter(([, value]) => value.startsWith('oklch('))
+
+const byTheme = [
+  [':root', root],
+  ['.dark', dark],
+] as const
+
+describe('ui-dark-mode-chroma R1: techo de saturación s = C/L congelado', () => {
+  it.each(byTheme)(
+    'ningún token de %s fuera de status/destructive/accent-action supera el techo',
+    (_selector, tokens) => {
+      const offenders = oklchTokens(tokens)
+        .filter(([token]) => !CEILING_EXEMPT.test(token))
+        .filter(([, value]) => saturation(value) > SATURATION_CEILING)
+        .map(([token]) => token)
+      expect(offenders).toEqual([])
+    },
+  )
+
+  it(':root --primary está sujeto al techo como cualquier otro token', () => {
+    expect(CEILING_EXEMPT.test('--primary')).toBe(false)
+    expect(saturation(root['--primary'])).toBeLessThanOrEqual(SATURATION_CEILING)
+  })
+})
+
+describe('ui-dark-mode-chroma R2: suelo del 85% de saturación en dark', () => {
+  // Solo estos dos: para los --status-* y --destructive el suelo es inalcanzable
+  // dentro de sRGB a su lightness (tabla de gamut en design.md).
+  it.each(['--primary', '--accent-action'])(
+    '.dark %s conserva al menos el 85% de la saturación de :root',
+    (token) => {
+      expect(saturation(dark[token])).toBeGreaterThanOrEqual(
+        0.85 * saturation(root[token]),
+      )
+    },
+  )
+})
+
+describe('ui-dark-mode-chroma R3: --ring y los alias del sidebar siguen a --primary', () => {
+  it.each(
+    byTheme.flatMap(([selector, tokens]) =>
+      ['--ring', '--sidebar-primary', '--sidebar-ring'].map(
+        (token) => [selector, token, tokens] as const,
+      ),
+    ),
+  )('%s %s vale lo mismo que su --primary', (_selector, token, tokens) => {
+    expect(tokens[token]).toBe(tokens['--primary'])
+  })
+})
+
+describe('ui-dark-mode-chroma R4: .dark --primary es una superficie clara', () => {
+  // Inverted Ledger Rule: en dark el primario es superficie clara con texto
+  // oscuro encima. Impide satisfacer R2 bajando la lightness, que sube s sin
+  // añadir color y devolvería un navy invisible sobre el fondo.
+  it.each(['--card', '--primary-foreground'])(
+    'tiene más lightness que .dark %s',
+    (token) => {
+      expect(parseOklch(dark['--primary'])[0]).toBeGreaterThan(
+        parseOklch(dark[token])[0],
+      )
+    },
+  )
 })
