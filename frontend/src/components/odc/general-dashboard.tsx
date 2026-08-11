@@ -11,6 +11,11 @@ import { formatCurrency } from '@/lib/odc'
 import type { OdcPage } from '@/lib/odc'
 import { OdcStatusBadge } from './odc-status-badge'
 
+// La cola es PRESUPUESTO_APROBADO por construcción — son las órdenes validadas
+// por Administración que esperan decisión. Constante, no derivada de los datos:
+// una cola vacía dejaría la tarjeta sin color.
+const QUEUE_ACCENT = 'border-l-status-budget'
+
 export function GeneralDashboard({
   userName,
   page,
@@ -32,7 +37,9 @@ export function GeneralDashboard({
 
         <section aria-label="Resumen de Dirección General">
           <Card className="min-w-0">
-            <CardHeader className="border-b border-border/60 pb-4">
+            <CardHeader
+              className={`border-b border-l-2 border-border/60 pb-3 ${QUEUE_ACCENT}`}
+            >
               <div className="flex items-start justify-between gap-4">
                 <div className="min-w-0">
                   <div className="mb-2 flex items-center gap-2 text-muted-foreground">
@@ -48,14 +55,14 @@ export function GeneralDashboard({
                     Órdenes con presupuesto validado listas para tu decisión.
                   </CardDescription>
                 </div>
-                <span className="tabular-nums text-3xl font-semibold tracking-tight">
+                <span className="tabular-nums text-2xl font-semibold tracking-tight text-muted-foreground">
                   {page.total}
                 </span>
               </div>
             </CardHeader>
             <CardContent>
               {page.items.length === 0 ? (
-                <div className="flex min-h-28 items-center justify-center rounded-2xl border border-dashed px-5 text-center text-sm text-muted-foreground">
+                <div className="flex min-h-20 items-center justify-center rounded-2xl border border-dashed px-5 text-center text-sm text-muted-foreground">
                   No hay órdenes esperando tu aprobación.
                 </div>
               ) : (

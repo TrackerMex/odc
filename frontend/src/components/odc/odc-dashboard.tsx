@@ -17,7 +17,7 @@ import {
 } from '@/components/ui/card'
 import { cn } from '@/lib/utils'
 import { formatCurrency } from '@/lib/odc'
-import type { OdcPage, OdcStatus } from '@/lib/odc'
+import type { OdcPage } from '@/lib/odc'
 import { OdcStatusBadge } from './odc-status-badge'
 
 export type DashboardStatus =
@@ -57,6 +57,15 @@ const sectionConfig: Array<{
   },
 ]
 
+// Cada cola es un solo estado, así que la barra puede llevar su color sin
+// mentir sobre el contenido (pages/dashboard.md §Tarjetas de cola).
+const queueAccent: Record<DashboardStatus, string> = {
+  RECHAZADA: 'border-l-status-rejected',
+  BORRADOR: 'border-l-status-draft',
+  COMPRA_APROBADA: 'border-l-status-approved',
+  EVIDENCIA_PAGO_SUBIDA: 'border-l-status-evidence',
+}
+
 function QueueCard({
   title,
   description,
@@ -66,13 +75,18 @@ function QueueCard({
 }: {
   title: string
   description: string
-  status: OdcStatus
+  status: DashboardStatus
   icon: typeof FilePenLineIcon
   page: OdcPage
 }) {
   return (
     <Card className="min-w-0">
-      <CardHeader className="border-b border-border/60 pb-4">
+      <CardHeader
+        className={cn(
+          'border-b border-l-2 border-border/60 pb-3',
+          queueAccent[status],
+        )}
+      >
         <div className="flex items-start justify-between gap-4">
           <div className="min-w-0">
             <div className="mb-2 flex items-center gap-2 text-muted-foreground">
@@ -86,14 +100,21 @@ function QueueCard({
               {description}
             </CardDescription>
           </div>
-          <span className="tabular-nums text-3xl font-semibold tracking-tight">
+          <span
+            className={cn(
+              'tabular-nums text-2xl font-semibold tracking-tight',
+              status === 'RECHAZADA'
+                ? 'text-status-rejected'
+                : 'text-muted-foreground',
+            )}
+          >
             {page.total}
           </span>
         </div>
       </CardHeader>
       <CardContent>
         {page.items.length === 0 ? (
-          <div className="flex min-h-28 items-center justify-center rounded-2xl border border-dashed px-5 text-center text-sm text-muted-foreground">
+          <div className="flex min-h-20 items-center justify-center rounded-2xl border border-dashed px-5 text-center text-sm text-muted-foreground">
             No hay órdenes en esta etapa.
           </div>
         ) : (

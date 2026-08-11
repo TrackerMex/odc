@@ -122,7 +122,7 @@ export function ExecutiveTasks({
             </CardHeader>
             <CardContent>
               {taskPage.items.length === 0 ? (
-                <div className="flex min-h-32 items-center rounded-2xl border border-dashed px-5 text-sm text-muted-foreground">
+                <div className="flex min-h-20 items-center rounded-2xl border border-dashed px-5 text-sm text-muted-foreground">
                   Cuando haya una orden que requiera tu intervención aparecerá aquí.
                 </div>
               ) : (

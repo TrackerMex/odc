@@ -159,14 +159,14 @@ function PriorityQueue({
                   : `${priority.total} ${priority.total === 1 ? 'tarea requiere' : 'tareas requieren'} atención.`}
               </p>
             </div>
-            <span className="tabular-nums text-3xl font-semibold tracking-tight">
+            <span className="tabular-nums text-2xl font-semibold tracking-tight text-muted-foreground">
               {priority.total}
             </span>
           </div>
         </CardHeader>
         <CardContent>
           {priority.items.length === 0 ? (
-            <div className="flex min-h-32 items-center rounded-2xl border border-dashed px-5 text-sm text-muted-foreground">
+            <div className="flex min-h-20 items-center rounded-2xl border border-dashed px-5 text-sm text-muted-foreground">
               Cuando haya una orden que requiera tu intervención aparecerá aquí.
             </div>
           ) : (
