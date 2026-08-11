@@ -7,8 +7,11 @@ import { describe, expect, it } from 'vitest'
 // debía quedar intacto.
 
 const projectDir = resolve(process.cwd())
+const repoRoot = `${resolve(process.cwd(), '..')}/`
 const read = (relativePath: string) =>
   readFileSync(`${projectDir}/${relativePath}`, 'utf8')
+const readRepo = (relativePath: string) =>
+  readFileSync(`${repoRoot}${relativePath}`, 'utf8')
 
 const PRIMITIVES = [
   'button',
@@ -155,57 +158,57 @@ describe('ui-surfaces-dashboards R11: cero color literal en las seis superficies
   })
 })
 
-describe('R15: sin dependencias nuevas y sin color literal en las primitivas', () => {
-  // Congelado en la aprobación de la spec (2026-08-10).
-  const FROZEN_DEPENDENCIES = [
-    '@base-ui/react',
-    '@fontsource-variable/geist',
-    '@fontsource-variable/inter',
-    '@tailwindcss/vite',
-    '@tanstack/react-devtools',
-    '@tanstack/react-form',
-    '@tanstack/react-query',
-    '@tanstack/react-router',
-    '@tanstack/react-router-devtools',
-    '@tanstack/react-router-ssr-query',
-    '@tanstack/react-start',
-    '@tanstack/router-plugin',
-    'class-variance-authority',
-    'clsx',
-    'date-fns',
-    'html-to-image',
-    'jspdf',
-    'lucide-react',
-    'react',
-    'react-day-picker',
-    'react-dom',
-    'tailwind-merge',
-    'tailwindcss',
-    'tw-animate-css',
-    'zod',
-    'zustand',
-  ]
-  const FROZEN_DEV_DEPENDENCIES = [
-    '@playwright/test',
-    '@tailwindcss/typography',
-    '@tanstack/devtools-vite',
-    '@tanstack/eslint-config',
-    '@tanstack/router-cli',
-    '@testing-library/dom',
-    '@testing-library/react',
-    '@types/node',
-    '@types/react',
-    '@types/react-dom',
-    '@vitejs/plugin-react',
-    'eslint',
-    'jsdom',
-    'prettier',
-    'shadcn',
-    'typescript',
-    'vite',
-    'vitest',
-  ]
+// Congelado en la aprobación de la spec (2026-08-10).
+const FROZEN_DEPENDENCIES = [
+  '@base-ui/react',
+  '@fontsource-variable/geist',
+  '@fontsource-variable/inter',
+  '@tailwindcss/vite',
+  '@tanstack/react-devtools',
+  '@tanstack/react-form',
+  '@tanstack/react-query',
+  '@tanstack/react-router',
+  '@tanstack/react-router-devtools',
+  '@tanstack/react-router-ssr-query',
+  '@tanstack/react-start',
+  '@tanstack/router-plugin',
+  'class-variance-authority',
+  'clsx',
+  'date-fns',
+  'html-to-image',
+  'jspdf',
+  'lucide-react',
+  'react',
+  'react-day-picker',
+  'react-dom',
+  'tailwind-merge',
+  'tailwindcss',
+  'tw-animate-css',
+  'zod',
+  'zustand',
+]
+const FROZEN_DEV_DEPENDENCIES = [
+  '@playwright/test',
+  '@tailwindcss/typography',
+  '@tanstack/devtools-vite',
+  '@tanstack/eslint-config',
+  '@tanstack/router-cli',
+  '@testing-library/dom',
+  '@testing-library/react',
+  '@types/node',
+  '@types/react',
+  '@types/react-dom',
+  '@vitejs/plugin-react',
+  'eslint',
+  'jsdom',
+  'prettier',
+  'shadcn',
+  'typescript',
+  'vite',
+  'vitest',
+]
 
+describe('R15: sin dependencias nuevas y sin color literal en las primitivas', () => {
   it('no añade dependencias a frontend/package.json', () => {
     const pkg = JSON.parse(read('package.json'))
     expect(Object.keys(pkg.dependencies).sort()).toEqual(
@@ -238,5 +241,122 @@ describe('R15: sin dependencias nuevas y sin color literal en las primitivas', (
   it('el detector de color literal no es vacuo', () => {
     const slide = read('src/components/odc/monthly-summary-slide.tsx')
     expect([...slide.matchAll(LITERAL_COLOR)].length).toBeGreaterThan(0)
+  })
+})
+
+// Las guardas de R12, R13 y R15 nacen en verde por construcción: afirman que
+// algo que ya está bien sigue estando bien. Se ponen rojas si esta feature —
+// o la siguiente — rompe lo que debía quedar intacto.
+describe('ui-surfaces-dashboards R12: las 6 aserciones en riesgo siguen intactas', () => {
+  it.each([
+    [
+      'components/odc/executive-dashboard.test.tsx',
+      'toMatch(/focus-visible:ring/)',
+    ],
+    [
+      'components/odc/executive-dashboard.test.tsx',
+      `container.querySelector('[class*="motion-reduce"]')`,
+    ],
+    [
+      'components/odc/executive-dashboard.test.tsx',
+      'expect(header.textContent).toMatch(/operaciones/i)',
+    ],
+    [
+      'components/odc/general-dashboard.test.tsx',
+      `expect(container.querySelector('main')?.className).toContain('min-w-0')`,
+    ],
+    [
+      'components/odc/general-dashboard.test.tsx',
+      'toMatch(/flex-col.*sm:flex-row/)',
+    ],
+    [
+      'components/odc/general-dashboard.test.tsx',
+      `expect(screen.getAllByText('Dirección General')).toHaveLength(2)`,
+    ],
+  ])('%s conserva %s', (file, assertion) => {
+    expect(read(`src/${file}`)).toContain(assertion)
+  })
+})
+
+describe('ui-surfaces-dashboards R13: los tests no fijan valores visuales inventados', () => {
+  const FEATURE_TESTS = [
+    'src/design-system.guardrails.test.ts',
+    ...SURFACES.map((surface) => `src/components/odc/${surface}.test.tsx`),
+  ]
+  // Un valor arbitrario de Tailwind (`max-w-[1400px]`, `tracking-[0.06em]`) es
+  // donde se cuela un número inventado. Los cuatro trackings prohibidos se
+  // afirman ausentes, no fijados, así que no necesitan respaldo documental.
+  const ARBITRARY_VALUE = /[\w-]*\[[^\]\s]*\d[^\]\s]*(?:px|rem|em)\]/g
+  const arbitraryValues = (file: string) =>
+    // Los backslashes de los selectores CSS escapados estorban al detector.
+    [...read(file).replace(/\\/g, '').matchAll(ARBITRARY_VALUE)]
+      .map((match) => match[0])
+      .filter((value) => !FORBIDDEN_TRACKING.includes(value as never))
+
+  const NORMATIVE = () =>
+    readRepo('design-system/odc/MASTER.md') +
+    readRepo('design-system/odc/pages/dashboard.md')
+
+  it.each(FEATURE_TESTS)(
+    '%s solo fija valores escritos en la fuente normativa',
+    (file) => {
+      const docs = NORMATIVE()
+      for (const value of arbitraryValues(file)) {
+        expect(docs).toContain(value)
+      }
+    },
+  )
+
+  it('la auditoría no es vacua: encuentra los valores que la feature sí fija', () => {
+    const found = FEATURE_TESTS.flatMap(arbitraryValues)
+    expect(found).toContain('max-w-[1400px]')
+    expect(found).toContain('tracking-[0.06em]')
+  })
+})
+
+describe('ui-surfaces-dashboards R14: la verificación en navegador existe', () => {
+  // El contenido lo juzga un humano; el test solo garantiza que el acta existe
+  // y declara sus cinco secciones. Un invariante verde puede seguir viéndose
+  // mal: esa es la razón de que la fase 3a exista.
+  it.each([
+    '## 1. Las cuatro superficies en los dos temas',
+    '## 2. Altura computada de los CTA del header',
+    '## 3. Las 8 badges con los tokens nuevos',
+    '## 4. Las barras de acento de las tarjetas de cola',
+    '## 5. Veredicto humano',
+    '### Observación: saturación de las badges de dark',
+  ])('el acta declara la sección "%s"', (heading) => {
+    expect(readRepo('progress/verify_ui-surfaces-dashboards.md')).toContain(
+      heading,
+    )
+  })
+})
+
+describe('ui-surfaces-dashboards R15: alcance cerrado, sin tokens ni dependencias nuevas', () => {
+  it('las utilidades de estado de las seis superficies ya existen en @theme inline', () => {
+    const theme = read('src/styles.css')
+    const used = new Set(
+      SURFACES.flatMap((surface) => [
+        ...surfaceSource(surface).matchAll(
+          /(?:bg|text|border|border-l)-(status-[\w-]+?)(?:\/\d+)?(?=["'\s`])/g,
+        ),
+      ]).map((match) => match[1]),
+    )
+
+    expect(used.size).toBeGreaterThan(0)
+    for (const token of used) {
+      expect(theme).toContain(`--color-${token}:`)
+    }
+  })
+
+  it('no declara tokens de estado nuevos en styles.css', () => {
+    expect([...read('src/styles.css').matchAll(/--color-status-[\w-]+:/g)]).toHaveLength(16)
+  })
+
+  it('no añade dependencias a frontend/package.json', () => {
+    const pkg = JSON.parse(read('package.json'))
+    expect(
+      Object.keys({ ...pkg.dependencies, ...pkg.devDependencies }),
+    ).toHaveLength(FROZEN_DEPENDENCIES.length + FROZEN_DEV_DEPENDENCIES.length)
   })
 })
