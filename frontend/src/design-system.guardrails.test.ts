@@ -126,6 +126,35 @@ describe('ui-surfaces-dashboards R6: las acciones no sobreescriben la densidad d
   })
 })
 
+const PALETTE =
+  'slate|gray|zinc|neutral|stone|red|orange|amber|yellow|lime|green|emerald|teal|cyan|sky|blue|indigo|violet|purple|fuchsia|pink|rose'
+const LITERAL_COLOR = new RegExp(
+  [
+    '#[0-9a-fA-F]{3,8}\\b',
+    `\\b(?:bg|text|border|ring|outline|fill|stroke|from|via|to|divide|placeholder|caret|decoration)-(?:${PALETTE})-\\d{2,3}`,
+    '\\b(?:bg|text|border|ring|outline|fill|stroke)-(?:black|white)(?:/\\d+)?\\b',
+  ].join('|'),
+  'g',
+)
+
+describe('ui-surfaces-dashboards R10: cada caja usa el radio de su token', () => {
+  it.each(SURFACES)('%s.tsx no usa rounded-xl ni rounded-2xl', (surface) => {
+    expect(surfaceSource(surface)).not.toMatch(/\brounded-2?xl\b/)
+  })
+})
+
+describe('ui-surfaces-dashboards R11: cero color literal en las seis superficies', () => {
+  it.each(SURFACES)('%s.tsx no usa hex crudo ni clase de paleta', (surface) => {
+    expect([...surfaceSource(surface).matchAll(LITERAL_COLOR)]).toEqual([])
+  })
+
+  it('las alertas de antigüedad usan el par --status-pending', () => {
+    const source = surfaceSource('executive-dashboard')
+    expect(source).toContain('border-status-pending')
+    expect(source).toContain('text-status-pending')
+  })
+})
+
 describe('R15: sin dependencias nuevas y sin color literal en las primitivas', () => {
   // Congelado en la aprobación de la spec (2026-08-10).
   const FROZEN_DEPENDENCIES = [
@@ -176,17 +205,6 @@ describe('R15: sin dependencias nuevas y sin color literal en las primitivas', (
     'vite',
     'vitest',
   ]
-
-  const PALETTE =
-    'slate|gray|zinc|neutral|stone|red|orange|amber|yellow|lime|green|emerald|teal|cyan|sky|blue|indigo|violet|purple|fuchsia|pink|rose'
-  const LITERAL_COLOR = new RegExp(
-    [
-      '#[0-9a-fA-F]{3,8}\\b',
-      `\\b(?:bg|text|border|ring|outline|fill|stroke|from|via|to|divide|placeholder|caret|decoration)-(?:${PALETTE})-\\d{2,3}`,
-      '\\b(?:bg|text|border|ring|outline|fill|stroke)-(?:black|white)(?:/\\d+)?\\b',
-    ].join('|'),
-    'g',
-  )
 
   it('no añade dependencias a frontend/package.json', () => {
     const pkg = JSON.parse(read('package.json'))

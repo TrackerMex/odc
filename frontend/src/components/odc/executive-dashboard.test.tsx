@@ -141,6 +141,23 @@ describe('ui-surfaces-dashboards R7,R8: la tarjeta heterogénea no miente con un
   })
 })
 
+describe('ui-surfaces-dashboards R9: filas multilínea densas sin ruido en el hover', () => {
+  it('no supera py-3 en la fila de prioridad y conserva el foco y el importe', () => {
+    render(<ExecutiveDashboard userName="Ana Pérez" dashboard={dashboard} />)
+
+    const link = screen.getByRole('link', { name: /ODC-2026-00001/i })
+    const row = link.closest('li')!
+    expect(row.className).toMatch(/\bpy-[23]\b/)
+    expect(row.className).not.toMatch(/\bpy-4\b/)
+    expect(link.className).toContain('focus-visible:ring-3')
+    for (const node of [row, link]) {
+      expect(node.className).not.toMatch(
+        /hover:bg-|hover:shadow|translate-y|scale-|cursor-pointer/,
+      )
+    }
+  })
+})
+
 describe('R3: executive priority makes the oldest actionable work visible first', () => {
   it('renders task context, total overflow and detail links before secondary metrics', () => {
     render(<ExecutiveDashboard userName="Ana Pérez" dashboard={dashboard} />)

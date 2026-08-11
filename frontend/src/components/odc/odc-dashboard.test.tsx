@@ -186,6 +186,33 @@ describe('ui-surfaces-dashboards R6: los CTA del header cierran D-V3', () => {
   })
 })
 
+describe('ui-surfaces-dashboards R9: filas más densas sin ruido en el hover', () => {
+  it('usa py-2 en la lista de una línea y conserva folio, importe y foco', () => {
+    render(<OdcDashboard userName="Ana Pérez" sections={sections} />)
+
+    const link = screen.getByRole('link', { name: /ODC-2026-00001/i })
+    expect(link.closest('li')!.className).toMatch(/\bpy-2\b/)
+    expect(link.className).toContain('focus-visible:ring-3')
+    expect(link.className).toContain('focus-visible:ring-ring/30')
+    expect(link.querySelector('.group-hover\\:underline')).toBeTruthy()
+    expect(link.querySelector('.tabular-nums')!.className).toContain(
+      'font-medium',
+    )
+  })
+
+  it('no introduce fondo, elevación, desplazamiento ni cursor de control en el hover', () => {
+    render(<OdcDashboard userName="Ana Pérez" sections={sections} />)
+
+    const link = screen.getByRole('link', { name: /ODC-2026-00001/i })
+    const row = link.closest('li')!
+    for (const node of [row, link]) {
+      expect(node.className).not.toMatch(
+        /hover:bg-|hover:shadow|translate-y|scale-|cursor-pointer/,
+      )
+    }
+  })
+})
+
 describe('R13: DIRECTOR_OPS dashboard orders sections by visual priority', () => {
   it('places Rechazadas, Borradores, Listas para comprar and Pendientes de factura in that DOM order', () => {
     render(

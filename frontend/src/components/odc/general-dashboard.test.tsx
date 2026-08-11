@@ -135,6 +135,22 @@ describe('ui-surfaces-dashboards R7,R8: la cola de aprobación se distingue de u
   })
 })
 
+describe('ui-surfaces-dashboards R9: filas más densas sin ruido en el hover', () => {
+  it('usa py-2 en la lista de una línea y conserva folio, importe y foco', () => {
+    render(<GeneralDashboard userName="Laura" page={page([odc])} />)
+
+    const link = screen.getByRole('link', { name: /ODC-2026-00012/i })
+    expect(link.closest('li')!.className).toMatch(/\bpy-2\b/)
+    expect(link.className).toContain('focus-visible:ring-3')
+    expect(link.className).not.toMatch(
+      /hover:bg-|hover:shadow|translate-y|scale-|cursor-pointer/,
+    )
+    expect(link.querySelector('.tabular-nums')!.className).toContain(
+      'font-medium',
+    )
+  })
+})
+
 describe('R10: responsive Dirección General dashboard', () => {
   it('keeps the queue and links constrained on narrow screens', () => {
     const { container } = render(

@@ -47,6 +47,26 @@ const taskPage: ExecutiveTaskPage = {
   ],
 }
 
+describe('ui-surfaces-dashboards R9: filas multilínea densas sin ruido en el hover', () => {
+  it('no supera py-3 en la fila de tarea y conserva el foco y el importe', () => {
+    render(<ExecutiveTasks initialPage={taskPage} role="DIRECTOR_OPS" />)
+
+    const link = screen.getByRole('link', { name: /ODC-2026-00001/i })
+    const row = link.closest('li')!
+    expect(row.className).toMatch(/\bpy-[23]\b/)
+    expect(row.className).not.toMatch(/\bpy-4\b/)
+    expect(link.className).toContain('focus-visible:ring-3')
+    expect(link.querySelector('.tabular-nums')!.className).toContain(
+      'font-medium',
+    )
+    for (const node of [row, link]) {
+      expect(node.className).not.toMatch(
+        /hover:bg-|hover:shadow|translate-y|scale-|cursor-pointer/,
+      )
+    }
+  })
+})
+
 describe('ui-surfaces-dashboards R7: la tarjeta heterogénea no miente con un color', () => {
   it('Tareas accionables se queda sin barra de acento', () => {
     render(<ExecutiveTasks initialPage={taskPage} role="DIRECTOR_OPS" />)

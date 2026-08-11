@@ -121,6 +121,22 @@ describe('ui-surfaces-dashboards R7,R8: cada cola se distingue de un vistazo', (
   })
 })
 
+describe('ui-surfaces-dashboards R9: filas más densas sin ruido en el hover', () => {
+  it('usa py-2 en la lista de una línea y conserva folio, importe y foco', () => {
+    render(<AdminDashboard userName="María Admin" sections={sections} />)
+
+    const link = screen.getByRole('link', { name: /ODC-2026-00001/i })
+    expect(link.closest('li')!.className).toMatch(/\bpy-2\b/)
+    expect(link.className).toContain('focus-visible:ring-3')
+    expect(link.className).not.toMatch(
+      /hover:bg-|hover:shadow|translate-y|scale-|cursor-pointer/,
+    )
+    expect(link.querySelector('.tabular-nums')!.className).toContain(
+      'font-medium',
+    )
+  })
+})
+
 describe('R2,R12: ADMINISTRACION dashboard queues', () => {
   it('renders counters, detail links and explicit empty states without create action', () => {
     render(
