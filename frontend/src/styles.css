@@ -27,11 +27,10 @@
   --muted-foreground: oklch(0.5544 0.0407 257.42);
   --accent: oklch(0.9632 0.0034 247.86);
   --accent-foreground: oklch(0.2077 0.0398 265.75);
-  --accent-action: oklch(0.5960 0.1274 163.23);
-  /* El MASTER §1 no fija este token. Blanco sobre el verde #059669 da 3.61:1
-     y R5 exige >= 4.5:1, así que el texto de confirmación es el navy oscuro
-     del sistema (4.74:1). Ver progress/impl_ui-design-tokens.md. */
-  --accent-action-foreground: oklch(0.2077 0.0398 265.75);
+  /* Mismo verde que --status-done: confirmar y el estado al que lleva
+     comparten color (enmienda firmada 2026-08-10, MASTER §1). */
+  --accent-action: oklch(0.5081 0.1049 165.61);
+  --accent-action-foreground: oklch(0.985 0 0);
   --destructive: oklch(0.5771 0.2152 27.33);
   --border: oklch(0.9268 0.0063 255.48);
   --input: oklch(0.9268 0.0063 255.48);
@@ -83,7 +82,7 @@
   --muted-foreground: oklch(0.7118 0.0329 256.79);
   --accent: oklch(0.2795 0.0368 260.03);
   --accent-foreground: oklch(0.9842 0.0034 247.86);
-  --accent-action: oklch(0.7227 0.1394 163.23);
+  --accent-action: oklch(0.7227 0.1394 165.61);
   --accent-action-foreground: oklch(0.1822 0.0362 265.75);
   --destructive: oklch(0.7049 0.1867 22.22);
   --border: oklch(1 0 0 / 10%);
