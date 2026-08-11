@@ -7,6 +7,8 @@ import { describe, expect, it } from 'vitest'
 // navegador (ver specs/ui-design-tokens/design.md).
 
 const srcDir = `${resolve(process.cwd(), 'src')}/`
+// vitest corre con cwd en frontend/; R9 y R10 auditan artefactos del harness.
+const repoRoot = `${resolve(process.cwd(), '..')}/`
 const css = readFileSync(`${srcDir}styles.css`, 'utf8')
 
 function ruleBody(selector: string): string {
@@ -496,4 +498,134 @@ describe('ui-dark-mode-chroma R6: el primario de dark contrasta con sus fondos',
       ).toBeGreaterThanOrEqual(4.5)
     },
   )
+})
+
+describe('ui-dark-mode-chroma R7: el verde es un color en dos papeles', () => {
+  // En light una sola lightness sirve para los dos papeles y los tokens son
+  // idénticos. En dark difieren en lightness a propósito: --accent-action es
+  // superficie de acción con texto oscuro encima, --status-done es texto de
+  // badge sobre superficie oscura, a la lightness común de las 8 badges. Lo que
+  // los mantiene siendo un verde y no dos es el hue compartido.
+  it(':root --accent-action y :root --status-done son el mismo valor', () => {
+    expect(root['--accent-action']).toBe(root['--status-done'])
+  })
+
+  it.each(['--accent-action', '--status-done'])(
+    '.dark %s conserva el hue de su contraparte de :root',
+    (token) => {
+      expect(parseOklch(dark[token])[2]).toBe(parseOklch(root[token])[2])
+    },
+  )
+})
+
+describe('ui-dark-mode-chroma R8: los tests afirman invariantes, no literales nuevos', () => {
+  // Todo literal oklch del propio archivo de test tiene que ser un valor
+  // declarado hoy en :root — las aserciones heredadas de la feature 23, que se
+  // conservan — o el violeta huérfano que R3 de la 23 exige que no exista.
+  // Fijar un color en un test sin haberlo visto en pantalla es lo que produjo la
+  // contradicción R2/R5 de la 23 y el propio D-V1.
+  const ORPHAN_VIOLET = 'oklch(0.488 0.243 264.376)'
+
+  it('no fija ningún literal oklch fuera de los valores de :root', () => {
+    const source = readFileSync(`${srcDir}styles.tokens.test.ts`, 'utf8')
+    const declared = new Set(Object.values(root))
+    // Exige un dígito tras el paréntesis para no confundir con los
+    // `startsWith('oklch(')` que filtran tokens por prefijo.
+    const literals = [...new Set(source.match(/oklch\(\s*[\d.][^)]*\)/g) ?? [])]
+    expect(literals.length).toBeGreaterThan(0)
+    expect(
+      literals.filter(
+        (literal) => literal !== ORPHAN_VIOLET && !declared.has(literal),
+      ),
+    ).toEqual([])
+  })
+})
+
+describe('ui-dark-mode-chroma R9: la verificación en navegador existe', () => {
+  // El contenido lo juzga un humano; el test solo garantiza que el informe
+  // existe y declara sus cuatro secciones. Un invariante verde puede seguir
+  // viéndose mal: esa es la razón de que esta feature exista.
+  it.each([
+    '## 1. getComputedStyle en los dos temas',
+    '## 2. CTA primario junto al outline en dark',
+    '## 3. Las 8 badges de estado en dark',
+    '## 4. Veredicto humano',
+  ])('el informe declara la sección "%s"', (heading) => {
+    expect(readFileSync(`${repoRoot}progress/verify_ui-dark-mode-chroma.md`, 'utf8')).toContain(heading)
+  })
+})
+
+describe('ui-dark-mode-chroma R10: la enmienda queda registrada en la spec de la 23', () => {
+  it('la tabla de enmiendas de ui-design-tokens nombra a ui-dark-mode-chroma', () => {
+    const spec = readFileSync(
+      `${repoRoot}specs/ui-design-tokens/requirements.md`,
+      'utf8',
+    )
+    const marker = '## Enmiendas posteriores a la aprobación'
+    expect(spec).toContain(marker)
+    expect(spec.slice(spec.indexOf(marker))).toContain('ui-dark-mode-chroma')
+  })
+})
+
+describe('ui-dark-mode-chroma R11: sin dependencias nuevas en frontend', () => {
+  // Lista congelada. La conversión oklch -> sRGB de este archivo se amplía a
+  // mano; añadir culori o colorjs.io para el gamut rompe aquí a propósito.
+  const FROZEN_DEPENDENCIES = [
+    '@base-ui/react',
+    '@fontsource-variable/geist',
+    '@fontsource-variable/inter',
+    '@playwright/test',
+    '@tailwindcss/typography',
+    '@tailwindcss/vite',
+    '@tanstack/devtools-vite',
+    '@tanstack/eslint-config',
+    '@tanstack/react-devtools',
+    '@tanstack/react-form',
+    '@tanstack/react-query',
+    '@tanstack/react-router',
+    '@tanstack/react-router-devtools',
+    '@tanstack/react-router-ssr-query',
+    '@tanstack/react-start',
+    '@tanstack/router-cli',
+    '@tanstack/router-plugin',
+    '@testing-library/dom',
+    '@testing-library/react',
+    '@types/node',
+    '@types/react',
+    '@types/react-dom',
+    '@vitejs/plugin-react',
+    'class-variance-authority',
+    'clsx',
+    'date-fns',
+    'eslint',
+    'html-to-image',
+    'jsdom',
+    'jspdf',
+    'lucide-react',
+    'prettier',
+    'react',
+    'react-day-picker',
+    'react-dom',
+    'shadcn',
+    'tailwind-merge',
+    'tailwindcss',
+    'tw-animate-css',
+    'typescript',
+    'vite',
+    'vitest',
+    'zod',
+    'zustand',
+  ]
+
+  it('el manifiesto declara exactamente las dependencias congeladas', () => {
+    const manifest = JSON.parse(
+      readFileSync(resolve(process.cwd(), 'package.json'), 'utf8'),
+    )
+    expect(
+      [
+        ...Object.keys(manifest.dependencies),
+        ...Object.keys(manifest.devDependencies),
+      ].sort(),
+    ).toEqual(FROZEN_DEPENDENCIES)
+  })
 })
