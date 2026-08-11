@@ -1,0 +1,148 @@
+import { readFileSync } from 'node:fs'
+import { resolve } from 'node:path'
+import { describe, expect, it } from 'vitest'
+
+// R13 y R15 son los requisitos de "no regresión" de la spec: estos tests son
+// guardas — nacen en verde y sólo se ponen rojos si el rediseño rompe algo que
+// debía quedar intacto.
+
+const projectDir = resolve(process.cwd())
+const read = (relativePath: string) =>
+  readFileSync(`${projectDir}/${relativePath}`, 'utf8')
+
+const PRIMITIVES = [
+  'button',
+  'badge',
+  'card',
+  'input',
+  'select',
+  'textarea',
+  'table',
+  'field',
+  'dialog',
+] as const
+
+describe('R13: las 6 aserciones sobre className siguen intactas', () => {
+  it.each([
+    [
+      'components/odc/executive-dashboard.test.tsx',
+      'toMatch(/focus-visible:ring/)',
+    ],
+    [
+      'components/odc/executive-dashboard.test.tsx',
+      `container.querySelector('[class*="motion-reduce"]')`,
+    ],
+    [
+      'components/odc/general-approval-actions.test.tsx',
+      'expect(busy?.className).toMatch(/flex-col.*sm:flex-row/)',
+    ],
+    [
+      'components/odc/general-dashboard.test.tsx',
+      `expect(container.querySelector('main')?.className).toContain('min-w-0')`,
+    ],
+    [
+      'components/odc/general-dashboard.test.tsx',
+      'toMatch(/flex-col.*sm:flex-row/)',
+    ],
+    ['components/odc/monthly-summary.test.tsx', `'odc-filter-results',`],
+  ])('%s conserva %s', (file, assertion) => {
+    expect(read(`src/${file}`)).toContain(assertion)
+  })
+})
+
+describe('R15: sin dependencias nuevas y sin color literal en las primitivas', () => {
+  // Congelado en la aprobación de la spec (2026-08-10).
+  const FROZEN_DEPENDENCIES = [
+    '@base-ui/react',
+    '@fontsource-variable/geist',
+    '@fontsource-variable/inter',
+    '@tailwindcss/vite',
+    '@tanstack/react-devtools',
+    '@tanstack/react-form',
+    '@tanstack/react-query',
+    '@tanstack/react-router',
+    '@tanstack/react-router-devtools',
+    '@tanstack/react-router-ssr-query',
+    '@tanstack/react-start',
+    '@tanstack/router-plugin',
+    'class-variance-authority',
+    'clsx',
+    'date-fns',
+    'html-to-image',
+    'jspdf',
+    'lucide-react',
+    'react',
+    'react-day-picker',
+    'react-dom',
+    'tailwind-merge',
+    'tailwindcss',
+    'tw-animate-css',
+    'zod',
+    'zustand',
+  ]
+  const FROZEN_DEV_DEPENDENCIES = [
+    '@playwright/test',
+    '@tailwindcss/typography',
+    '@tanstack/devtools-vite',
+    '@tanstack/eslint-config',
+    '@tanstack/router-cli',
+    '@testing-library/dom',
+    '@testing-library/react',
+    '@types/node',
+    '@types/react',
+    '@types/react-dom',
+    '@vitejs/plugin-react',
+    'eslint',
+    'jsdom',
+    'prettier',
+    'shadcn',
+    'typescript',
+    'vite',
+    'vitest',
+  ]
+
+  const PALETTE =
+    'slate|gray|zinc|neutral|stone|red|orange|amber|yellow|lime|green|emerald|teal|cyan|sky|blue|indigo|violet|purple|fuchsia|pink|rose'
+  const LITERAL_COLOR = new RegExp(
+    [
+      '#[0-9a-fA-F]{3,8}\\b',
+      `\\b(?:bg|text|border|ring|outline|fill|stroke|from|via|to|divide|placeholder|caret|decoration)-(?:${PALETTE})-\\d{2,3}`,
+      '\\b(?:bg|text|border|ring|outline|fill|stroke)-(?:black|white)(?:/\\d+)?\\b',
+    ].join('|'),
+    'g',
+  )
+
+  it('no añade dependencias a frontend/package.json', () => {
+    const pkg = JSON.parse(read('package.json'))
+    expect(Object.keys(pkg.dependencies).sort()).toEqual(
+      [...FROZEN_DEPENDENCIES].sort(),
+    )
+    expect(Object.keys(pkg.devDependencies).sort()).toEqual(
+      [...FROZEN_DEV_DEPENDENCIES].sort(),
+    )
+  })
+
+  it.each(PRIMITIVES)('%s.tsx no usa color literal', (primitive) => {
+    const source = read(`src/components/ui/${primitive}.tsx`)
+    const literals = [...source.matchAll(LITERAL_COLOR)].map(
+      (match) => match[0],
+    )
+    // Única excepción del MASTER §6: el backdrop del diálogo.
+    const allowed = primitive === 'dialog' ? ['bg-black/30'] : []
+    expect(literals.filter((literal) => !allowed.includes(literal))).toEqual([])
+  })
+
+  it('monthly-summary-slide.tsx conserva sus clases de paleta literales', () => {
+    const slide = read('src/components/odc/monthly-summary-slide.tsx')
+    expect(slide).toContain('bg-white')
+    expect(slide).toMatch(/text-slate-\d{2,3}/)
+    expect(slide).toMatch(/border-slate-\d{2,3}/)
+  })
+
+  // La guarda anterior sólo vale si el detector realmente detecta: se calibra
+  // contra el único archivo del repo que sí tiene color crudo por diseño.
+  it('el detector de color literal no es vacuo', () => {
+    const slide = read('src/components/odc/monthly-summary-slide.tsx')
+    expect([...slide.matchAll(LITERAL_COLOR)].length).toBeGreaterThan(0)
+  })
+})
