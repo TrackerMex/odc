@@ -6,11 +6,11 @@ id: 30
 inicio: 2026-08-11 12:52 -06:00
 plan: auditar superficies ODC sin importadores de produccion, decidir si se
       montan o eliminan y definir una guarda contra nuevas superficies muertas
-estado: in_progress; gate humano aprobado, implementacion por iniciar
+estado: in_progress; implementer en curso
 bloqueos: ninguno
 spec_author: hecho -> specs/ui-dead-surfaces-audit/ (4 requisitos)
 gate humano: aprobado 2026-08-11
-implementer: por lanzar
+implementer: en curso
 reviewer: no lanzado
 ```
 
