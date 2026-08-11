@@ -129,6 +129,21 @@ describe('ui-surfaces-dashboards R6: las acciones no sobreescriben la densidad d
   })
 })
 
+describe('ui-surfaces-dashboards R7: el pb-3 del CardHeader gana a la primitiva', () => {
+  // La primitiva trae `[.border-b]:pb-(--card-spacing)`, que compila a un
+  // selector de dos clases (0,2,0) y gana a un `pb-3` plano (0,1,0): el valor
+  // declarado quedaría inerte. Un `toContain('pb-3')` no detecta la regresión
+  // porque `'pb-3!'.includes('pb-3')` es `true`; hace falta mirar el `!`.
+  it.each(['odc-dashboard', 'admin-dashboard', 'general-dashboard'])(
+    '%s.tsx marca su pb-3 como important',
+    (surface) => {
+      const source = surfaceSource(surface)
+      expect(source).toContain('pb-3!')
+      expect(source).not.toMatch(/\bpb-3(?!!)/)
+    },
+  )
+})
+
 const PALETTE =
   'slate|gray|zinc|neutral|stone|red|orange|amber|yellow|lime|green|emerald|teal|cyan|sky|blue|indigo|violet|purple|fuchsia|pink|rose'
 const LITERAL_COLOR = new RegExp(
