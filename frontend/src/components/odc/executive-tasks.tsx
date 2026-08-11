@@ -88,7 +88,9 @@ export function ExecutiveTasks({
 
   return (
     <main className="min-w-0 flex-1 p-4 sm:p-6">
-      <div className="mx-auto max-w-[1400px]">
+      {/* Lista de una sola columna: el ancho de consola de 1400px no aplica
+          (enmienda firmada 2026-08-11 de pages/dashboard.md). */}
+      <div className="mx-auto max-w-4xl">
         <header className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div className="max-w-2xl">
             <p className="text-sm font-medium text-muted-foreground">Bandeja de trabajo</p>
