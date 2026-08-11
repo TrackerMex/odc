@@ -41,24 +41,10 @@ import type {
 import { cn } from '@/lib/utils'
 import { OdcStatusBadge } from './odc-status-badge'
 
-const roleCopy: Record<
-  ExecutiveDashboardRole,
-  { label: string; description: string }
-> = {
-  DIRECTOR_OPS: {
-    label: 'Operaciones',
-    description:
-      'Revisa lo que bloquea el flujo y continúa la siguiente acción.',
-  },
-  ADMINISTRACION: {
-    label: 'Administración',
-    description: 'Revisa las tareas que requieren tu validación o evidencia.',
-  },
-  DIRECTOR_GENERAL: {
-    label: 'Dirección General',
-    description:
-      'Consulta las decisiones de compra que requieren tu aprobación.',
-  },
+const roleCopy: Record<ExecutiveDashboardRole, { label: string }> = {
+  DIRECTOR_OPS: { label: 'Operaciones' },
+  ADMINISTRACION: { label: 'Administración' },
+  DIRECTOR_GENERAL: { label: 'Dirección General' },
 }
 
 const actionLabel: Record<ExecutiveTaskNextAction, string> = {
@@ -125,19 +111,18 @@ function DashboardHeader({
       className="flex flex-col gap-5 border-b border-border/70 pb-6 sm:flex-row sm:items-end sm:justify-between"
     >
       <div className="max-w-2xl">
-        <p className="text-xs font-semibold tracking-[0.14em] text-muted-foreground uppercase">
+        <p className="text-xs font-semibold tracking-[0.06em] text-muted-foreground uppercase">
           {copy.label}
         </p>
         <h1
           id="dashboard-title"
-          className="mt-2 text-3xl font-semibold tracking-tight sm:text-4xl"
+          className="mt-2 text-2xl font-semibold tracking-tight"
         >
           Buen día, {userName}
         </h1>
-        <p className="mt-2 text-muted-foreground">{copy.description}</p>
       </div>
       <div className="flex flex-wrap items-center gap-2 sm:justify-end">
-        <span className="inline-flex h-8 items-center gap-2 rounded-2xl bg-muted px-3 text-sm text-muted-foreground">
+        <span className="inline-flex h-8 items-center gap-2 rounded-(--radius) bg-muted px-3 text-sm text-muted-foreground">
           <CalendarDaysIcon className="size-4" aria-hidden="true" />
           {formatMonth(dashboard.month)}
         </span>
@@ -174,19 +159,19 @@ function PriorityQueue({
                   : `${priority.total} ${priority.total === 1 ? 'tarea requiere' : 'tareas requieren'} atención.`}
               </p>
             </div>
-            <span className="tabular-nums text-3xl font-semibold tracking-tight">
+            <span className="tabular-nums text-2xl font-semibold tracking-tight text-muted-foreground">
               {priority.total}
             </span>
           </div>
         </CardHeader>
         <CardContent>
           {priority.items.length === 0 ? (
-            <div className="flex min-h-32 items-center rounded-2xl border border-dashed px-5 text-sm text-muted-foreground">
+            <div className="flex min-h-20 items-center rounded-card border border-dashed px-5 text-sm text-muted-foreground">
               Cuando haya una orden que requiera tu intervención aparecerá aquí.
             </div>
           ) : (
             <>
-              <div className="hidden grid-cols-[minmax(0,1.8fr)_minmax(8rem,0.8fr)_minmax(6rem,0.55fr)_minmax(7rem,0.7fr)_minmax(9rem,0.9fr)] gap-4 border-b border-border/60 pb-3 text-xs font-semibold tracking-[0.1em] text-muted-foreground uppercase lg:grid">
+              <div className="hidden grid-cols-[minmax(0,1.8fr)_minmax(8rem,0.8fr)_minmax(6rem,0.55fr)_minmax(7rem,0.7fr)_minmax(9rem,0.9fr)] gap-4 border-b border-border/60 pb-3 text-xs font-semibold tracking-[0.06em] text-muted-foreground uppercase lg:grid">
                 <span>Orden / proveedor</span>
                 <span>Estado</span>
                 <span>Antigüedad</span>
@@ -200,12 +185,12 @@ function PriorityQueue({
                 {priority.items.map((task) => (
                   <li
                     key={task.id}
-                    className="grid gap-3 py-4 first:pt-0 last:pb-0 lg:grid-cols-[minmax(0,1.8fr)_minmax(8rem,0.8fr)_minmax(6rem,0.55fr)_minmax(7rem,0.7fr)_minmax(9rem,0.9fr)] lg:items-center lg:gap-4"
+                    className="grid gap-3 py-3 first:pt-0 last:pb-0 lg:grid-cols-[minmax(0,1.8fr)_minmax(8rem,0.8fr)_minmax(6rem,0.55fr)_minmax(7rem,0.7fr)_minmax(9rem,0.9fr)] lg:items-center lg:gap-4"
                   >
                     <Link
                       to="/odcs/$id"
                       params={{ id: task.id }}
-                      className="group min-w-0 rounded-xl outline-none focus-visible:ring-3 focus-visible:ring-ring/30"
+                      className="group min-w-0 rounded-(--radius) outline-none focus-visible:ring-3 focus-visible:ring-ring/30"
                     >
                       <div className="flex flex-wrap items-center gap-2">
                         <span className="font-medium group-hover:underline group-hover:underline-offset-4">
@@ -221,25 +206,25 @@ function PriorityQueue({
                     </Link>
                     <div className="lg:contents">
                       <div className="lg:justify-self-start">
-                        <span className="mr-2 text-xs font-semibold tracking-[0.1em] text-muted-foreground uppercase lg:hidden">
+                        <span className="mr-2 text-xs font-semibold tracking-[0.06em] text-muted-foreground uppercase lg:hidden">
                           Estado
                         </span>
                         <OdcStatusBadge status={task.status} />
                       </div>
                       <p className="text-sm tabular-nums lg:text-muted-foreground">
-                        <span className="mr-2 text-xs font-semibold tracking-[0.1em] text-muted-foreground uppercase lg:hidden">
+                        <span className="mr-2 text-xs font-semibold tracking-[0.06em] text-muted-foreground uppercase lg:hidden">
                           Antigüedad
                         </span>
                         {task.ageDays} {task.ageDays === 1 ? 'día' : 'días'}
                       </p>
                       <p className="text-sm font-medium tabular-nums lg:text-right">
-                        <span className="mr-2 text-xs font-semibold tracking-[0.1em] text-muted-foreground uppercase lg:hidden">
+                        <span className="mr-2 text-xs font-semibold tracking-[0.06em] text-muted-foreground uppercase lg:hidden">
                           Importe
                         </span>
                         {formatCurrency(task.totalCents)}
                       </p>
                       <div className="lg:text-right">
-                        <span className="mr-2 text-xs font-semibold tracking-[0.1em] text-muted-foreground uppercase lg:hidden">
+                        <span className="mr-2 text-xs font-semibold tracking-[0.06em] text-muted-foreground uppercase lg:hidden">
                           Siguiente acción
                         </span>
                         <PriorityAction role={dashboard.role} task={task} />
@@ -282,9 +267,9 @@ function Metric({
   detail: string
 }) {
   return (
-    <div className="min-w-0 rounded-2xl bg-muted/55 p-4 ring-1 ring-foreground/5 dark:ring-foreground/10">
+    <div className="min-w-0 rounded-card bg-muted/55 p-4 ring-1 ring-foreground/5 dark:ring-foreground/10">
       <div className="flex items-center justify-between gap-3">
-        <p className="text-xs font-semibold tracking-[0.1em] text-muted-foreground uppercase">
+        <p className="text-xs font-semibold tracking-[0.06em] text-muted-foreground uppercase">
           {label}
         </p>
         <Icon className="size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
@@ -358,11 +343,11 @@ function AgeingAlerts({
 }) {
   return (
     <section aria-labelledby="ageing-alerts-title" className="min-w-0">
-      <Card className="h-full border-amber-200 dark:border-amber-900/60">
+      <Card className="h-full border-status-pending/50">
         <CardHeader>
           <div className="flex items-center gap-2">
             <AlertTriangleIcon
-              className="size-5 shrink-0 text-amber-600 dark:text-amber-400"
+              className="size-5 shrink-0 text-status-pending"
               aria-hidden="true"
             />
             <CardTitle id="ageing-alerts-title">
@@ -376,7 +361,7 @@ function AgeingAlerts({
         </CardHeader>
         <CardContent>
           {dashboard.oldestActiveOrders.length === 0 ? (
-            <p className="rounded-2xl border border-dashed p-4 text-sm text-muted-foreground">
+            <p className="rounded-card border border-dashed p-4 text-sm text-muted-foreground">
               No hay órdenes activas con antigüedad para mostrar.
             </p>
           ) : (
@@ -389,7 +374,7 @@ function AgeingAlerts({
                   <Link
                     to="/odcs/$id"
                     params={{ id: order.id }}
-                    className="group flex min-w-0 items-center justify-between gap-3 rounded-xl outline-none focus-visible:ring-3 focus-visible:ring-ring/30"
+                    className="group flex min-w-0 items-center justify-between gap-3 rounded-(--radius) outline-none focus-visible:ring-3 focus-visible:ring-ring/30"
                   >
                     <span className="min-w-0">
                       <span className="block font-medium group-hover:underline group-hover:underline-offset-4">
@@ -429,7 +414,7 @@ function TopSuppliers({
         </CardHeader>
         <CardContent>
           {dashboard.topSuppliers.length === 0 ? (
-            <p className="rounded-2xl border border-dashed p-4 text-sm text-muted-foreground">
+            <p className="rounded-card border border-dashed p-4 text-sm text-muted-foreground">
               No hay compras pagadas en este periodo.
             </p>
           ) : (
@@ -467,8 +452,8 @@ export function ExecutiveDashboard({
   dashboard: ExecutiveDashboardResponse
 }) {
   return (
-    <main className="min-w-0 flex-1 p-4 sm:p-6 lg:p-8">
-      <div className="mx-auto max-w-7xl space-y-6">
+    <main className="min-w-0 flex-1 p-4 sm:p-6">
+      <div className="mx-auto max-w-[1400px] space-y-6">
         <DashboardHeader userName={userName} dashboard={dashboard} />
         <div className="space-y-6 transition-opacity duration-200 motion-reduce:transition-none">
           <PriorityQueue dashboard={dashboard} />
@@ -486,11 +471,11 @@ export function ExecutiveDashboard({
 export function ExecutiveDashboardLoading() {
   return (
     <main
-      className="min-w-0 flex-1 p-4 sm:p-6 lg:p-8"
+      className="min-w-0 flex-1 p-4 sm:p-6"
       aria-label="Cargando resumen ejecutivo"
       aria-busy="true"
     >
-      <div className="mx-auto max-w-7xl space-y-6">
+      <div className="mx-auto max-w-[1400px] space-y-6">
         <Skeleton className="h-32 w-full motion-reduce:animate-none" />
         <Skeleton className="h-96 w-full motion-reduce:animate-none" />
         <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">

@@ -69,14 +69,70 @@ Requiere `.env` en la raíz (plantilla en `.env.example`): `DATABASE_URL`,
   `GeneralApprovalActions`, `RegisterPaymentForm`, `UploadInvoiceForm`) no
   tiene ningún test de regresión — bajo riesgo (glue trivial), pero pendiente
   si se toca esa ruta de nuevo.
-- Siguiente: no hay feature pendiente del plan maestro. Cualquier trabajo
-  nuevo (bug, mejora, feature no planeada) entra como entrada nueva en
-  `feature_list.json` y sigue el pipeline normal (`spec_author` →
-  aprobación humana → `implementer` → `reviewer`).
+- **Sistema de diseño (2026-08-10)**: `design-system/odc/MASTER.md` es la
+  **fuente única de verdad** visual. `/DESIGN.md` queda subordinado y
+  sincronizado (se conserva solo porque la skill `impeccable` lo lee vía
+  `scripts/context.mjs`). Overrides por página en `design-system/odc/pages/`.
+  Regla cromática vigente: **Two-Color Rule** — navy institucional para chrome,
+  acción primaria y foco; hues de estado para el ciclo de la orden; nada más.
+- **#23 `ui-design-tokens` done** (2026-08-10): fases 1-2 del refactor visual.
+  Tokens navy + 8 pares `--status-*`, Inter importada (nunca lo había estado
+  pese a llevar dos años en `package.json`), radios cerrados y las 9 primitivas
+  de `ui/` reestiladas. Los `--status-*` se declaran pero **aún no se
+  consumen**: `odc-status-badge.tsx` es fase 3e.
+- Siguiente: fases 3a-3e del refactor visual, propuestas en
+  `progress/ui-redesign-plan.md` como features 24-26 (dashboards, detalle +
+  formularios, resumen mensual). **No están en `feature_list.json` todavía**;
+  se especifican tras evaluar visualmente el resultado de la #23. Cualquier
+  otro trabajo entra como entrada nueva y sigue el pipeline normal
+  (`spec_author` → aprobación humana → `implementer` → `reviewer`).
+- Deuda anotada (frontend, 2026-08-10): `ui/toast.tsx` fija `rounded-2xl!` con
+  `!` y quedó fuera del alcance de la #23, así que es la única superficie con
+  el radio viejo. Arreglo de una línea, pendiente de feature.
+- Deuda anotada (tests): `general-approval-actions.test.tsx:163` es flaky —
+  solo falla con la suite completa, por una carrera de render (`waitFor`
+  seguido de `getByText` síncrono). Re-correr antes de culpar a un cambio.
 
 ---
 
 ## Última sesión
+
+**2026-08-10** — Sistema de diseño + cierre de `ui-design-tokens` (#23) →
+**23/23 completadas**.
+
+- Diagnóstico de por qué la UI "se veía genérica": `--primary` acromático,
+  `--card` idéntico a `--background`, radios de app de consumo y —el hallazgo
+  caro— las fuentes de `package.json` **nunca importadas**, así que la app
+  renderizaba con Segoe UI.
+- Se generó el sistema de diseño con la skill `ui-ux-pro-max` contra el tipo
+  de producto "Invoice & Billing Tool". Se descartaron cuatro de sus
+  recomendaciones con motivo registrado en `MASTER.md`: el bloque STYLE
+  (misruteado a "Exaggerated Minimalism" con tres queries distintas), el
+  pairing Fira (Inter ya instalada), el preset GSAP (las view transitions ya
+  cubren ese tier) y los iconos Phosphor (Lucide ya en uso).
+- `MASTER.md` pasa a fuente única; `/DESIGN.md` sincronizado en vez de
+  abandonado, porque `impeccable` lo lee solo.
+- **R2 y R5 salieron contradictorios de la spec aprobada**: R2 fijaba texto
+  blanco sobre `#059669` (3.77:1) y R5 exigía 4.5:1. Ninguna implementación
+  podía cumplir ambos; el `spec_author` no lo detectó al redactarlos, el
+  `implementer` sí al chocar con ello. Resuelto por decisión humana bajando el
+  verde a `#047857` (5.48:1), que además coincide con `--status-done`.
+  Registrado como enmienda firmada en `requirements.md`, no como edición
+  silenciosa, porque C6 lo exige.
+- C4 limpio a la primera, por una vez: 11 commits, ningún par test+impl
+  mezclado. El reviewer lo verificó archivo por archivo y con rojo empírico en
+  worktree aislado.
+- El reviewer aprobó con dos defectos de documentación, ambos corregidos: una
+  afirmación falsa sobre el orden de commits de R13/R15 en `traceability.md`
+  (el `git log` la desmentía) y una justificación mía del chroma que citaba el
+  requisito equivocado y leía la restricción al revés.
+- `./init.sh` verde: 471 tests backend, 328 frontend, builds y lint.
+
+**Próxima sesión**: evaluar visualmente el resultado de la #23 en el navegador
+—nada de esto se ha visto correr, solo tests y CSS compilado— y decidir si se
+especifican las features 24-26 (fases 3a-3e) de `progress/ui-redesign-plan.md`.
+
+---
 
 **2026-07-23** — Cierre de `frontend-payment-invoice` (#13), última feature
 del plan maestro → **14/14 completadas**.

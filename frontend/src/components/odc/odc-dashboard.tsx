@@ -17,7 +17,7 @@ import {
 } from '@/components/ui/card'
 import { cn } from '@/lib/utils'
 import { formatCurrency } from '@/lib/odc'
-import type { OdcPage, OdcStatus } from '@/lib/odc'
+import type { OdcPage } from '@/lib/odc'
 import { OdcStatusBadge } from './odc-status-badge'
 
 export type DashboardStatus =
@@ -57,6 +57,15 @@ const sectionConfig: Array<{
   },
 ]
 
+// Cada cola es un solo estado, así que la barra puede llevar su color sin
+// mentir sobre el contenido (pages/dashboard.md §Tarjetas de cola).
+const queueAccent: Record<DashboardStatus, string> = {
+  RECHAZADA: 'border-l-status-rejected',
+  BORRADOR: 'border-l-status-draft',
+  COMPRA_APROBADA: 'border-l-status-approved',
+  EVIDENCIA_PAGO_SUBIDA: 'border-l-status-evidence',
+}
+
 function QueueCard({
   title,
   description,
@@ -66,18 +75,23 @@ function QueueCard({
 }: {
   title: string
   description: string
-  status: OdcStatus
+  status: DashboardStatus
   icon: typeof FilePenLineIcon
   page: OdcPage
 }) {
   return (
     <Card className="min-w-0">
-      <CardHeader className="border-b border-border/60 pb-4">
+      <CardHeader
+        className={cn(
+          'border-b border-l-2 border-border/60 pb-3!',
+          queueAccent[status],
+        )}
+      >
         <div className="flex items-start justify-between gap-4">
           <div className="min-w-0">
             <div className="mb-2 flex items-center gap-2 text-muted-foreground">
               <Icon className="size-4" aria-hidden="true" />
-              <span className="text-xs font-semibold tracking-[0.12em] uppercase">
+              <span className="text-xs font-semibold tracking-[0.06em] uppercase">
                 Flujo de compra
               </span>
             </div>
@@ -86,24 +100,31 @@ function QueueCard({
               {description}
             </CardDescription>
           </div>
-          <span className="tabular-nums text-3xl font-semibold tracking-tight">
+          <span
+            className={cn(
+              'tabular-nums text-2xl font-semibold tracking-tight',
+              status === 'RECHAZADA'
+                ? 'text-status-rejected'
+                : 'text-muted-foreground',
+            )}
+          >
             {page.total}
           </span>
         </div>
       </CardHeader>
       <CardContent>
         {page.items.length === 0 ? (
-          <div className="flex min-h-28 items-center justify-center rounded-2xl border border-dashed px-5 text-center text-sm text-muted-foreground">
+          <div className="flex min-h-20 items-center justify-center rounded-card border border-dashed px-5 text-center text-sm text-muted-foreground">
             No hay órdenes en esta etapa.
           </div>
         ) : (
           <ul className="divide-y divide-border/70" aria-label={title}>
             {page.items.map((odc) => (
-              <li key={odc.id} className="py-3 first:pt-0 last:pb-0">
+              <li key={odc.id} className="py-2 first:pt-0 last:pb-0">
                 <Link
                   to="/odcs/$id"
                   params={{ id: odc.id ?? '' }}
-                  className="group flex min-w-0 items-center justify-between gap-4 rounded-xl outline-none focus-visible:ring-3 focus-visible:ring-ring/30"
+                  className="group flex min-w-0 items-center justify-between gap-4 rounded-(--radius) outline-none focus-visible:ring-3 focus-visible:ring-ring/30"
                 >
                   <div className="min-w-0">
                     <div className="flex flex-wrap items-center gap-2">
@@ -137,30 +158,26 @@ export function OdcDashboard({
   sections: DashboardSections
 }) {
   return (
-    <main className="min-w-0 flex-1 p-4 sm:p-6 lg:p-8">
-      <div className="mx-auto max-w-7xl">
+    <main className="min-w-0 flex-1 p-4 sm:p-6">
+      <div className="mx-auto max-w-[1400px]">
         <header className="mb-8 flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <p className="text-xs font-semibold tracking-[0.18em] text-muted-foreground uppercase">
+            <p className="text-xs font-semibold tracking-[0.06em] text-muted-foreground uppercase">
               Operaciones
             </p>
-            <h1 className="mt-2 text-3xl font-semibold tracking-tight sm:text-4xl">
+            <h1 className="mt-2 text-2xl font-semibold tracking-tight">
               Buen día, {userName}
             </h1>
-            <p className="mt-2 max-w-2xl text-muted-foreground">
-              Consulta tus órdenes activas y continúa cada compra desde donde
-              quedó.
-            </p>
           </div>
           <div className="flex flex-wrap gap-2 self-start">
             <Link
               to="/monthly-summary"
-              className={buttonVariants({ variant: 'outline', size: 'lg' })}
+              className={buttonVariants({ variant: 'outline', size: 'sm' })}
             >
               <ChartNoAxesCombinedIcon />
               Resumen mensual
             </Link>
-            <Link to="/odcs/new" className={cn(buttonVariants({ size: 'lg' }))}>
+            <Link to="/odcs/new" className={cn(buttonVariants({ size: 'sm' }))}>
               <PlusIcon />
               Nueva ODC
             </Link>

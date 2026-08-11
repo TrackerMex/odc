@@ -84,6 +84,80 @@ const dashboard: ExecutiveDashboardResponse = {
   ],
 }
 
+describe('ui-surfaces-dashboards R3,R4: consola de trabajo densa, no landing', () => {
+  it('usa el ancho y el padding de página en la superficie y en su estado de carga', () => {
+    const { container } = render(
+      <ExecutiveDashboard userName="Ana Pérez" dashboard={dashboard} />,
+    )
+    const loading = render(<ExecutiveDashboardLoading />).container
+
+    for (const root of [container, loading]) {
+      const main = root.querySelector('main')!
+      expect(main.className).toContain('min-w-0')
+      expect(main.className).toContain('flex-1')
+      expect(main.className).toContain('p-4')
+      expect(main.className).toContain('sm:p-6')
+      expect(main.className).not.toContain('lg:p-8')
+      expect(root.querySelector('.max-w-\\[1400px\\]')).toBeTruthy()
+      expect(root.querySelector('.max-w-7xl')).toBeNull()
+    }
+  })
+
+  it('reduce el header a un escalón tipográfico y suelta el párrafo de rol', () => {
+    render(<ExecutiveDashboard userName="Ana Pérez" dashboard={dashboard} />)
+
+    const heading = screen.getByRole('heading', { level: 1 })
+    expect(heading.className).toContain('text-2xl')
+    expect(heading.className).not.toContain('text-3xl')
+    expect(heading.className).not.toContain('sm:text-4xl')
+    expect(screen.queryByText(/revisa lo que bloquea el flujo/i)).toBeNull()
+    // El eyebrow de rol sobrevive: lo exige la aserción en riesgo de R12.
+    expect(
+      screen.getByRole('region', { name: /resumen ejecutivo/i }).textContent,
+    ).toMatch(/operaciones/i)
+  })
+})
+
+describe('ui-surfaces-dashboards R7,R8: la tarjeta heterogénea no miente con un color', () => {
+  it('Prioridad inmediata se queda sin barra de acento', () => {
+    render(<ExecutiveDashboard userName="Ana Pérez" dashboard={dashboard} />)
+
+    const header = screen
+      .getByText('Prioridad inmediata')
+      .closest('[data-slot="card-header"]')!
+    expect(header.className).not.toMatch(/border-l-/)
+  })
+
+  it('su contador baja de escalón y se queda en el gris de metadatos', () => {
+    render(<ExecutiveDashboard userName="Ana Pérez" dashboard={dashboard} />)
+
+    const counter = screen
+      .getByText('Prioridad inmediata')
+      .closest('[data-slot="card-header"]')!
+      .querySelector('.tabular-nums')!
+    expect(counter.className).toContain('text-2xl')
+    expect(counter.className).not.toContain('text-3xl')
+    expect(counter.className).toContain('text-muted-foreground')
+  })
+})
+
+describe('ui-surfaces-dashboards R9: filas multilínea densas sin ruido en el hover', () => {
+  it('no supera py-3 en la fila de prioridad y conserva el foco y el importe', () => {
+    render(<ExecutiveDashboard userName="Ana Pérez" dashboard={dashboard} />)
+
+    const link = screen.getByRole('link', { name: /ODC-2026-00001/i })
+    const row = link.closest('li')!
+    expect(row.className).toMatch(/\bpy-[23]\b/)
+    expect(row.className).not.toMatch(/\bpy-4\b/)
+    expect(link.className).toContain('focus-visible:ring-3')
+    for (const node of [row, link]) {
+      expect(node.className).not.toMatch(
+        /hover:bg-|hover:shadow|translate-y|scale-|cursor-pointer/,
+      )
+    }
+  })
+})
+
 describe('R3: executive priority makes the oldest actionable work visible first', () => {
   it('renders task context, total overflow and detail links before secondary metrics', () => {
     render(<ExecutiveDashboard userName="Ana Pérez" dashboard={dashboard} />)

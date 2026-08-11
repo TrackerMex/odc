@@ -57,7 +57,7 @@ function TaskAction({
     const Icon = action.icon
     return <Link to="/odcs/$id" params={{ id: task.id }} className={buttonVariants({ variant: 'outline', size: 'sm' })}><Icon aria-hidden="true" />{action.label}</Link>
   }
-  return <p className="shrink-0 text-right text-sm text-muted-foreground"><span className="block text-xs font-semibold tracking-[0.12em] uppercase">Siguiente acción</span><span className="text-foreground">{actionLabel[task.nextAction]}</span></p>
+  return <p className="shrink-0 text-right text-sm text-muted-foreground"><span className="block text-xs font-semibold tracking-[0.06em] uppercase">Siguiente acción</span><span className="text-foreground">{actionLabel[task.nextAction]}</span></p>
 }
 
 export function ExecutiveTasks({
@@ -87,13 +87,14 @@ export function ExecutiveTasks({
   const last = Math.min(taskPage.page * taskPage.pageSize, taskPage.total)
 
   return (
-    <main className="min-w-0 flex-1 p-4 sm:p-6 lg:p-8">
-      <div className="mx-auto max-w-5xl">
+    <main className="min-w-0 flex-1 p-4 sm:p-6">
+      {/* Lista de una sola columna: el ancho de consola de 1400px no aplica
+          (enmienda firmada 2026-08-11 de pages/dashboard.md). */}
+      <div className="mx-auto max-w-4xl">
         <header className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div className="max-w-2xl">
             <p className="text-sm font-medium text-muted-foreground">Bandeja de trabajo</p>
-            <h1 className="mt-2 text-3xl font-semibold tracking-tight sm:text-4xl">Todas las tareas</h1>
-            <p className="mt-2 text-muted-foreground">Prioriza las órdenes más antiguas y continúa su siguiente acción.</p>
+            <h1 className="mt-2 text-2xl font-semibold tracking-tight">Todas las tareas</h1>
           </div>
           <Link to="/" className={buttonVariants({ variant: 'outline' })}>
             <ArrowLeftIcon aria-hidden="true" /> Volver a la bandeja
@@ -123,7 +124,7 @@ export function ExecutiveTasks({
             </CardHeader>
             <CardContent>
               {taskPage.items.length === 0 ? (
-                <div className="flex min-h-32 items-center rounded-2xl border border-dashed px-5 text-sm text-muted-foreground">
+                <div className="flex min-h-20 items-center rounded-card border border-dashed px-5 text-sm text-muted-foreground">
                   Cuando haya una orden que requiera tu intervención aparecerá aquí.
                 </div>
               ) : (
@@ -133,9 +134,9 @@ export function ExecutiveTasks({
                   aria-label="Todas las tareas accionables"
                 >
                   {taskPage.items.map((task) => (
-                    <li key={task.id} className="py-4 first:pt-0 last:pb-0">
+                    <li key={task.id} className="py-3 first:pt-0 last:pb-0">
                       <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                        <Link to="/odcs/$id" params={{ id: task.id }} className="group min-w-0 rounded-xl outline-none focus-visible:ring-3 focus-visible:ring-ring/30">
+                        <Link to="/odcs/$id" params={{ id: task.id }} className="group min-w-0 rounded-(--radius) outline-none focus-visible:ring-3 focus-visible:ring-ring/30">
                           <div className="flex flex-wrap items-center gap-2"><span className="font-medium group-hover:underline group-hover:underline-offset-4">{task.odcNumber}</span><OdcStatusBadge status={task.status} /><span className="text-xs text-muted-foreground">{task.ageDays} {task.ageDays === 1 ? 'día' : 'días'}</span></div>
                           <p className="mt-1 text-sm text-muted-foreground sm:truncate">{task.description} · {task.supplier}</p>
                           <p className="mt-1 text-sm font-medium tabular-nums">{formatCurrency(task.totalCents)}</p>

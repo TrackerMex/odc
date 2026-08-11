@@ -11,6 +11,11 @@ import { formatCurrency } from '@/lib/odc'
 import type { OdcPage } from '@/lib/odc'
 import { OdcStatusBadge } from './odc-status-badge'
 
+// La cola es PRESUPUESTO_APROBADO por construcción — son las órdenes validadas
+// por Administración que esperan decisión. Constante, no derivada de los datos:
+// una cola vacía dejaría la tarjeta sin color.
+const QUEUE_ACCENT = 'border-l-status-budget'
+
 export function GeneralDashboard({
   userName,
   page,
@@ -19,29 +24,27 @@ export function GeneralDashboard({
   page: OdcPage
 }) {
   return (
-    <main className="min-w-0 flex-1 p-4 sm:p-6 lg:p-8">
-      <div className="mx-auto max-w-7xl">
+    <main className="min-w-0 flex-1 p-4 sm:p-6">
+      <div className="mx-auto max-w-[1400px]">
         <header className="mb-8">
-          <p className="text-xs font-semibold tracking-[0.18em] text-muted-foreground uppercase">
+          <p className="text-xs font-semibold tracking-[0.06em] text-muted-foreground uppercase">
             Dirección General
           </p>
-          <h1 className="mt-2 text-3xl font-semibold tracking-tight sm:text-4xl">
+          <h1 className="mt-2 text-2xl font-semibold tracking-tight">
             Buen día, {userName}
           </h1>
-          <p className="mt-2 max-w-2xl text-muted-foreground">
-            Revisa las órdenes validadas por Administración y decide si la
-            compra puede continuar.
-          </p>
         </header>
 
         <section aria-label="Resumen de Dirección General">
           <Card className="min-w-0">
-            <CardHeader className="border-b border-border/60 pb-4">
+            <CardHeader
+              className={`border-b border-l-2 border-border/60 pb-3! ${QUEUE_ACCENT}`}
+            >
               <div className="flex items-start justify-between gap-4">
                 <div className="min-w-0">
                   <div className="mb-2 flex items-center gap-2 text-muted-foreground">
                     <BadgeCheckIcon className="size-4" aria-hidden="true" />
-                    <span className="text-xs font-semibold tracking-[0.12em] uppercase">
+                    <span className="text-xs font-semibold tracking-[0.06em] uppercase">
                       Dirección General
                     </span>
                   </div>
@@ -52,14 +55,14 @@ export function GeneralDashboard({
                     Órdenes con presupuesto validado listas para tu decisión.
                   </CardDescription>
                 </div>
-                <span className="tabular-nums text-3xl font-semibold tracking-tight">
+                <span className="tabular-nums text-2xl font-semibold tracking-tight text-muted-foreground">
                   {page.total}
                 </span>
               </div>
             </CardHeader>
             <CardContent>
               {page.items.length === 0 ? (
-                <div className="flex min-h-28 items-center justify-center rounded-2xl border border-dashed px-5 text-center text-sm text-muted-foreground">
+                <div className="flex min-h-20 items-center justify-center rounded-card border border-dashed px-5 text-center text-sm text-muted-foreground">
                   No hay órdenes esperando tu aprobación.
                 </div>
               ) : (
@@ -68,11 +71,11 @@ export function GeneralDashboard({
                   aria-label="Esperando mi aprobación"
                 >
                   {page.items.map((odc) => (
-                    <li key={odc.id} className="py-3 first:pt-0 last:pb-0">
+                    <li key={odc.id} className="py-2 first:pt-0 last:pb-0">
                       <Link
                         to="/odcs/$id"
                         params={{ id: odc.id ?? '' }}
-                        className="group flex min-w-0 flex-col gap-3 rounded-xl outline-none focus-visible:ring-3 focus-visible:ring-ring/30 sm:flex-row sm:items-center sm:justify-between"
+                        className="group flex min-w-0 flex-col gap-3 rounded-(--radius) outline-none focus-visible:ring-3 focus-visible:ring-ring/30 sm:flex-row sm:items-center sm:justify-between"
                       >
                         <div className="min-w-0">
                           <div className="flex flex-wrap items-center gap-2">
