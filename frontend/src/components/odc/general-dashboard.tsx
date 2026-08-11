@@ -38,7 +38,7 @@ export function GeneralDashboard({
         <section aria-label="Resumen de Dirección General">
           <Card className="min-w-0">
             <CardHeader
-              className={`border-b border-l-2 border-border/60 pb-3 ${QUEUE_ACCENT}`}
+              className={`border-b border-l-2 border-border/60 pb-3! ${QUEUE_ACCENT}`}
             >
               <div className="flex items-start justify-between gap-4">
                 <div className="min-w-0">

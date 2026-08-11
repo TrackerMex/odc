@@ -59,7 +59,7 @@ function AdminQueue({
     <Card className="min-w-0">
       <CardHeader
         className={cn(
-          'border-b border-l-2 border-border/60 pb-3',
+          'border-b border-l-2 border-border/60 pb-3!',
           queueAccent[status],
         )}
       >
