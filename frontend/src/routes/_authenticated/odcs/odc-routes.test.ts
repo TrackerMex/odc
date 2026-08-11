@@ -1,6 +1,11 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type * as ApiModule from '@/lib/api'
-import { getExecutiveDashboard, getOdc, listSuppliers } from '@/lib/api'
+import {
+  getExecutiveDashboard,
+  getOdc,
+  listOdcs,
+  listSuppliers,
+} from '@/lib/api'
 import { loadAuthenticatedDashboard } from '../index'
 import { canEditOdc, loadOdcDetail } from './$id'
 
@@ -10,6 +15,7 @@ vi.mock('@/lib/api', async (importOriginal) => {
     ...actual,
     getOdc: vi.fn(),
     getExecutiveDashboard: vi.fn(),
+    listOdcs: vi.fn(),
     listSuppliers: vi.fn(),
   }
 })
@@ -28,7 +34,7 @@ const emptyDashboard = {
   topSuppliers: [],
 } as const
 
-describe('R1: authenticated dashboard loads one executive snapshot by role', () => {
+describe('R2: authenticated home loads one shared executive snapshot by role', () => {
   beforeEach(() => vi.clearAllMocks())
 
   it.each([
@@ -48,6 +54,7 @@ describe('R1: authenticated dashboard loads one executive snapshot by role', () 
     expect(getExecutiveDashboard).toHaveBeenCalledWith(
       expect.stringMatching(/^\d{4}-\d{2}$/),
     )
+    expect(listOdcs).not.toHaveBeenCalled()
   })
 
   it('does not select a dashboard for an unknown role', async () => {
@@ -55,6 +62,7 @@ describe('R1: authenticated dashboard loads one executive snapshot by role', () 
       loadAuthenticatedDashboard({ role: 'UNKNOWN' }),
     ).resolves.toBeNull()
     expect(getExecutiveDashboard).not.toHaveBeenCalled()
+    expect(listOdcs).not.toHaveBeenCalled()
   })
 })
 

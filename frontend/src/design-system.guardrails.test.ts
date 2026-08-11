@@ -25,12 +25,9 @@ const PRIMITIVES = [
   'dialog',
 ] as const
 
-// ui-surfaces-dashboards (fases 3a + 3e): los seis archivos del alcance de R15.
+// Superficies activas conservadas tras ui-dead-surfaces-audit.
 const SURFACES = [
   'odc-status-badge',
-  'odc-dashboard',
-  'admin-dashboard',
-  'general-dashboard',
   'executive-dashboard',
   'executive-tasks',
 ] as const
@@ -66,7 +63,7 @@ describe('ui-surfaces-dashboards R1: el badge deja de pintar paleta cruda', () =
   })
 })
 
-describe('R13: las 6 aserciones sobre className siguen intactas', () => {
+describe('R13: las 4 aserciones sobre className siguen intactas', () => {
   it.each([
     [
       'components/odc/executive-dashboard.test.tsx',
@@ -79,14 +76,6 @@ describe('R13: las 6 aserciones sobre className siguen intactas', () => {
     [
       'components/odc/general-approval-actions.test.tsx',
       'expect(busy?.className).toMatch(/flex-col.*sm:flex-row/)',
-    ],
-    [
-      'components/odc/general-dashboard.test.tsx',
-      `expect(container.querySelector('main')?.className).toContain('min-w-0')`,
-    ],
-    [
-      'components/odc/general-dashboard.test.tsx',
-      'toMatch(/flex-col.*sm:flex-row/)',
     ],
     ['components/odc/monthly-summary.test.tsx', `'odc-filter-results',`],
   ])('%s conserva %s', (file, assertion) => {
@@ -123,25 +112,6 @@ describe('ui-surfaces-dashboards R6: las acciones no sobreescriben la densidad d
   it.each(SURFACES)('%s.tsx no fuerza el tamaño lg', (surface) => {
     expect(surfaceSource(surface)).not.toMatch(/size:\s*'lg'|size="lg"/)
   })
-
-  it('odc-dashboard.tsx usa el tamaño sm que prescribe pages/dashboard.md', () => {
-    expect(surfaceSource('odc-dashboard')).toMatch(/size:\s*'sm'/)
-  })
-})
-
-describe('ui-surfaces-dashboards R7: el pb-3 del CardHeader gana a la primitiva', () => {
-  // La primitiva trae `[.border-b]:pb-(--card-spacing)`, que compila a un
-  // selector de dos clases (0,2,0) y gana a un `pb-3` plano (0,1,0): el valor
-  // declarado quedaría inerte. Un `toContain('pb-3')` no detecta la regresión
-  // porque `'pb-3!'.includes('pb-3')` es `true`; hace falta mirar el `!`.
-  it.each(['odc-dashboard', 'admin-dashboard', 'general-dashboard'])(
-    '%s.tsx marca su pb-3 como important',
-    (surface) => {
-      const source = surfaceSource(surface)
-      expect(source).toContain('pb-3!')
-      expect(source).not.toMatch(/\bpb-3(?!!)/)
-    },
-  )
 })
 
 const PALETTE =
@@ -262,7 +232,7 @@ describe('R15: sin dependencias nuevas y sin color literal en las primitivas', (
 // Las guardas de R12, R13 y R15 nacen en verde por construcción: afirman que
 // algo que ya está bien sigue estando bien. Se ponen rojas si esta feature —
 // o la siguiente — rompe lo que debía quedar intacto.
-describe('ui-surfaces-dashboards R12: las 6 aserciones en riesgo siguen intactas', () => {
+describe('ui-surfaces-dashboards R12: las 3 aserciones en riesgo siguen intactas', () => {
   it.each([
     [
       'components/odc/executive-dashboard.test.tsx',
@@ -275,18 +245,6 @@ describe('ui-surfaces-dashboards R12: las 6 aserciones en riesgo siguen intactas
     [
       'components/odc/executive-dashboard.test.tsx',
       'expect(header.textContent).toMatch(/operaciones/i)',
-    ],
-    [
-      'components/odc/general-dashboard.test.tsx',
-      `expect(container.querySelector('main')?.className).toContain('min-w-0')`,
-    ],
-    [
-      'components/odc/general-dashboard.test.tsx',
-      'toMatch(/flex-col.*sm:flex-row/)',
-    ],
-    [
-      'components/odc/general-dashboard.test.tsx',
-      `expect(screen.getAllByText('Dirección General')).toHaveLength(2)`,
     ],
   ])('%s conserva %s', (file, assertion) => {
     expect(read(`src/${file}`)).toContain(assertion)
@@ -348,7 +306,7 @@ describe('ui-surfaces-dashboards R14: la verificación en navegador existe', () 
 })
 
 describe('ui-surfaces-dashboards R15: alcance cerrado, sin tokens ni dependencias nuevas', () => {
-  it('las utilidades de estado de las seis superficies ya existen en @theme inline', () => {
+  it('las utilidades de estado de las superficies activas ya existen en @theme inline', () => {
     const theme = read('src/styles.css')
     const used = new Set(
       SURFACES.flatMap((surface) => [
