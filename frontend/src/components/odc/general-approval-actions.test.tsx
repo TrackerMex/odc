@@ -190,9 +190,11 @@ describe('R7: accessible rejection dialog and required reason', () => {
     })
     fireEvent.click(screen.getByRole('button', { name: /confirmar rechazo/i }))
 
-    expect(screen.getByRole('alert').textContent).toMatch(
-      /motivo.*obligatorio/i,
-    )
+    const localError = screen.getByRole('alert')
+    const reason = screen.getByLabelText('Motivo del rechazo')
+    expect(localError.textContent).toMatch(/motivo.*obligatorio/i)
+    expect(reason.getAttribute('aria-invalid')).toBe('true')
+    expect(reason.getAttribute('aria-describedby')).toBe(localError.id)
     expect(
       screen.getByRole('dialog', { name: /rechazar compra/i }),
     ).toBeTruthy()
@@ -285,7 +287,7 @@ describe('R9: recoverable purchase decision errors', () => {
     await waitFor(() => expect(approve).toHaveBeenCalledTimes(2))
   })
 
-  it('keeps the entered reason and restores rejection for retry', async () => {
+  it('R6 keeps the API rejection alert separate from the reason field', async () => {
     const reject = vi.fn().mockRejectedValue(new Error('Forbidden'))
     render(
       <GeneralApprovalActions
@@ -298,15 +300,19 @@ describe('R9: recoverable purchase decision errors', () => {
     )
 
     fireEvent.click(screen.getByRole('button', { name: /^rechazar$/i }))
+    const dialog = screen.getByRole('dialog', { name: /rechazar compra/i })
     const reason = screen.getByLabelText('Motivo del rechazo')
     fireEvent.change(reason, { target: { value: 'Fuera de presupuesto' } })
     fireEvent.click(screen.getByRole('button', { name: /confirmar rechazo/i }))
 
     await waitFor(() =>
-      expect(screen.getByRole('alert').textContent).toMatch(
+      expect(dialog.querySelector('[role="alert"]')?.textContent).toMatch(
         /no pudimos rechazar la compra/i,
       ),
     )
+    expect(dialog.querySelector('[role="alert"]')).toBeTruthy()
+    expect(reason.getAttribute('aria-invalid')).toBe('false')
+    expect(reason.hasAttribute('aria-describedby')).toBe(false)
     expect((reason as HTMLTextAreaElement).value).toBe('Fuera de presupuesto')
     const confirm = screen.getByRole('button', {
       name: /confirmar rechazo/i,

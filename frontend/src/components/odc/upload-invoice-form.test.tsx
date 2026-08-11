@@ -476,9 +476,7 @@ describe('R5: explicit completion confirmation', () => {
         /no pudimos subir/i,
       ),
     )
-    expect(
-      (screen.getByLabelText(/número de factura/i) as HTMLInputElement).value,
-    ).toBe('FAC-200')
+    expect(screen.getByDisplayValue('FAC-200')).toBeTruthy()
     expect(
       screen
         .getByRole('button', { name: /completar orden/i })

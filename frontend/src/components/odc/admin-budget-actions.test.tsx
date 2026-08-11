@@ -105,9 +105,16 @@ describe('R5,R6,R10,R11: rejection dialog', () => {
       screen.getByRole('dialog', { name: /rechazar presupuesto/i }),
     ).toBeTruthy()
     fireEvent.click(screen.getByRole('button', { name: /confirmar rechazo/i }))
-    expect(screen.getByRole('alert').textContent).toMatch(
-      /motivo.*obligatorio/i,
-    )
+    const localError = screen.getByRole('alert')
+    expect(localError.textContent).toMatch(/motivo.*obligatorio/i)
+    expect(
+      screen.getByLabelText(/motivo del rechazo/i).getAttribute('aria-invalid'),
+    ).toBe('true')
+    expect(
+      screen
+        .getByLabelText(/motivo del rechazo/i)
+        .getAttribute('aria-describedby'),
+    ).toBe(localError.id)
     expect(reject).not.toHaveBeenCalled()
 
     fireEvent.change(screen.getByLabelText(/motivo del rechazo/i), {
@@ -123,7 +130,7 @@ describe('R5,R6,R10,R11: rejection dialog', () => {
     )
   })
 
-  it('keeps the reason and original status after a server failure', async () => {
+  it('R6 keeps the API rejection alert separate from the reason field', async () => {
     const reject = vi.fn().mockRejectedValue(new Error('Conflict'))
     render(
       <AdminBudgetActions
@@ -135,15 +142,21 @@ describe('R5,R6,R10,R11: rejection dialog', () => {
       />,
     )
     fireEvent.click(screen.getByRole('button', { name: /^rechazar$/i }))
+    const dialog = screen.getByRole('dialog', {
+      name: /rechazar presupuesto/i,
+    })
     const reason = screen.getByLabelText(/motivo del rechazo/i)
     fireEvent.change(reason, { target: { value: 'Duplicada' } })
     fireEvent.click(screen.getByRole('button', { name: /confirmar rechazo/i }))
 
     await waitFor(() =>
-      expect(screen.getByRole('alert').textContent).toMatch(
+      expect(dialog.querySelector('[role="alert"]')?.textContent).toMatch(
         /no pudimos rechazar/i,
       ),
     )
+    expect(dialog.querySelector('[role="alert"]')).toBeTruthy()
+    expect(reason.getAttribute('aria-invalid')).toBe('false')
+    expect(reason.hasAttribute('aria-describedby')).toBe(false)
     expect((reason as HTMLTextAreaElement).value).toBe('Duplicada')
     expect(
       screen
