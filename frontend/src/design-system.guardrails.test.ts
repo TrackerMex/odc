@@ -91,6 +91,41 @@ describe('R13: las 6 aserciones sobre className siguen intactas', () => {
   })
 })
 
+// Tracking de póster: 12px con 0.1em–0.18em es ilegible en una fila de tabla
+// (MASTER §2). El label del sistema es 0.06em.
+const FORBIDDEN_TRACKING = [
+  'tracking-[0.1em]',
+  'tracking-[0.12em]',
+  'tracking-[0.14em]',
+  'tracking-[0.18em]',
+] as const
+
+describe('ui-surfaces-dashboards R5: las etiquetas usan el tracking de label del MASTER', () => {
+  it.each(SURFACES)('%s.tsx no usa tracking de póster', (surface) => {
+    const source = surfaceSource(surface)
+    for (const tracking of FORBIDDEN_TRACKING) {
+      expect(source).not.toContain(tracking)
+    }
+  })
+
+  it.each(SURFACES.filter((surface) => surface !== 'odc-status-badge'))(
+    '%s.tsx declara el tracking de label',
+    (surface) => {
+      expect(surfaceSource(surface)).toContain('tracking-[0.06em]')
+    },
+  )
+})
+
+describe('ui-surfaces-dashboards R6: las acciones no sobreescriben la densidad de la primitiva', () => {
+  it.each(SURFACES)('%s.tsx no fuerza el tamaño lg', (surface) => {
+    expect(surfaceSource(surface)).not.toMatch(/size:\s*'lg'|size="lg"/)
+  })
+
+  it('odc-dashboard.tsx usa el tamaño sm que prescribe pages/dashboard.md', () => {
+    expect(surfaceSource('odc-dashboard')).toMatch(/size:\s*'sm'/)
+  })
+})
+
 describe('R15: sin dependencias nuevas y sin color literal en las primitivas', () => {
   // Congelado en la aprobación de la spec (2026-08-10).
   const FROZEN_DEPENDENCIES = [

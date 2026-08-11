@@ -122,6 +122,19 @@ describe('ui-surfaces-dashboards R3,R4: consola de trabajo densa, no landing', (
   })
 })
 
+describe('ui-surfaces-dashboards R6: los CTA del header cierran D-V3', () => {
+  it('no sube la altura de la primitiva y conserva el anillo de foco', () => {
+    render(<OdcDashboard userName="Ana Pérez" sections={sections} />)
+
+    for (const name of [/nueva odc/i, /resumen mensual/i]) {
+      const cta = screen.getByRole('link', { name })
+      // `h-9` es la altura del tamaño `lg` de la primitiva: 36px, el defecto D-V3.
+      expect(cta.className).not.toMatch(/\bh-9\b/)
+      expect(cta.className).toMatch(/focus-visible:ring/)
+    }
+  })
+})
+
 describe('R13: DIRECTOR_OPS dashboard orders sections by visual priority', () => {
   it('places Rechazadas, Borradores, Listas para comprar and Pendientes de factura in that DOM order', () => {
     render(
