@@ -74,8 +74,10 @@ tags: [harness, spec, frontend, design-system, tokens, dark-mode]
 - [X] (1) Escribir test que falla para R9 — existencia y estructura mínima de
       `progress/verify_ui-dark-mode-chroma.md` (las 4 secciones); el contenido
       visual lo juzga el humano, no el test
-- [ ] (2) Ejecutar la sesión en navegador y redactar el archivo
-- [ ] (3) Recoger el veredicto humano con fecha
+- [X] (2) Ejecutar la sesión en navegador y redactar el archivo — hecho por el
+      leader el 2026-08-11, Chrome real sobre `localhost:3005`
+- [X] (3) Recoger el veredicto humano con fecha — **afirmativo**, Alexis,
+      2026-08-11, en la sección 4 de `progress/verify_ui-dark-mode-chroma.md`
 
 ## R10 — Enmienda registrada en la spec de la feature 23
 

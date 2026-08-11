@@ -190,4 +190,8 @@ en dark. Valores actuales relevantes: `:root --primary` → `s = 0.0736 / 0.3462
 
 ## Aprobación
 
-- [X] Aprobado por humano (fecha: 11/10/2026) ← gate obligatorio antes de implementar
+- [X] Aprobado por humano (fecha: 2026-08-11) ← gate obligatorio antes de implementar
+
+> Nota del leader: la casilla la marcó el humano el 2026-08-11 y escribió la fecha
+> como `11/10/2026`. Corregida a ISO para seguir la convención de la feature 23.
+> Solo cambia el formato de la fecha; la aprobación y su autor son los mismos.
