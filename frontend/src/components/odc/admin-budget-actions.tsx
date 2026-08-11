@@ -38,7 +38,9 @@ export function AdminBudgetActions({
 }) {
   const [dialogOpen, setDialogOpen] = useState(false)
   const [reason, setReason] = useState('')
-  const [error, setError] = useState<string | null>(null)
+  const [reasonError, setReasonError] = useState<string | null>(null)
+  const [approveError, setApproveError] = useState<string | null>(null)
+  const [rejectError, setRejectError] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState<'approve' | 'reject' | null>(
     null,
   )
@@ -50,7 +52,7 @@ export function AdminBudgetActions({
   async function handleApprove() {
     if (submitting) return
     setSubmitting('approve')
-    setError(null)
+    setApproveError(null)
     try {
       const nextOdc = await approve()
       toast.add({
@@ -60,7 +62,9 @@ export function AdminBudgetActions({
       })
       onSuccess(nextOdc)
     } catch {
-      setError('No pudimos aprobar el presupuesto. Intenta nuevamente.')
+      setApproveError(
+        'No pudimos aprobar el presupuesto. Intenta nuevamente.',
+      )
     } finally {
       setSubmitting(null)
     }
@@ -71,11 +75,13 @@ export function AdminBudgetActions({
     if (submitting) return
     const trimmedReason = reason.trim()
     if (!trimmedReason) {
-      setError('El motivo del rechazo es obligatorio.')
+      setReasonError('El motivo del rechazo es obligatorio.')
+      setRejectError(null)
       return
     }
     setSubmitting('reject')
-    setError(null)
+    setReasonError(null)
+    setRejectError(null)
     try {
       const nextOdc = await reject(trimmedReason)
       toast.add({
@@ -87,7 +93,9 @@ export function AdminBudgetActions({
       setDialogOpen(false)
       setReason('')
     } catch {
-      setError('No pudimos rechazar el presupuesto. Intenta nuevamente.')
+      setRejectError(
+        'No pudimos rechazar el presupuesto. Intenta nuevamente.',
+      )
     } finally {
       setSubmitting(null)
     }
@@ -103,9 +111,9 @@ export function AdminBudgetActions({
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {error && !dialogOpen ? (
+          {approveError ? (
             <p role="alert" className="mb-4 text-sm text-destructive">
-              {error}
+              {approveError}
             </p>
           ) : null}
         </CardContent>
@@ -125,7 +133,9 @@ export function AdminBudgetActions({
             type="button"
             variant="destructive"
             onClick={() => {
-              setError(null)
+              setApproveError(null)
+              setReasonError(null)
+              setRejectError(null)
               setDialogOpen(true)
             }}
             disabled={submitting !== null}
@@ -155,18 +165,28 @@ export function AdminBudgetActions({
               <Textarea
                 id="rejection-reason"
                 value={reason}
-                onChange={(event) => setReason(event.target.value)}
+                onChange={(event) => {
+                  setReason(event.target.value)
+                  setReasonError(null)
+                }}
                 disabled={submitting !== null}
-                aria-invalid={Boolean(error)}
-                aria-describedby={error ? 'rejection-reason-error' : undefined}
+                aria-invalid={Boolean(reasonError)}
+                aria-describedby={
+                  reasonError ? 'rejection-reason-error' : undefined
+                }
               />
-              {error ? (
+              {reasonError ? (
                 <p
                   id="rejection-reason-error"
                   role="alert"
                   className="text-sm text-destructive"
                 >
-                  {error}
+                  {reasonError}
+                </p>
+              ) : null}
+              {rejectError ? (
+                <p role="alert" className="text-sm text-destructive">
+                  {rejectError}
                 </p>
               ) : null}
             </div>

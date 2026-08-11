@@ -40,7 +40,9 @@ export function GeneralApprovalActions({
 }: GeneralApprovalActionsProps) {
   const [dialogOpen, setDialogOpen] = useState(false)
   const [reason, setReason] = useState('')
-  const [error, setError] = useState<string | null>(null)
+  const [reasonError, setReasonError] = useState<string | null>(null)
+  const [approveError, setApproveError] = useState<string | null>(null)
+  const [rejectError, setRejectError] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState<'approve' | 'reject' | null>(
     null,
   )
@@ -56,7 +58,7 @@ export function GeneralApprovalActions({
   async function handleApprove() {
     if (submitting) return
     setSubmitting('approve')
-    setError(null)
+    setApproveError(null)
     try {
       const nextOdc = await approve()
       toast.add({
@@ -66,7 +68,7 @@ export function GeneralApprovalActions({
       })
       onSuccess(nextOdc)
     } catch {
-      setError('No pudimos aprobar la compra. Intenta nuevamente.')
+      setApproveError('No pudimos aprobar la compra. Intenta nuevamente.')
     } finally {
       setSubmitting(null)
     }
@@ -77,11 +79,13 @@ export function GeneralApprovalActions({
     if (submitting) return
     const trimmedReason = reason.trim()
     if (!trimmedReason) {
-      setError('El motivo del rechazo es obligatorio.')
+      setReasonError('El motivo del rechazo es obligatorio.')
+      setRejectError(null)
       return
     }
     setSubmitting('reject')
-    setError(null)
+    setReasonError(null)
+    setRejectError(null)
     try {
       const nextOdc = await reject(trimmedReason)
       toast.add({
@@ -93,7 +97,7 @@ export function GeneralApprovalActions({
       setDialogOpen(false)
       setReason('')
     } catch {
-      setError('No pudimos rechazar la compra. Intenta nuevamente.')
+      setRejectError('No pudimos rechazar la compra. Intenta nuevamente.')
     } finally {
       setSubmitting(null)
     }
@@ -109,9 +113,9 @@ export function GeneralApprovalActions({
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {error && !dialogOpen ? (
+          {approveError ? (
             <p role="alert" className="mb-4 text-sm text-destructive">
-              {error}
+              {approveError}
             </p>
           ) : null}
           {validatedByAdministration ? (
@@ -138,7 +142,9 @@ export function GeneralApprovalActions({
             variant="destructive"
             disabled={submitting !== null}
             onClick={() => {
-              setError(null)
+              setApproveError(null)
+              setReasonError(null)
+              setRejectError(null)
               setDialogOpen(true)
             }}
           >
@@ -169,20 +175,28 @@ export function GeneralApprovalActions({
               <Textarea
                 id="general-rejection-reason"
                 value={reason}
-                onChange={(event) => setReason(event.target.value)}
+                onChange={(event) => {
+                  setReason(event.target.value)
+                  setReasonError(null)
+                }}
                 disabled={submitting !== null}
-                aria-invalid={Boolean(error)}
+                aria-invalid={Boolean(reasonError)}
                 aria-describedby={
-                  error ? 'general-rejection-reason-error' : undefined
+                  reasonError ? 'general-rejection-reason-error' : undefined
                 }
               />
-              {error ? (
+              {reasonError ? (
                 <p
                   id="general-rejection-reason-error"
                   role="alert"
                   className="text-sm text-destructive"
                 >
-                  {error}
+                  {reasonError}
+                </p>
+              ) : null}
+              {rejectError ? (
+                <p role="alert" className="text-sm text-destructive">
+                  {rejectError}
                 </p>
               ) : null}
             </div>

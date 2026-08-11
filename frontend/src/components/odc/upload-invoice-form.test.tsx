@@ -321,8 +321,7 @@ describe('R8: recoverable errors on upload invoice', () => {
     )
     expect(screen.getByLabelText(/número de factura/i).value).toBe('FAC-200')
     expect(
-      (screen.getByLabelText(/fecha de entrada a almacén/i) as HTMLInputElement)
-        .value,
+      screen.getByLabelText(/fecha de entrada a almacén/i).value,
     ).toBe('2026-07-23')
     expect(
       screen
@@ -369,12 +368,10 @@ describe('R11: loading state and accessibility of upload invoice', () => {
         .hasAttribute('disabled'),
     ).toBe(true)
     expect(
-      (screen.getByLabelText(/número de factura/i) as HTMLInputElement)
-        .disabled,
+      screen.getByLabelText(/número de factura/i).disabled,
     ).toBe(true)
     expect(
-      (screen.getByLabelText(/fecha de entrada a almacén/i) as HTMLInputElement)
-        .disabled,
+      screen.getByLabelText(/fecha de entrada a almacén/i).disabled,
     ).toBe(true)
 
     resolveUpload(evidenceUploadedOdc())
