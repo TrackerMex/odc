@@ -1,6 +1,8 @@
 import { formatCurrency, formatMonth, formatDateOnly } from '@/lib/odc'
 import type { MonthlyPurchaseSummary } from '@/lib/odc'
 
+// The PDF is rendered by html-to-image in a fixed light theme. These literal
+// palette classes are deliberate and must not follow the app theme.
 export function MonthlySummarySlide({
   summary,
 }: {

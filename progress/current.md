@@ -6,16 +6,15 @@
 ```
 feature: ui-surfaces-monthly-summary
 id: 27
-inicio: 2026-08-15
+inicio: 2026-08-16
 plan:
-  - spec_author investiga alcanzabilidad real de las superficies de resumen mensual
-  - spec_author escribe specs/ui-surfaces-monthly-summary/ y deja la feature en spec_ready
-  - gate humano: aprobar el checkbox en requirements.md (verificar a mano, no fiarse del agente)
-  - implementer con TDD tras la aprobación
-estado: pending
-bloqueos: —
-spec_author: en curso
-implementer: pendiente
+  - escribir pruebas R1-R10 antes del código
+  - aplicar el rediseño mínimo en la superficie mensual
+  - ejecutar build, tests, lint y validación visual
+estado: in_progress
+bloqueos: acta visual R9 y veredicto humano pendientes
+spec_author: done
+implementer: done
 reviewer: pendiente
 ```
 
