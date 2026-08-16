@@ -12,7 +12,7 @@ plan:
   - aplicar el rediseño mínimo en la superficie mensual
   - ejecutar build, tests, lint y validación visual
 estado: in_progress
-bloqueos: acta visual R9 y veredicto humano pendientes
+bloqueos: R9 requiere un mes con más de 10 compras para probar paginación; veredicto humano pendiente
 spec_author: done
 implementer: done
 reviewer: pendiente
