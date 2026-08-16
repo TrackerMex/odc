@@ -484,3 +484,25 @@ _El historial comenzará aquí cuando se complete la primera sesión._
   tests, `b04d3d0` implementación, `aea3c7b` regresión R6, `631fb5a` fix y
   `16c3e9e` aprobación reviewer.
 - **Estado final:** done. Quedan #28, #27 y #29.
+
+## Sesión 2026-08-16 — ui-surfaces-monthly-summary (id: 27)
+
+- **Alcance:** fase 3d del refactor visual sobre `/monthly-summary`, sin cambios
+  de backend, API, ruta, permisos, exportador ni dependencias.
+- **Implementación:** header compacto, total como único escalón de énfasis,
+  barras horizontales accesibles por etapa reutilizando `statusStyles`, radio
+  semántico y tracking `0.06em` en la tabla. El slide exportable conservó su
+  render y solo recibió el comentario que documenta su paleta clara.
+- **TDD:** `7a2be38` añadió primero las pruebas R1–R10 y dejó 16 fallos
+  esperados; `2092adb` implementó el cambio mínimo. `cb94a60` registró la
+  trazabilidad.
+- **Verificación visual:** claro y oscuro a 1440×900; header de `100px` a
+  `59.9875px`, total único a `30px`, barras 3/3/1 legibles y tabla sin overflow.
+  PNG y PDF reales inspeccionados sin recortes. Cuatro filas locales temporales
+  elevaron julio a 11 compras: página 1 mostró 10 y página 2 mostró 1; después
+  se eliminaron y la base volvió a sus 7 compras originales.
+- **Gate humano:** Alexis aprobó la superficie el 2026-08-16. Acta en
+  `progress/verify_ui-surfaces-monthly-summary.md` (`9607e64`, `a8ed7fd`).
+- **Verificación final:** `./init.sh` verde: 59 suites/471 tests backend,
+  35 archivos/480 tests frontend, builds y lint correctos.
+- **Estado final:** done. Quedan #28 y #29.

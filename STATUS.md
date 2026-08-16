@@ -1,8 +1,8 @@
 # ODC — Status
 
-**Última actualización**: 2026-08-11
-**Features completadas**: 27/30 (`feature_list.json`)
-**Pendientes**: 3; siguientes #28, #27 y #29
+**Última actualización**: 2026-08-16
+**Features completadas**: 28/30 (`feature_list.json`)
+**Pendientes**: 2; siguientes #28 y #29
 **En producción**: no
 
 ---
@@ -84,7 +84,10 @@ Requiere `.env` en la raíz (plantilla en `.env.example`): `DATABASE_URL`,
 - **#26 `ui-surfaces-detail-forms` done** (2026-08-11): detalle y timeline
   semánticos, acciones integradas en la columna principal, confirmación de
   cierre y validación accesible con blur/foco en los cinco formularios.
-- Siguientes: #28, #27 y #29. Cada una
+- **#27 `ui-surfaces-monthly-summary` done** (2026-08-16): resumen mensual con
+  header compacto, barras de estado por tokens, tabla alineada al sistema y
+  exportaciones PNG/PDF preservadas; gate visual y humano aprobados.
+- Siguientes: #28 y #29. Cada una
   sigue el pipeline `spec_author` → aprobación humana → `implementer` →
   `reviewer`.
 - Deuda anotada (tests): `general-approval-actions.test.tsx:163` es flaky —
@@ -95,15 +98,14 @@ Requiere `.env` en la raíz (plantilla en `.env.example`): `DATABASE_URL`,
 
 ## Última sesión
 
-**2026-08-11** — Cierre de `ui-surfaces-detail-forms` (#26) → **27/30**.
+**2026-08-16** — Cierre de `ui-surfaces-monthly-summary` (#27) → **28/30**.
 
-- Detalle convertido a filas `dt`/`dd`, timeline por tokens de estado y
-  acciones ubicadas antes del sidebar sticky.
-- Validación accesible por blur/change, foco al primer inválido, comentarios
-  colapsables y diálogo explícito para completar la orden.
-- Primera revisión rechazó la atribución ARIA de errores API; la regresión R6
-  se escribió roja y quedó corregida antes de la aprobación final.
-- Reviewer aprobado; `./init.sh` verde con 471 tests backend y 455 frontend.
+- Header reducido de 100px a 59.9875px en ambos temas, total único a 30px y
+  barras 3/3/1 legibles con los tokens de estado existentes.
+- Paginación real validada con 11 registros locales; los cuatro temporales se
+  eliminaron y la base volvió a 7 compras.
+- PNG y PDF ejecutados e inspeccionados sin recortes; reviewer y gate humano
+  aprobados. `./init.sh` verde con 471 tests backend y 480 frontend.
 
 ---
 

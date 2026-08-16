@@ -16,7 +16,7 @@ tags: [harness, spec, frontend, ui, monthly-summary, charts]
 | R6 | `design-system.guardrails.test.ts::ui-surfaces-monthly-summary R6: the export slide exception is documented`; guardas congeladas de `R15` | test `7a2be38` + feat `2092adb` |
 | R7 | `monthly-summary.test.tsx::R7: existing loading and result contracts remain accessible`; caracterizaciones preexistentes del resumen; `production-reachability.test.ts::R4` | test `7a2be38` + feat `2092adb` |
 | R8 | `design-system.guardrails.test.ts::ui-surfaces-monthly-summary R8: the active surface is audited`; auditorías `ui-surfaces-dashboards R5/R10/R11/R13/R15` | test `7a2be38` + feat `2092adb` |
-| R9 | `design-system.guardrails.test.ts::ui-surfaces-monthly-summary R9: browser verification record exists`; `progress/verify_ui-surfaces-monthly-summary.md` | test `7a2be38` + esqueleto `2092adb`; acta y firma humana pendientes |
+| R9 | `design-system.guardrails.test.ts::ui-surfaces-monthly-summary R9: browser verification record exists`; `progress/verify_ui-surfaces-monthly-summary.md` | test `7a2be38` + esqueleto `2092adb` + acta `9607e64`/`a8ed7fd` |
 | R10 | `design-system.guardrails.test.ts::ui-surfaces-monthly-summary R10: existing summary assertions stay intact`; suite completa | test `7a2be38` + feat `2092adb`; `pnpm -C frontend test` 480/480 y `pnpm -C frontend build` verdes |
 
 Regla: el reviewer no aprueba si alguna fila queda "pendiente".
@@ -24,5 +24,5 @@ Convención de commit: `feat(ui-surfaces-monthly-summary): <desc> (R1,R2)`.
 El implementer actualiza esta tabla tras cada commit; el reviewer la valida
 al aprobar (ver [[../../docs/specs|specs]] y [[../../CHECKPOINTS|CHECKPOINTS]] C5).
 
-R9 se cierra con `progress/verify_ui-surfaces-monthly-summary.md` firmado por un
-humano, no solo con el test que comprueba que el archivo existe.
+R9 quedó firmado por Alexis el 2026-08-16 después de la verificación en
+navegador real, incluida la paginación con 11 registros locales temporales.
