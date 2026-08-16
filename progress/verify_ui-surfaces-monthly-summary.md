@@ -37,8 +37,12 @@ En julio la tabla midió `scrollWidth: 1087px` y `clientWidth: 1087px` a
 1440×900, sin scroll horizontal. El encabezado computó
 `letter-spacing: 0.72px` (`0.06em` sobre `12px`).
 
-PENDIENTE: la base local solo contiene 7 compras pagadas en el mes disponible;
-falta repetir la sesión con más de 10 registros para ejercer la paginación real.
+Con cuatro registros locales temporales, julio llegó a 11 compras. La página 1
+mostró 10 filas y el texto `Mostrando 1–10 de 11 compras`; la página 2 mostró
+una fila y `Mostrando 11–11 de 11 compras`. En ambas páginas se cumplió
+`scrollWidth == clientWidth` (`1087px` en la primera y `1102px` en la segunda).
+Los cuatro registros se eliminaron al terminar y la base volvió a sus 7 compras
+originales.
 
 ## 5. La exportación PNG y PDF
 
@@ -52,4 +56,5 @@ código es el comentario que documenta la paleta clara deliberada.
 
 ## 6. Veredicto humano
 
-PENDIENTE
+APROBADO por Alexis el 2026-08-16, tras revisar la superficie final y autorizar
+la prueba de paginación con datos temporales locales.
