@@ -30,6 +30,7 @@ const SURFACES = [
   'odc-status-badge',
   'executive-dashboard',
   'executive-tasks',
+  'monthly-summary',
 ] as const
 
 const surfaceSource = (name: string) => read(`src/components/odc/${name}.tsx`)
@@ -309,7 +310,8 @@ describe('ui-surfaces-dashboards R13: los tests no fijan valores visuales invent
 
   const NORMATIVE = () =>
     readRepo('design-system/odc/MASTER.md') +
-    readRepo('design-system/odc/pages/dashboard.md')
+    readRepo('design-system/odc/pages/dashboard.md') +
+    readRepo('design-system/odc/pages/monthly-summary.md')
 
   it.each(FEATURE_TESTS)(
     '%s solo fija valores escritos en la fuente normativa',
@@ -374,5 +376,48 @@ describe('ui-surfaces-dashboards R15: alcance cerrado, sin tokens ni dependencia
     expect(
       Object.keys({ ...pkg.dependencies, ...pkg.devDependencies }),
     ).toHaveLength(FROZEN_DEPENDENCIES.length + FROZEN_DEV_DEPENDENCIES.length)
+  })
+})
+
+describe('ui-surfaces-monthly-summary R6: the export slide exception is documented', () => {
+  it('explains why literal light-theme colors must remain in the PDF render', () => {
+    const slide = surfaceSource('monthly-summary-slide')
+
+    expect(slide).toMatch(/PDF.*html-to-image|html-to-image.*PDF/)
+  })
+})
+
+describe('ui-surfaces-monthly-summary R8: the active surface is audited', () => {
+  it('includes monthly-summary and excludes the intentionally literal slide', () => {
+    expect(SURFACES).toContain('monthly-summary')
+    expect(SURFACES).not.toContain('monthly-summary-slide')
+  })
+})
+
+describe('ui-surfaces-monthly-summary R9: browser verification record exists', () => {
+  it.each([
+    '## 1. La superficie en los dos temas',
+    '## 2. Jerarquía tipográfica del total',
+    '## 3. Las barras de etapa',
+    '## 4. La tabla de detalle',
+    '## 5. La exportación PNG y PDF',
+    '## 6. Veredicto humano',
+  ])('declares the section "%s"', (heading) => {
+    expect(
+      readRepo('progress/verify_ui-surfaces-monthly-summary.md'),
+    ).toContain(heading)
+  })
+})
+
+describe('ui-surfaces-monthly-summary R10: existing summary assertions stay intact', () => {
+  it.each([
+    "'odc-filter-results',",
+    "getByRole('button', { name: 'Página siguiente' })",
+    "getByRole('button', { name: 'Imagen' })",
+    "getByRole('button', { name: 'PDF' })",
+  ])('preserves %s', (assertion) => {
+    expect(read('src/components/odc/monthly-summary.test.tsx')).toContain(
+      assertion,
+    )
   })
 })
