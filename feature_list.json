@@ -147,13 +147,13 @@
   {
     "id": 26,
     "name": "ui-surfaces-detail-forms",
-    "status": "pending",
+    "status": "done",
     "priority": "P2"
   },
   {
     "id": 27,
     "name": "ui-surfaces-monthly-summary",
-    "status": "pending",
+    "status": "done",
     "priority": "P3"
   },
   {

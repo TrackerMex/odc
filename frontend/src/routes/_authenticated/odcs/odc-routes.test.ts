@@ -1,4 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { readFileSync } from 'node:fs'
+import { resolve } from 'node:path'
 import type * as ApiModule from '@/lib/api'
 import {
   getExecutiveDashboard,
@@ -8,6 +10,11 @@ import {
 } from '@/lib/api'
 import { loadAuthenticatedDashboard } from '../index'
 import { canEditOdc, loadOdcDetail } from './$id'
+
+const detailRouteSource = readFileSync(
+  resolve(process.cwd(), 'src/routes/_authenticated/odcs/$id.tsx'),
+  'utf8',
+)
 
 vi.mock('@/lib/api', async (importOriginal) => {
   const actual = await importOriginal<typeof ApiModule>()
@@ -103,5 +110,22 @@ describe('R1,R5: draft editing access is limited to the creator in DIRECTOR_OPS'
         { ...draft, status: 'RECHAZADA' },
       ),
     ).toBe(true)
+  })
+})
+
+describe('R4: permitted actions compose inside the detail main column', () => {
+  it('passes every role-gated surface through the OdcDetail action slot', () => {
+    expect(detailRouteSource).toMatch(/<OdcDetail[\s\S]*actions=/)
+    for (const surface of [
+      'AdminBudgetActions',
+      'GeneralApprovalActions',
+      'PaymentEvidenceForm',
+      'RegisterPaymentForm',
+      'UploadInvoiceForm',
+    ]) {
+      expect(detailRouteSource).toMatch(
+        new RegExp(`actions={[\\s\\S]*<${surface}`),
+      )
+    }
   })
 })

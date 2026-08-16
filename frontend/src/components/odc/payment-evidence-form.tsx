@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { UploadIcon } from 'lucide-react'
 import type { SessionUser } from '@/lib/session'
 import type { Odc } from '@/lib/odc'
@@ -7,6 +7,7 @@ import {
   Card,
   CardContent,
   CardDescription,
+  CardFooter,
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
@@ -34,31 +35,38 @@ export function PaymentEvidenceForm({
 }) {
   const [file, setFile] = useState<File | null>(null)
   const [reference, setReference] = useState('')
-  const [error, setError] = useState<string | null>(null)
+  const [fileError, setFileError] = useState<string | null>(null)
+  const [apiError, setApiError] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
+  const fileRef = useRef<HTMLInputElement>(null)
 
   if (role !== 'ADMINISTRACION' || odc.status !== 'PAGO_REGISTRADO') {
+    return null
+  }
+
+  function fileValidationMessage(selectedFile: File | null) {
+    if (!selectedFile) return 'El archivo del comprobante es obligatorio.'
+    if (!ALLOWED_FILE_TYPES.has(selectedFile.type)) {
+      return 'Selecciona un archivo PDF, JPG o PNG.'
+    }
+    if (selectedFile.size > MAX_FILE_SIZE) {
+      return 'El archivo no puede superar 10 MB.'
+    }
     return null
   }
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
     if (submitting) return
-    if (!file) {
-      setError('El archivo del comprobante es obligatorio.')
-      return
-    }
-    if (!ALLOWED_FILE_TYPES.has(file.type)) {
-      setError('Selecciona un archivo PDF, JPG o PNG.')
-      return
-    }
-    if (file.size > MAX_FILE_SIZE) {
-      setError('El archivo no puede superar 10 MB.')
+    const nextFileError = fileValidationMessage(file)
+    setFileError(nextFileError)
+    if (!file || nextFileError) {
+      fileRef.current?.focus()
       return
     }
 
     setSubmitting(true)
-    setError(null)
+    setApiError(null)
     try {
       const nextOdc = await upload(file, reference.trim() || undefined)
       toast.add({
@@ -68,7 +76,7 @@ export function PaymentEvidenceForm({
       })
       onSuccess(nextOdc)
     } catch {
-      setError('No pudimos subir el comprobante. Intenta nuevamente.')
+      setApiError('No pudimos subir el comprobante. Intenta nuevamente.')
     } finally {
       setSubmitting(false)
     }
@@ -85,26 +93,42 @@ export function PaymentEvidenceForm({
             Adjunta un PDF, JPG o PNG de hasta 10 MB.
           </CardDescription>
         </CardHeader>
-        <CardContent>
-          <form
-            onSubmit={handleSubmit}
-            className="space-y-5"
-            aria-busy={submitting}
-          >
+        <form
+          className="contents"
+          onSubmit={handleSubmit}
+          aria-busy={submitting}
+        >
+          <CardContent className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="payment-evidence-file">
                 Archivo del comprobante
               </Label>
               <Input
+                ref={fileRef}
                 id="payment-evidence-file"
                 type="file"
                 accept="application/pdf,image/jpeg,image/png"
                 onChange={(event) => {
-                  setFile(event.target.files?.[0] ?? null)
-                  setError(null)
+                  const nextFile = event.target.files?.[0] ?? null
+                  setFile(nextFile)
+                  setFileError(fileValidationMessage(nextFile))
+                  setApiError(null)
                 }}
                 disabled={submitting}
+                aria-invalid={Boolean(fileError)}
+                aria-describedby={
+                  fileError ? 'payment-evidence-file-error' : undefined
+                }
               />
+              {fileError ? (
+                <p
+                  id="payment-evidence-file-error"
+                  role="alert"
+                  className="text-sm text-destructive"
+                >
+                  {fileError}
+                </p>
+              ) : null}
             </div>
             <div className="space-y-2">
               <Label htmlFor="evidence-reference">
@@ -118,17 +142,19 @@ export function PaymentEvidenceForm({
                 placeholder="Opcional"
               />
             </div>
-            {error ? (
+            {apiError ? (
               <p role="alert" className="text-sm text-destructive">
-                {error}
+                {apiError}
               </p>
             ) : null}
+          </CardContent>
+          <CardFooter className="border-t flex flex-col items-stretch sm:flex-row sm:items-center">
             <Button type="submit" disabled={submitting}>
               <UploadIcon aria-hidden="true" />
               {submitting ? 'Subiendo…' : 'Subir comprobante'}
             </Button>
-          </form>
-        </CardContent>
+          </CardFooter>
+        </form>
       </Card>
     </section>
   )

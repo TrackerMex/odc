@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { useNavigate } from '@tanstack/react-router'
 
 import { cn } from '@/lib/utils'
@@ -37,9 +37,22 @@ export function LoginForm({
   const [password, setPassword] = useState('')
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({})
   const [formError, setFormError] = useState<string | null>(null)
+  const [submitting, setSubmitting] = useState(false)
+  const emailRef = useRef<HTMLInputElement>(null)
+  const passwordRef = useRef<HTMLInputElement>(null)
+
+  function validateField(field: keyof FieldErrors) {
+    const result = loginSchema.safeParse({ email, password })
+    const message = result.success
+      ? undefined
+      : result.error.flatten().fieldErrors[field]?.[0]
+    setFieldErrors((current) => ({ ...current, [field]: message }))
+    return message
+  }
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
+    if (submitting) return
 
     const result = loginSchema.safeParse({ email, password })
     if (!result.success) {
@@ -49,11 +62,13 @@ export function LoginForm({
         password: flattened.password?.[0],
       })
       setFormError(null)
+      ;(flattened.email?.[0] ? emailRef : passwordRef).current?.focus()
       return
     }
 
     setFieldErrors({})
     setFormError(null)
+    setSubmitting(true)
 
     try {
       const { user } = await login(result.data)
@@ -65,6 +80,8 @@ export function LoginForm({
         return
       }
       throw error
+    } finally {
+      setSubmitting(false)
     }
   }
 
@@ -78,7 +95,12 @@ export function LoginForm({
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form data-testid="login-form" onSubmit={handleSubmit} noValidate>
+          <form
+            data-testid="login-form"
+            onSubmit={handleSubmit}
+            noValidate
+            aria-busy={submitting}
+          >
             <FieldGroup>
               <Field
                 data-testid="email-field"
@@ -86,14 +108,28 @@ export function LoginForm({
               >
                 <FieldLabel htmlFor="email">Email</FieldLabel>
                 <Input
+                  ref={emailRef}
                   id="email"
                   type="email"
                   placeholder="m@example.com"
                   value={email}
-                  onChange={(event) => setEmail(event.target.value)}
+                  onChange={(event) => {
+                    setEmail(event.target.value)
+                    setFieldErrors((current) => ({
+                      ...current,
+                      email: undefined,
+                    }))
+                    setFormError(null)
+                  }}
+                  onBlur={() => validateField('email')}
+                  disabled={submitting}
                   aria-invalid={!!fieldErrors.email}
+                  aria-describedby={
+                    fieldErrors.email ? 'email-error' : undefined
+                  }
                 />
                 <FieldError
+                  id="email-error"
                   errors={
                     fieldErrors.email ? [{ message: fieldErrors.email }] : []
                   }
@@ -105,13 +141,27 @@ export function LoginForm({
               >
                 <FieldLabel htmlFor="password">Password</FieldLabel>
                 <Input
+                  ref={passwordRef}
                   id="password"
                   type="password"
                   value={password}
-                  onChange={(event) => setPassword(event.target.value)}
+                  onChange={(event) => {
+                    setPassword(event.target.value)
+                    setFieldErrors((current) => ({
+                      ...current,
+                      password: undefined,
+                    }))
+                    setFormError(null)
+                  }}
+                  onBlur={() => validateField('password')}
+                  disabled={submitting}
                   aria-invalid={!!fieldErrors.password}
+                  aria-describedby={
+                    fieldErrors.password ? 'password-error' : undefined
+                  }
                 />
                 <FieldError
+                  id="password-error"
                   errors={
                     fieldErrors.password
                       ? [{ message: fieldErrors.password }]
@@ -125,7 +175,9 @@ export function LoginForm({
                 </p>
               ) : null}
               <Field>
-                <Button type="submit">Ingresar</Button>
+                <Button type="submit" disabled={submitting}>
+                  {submitting ? 'Ingresando…' : 'Ingresar'}
+                </Button>
               </Field>
             </FieldGroup>
           </form>

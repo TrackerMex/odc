@@ -30,10 +30,10 @@ const SURFACES = [
   'odc-status-badge',
   'executive-dashboard',
   'executive-tasks',
+  'monthly-summary',
 ] as const
 
-const surfaceSource = (name: string) =>
-  read(`src/components/odc/${name}.tsx`)
+const surfaceSource = (name: string) => read(`src/components/odc/${name}.tsx`)
 
 describe('ui-surfaces-dashboards R1: el badge deja de pintar paleta cruda', () => {
   const badge = () => surfaceSource('odc-status-badge')
@@ -49,7 +49,9 @@ describe('ui-surfaces-dashboards R1: el badge deja de pintar paleta cruda', () =
     'rejected',
   ])('declara el par de tokens de status-%s', (token) => {
     expect(badge()).toContain(`bg-status-${token}-surface`)
-    expect(badge()).toMatch(new RegExp(`\\btext-status-${token}\\b(?!-surface)`))
+    expect(badge()).toMatch(
+      new RegExp(`\\btext-status-${token}\\b(?!-surface)`),
+    )
   })
 
   it('no conserva ninguna clase de paleta Tailwind', () => {
@@ -229,6 +231,46 @@ describe('R15: sin dependencias nuevas y sin color literal en las primitivas', (
   })
 })
 
+describe('ui-surfaces-detail-forms R14: preservación transversal', () => {
+  const affectedSurfaces = [
+    'admin-budget-actions',
+    'general-approval-actions',
+    'odc-detail',
+    'odc-document-preview',
+    'odc-form',
+    'payment-evidence-form',
+    'register-payment-form',
+    'upload-invoice-form',
+  ] as const
+
+  it.each(affectedSurfaces)('%s usa solo colores semánticos', (surface) => {
+    expect([...surfaceSource(surface).matchAll(LITERAL_COLOR)]).toEqual([])
+  })
+
+  it('mantiene layouts apilados, anchos mínimos y breakpoints acotados', () => {
+    expect(surfaceSource('odc-detail')).toContain('grid min-w-0')
+    expect(surfaceSource('odc-detail')).toContain('sm:grid-cols-2')
+    expect(surfaceSource('general-approval-actions')).toMatch(
+      /flex flex-col.*sm:flex-row/,
+    )
+    expect(surfaceSource('odc-form')).toContain('min-w-0')
+  })
+
+  it('protege indicadores de carga añadidos frente a reduced motion', () => {
+    for (const surface of [
+      'odc-form',
+      'payment-evidence-form',
+      'register-payment-form',
+      'upload-invoice-form',
+    ] as const) {
+      const source = surfaceSource(surface)
+      if (source.includes('animate-spin')) {
+        expect(source).toContain('motion-reduce:animate-none')
+      }
+    }
+  })
+})
+
 // Las guardas de R12, R13 y R15 nacen en verde por construcción: afirman que
 // algo que ya está bien sigue estando bien. Se ponen rojas si esta feature —
 // o la siguiente — rompe lo que debía quedar intacto.
@@ -268,7 +310,8 @@ describe('ui-surfaces-dashboards R13: los tests no fijan valores visuales invent
 
   const NORMATIVE = () =>
     readRepo('design-system/odc/MASTER.md') +
-    readRepo('design-system/odc/pages/dashboard.md')
+    readRepo('design-system/odc/pages/dashboard.md') +
+    readRepo('design-system/odc/pages/monthly-summary.md')
 
   it.each(FEATURE_TESTS)(
     '%s solo fija valores escritos en la fuente normativa',
@@ -323,7 +366,9 @@ describe('ui-surfaces-dashboards R15: alcance cerrado, sin tokens ni dependencia
   })
 
   it('no declara tokens de estado nuevos en styles.css', () => {
-    expect([...read('src/styles.css').matchAll(/--color-status-[\w-]+:/g)]).toHaveLength(16)
+    expect([
+      ...read('src/styles.css').matchAll(/--color-status-[\w-]+:/g),
+    ]).toHaveLength(16)
   })
 
   it('no añade dependencias a frontend/package.json', () => {
@@ -331,5 +376,48 @@ describe('ui-surfaces-dashboards R15: alcance cerrado, sin tokens ni dependencia
     expect(
       Object.keys({ ...pkg.dependencies, ...pkg.devDependencies }),
     ).toHaveLength(FROZEN_DEPENDENCIES.length + FROZEN_DEV_DEPENDENCIES.length)
+  })
+})
+
+describe('ui-surfaces-monthly-summary R6: the export slide exception is documented', () => {
+  it('explains why literal light-theme colors must remain in the PDF render', () => {
+    const slide = surfaceSource('monthly-summary-slide')
+
+    expect(slide).toMatch(/PDF.*html-to-image|html-to-image.*PDF/)
+  })
+})
+
+describe('ui-surfaces-monthly-summary R8: the active surface is audited', () => {
+  it('includes monthly-summary and excludes the intentionally literal slide', () => {
+    expect(SURFACES).toContain('monthly-summary')
+    expect(SURFACES).not.toContain('monthly-summary-slide')
+  })
+})
+
+describe('ui-surfaces-monthly-summary R9: browser verification record exists', () => {
+  it.each([
+    '## 1. La superficie en los dos temas',
+    '## 2. Jerarquía tipográfica del total',
+    '## 3. Las barras de etapa',
+    '## 4. La tabla de detalle',
+    '## 5. La exportación PNG y PDF',
+    '## 6. Veredicto humano',
+  ])('declares the section "%s"', (heading) => {
+    expect(
+      readRepo('progress/verify_ui-surfaces-monthly-summary.md'),
+    ).toContain(heading)
+  })
+})
+
+describe('ui-surfaces-monthly-summary R10: existing summary assertions stay intact', () => {
+  it.each([
+    "'odc-filter-results',",
+    "getByRole('button', { name: 'Página siguiente' })",
+    "getByRole('button', { name: 'Imagen' })",
+    "getByRole('button', { name: 'PDF' })",
+  ])('preserves %s', (assertion) => {
+    expect(read('src/components/odc/monthly-summary.test.tsx')).toContain(
+      assertion,
+    )
   })
 })

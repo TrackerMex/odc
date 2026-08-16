@@ -457,3 +457,52 @@ _El historial comenzará aquí cuando se complete la primera sesión._
   `6153dd6` test, `4f60a9b` feat, `206bbfd` trazabilidad.
 - **Estado final:** done. Siguiente feature recomendada: #26
   `ui-surfaces-detail-forms`.
+
+## Sesión 2026-08-11 — ui-surfaces-detail-forms (id: 26)
+
+- **Alcance:** fases 3b–3c del refactor visual sobre detalle, timeline,
+  acciones, `OdcForm`, registro de pago, evidencia, factura y login. #27,
+  #28, #29 y `CardHeader` permanecieron fuera.
+- **Detalle y acciones:** los datos usan filas semánticas `dt`/`dd`, el total
+  ocupa una fila enfatizada, pago/factura son secciones y el timeline consume
+  los ocho tokens de estado. Las acciones permitidas viven al pie de la
+  columna principal, antes del sidebar sticky de 22rem.
+- **Formularios:** validación por blur o change según el control, errores
+  asociados con ARIA, foco al primer inválido, `DatePicker` enfocable,
+  comentarios colapsables y estados pending sin duplicados. Completar una ODC
+  exige confirmación explícita y mantiene error, datos y retry en el diálogo.
+- **TDD:** `66d55d8` dejó 25 fallos esperados antes de `b04d3d0`. La primera
+  revisión detectó que los fallos API de rechazo se atribuían al textarea;
+  `aea3c7b` reprodujo dos fallos R6 y `631fb5a` separó errores locales, de
+  aprobación y de rechazo. Ambos rojos se reprodujeron en worktrees aislados.
+- **Diseño y accesibilidad:** la skill `ui-styling` guio foco, teclado, ARIA y
+  responsive, manteniendo como autoridad las primitivas Base UI y los tokens
+  locales. Toast usa `rounded-card` sin `!important`.
+- **Verificación:** light 768/1024/1440 y dark 1440 sin overflow; suite dirigida
+  331/331; `./init.sh` final verde con 471 tests backend y 455 frontend.
+- **Commits principales:** `8f29a0c` spec, `769594e` gate humano, `66d55d8`
+  tests, `b04d3d0` implementación, `aea3c7b` regresión R6, `631fb5a` fix y
+  `16c3e9e` aprobación reviewer.
+- **Estado final:** done. Quedan #28, #27 y #29.
+
+## Sesión 2026-08-16 — ui-surfaces-monthly-summary (id: 27)
+
+- **Alcance:** fase 3d del refactor visual sobre `/monthly-summary`, sin cambios
+  de backend, API, ruta, permisos, exportador ni dependencias.
+- **Implementación:** header compacto, total como único escalón de énfasis,
+  barras horizontales accesibles por etapa reutilizando `statusStyles`, radio
+  semántico y tracking `0.06em` en la tabla. El slide exportable conservó su
+  render y solo recibió el comentario que documenta su paleta clara.
+- **TDD:** `7a2be38` añadió primero las pruebas R1–R10 y dejó 16 fallos
+  esperados; `2092adb` implementó el cambio mínimo. `cb94a60` registró la
+  trazabilidad.
+- **Verificación visual:** claro y oscuro a 1440×900; header de `100px` a
+  `59.9875px`, total único a `30px`, barras 3/3/1 legibles y tabla sin overflow.
+  PNG y PDF reales inspeccionados sin recortes. Cuatro filas locales temporales
+  elevaron julio a 11 compras: página 1 mostró 10 y página 2 mostró 1; después
+  se eliminaron y la base volvió a sus 7 compras originales.
+- **Gate humano:** Alexis aprobó la superficie el 2026-08-16. Acta en
+  `progress/verify_ui-surfaces-monthly-summary.md` (`9607e64`, `a8ed7fd`).
+- **Verificación final:** `./init.sh` verde: 59 suites/471 tests backend,
+  35 archivos/480 tests frontend, builds y lint correctos.
+- **Estado final:** done. Quedan #28 y #29.

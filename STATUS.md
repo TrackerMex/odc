@@ -1,8 +1,8 @@
 # ODC — Status
 
-**Última actualización**: 2026-08-11
-**Features completadas**: 26/30 (`feature_list.json`)
-**Pendientes**: 4; siguiente recomendada: #26 `ui-surfaces-detail-forms`
+**Última actualización**: 2026-08-16
+**Features completadas**: 28/30 (`feature_list.json`)
+**Pendientes**: 2; siguientes #28 y #29
 **En producción**: no
 
 ---
@@ -81,12 +81,15 @@ Requiere `.env` en la raíz (plantilla en `.env.example`): `DATABASE_URL`,
 - **#24, #25 y #30 done** (2026-08-11): corrección cromática de dark mode,
   refactor de dashboards activos y eliminación auditada de tres dashboards
   sustituidos. Una guarda transitiva impide nuevas superficies ODC sin ruta.
-- Siguiente: #26 `ui-surfaces-detail-forms`; después #28, #27 y #29. Cada una
+- **#26 `ui-surfaces-detail-forms` done** (2026-08-11): detalle y timeline
+  semánticos, acciones integradas en la columna principal, confirmación de
+  cierre y validación accesible con blur/foco en los cinco formularios.
+- **#27 `ui-surfaces-monthly-summary` done** (2026-08-16): resumen mensual con
+  header compacto, barras de estado por tokens, tabla alineada al sistema y
+  exportaciones PNG/PDF preservadas; gate visual y humano aprobados.
+- Siguientes: #28 y #29. Cada una
   sigue el pipeline `spec_author` → aprobación humana → `implementer` →
   `reviewer`.
-- Deuda anotada (frontend, 2026-08-10): `ui/toast.tsx` fija `rounded-2xl!` con
-  `!` y quedó fuera del alcance de la #23, así que es la única superficie con
-  el radio viejo. Arreglo de una línea, pendiente de feature.
 - Deuda anotada (tests): `general-approval-actions.test.tsx:163` es flaky —
   solo falla con la suite completa, por una carrera de render (`waitFor`
   seguido de `getByText` síncrono). Re-correr antes de culpar a un cambio.
@@ -95,13 +98,14 @@ Requiere `.env` en la raíz (plantilla en `.env.example`): `DATABASE_URL`,
 
 ## Última sesión
 
-**2026-08-11** — Cierre de `ui-dead-surfaces-audit` (#30) → **26/30**.
+**2026-08-16** — Cierre de `ui-surfaces-monthly-summary` (#27) → **28/30**.
 
-- Eliminados `OdcDashboard`, `AdminDashboard` y `GeneralDashboard`, ya
-  sustituidos por la portada ejecutiva común.
-- Confirmado que detalle, formularios, login y resumen mensual siguen montados.
-- Añadida guarda transitiva de alcanzabilidad desde rutas de producción.
-- Reviewer aprobado; `./init.sh` verde con 471 tests backend y 419 frontend.
+- Header reducido de 100px a 59.9875px en ambos temas, total único a 30px y
+  barras 3/3/1 legibles con los tokens de estado existentes.
+- Paginación real validada con 11 registros locales; los cuatro temporales se
+  eliminaron y la base volvió a 7 compras.
+- PNG y PDF ejecutados e inspeccionados sin recortes; reviewer y gate humano
+  aprobados. `./init.sh` verde con 471 tests backend y 480 frontend.
 
 ---
 

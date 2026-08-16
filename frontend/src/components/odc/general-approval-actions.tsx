@@ -7,6 +7,7 @@ import {
   Card,
   CardContent,
   CardDescription,
+  CardFooter,
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
@@ -39,7 +40,9 @@ export function GeneralApprovalActions({
 }: GeneralApprovalActionsProps) {
   const [dialogOpen, setDialogOpen] = useState(false)
   const [reason, setReason] = useState('')
-  const [error, setError] = useState<string | null>(null)
+  const [reasonError, setReasonError] = useState<string | null>(null)
+  const [approveError, setApproveError] = useState<string | null>(null)
+  const [rejectError, setRejectError] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState<'approve' | 'reject' | null>(
     null,
   )
@@ -55,7 +58,7 @@ export function GeneralApprovalActions({
   async function handleApprove() {
     if (submitting) return
     setSubmitting('approve')
-    setError(null)
+    setApproveError(null)
     try {
       const nextOdc = await approve()
       toast.add({
@@ -65,7 +68,7 @@ export function GeneralApprovalActions({
       })
       onSuccess(nextOdc)
     } catch {
-      setError('No pudimos aprobar la compra. Intenta nuevamente.')
+      setApproveError('No pudimos aprobar la compra. Intenta nuevamente.')
     } finally {
       setSubmitting(null)
     }
@@ -76,11 +79,13 @@ export function GeneralApprovalActions({
     if (submitting) return
     const trimmedReason = reason.trim()
     if (!trimmedReason) {
-      setError('El motivo del rechazo es obligatorio.')
+      setReasonError('El motivo del rechazo es obligatorio.')
+      setRejectError(null)
       return
     }
     setSubmitting('reject')
-    setError(null)
+    setReasonError(null)
+    setRejectError(null)
     try {
       const nextOdc = await reject(trimmedReason)
       toast.add({
@@ -92,7 +97,7 @@ export function GeneralApprovalActions({
       setDialogOpen(false)
       setReason('')
     } catch {
-      setError('No pudimos rechazar la compra. Intenta nuevamente.')
+      setRejectError('No pudimos rechazar la compra. Intenta nuevamente.')
     } finally {
       setSubmitting(null)
     }
@@ -108,43 +113,45 @@ export function GeneralApprovalActions({
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {error && !dialogOpen ? (
+          {approveError ? (
             <p role="alert" className="mb-4 text-sm text-destructive">
-              {error}
+              {approveError}
             </p>
           ) : null}
           {validatedByAdministration ? (
-            <p className="mb-4 flex items-center gap-2 text-sm font-medium text-emerald-700 dark:text-emerald-300">
+            <p className="mb-4 flex items-center gap-2 text-sm font-medium text-status-done">
               <BadgeCheckIcon className="size-4" aria-hidden="true" />
               Validado por Administración
             </p>
           ) : null}
-          <div
-            className="flex flex-col gap-3 sm:flex-row"
-            aria-busy={submitting !== null}
-          >
-            <Button
-              type="button"
-              onClick={handleApprove}
-              disabled={submitting !== null}
-            >
-              <CheckIcon aria-hidden="true" />
-              {submitting === 'approve' ? 'Aprobando…' : 'Aprobar compra'}
-            </Button>
-            <Button
-              type="button"
-              variant="destructive"
-              disabled={submitting !== null}
-              onClick={() => {
-                setError(null)
-                setDialogOpen(true)
-              }}
-            >
-              <XIcon aria-hidden="true" />
-              Rechazar
-            </Button>
-          </div>
         </CardContent>
+        <CardFooter
+          className="border-t flex flex-col items-stretch gap-3 sm:flex-row sm:items-center"
+          aria-busy={submitting !== null}
+        >
+          <Button
+            type="button"
+            onClick={handleApprove}
+            disabled={submitting !== null}
+          >
+            <CheckIcon aria-hidden="true" />
+            {submitting === 'approve' ? 'Aprobando…' : 'Aprobar compra'}
+          </Button>
+          <Button
+            type="button"
+            variant="destructive"
+            disabled={submitting !== null}
+            onClick={() => {
+              setApproveError(null)
+              setReasonError(null)
+              setRejectError(null)
+              setDialogOpen(true)
+            }}
+          >
+            <XIcon aria-hidden="true" />
+            Rechazar
+          </Button>
+        </CardFooter>
       </Card>
 
       <Dialog
@@ -168,13 +175,28 @@ export function GeneralApprovalActions({
               <Textarea
                 id="general-rejection-reason"
                 value={reason}
-                onChange={(event) => setReason(event.target.value)}
+                onChange={(event) => {
+                  setReason(event.target.value)
+                  setReasonError(null)
+                }}
                 disabled={submitting !== null}
-                aria-invalid={Boolean(error)}
+                aria-invalid={Boolean(reasonError)}
+                aria-describedby={
+                  reasonError ? 'general-rejection-reason-error' : undefined
+                }
               />
-              {error ? (
+              {reasonError ? (
+                <p
+                  id="general-rejection-reason-error"
+                  role="alert"
+                  className="text-sm text-destructive"
+                >
+                  {reasonError}
+                </p>
+              ) : null}
+              {rejectError ? (
                 <p role="alert" className="text-sm text-destructive">
-                  {error}
+                  {rejectError}
                 </p>
               ) : null}
             </div>

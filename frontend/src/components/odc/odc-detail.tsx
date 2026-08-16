@@ -14,30 +14,43 @@ import {
 } from '@/lib/odc'
 import type { Odc } from '@/lib/odc'
 import { cn } from '@/lib/utils'
-import { OdcStatusBadge } from './odc-status-badge'
+import { OdcStatusBadge, statusStyles } from './odc-status-badge'
 import { OdcDocumentPreview } from './odc-document-preview'
 
-function DetailItem({
+function DefinitionRow({
   label,
   value,
   numeric = false,
-  emphasis = false,
+  total = false,
+  full = false,
+  section = false,
 }: {
   label: string
   value: string
   numeric?: boolean
-  emphasis?: boolean
+  total?: boolean
+  full?: boolean
+  section?: boolean
 }) {
   return (
-    <div className="min-w-0 rounded-2xl bg-muted/60 p-4">
-      <dt className="text-xs font-semibold tracking-[0.12em] text-muted-foreground uppercase">
+    <div
+      data-detail-row
+      data-detail-section={section || undefined}
+      className={cn(
+        'grid min-w-0 grid-cols-[minmax(0,1fr)_minmax(0,1.5fr)] items-start gap-3 border-b border-border py-3',
+        full && 'col-span-full',
+        section && 'border-t pt-4',
+        total && 'col-span-full mt-1 border-t-2 border-b-0 pt-4',
+      )}
+    >
+      <dt className="text-xs font-semibold tracking-[0.06em] text-muted-foreground uppercase">
         {label}
       </dt>
       <dd
         className={cn(
-          'mt-1 break-words font-medium',
+          'min-w-0 break-words text-right font-medium',
           numeric && 'tabular-nums',
-          emphasis && 'text-lg font-semibold',
+          total && 'text-xl font-semibold tabular-nums',
         )}
       >
         {value}
@@ -46,14 +59,23 @@ function DetailItem({
   )
 }
 
-export function OdcDetail({ odc }: { odc: Odc }) {
+export function OdcDetail({
+  odc,
+  actions,
+}: {
+  odc: Odc
+  actions?: React.ReactNode
+}) {
   return (
     <div className="grid min-w-0 gap-5 xl:grid-cols-[minmax(0,1fr)_22rem]">
-      <div className="space-y-5">
+      <div data-detail-main className="min-w-0 space-y-5">
         {odc.status === 'RECHAZADA' && odc.rejectionReason ? (
-          <div className="flex gap-3 rounded-2xl border border-destructive/20 bg-destructive/10 p-4 text-destructive">
+          <div
+            data-rejection-banner
+            className="flex gap-3 rounded-card border border-destructive/20 bg-destructive/3 p-4 text-destructive"
+          >
             <AlertTriangleIcon
-              className="mt-0.5 size-5 shrink-0"
+              className="mt-0.5 size-4 shrink-0"
               aria-hidden="true"
             />
             <div>
@@ -77,28 +99,36 @@ export function OdcDetail({ odc }: { odc: Odc }) {
             </div>
           </CardHeader>
           <CardContent>
-            <dl className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-              <DetailItem label="Descripción" value={odc.description} />
-              <DetailItem label="Proveedor" value={odc.supplier} />
-              <DetailItem
+            <dl className="grid grid-cols-1 gap-x-6 sm:grid-cols-2">
+              <DefinitionRow label="Descripción" value={odc.description} />
+              <DefinitionRow label="Proveedor" value={odc.supplier} />
+              <DefinitionRow
                 label="Cantidad"
                 value={`${odc.quantity} ${odc.unit}`}
                 numeric
               />
-              <DetailItem
+              <DefinitionRow
                 label="Precio unitario"
                 value={formatCurrency(odc.unitPriceCents)}
                 numeric
               />
-              <DetailItem
+              <DefinitionRow
+                label="Última actualización"
+                value={formatDate(odc.updatedAt)}
+              />
+              {odc.comments ? (
+                <DefinitionRow
+                  label="Comentarios"
+                  value={odc.comments}
+                  full
+                  section
+                />
+              ) : null}
+              <DefinitionRow
                 label="Total"
                 value={formatCurrency(odc.totalCents)}
                 numeric
-                emphasis
-              />
-              <DetailItem
-                label="Última actualización"
-                value={formatDate(odc.updatedAt)}
+                total
               />
             </dl>
             {odc.hasPaymentEvidence || odc.hasInvoice ? (
@@ -119,77 +149,70 @@ export function OdcDetail({ odc }: { odc: Odc }) {
                 ) : null}
               </div>
             ) : null}
-            {odc.comments ? (
-              <div className="mt-4 rounded-2xl border p-4">
-                <p className="text-xs font-semibold tracking-[0.12em] text-muted-foreground uppercase">
-                  Comentarios
-                </p>
-                <p className="mt-2 text-sm leading-relaxed">{odc.comments}</p>
-              </div>
-            ) : null}
             {odc.paymentDate || odc.paymentMethod ? (
-              <div className="mt-4 rounded-2xl border p-4">
-                <p className="text-xs font-semibold tracking-[0.12em] text-muted-foreground uppercase">
+              <section data-detail-section className="mt-4 border-t pt-4">
+                <p className="text-xs font-semibold tracking-[0.06em] text-muted-foreground uppercase">
                   Información de pago
                 </p>
-                <dl className="mt-3 grid gap-3 sm:grid-cols-2">
-                  <DetailItem
+                <dl className="mt-2 grid grid-cols-1 gap-x-6 sm:grid-cols-2">
+                  <DefinitionRow
                     label="Fecha de pago"
                     value={formatDateOnly(odc.paymentDate)}
                   />
-                  <DetailItem
+                  <DefinitionRow
                     label="Método de pago"
                     value={odc.paymentMethod ?? 'Pendiente'}
                   />
                   {odc.paymentReference ? (
-                    <DetailItem
+                    <DefinitionRow
                       label="Referencia de pago"
                       value={odc.paymentReference}
                     />
                   ) : null}
                   {odc.paymentNotes ? (
-                    <DetailItem
+                    <DefinitionRow
                       label="Notas de pago"
                       value={odc.paymentNotes}
                     />
                   ) : null}
                 </dl>
-              </div>
+              </section>
             ) : null}
             {odc.invoiceNumber ||
             odc.invoiceDate ||
             odc.warehouseEntryDate ||
             odc.observations ? (
-              <div className="mt-4 rounded-2xl border p-4">
-                <p className="text-xs font-semibold tracking-[0.12em] text-muted-foreground uppercase">
+              <section data-detail-section className="mt-4 border-t pt-4">
+                <p className="text-xs font-semibold tracking-[0.06em] text-muted-foreground uppercase">
                   Información de factura
                 </p>
-                <dl className="mt-3 grid gap-3 sm:grid-cols-2">
+                <dl className="mt-2 grid grid-cols-1 gap-x-6 sm:grid-cols-2">
                   {odc.invoiceNumber ? (
-                    <DetailItem
+                    <DefinitionRow
                       label="Número de factura"
                       value={odc.invoiceNumber}
                     />
                   ) : null}
-                  <DetailItem
+                  <DefinitionRow
                     label="Fecha de factura"
                     value={formatDateOnly(odc.invoiceDate)}
                   />
-                  <DetailItem
+                  <DefinitionRow
                     label="Fecha de entrada a almacén"
                     value={formatDateOnly(odc.warehouseEntryDate)}
                   />
                   {odc.observations ? (
-                    <DetailItem
+                    <DefinitionRow
                       label="Observaciones"
                       value={odc.observations}
                     />
                   ) : null}
                 </dl>
-              </div>
+              </section>
             ) : null}
           </CardContent>
         </Card>
+        {actions}
       </div>
 
       <Card className="xl:sticky xl:top-6 xl:self-start">
@@ -199,7 +222,7 @@ export function OdcDetail({ odc }: { odc: Odc }) {
         </CardHeader>
         <CardContent>
           {odc.history.length === 0 ? (
-            <p className="rounded-2xl border border-dashed p-4 text-sm text-muted-foreground">
+            <p className="rounded-card border border-dashed p-4 text-sm text-muted-foreground">
               Todavía no hay movimientos registrados.
             </p>
           ) : (
@@ -207,12 +230,21 @@ export function OdcDetail({ odc }: { odc: Odc }) {
               {odc.history.map((entry, index) => (
                 <li
                   key={entry.id ?? `${entry.toStatus}-${index}`}
-                  className="relative grid grid-cols-[1rem_1fr] gap-3 pb-5 last:pb-0"
+                  className="relative grid grid-cols-[1rem_1fr] gap-3 pb-4 last:pb-0"
                 >
                   {index < odc.history.length - 1 ? (
                     <span className="absolute top-3 bottom-0 left-[0.3125rem] w-px bg-border" />
                   ) : null}
-                  <span className="relative mt-1 size-2.5 rounded-full bg-foreground ring-4 ring-background" />
+                  <span
+                    data-timeline-point
+                    className={cn(
+                      'relative mt-1 size-2.5 rounded-full border',
+                      statusStyles[entry.toStatus].point,
+                      index === odc.history.length - 1
+                        ? 'ring-4 ring-background'
+                        : 'border-[1.5px] bg-background',
+                    )}
+                  />
                   <div className="min-w-0">
                     <p className="text-sm font-medium">
                       {entry.fromStatus
@@ -223,7 +255,7 @@ export function OdcDetail({ odc }: { odc: Odc }) {
                       {formatDate(entry.createdAt)}
                     </p>
                     {entry.note ? (
-                      <p className="mt-2 rounded-xl bg-muted px-3 py-2 text-sm">
+                      <p className="mt-2 border-l-2 border-border pl-3 text-sm">
                         {entry.note}
                       </p>
                     ) : null}

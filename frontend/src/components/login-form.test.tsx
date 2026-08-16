@@ -112,3 +112,53 @@ describe('R9: failed login (401) keeps the user on /login with an error, store u
     expect(navigateMock).not.toHaveBeenCalled()
   })
 })
+
+describe('R6,R12: login blur validation, focus and pending state', () => {
+  beforeEach(() => {
+    vi.mocked(login).mockReset()
+    navigateMock.mockReset()
+    useSessionStore.setState({ user: null })
+  })
+
+  it('validates each blurred field with stable accessible associations', () => {
+    render(<LoginForm />)
+    const email = screen.getByLabelText('Email')
+    fireEvent.change(email, { target: { value: 'not-an-email' } })
+    fireEvent.blur(email)
+
+    const emailError = within(screen.getByTestId('email-field')).getByRole(
+      'alert',
+    )
+    expect(emailError.id).toBe('email-error')
+    expect(email.getAttribute('aria-invalid')).toBe('true')
+    expect(email.getAttribute('aria-describedby')).toBe(emailError.id)
+    expect(
+      within(screen.getByTestId('password-field')).queryByRole('alert'),
+    ).toBeNull()
+  })
+
+  it('focuses Email first when submit contains multiple invalid fields', () => {
+    render(<LoginForm />)
+    fireEvent.submit(screen.getByTestId('login-form'))
+    expect(document.activeElement).toBe(screen.getByLabelText('Email'))
+  })
+
+  it('marks the form busy, disables controls and blocks duplicate login requests', () => {
+    vi.mocked(login).mockImplementation(() => new Promise(() => undefined))
+    render(<LoginForm />)
+    fillAndSubmit('user@example.com', 'secret123')
+    fireEvent.submit(screen.getByTestId('login-form'))
+
+    expect(login).toHaveBeenCalledOnce()
+    expect(screen.getByTestId('login-form').getAttribute('aria-busy')).toBe(
+      'true',
+    )
+    expect(screen.getByLabelText('Email').disabled).toBe(true)
+    expect(screen.getByLabelText('Password').disabled).toBe(true)
+    expect(
+      screen
+        .getByRole('button', { name: /ingresando/i })
+        .hasAttribute('disabled'),
+    ).toBe(true)
+  })
+})

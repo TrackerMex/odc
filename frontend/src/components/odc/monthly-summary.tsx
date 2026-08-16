@@ -39,13 +39,14 @@ import { getMonthlyPurchaseSummary } from '@/lib/api'
 import { exportMonthlySummarySlide } from '@/lib/monthly-summary-export'
 import type { SummaryExportFormat } from '@/lib/monthly-summary-export'
 import {
+  ODC_STATUSES,
   formatCurrency,
   formatDateOnly,
   formatMonth,
-  statusLabel,
 } from '@/lib/odc'
 import type { MonthlyPurchaseSummary } from '@/lib/odc'
 import { MonthlySummarySlide } from './monthly-summary-slide'
+import { OdcStatusBadge, statusStyles } from './odc-status-badge'
 
 const PURCHASES_PER_PAGE = 10
 
@@ -59,14 +60,6 @@ function initialPageFromLocation() {
   if (typeof window === 'undefined') return 1
   const value = Number(new URLSearchParams(window.location.search).get('page'))
   return Number.isInteger(value) && value > 0 ? value : 1
-}
-
-function StageLabel({
-  status,
-}: {
-  status: 'PAGO_REGISTRADO' | 'EVIDENCIA_PAGO_SUBIDA' | 'COMPLETADA'
-}) {
-  return <Badge variant="secondary">{statusLabel(status)}</Badge>
 }
 
 export function MonthlySummary({
@@ -138,19 +131,16 @@ export function MonthlySummary({
   }
 
   return (
-    <main className="min-w-0 flex-1 p-4 sm:p-6 lg:p-8">
-      <div className="mx-auto max-w-7xl">
+    <main className="min-w-0 flex-1 p-4 sm:p-6">
+      <div className="mx-auto max-w-[1400px]">
         <header className="mb-8 flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
           <div className="max-w-2xl">
             <p className="text-sm font-medium text-muted-foreground">
               Operaciones / Seguimiento mensual
             </p>
-            <h1 className="mt-2 text-3xl font-semibold tracking-tight sm:text-4xl">
+            <h1 className="mt-2 text-2xl font-semibold tracking-tight">
               Compras que sí se realizaron
             </h1>
-            <p className="mt-2 text-muted-foreground">
-              Un corte mensual listo para revisar y compartir.
-            </p>
           </div>
           <div className="flex flex-wrap items-end gap-2">
             <div className="grid gap-1 text-sm font-medium">
@@ -225,7 +215,7 @@ export function MonthlySummary({
           ) : null}
         </section>
         {!loading && isSummaryCurrent && summary.purchases.length === 0 ? (
-          <div className="mt-6 rounded-2xl border border-dashed p-8 text-center text-sm text-muted-foreground">
+          <div className="mt-6 rounded-card border border-dashed p-8 text-center text-sm text-muted-foreground">
             No hay compras con pago registrado en {formatMonth(summary.month)}.
           </div>
         ) : null}
@@ -242,7 +232,7 @@ export function MonthlySummary({
 function SummarySkeleton() {
   return (
     <div className="space-y-5 motion-reduce:animate-none" aria-busy="true">
-      <Skeleton className="h-52 w-full motion-reduce:animate-none" />
+      <Skeleton className="h-60 w-full motion-reduce:animate-none" />
       <Skeleton className="h-72 w-full motion-reduce:animate-none" />
     </div>
   )
@@ -275,6 +265,12 @@ function SummaryContent({
     firstPurchaseIndex,
     firstPurchaseIndex + PURCHASES_PER_PAGE,
   )
+  const sortedStages = [...summary.stages].sort(
+    (first, second) =>
+      second.count - first.count ||
+      ODC_STATUSES.indexOf(first.status) - ODC_STATUSES.indexOf(second.status),
+  )
+  const maxStageCount = Math.max(0, ...sortedStages.map((stage) => stage.count))
   return (
     <div className="space-y-6">
       <section
@@ -284,7 +280,7 @@ function SummaryContent({
         <Card>
           <CardHeader className="border-b border-border/60">
             <CardDescription>Total de compras pagadas</CardDescription>
-            <CardTitle className="text-4xl font-semibold tracking-tight tabular-nums sm:text-5xl">
+            <CardTitle className="mt-3 text-3xl font-semibold tracking-tight tabular-nums">
               {formatCurrency(summary.totalCents)}
             </CardTitle>
           </CardHeader>
@@ -304,18 +300,30 @@ function SummaryContent({
               Compras contabilizadas en el corte.
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-3">
-            {summary.stages.map((stage) => (
-              <div
-                key={stage.status}
-                className="flex items-center justify-between gap-3 text-sm"
-              >
-                <StageLabel status={stage.status} />
-                <span className="text-right tabular-nums">
-                  {stage.count} · {formatCurrency(stage.totalCents)}
-                </span>
-              </div>
-            ))}
+          <CardContent>
+            <ul className="space-y-3">
+              {sortedStages.map((stage) => (
+                <li key={stage.status}>
+                  <div className="flex items-center justify-between gap-3 text-sm">
+                    <OdcStatusBadge status={stage.status} />
+                    <span className="text-right tabular-nums">
+                      {stage.count} · {formatCurrency(stage.totalCents)}
+                    </span>
+                  </div>
+                  <div
+                    aria-hidden="true"
+                    className="mt-2 h-2 overflow-hidden rounded-sm bg-muted"
+                  >
+                    <div
+                      className={`h-full ${statusStyles[stage.status].point}`}
+                      style={{
+                        width: `${maxStageCount === 0 ? 0 : (stage.count / maxStageCount) * 100}%`,
+                      }}
+                    />
+                  </div>
+                </li>
+              ))}
+            </ul>
           </CardContent>
         </Card>
       </section>
@@ -334,22 +342,22 @@ function SummaryContent({
           >
             <TableHeader>
               <TableRow>
-                <TableHead className="text-xs font-semibold tracking-[0.12em] text-muted-foreground uppercase">
+                <TableHead className="text-xs font-semibold tracking-[0.06em] text-muted-foreground uppercase">
                   ODC / pago
                 </TableHead>
-                <TableHead className="text-xs font-semibold tracking-[0.12em] text-muted-foreground uppercase">
+                <TableHead className="text-xs font-semibold tracking-[0.06em] text-muted-foreground uppercase">
                   Solicitud
                 </TableHead>
-                <TableHead className="text-xs font-semibold tracking-[0.12em] text-muted-foreground uppercase">
+                <TableHead className="text-xs font-semibold tracking-[0.06em] text-muted-foreground uppercase">
                   Proveedor
                 </TableHead>
-                <TableHead className="text-xs font-semibold tracking-[0.12em] text-muted-foreground uppercase">
+                <TableHead className="text-xs font-semibold tracking-[0.06em] text-muted-foreground uppercase">
                   Almacén
                 </TableHead>
-                <TableHead className="text-xs font-semibold tracking-[0.12em] text-muted-foreground uppercase">
+                <TableHead className="text-xs font-semibold tracking-[0.06em] text-muted-foreground uppercase">
                   Factura
                 </TableHead>
-                <TableHead className="text-right text-xs font-semibold tracking-[0.12em] text-muted-foreground uppercase">
+                <TableHead className="text-right text-xs font-semibold tracking-[0.06em] text-muted-foreground uppercase">
                   Total
                 </TableHead>
               </TableRow>

@@ -86,7 +86,7 @@ export function OdcDocumentPreview({
             </DialogDescription>
           </DialogHeader>
 
-          <div className="relative min-h-72 min-w-0 overflow-hidden rounded-2xl bg-muted/60 ring-1 ring-foreground/5 sm:min-h-[32rem] dark:ring-foreground/10">
+          <div className="relative min-h-72 min-w-0 overflow-hidden rounded-card bg-muted/60 ring-1 ring-foreground/5 sm:min-h-[32rem] dark:ring-foreground/10">
             {previewState === 'loading' ? (
               <div
                 className="absolute inset-0 z-10 flex items-center justify-center gap-2 text-sm text-muted-foreground"

@@ -66,54 +66,61 @@ function OdcDetailPage() {
           Volver al dashboard
         </Link>
         <div className="mt-5">
-          <OdcDetail odc={odc} />
+          <OdcDetail
+            odc={odc}
+            actions={
+              <>
+                <AdminBudgetActions
+                  odc={odc}
+                  role={user.role}
+                  approve={() => approveBudget(odc.id ?? '')}
+                  reject={(reason) => rejectOdc(odc.id ?? '', reason)}
+                  onSuccess={setOdc}
+                />
+
+                <GeneralApprovalActions
+                  odc={odc}
+                  role={user.role}
+                  approve={() => approvePurchase(odc.id ?? '')}
+                  reject={(reason) => rejectOdc(odc.id ?? '', reason)}
+                  onSuccess={setOdc}
+                />
+
+                <PaymentEvidenceForm
+                  odc={odc}
+                  role={user.role}
+                  upload={(file, reference) =>
+                    uploadPaymentEvidence(odc.id ?? '', file, reference)
+                  }
+                  onSuccess={setOdc}
+                />
+
+                <RegisterPaymentForm
+                  odc={odc}
+                  role={user.role}
+                  register={(payload) =>
+                    registerPayment(odc.id ?? '', payload)
+                  }
+                  onSuccess={setOdc}
+                />
+
+                <UploadInvoiceForm
+                  odc={odc}
+                  role={user.role}
+                  upload={(file, payload) =>
+                    uploadInvoice(odc.id ?? '', file, payload)
+                  }
+                  onSuccess={setOdc}
+                />
+              </>
+            }
+          />
         </div>
-
-        <AdminBudgetActions
-          odc={odc}
-          role={user.role}
-          approve={() => approveBudget(odc.id ?? '')}
-          reject={(reason) => rejectOdc(odc.id ?? '', reason)}
-          onSuccess={setOdc}
-        />
-
-        <GeneralApprovalActions
-          odc={odc}
-          role={user.role}
-          approve={() => approvePurchase(odc.id ?? '')}
-          reject={(reason) => rejectOdc(odc.id ?? '', reason)}
-          onSuccess={setOdc}
-        />
-
-        <PaymentEvidenceForm
-          odc={odc}
-          role={user.role}
-          upload={(file, reference) =>
-            uploadPaymentEvidence(odc.id ?? '', file, reference)
-          }
-          onSuccess={setOdc}
-        />
-
-        <RegisterPaymentForm
-          odc={odc}
-          role={user.role}
-          register={(payload) => registerPayment(odc.id ?? '', payload)}
-          onSuccess={setOdc}
-        />
-
-        <UploadInvoiceForm
-          odc={odc}
-          role={user.role}
-          upload={(file, payload) =>
-            uploadInvoice(odc.id ?? '', file, payload)
-          }
-          onSuccess={setOdc}
-        />
 
         {canEdit ? (
           <section className="mt-8" aria-labelledby="edit-odc-title">
             <div className="mb-5">
-              <p className="text-xs font-semibold tracking-[0.18em] text-muted-foreground uppercase">
+              <p className="text-xs font-semibold tracking-[0.06em] text-muted-foreground uppercase">
                 Corrección solicitada
               </p>
               <h2
