@@ -506,3 +506,38 @@ _El historial comenzará aquí cuando se complete la primera sesión._
 - **Verificación final:** `./init.sh` verde: 59 suites/471 tests backend,
   35 archivos/480 tests frontend, builds y lint correctos.
 - **Estado final:** done. Quedan #28 y #29.
+
+## Sesión 2026-08-17 — ui-responsive-375 (id: 28)
+
+- **Alcance:** feature de verificación, no de rediseño. Auditar a 375px las seis
+  rutas vivas, registrar lo que se rompa y arreglarlo. Cierra el punto de
+  responsive del checklist de `MASTER.md` §10, sin comprobar desde 2026-08-10.
+- **Resultado:** a 375px **no se rompe nada**. `scrollWidth == clientWidth == 375`
+  en las seis rutas, 16 observaciones en navegador real → **cero cambios en
+  `frontend/src/components/`**. El entregable es el acta
+  `progress/verify_ui-responsive-375.md`.
+- **R1 como gate:** el `resize_window` de la revisión del 2026-08-10 nunca
+  redimensionó (pedido 390px, `innerWidth` seguía en 1864), así que la spec exigió
+  demostrar el viewport antes de dar por válida ninguna observación. Se resolvió
+  con Playwright `setViewportSize({375,667})`: `innerWidth` 375 y `matchMedia` de
+  40rem y 48rem ambas `false`. Nuevo `frontend/e2e/responsive-375.spec.ts`; no añade
+  gate, `pnpm e2e` ya existía y `test`/`build` no dependen de él.
+- **TDD:** 18 commits, un par `test(...)`→`feat(...)` por requisito. C4 limpio a la
+  primera por segunda vez. R4/R5/R6/R10 cerraron solo con commit `test(...)` por ser
+  guardas de no regresión; el reviewer verificó su rojo rompiendo la fuente real
+  (8 mutaciones → 8 rojos, revertidas).
+- **Gate humano:** Alexis aprobó verbalmente en sesión; el **leader transcribió** el
+  veredicto a la §8 del acta, declarándolo explícitamente como transcripción y con
+  cita literal (`f914082`). Mismo procedimiento aceptado en la feature 14. El
+  reviewer lo validó con ese criterio, no como casilla auto-marcada.
+- **Deudas abiertas por decisión humana, medidas y con dueño:** área táctil bajo
+  44×44px (`SidebarTrigger` 28×28, botones 309×32, paginación 32×32) — corregirla
+  contradice el dial de densidad de la #23; y el `grid-cols-3` del resumen mensual,
+  que desborda 10-28px a partir de importes de siete cifras (sin defecto con los
+  datos reales, y R6 prohibía tocarlo).
+- **Revisión:** APROBADO sin defectos bloqueantes
+  (`progress/review_ui-responsive-375.md`). Tres observaciones no bloqueantes, las
+  tres corregidas al cerrar: cita de clase equivocada en §5 del acta, `traceability.md`
+  desfasado sobre la §8 y `current.md` sin actualizar.
+- **Verificación final:** `./init.sh` exit 0, 471 tests backend y 596 frontend.
+- **Estado final:** done. Queda #29.

@@ -1,8 +1,8 @@
 # ODC — Status
 
-**Última actualización**: 2026-08-16
-**Features completadas**: 28/30 (`feature_list.json`)
-**Pendientes**: 2; siguientes #28 y #29
+**Última actualización**: 2026-08-17
+**Features completadas**: 29/30 (`feature_list.json`)
+**Pendientes**: 1; siguiente #29
 **En producción**: no
 
 ---
@@ -87,9 +87,17 @@ Requiere `.env` en la raíz (plantilla en `.env.example`): `DATABASE_URL`,
 - **#27 `ui-surfaces-monthly-summary` done** (2026-08-16): resumen mensual con
   header compacto, barras de estado por tokens, tabla alineada al sistema y
   exportaciones PNG/PDF preservadas; gate visual y humano aprobados.
-- Siguientes: #28 y #29. Cada una
-  sigue el pipeline `spec_author` → aprobación humana → `implementer` →
-  `reviewer`.
+- **#28 `ui-responsive-375` done** (2026-08-17): auditoría a 375px de las seis
+  rutas vivas. **No se rompió nada** — `scrollWidth == clientWidth == 375` en
+  todas, cero cambios en `frontend/src/components/`; el entregable es el acta
+  `progress/verify_ui-responsive-375.md`. El viewport se demostró con Playwright
+  (`frontend/e2e/responsive-375.spec.ts`) porque `resize_window` nunca
+  redimensionó de verdad. Dos deudas medidas y abiertas por decisión humana:
+  área táctil bajo 44×44px (choca con el dial de densidad de la #23) y el
+  `grid-cols-3` del resumen mensual, que desborda a partir de importes de siete
+  cifras.
+- Siguiente: #29. Sigue el pipeline `spec_author` → aprobación humana →
+  `implementer` → `reviewer`.
 - Deuda anotada (tests): `general-approval-actions.test.tsx:163` es flaky —
   solo falla con la suite completa, por una carrera de render (`waitFor`
   seguido de `getByText` síncrono). Re-correr antes de culpar a un cambio.
@@ -97,6 +105,23 @@ Requiere `.env` en la raíz (plantilla en `.env.example`): `DATABASE_URL`,
 ---
 
 ## Última sesión
+
+**2026-08-17** — Cierre de `ui-responsive-375` (#28) → **29/30**.
+
+- Feature de verificación: el resultado es que a 375px no se rompe nada. 16
+  observaciones en navegador real, cero cambios de componente.
+- R1 era el gate de todo lo demás: sin demostrar el viewport, un "no encontré
+  defectos" es indistinguible de no haber mirado. Playwright lo demostró
+  (`innerWidth` 375, `matchMedia` 40rem y 48rem en `false`) donde
+  `resize_window` había fallado en silencio el 2026-08-10.
+- 18 commits con par `test`→`feat` por requisito; C4 limpio a la primera. El
+  reviewer verificó el rojo de las cuatro guardas de no regresión mutando la
+  fuente real (8 mutaciones → 8 rojos).
+- Gate humano de la §8 del acta: aprobación verbal transcrita por el leader y
+  declarada como tal en el archivo (`f914082`), no casilla auto-marcada.
+- `./init.sh` verde: 471 tests backend, 596 frontend.
+
+---
 
 **2026-08-16** — Cierre de `ui-surfaces-monthly-summary` (#27) → **28/30**.
 

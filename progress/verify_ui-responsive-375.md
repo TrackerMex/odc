@@ -129,7 +129,7 @@ más los estados transitorios `OdcPagePending` y `OdcPageError`.
 | Estado / sesión | Bloque expuesto | Medida a 375px |
 |---|---|---|
 | `PENDIENTE_ADMIN` · ADMINISTRACION | `AdminBudgetActions` | fila `flex-direction: column`, 309px; botones `Aprobar presupuesto` y `Rechazar` a 309 × 32px |
-| `PRESUPUESTO_APROBADO` · DIRECTOR_GENERAL | `GeneralApprovalActions` | fila `flex-direction: column` (clase viva `flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between`); botones `Aprobar compra` y `Rechazar` a 309 × 32px |
+| `PRESUPUESTO_APROBADO` · DIRECTOR_GENERAL | `GeneralApprovalActions` | fila `flex-direction: column` (clase viva `border-t flex flex-col items-stretch gap-3 sm:flex-row sm:items-center`, `general-approval-actions.tsx:129`); botones `Aprobar compra` y `Rechazar` a 309 × 32px |
 | `COMPRA_APROBADA` · DIRECTOR_OPS | `RegisterPaymentForm` | fila `flex-direction: column`; formulario de registro de pago visible |
 | `EVIDENCIA_PAGO_SUBIDA` · DIRECTOR_OPS | `UploadInvoiceForm` | formulario de factura visible junto al comprobante ya cargado |
 | `PAGO_REGISTRADO` · ADMINISTRACION | `PaymentEvidenceForm` | fila `flex-direction: column`; `input[type=file]` a 309 × 32px |

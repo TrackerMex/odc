@@ -26,14 +26,15 @@ auditoría no produjo cambios en `frontend/src/components/`. Las cuatro
 aserciones en riesgo del plan siguen intactas y sin editar, y la guarda de
 alcanzabilidad de la feature 30 sigue en verde tal cual.
 
-## Pendiente del gate humano
+## Gate humano — cerrado
 
-La **sección 8 del acta** (`## 8. Veredicto humano`) sigue en `PENDIENTE`: es la
-única línea que el implementer no puede levantar. La guarda de R9 comprueba las
-secciones 0 a 7 y deja la 8 deliberadamente fuera, porque ponerla en verde desde
-un test sería falsificar justo el gate que R9 existe para imponer. El reviewer no
-aprueba el cierre sin esa firma, aunque `pnpm test` y `pnpm build` estén en
-verde — que es el caso que la propia R9 anticipa.
+La **sección 8 del acta** (`## 8. Veredicto humano`) quedó **APROBADA** el
+2026-08-17 en el commit `f914082`. Era la única línea que el implementer no podía
+levantar: la guarda de R9 comprueba las secciones 0 a 7 y deja la 8 deliberadamente
+fuera, porque ponerla en verde desde un test sería falsificar justo el gate que R9
+existe para imponer. El veredicto lo transcribió el leader desde la aprobación
+verbal del humano, declarándolo así en el propio acta (mismo procedimiento que la
+feature 14); el reviewer lo aceptó explícitamente con ese criterio.
 
 Los requisitos que solo se pueden observar en un navegador real (R1, R3, R7, R8)
 citan en la columna de test la **sección del acta**
