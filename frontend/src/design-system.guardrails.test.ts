@@ -751,3 +751,42 @@ describe('ui-responsive-375 R7: los tres sospechosos reciben veredicto', () => {
     expect(block).toMatch(/\b0\s*px|cero p[íi]xeles/)
   })
 })
+
+const TOUCH_MINIMUM = 44
+
+describe('ui-responsive-375 R8: el área táctil se mide y se declara', () => {
+  it.each([
+    'SidebarTrigger',
+    'Aprobar presupuesto',
+    'ODC-2026-00014',
+    'Siguiente',
+  ])('la sección 7 registra el rectángulo de %s', (control) => {
+    expect(actaSection(7)).toContain(control)
+  })
+
+  it('la sección 7 contrasta contra el mínimo de MASTER y nombra la deuda', () => {
+    const touch = actaSection(7)
+
+    expect(touch).toContain(`${TOUCH_MINIMUM}`)
+    expect(touch).toMatch(/deuda/i)
+    // Cuatro rectángulos medidos, uno por control exigido por R8.
+    expect(
+      [...touch.matchAll(/\d+(?:\.\d+)?\s*×\s*\d+(?:\.\d+)?px/g)].length,
+    ).toBeGreaterThanOrEqual(4)
+  })
+
+  // Esta feature mide; no toca el dial de densidad de la feature 23.
+  it('la densidad de la feature 23 sigue fijada por sus tests', () => {
+    const tokens = read('src/components/ui/primitives.tokens.test.tsx')
+
+    expect([...tokens.matchAll(/expect\(cls\)\.toContain\('h-8'\)/g)]).toHaveLength(2)
+    expect(tokens).toContain("data-[size=default]:h-8")
+  })
+
+  it('las alturas de control siguen siendo las de la primitiva', () => {
+    const button = read('src/components/ui/button.tsx')
+
+    expect(button).toMatch(/"h-8 gap-1\.5 px-3/)
+    expect(button).toContain('"icon-sm": "size-7"')
+  })
+})
