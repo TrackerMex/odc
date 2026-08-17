@@ -337,6 +337,29 @@ seguía en 1864. A ancho de escritorio no hay scroll horizontal
 (`scrollWidth == clientWidth == 1849`). El punto correspondiente del checklist de
 `MASTER.md` §10 **sigue sin comprobar** y no debe darse por bueno.
 
+> **Cerrado el 2026-08-17 por la feature 28 `ui-responsive-375`.** El registro de
+> arriba se conserva a propósito: el fallo silencioso de `resize_window` es el motivo
+> de que la spec exija una lectura de control antes de cualquier observación.
+>
+> Instrumento que sí funcionó: Playwright con
+> `page.setViewportSize({ width: 375, height: 667 })`, en
+> `frontend/e2e/responsive-375.spec.ts`. Lecturas de control: `innerWidth` 375,
+> `clientWidth` 375, `matchMedia('(min-width: 40rem)')` y `('(min-width: 48rem)')`
+> ambas en `false`.
+>
+> Resultado: **ninguna de las seis rutas de producción produce scroll horizontal de
+> página a 375px** (`scrollWidth == clientWidth == 375` en las seis), y ninguna
+> superficie viva necesitó corrección. Dos hallazgos quedan anotados como deuda con
+> nombre y medida, no como defecto: el área táctil de los controles densos
+> (`SidebarTrigger` 28 × 28px, botón por defecto 309 × 32px, paginación 36 × 32px)
+> no alcanza los 44 × 44px de `MASTER.md` §6, y el `grid-cols-3` de
+> `monthly-summary.tsx` aguanta importes de seis cifras pero desborda su columna de
+> 92.33px a partir de siete. Acta completa con las medidas en
+> `progress/verify_ui-responsive-375.md`.
+>
+> Los otros tres anchos del checklist (**768 y 1024 siguen sin comprobar**; 1440 se
+> cerró el 2026-08-10) quedaron fuera del alcance de la 28 a propósito.
+
 ### Ajenos al refactor visual
 
 - `login-form.tsx` rotula `Email` y `Password` en inglés en una aplicación que es toda en
