@@ -14,7 +14,7 @@ test('login page renders the login form', async ({ page }) => {
 
   await expect(page.getByText('Ingresa a tu cuenta')).toBeVisible()
   await expect(page.getByTestId('login-form')).toBeVisible()
-  await expect(page.getByLabel(/email/i)).toBeVisible()
-  await expect(page.getByLabel(/password/i)).toBeVisible()
+  await expect(page.getByLabel('Correo electrónico')).toBeVisible()
+  await expect(page.getByLabel('Contraseña')).toBeVisible()
   await expect(page.getByRole('button', { name: 'Ingresar' })).toBeVisible()
 })

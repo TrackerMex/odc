@@ -29,14 +29,23 @@ const loggedInUser = {
 }
 
 function fillAndSubmit(email: string, password: string) {
-  fireEvent.change(screen.getByLabelText(/email/i), {
+  fireEvent.change(screen.getByLabelText('Correo electrónico'), {
     target: { value: email },
   })
-  fireEvent.change(screen.getByLabelText(/password/i), {
+  fireEvent.change(screen.getByLabelText('Contraseña'), {
     target: { value: password },
   })
   fireEvent.submit(screen.getByTestId('login-form'))
 }
+
+describe('R1: login field labels are in Spanish and keep their association', () => {
+  it('labels the email and password inputs with their Spanish text', () => {
+    render(<LoginForm />)
+
+    expect(screen.getByLabelText('Correo electrónico').id).toBe('email')
+    expect(screen.getByLabelText('Contraseña').id).toBe('password')
+  })
+})
 
 describe('R7: login form validates email/password with zod before submitting', () => {
   beforeEach(() => {
@@ -122,7 +131,7 @@ describe('R6,R12: login blur validation, focus and pending state', () => {
 
   it('validates each blurred field with stable accessible associations', () => {
     render(<LoginForm />)
-    const email = screen.getByLabelText('Email')
+    const email = screen.getByLabelText('Correo electrónico')
     fireEvent.change(email, { target: { value: 'not-an-email' } })
     fireEvent.blur(email)
 
@@ -137,10 +146,12 @@ describe('R6,R12: login blur validation, focus and pending state', () => {
     ).toBeNull()
   })
 
-  it('focuses Email first when submit contains multiple invalid fields', () => {
+  it('focuses the email field first when submit contains multiple invalid fields', () => {
     render(<LoginForm />)
     fireEvent.submit(screen.getByTestId('login-form'))
-    expect(document.activeElement).toBe(screen.getByLabelText('Email'))
+    expect(document.activeElement).toBe(
+      screen.getByLabelText('Correo electrónico'),
+    )
   })
 
   it('marks the form busy, disables controls and blocks duplicate login requests', () => {
@@ -153,8 +164,8 @@ describe('R6,R12: login blur validation, focus and pending state', () => {
     expect(screen.getByTestId('login-form').getAttribute('aria-busy')).toBe(
       'true',
     )
-    expect(screen.getByLabelText('Email').disabled).toBe(true)
-    expect(screen.getByLabelText('Password').disabled).toBe(true)
+    expect(screen.getByLabelText('Correo electrónico').disabled).toBe(true)
+    expect(screen.getByLabelText('Contraseña').disabled).toBe(true)
     expect(
       screen
         .getByRole('button', { name: /ingresando/i })
