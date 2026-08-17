@@ -215,7 +215,33 @@ Veredicto de la ruta: **correcto a 375px**. Sin corrección (R6).
 
 ## 7. Área táctil
 
-PENDIENTE
+Rectángulos reales (`getBoundingClientRect`) medidos a 375px bajo el gate de la
+sección 0, contrastados con el mínimo de **44 × 44px** que exige
+`design-system/odc/MASTER.md` §6 para móvil.
+
+| Control | Dónde | Rectángulo medido | Contra 44 × 44px |
+|---|---|---|---|
+| `SidebarTrigger` (`size="icon-sm"`) | `app-layout.tsx`, cabecera de `/` | 28 × 28px | **-16px de ancho y -16px de alto** |
+| Botón de acción por defecto (`Aprobar presupuesto`) | `admin-budget-actions.tsx` en `PENDIENTE_ADMIN` | 309 × 32px | ancho de sobra; **-12px de alto** |
+| Enlace de folio de la tabla (`ODC-2026-00014`) | `monthly-summary.tsx`, tabla de compras | 120.86 × 17px | ancho de sobra; **-27px de alto** |
+| Control de paginación (`Siguiente`) | `components/ui/pagination.tsx` | 36 × 32px | **-8px de ancho y -12px de alto** |
+| Enlace de página (`1`) | `components/ui/pagination.tsx` | 32 × 32px | **-12px de ancho y -12px de alto** |
+
+Ninguno de los cinco alcanza el mínimo de 44px de alto. Es un choque real y ya
+conocido entre MASTER §6 y el dial de densidad 8/10 que materializó la feature
+23 (`h-8` = 32px, `icon-sm` = 28px), fijado por
+`components/ui/primitives.tokens.test.tsx:37`, `:68` y `:93`.
+
+**Queda anotado como deuda con nombre y medida**, no se corrige aquí: R8 y la
+sección "Fuera de alcance" de la spec lo excluyen expresamente, porque subir la
+altura de los controles es rediseño (contradice el dial de densidad o introduce
+un escalón de altura solo para móvil) y esa es una decisión humana, no una
+verificación. El leader la lleva a decisión como feature aparte.
+
+Atenuante medido, no excusa: el enlace de folio de la portada mide 309 × 68px
+porque toda la tarjeta de la cola es el área de toque, así que el patrón de
+"fila entera pulsable" ya resuelve el caso donde más se usa. Los que quedan
+cortos son los controles densos: el disparador del sidebar y la paginación.
 
 ## 8. Veredicto humano
 
