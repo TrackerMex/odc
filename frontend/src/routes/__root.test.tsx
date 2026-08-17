@@ -5,7 +5,7 @@ const routeSources = import.meta.glob('./**/*.tsx', {
   query: '?raw',
   import: 'default',
   eager: true,
-}) as Record<string, string>
+})
 
 describe('R3: the document title is declared once in the root route', () => {
   it('emits the exact global title in the root head()', () => {
