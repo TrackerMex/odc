@@ -818,3 +818,32 @@ describe('ui-responsive-375 R6: la corrección es condicional y mobile-first', (
     expect(arbitraryVariants).toEqual([])
   })
 })
+
+describe('ui-responsive-375 R9: el acta existe y está levantada', () => {
+  it('declara los nueve encabezados exigidos, en orden', () => {
+    const acta = readRepo(ACTA)
+    const positions = ACTA_HEADINGS.map((heading) => acta.indexOf(heading))
+
+    expect(positions.filter((position) => position < 0)).toEqual([])
+    expect(positions).toEqual([...positions].sort((a, b) => a - b))
+  })
+
+  // Las secciones 0 a 7 son las que se levantan midiendo en el navegador. La 8
+  // es el veredicto humano: este test NO la da por buena, porque falsificarla
+  // en verde es justo lo que R9 pide que no ocurra. Su gate es el reviewer, que
+  // no aprueba el cierre aunque `pnpm test` esté verde.
+  it.each([0, 1, 2, 3, 4, 5, 6, 7])(
+    'la sección %i está levantada, no pendiente',
+    (index) => {
+      expect(actaSection(index)).not.toMatch(/\bPENDIENTE\b/)
+    },
+  )
+
+  it('el plan cierra el punto sin verificar sin borrar el fallo histórico', () => {
+    const plan = readRepo('progress/ui-redesign-plan.md')
+
+    expect(plan).toContain('resize_window')
+    expect(plan).toMatch(/seguía en 1864/)
+    expect(plan).toContain('verify_ui-responsive-375.md')
+  })
+})
