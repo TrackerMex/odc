@@ -790,3 +790,31 @@ describe('ui-responsive-375 R8: el área táctil se mide y se declara', () => {
     expect(button).toContain('"icon-sm": "size-7"')
   })
 })
+
+describe('ui-responsive-375 R6: la corrección es condicional y mobile-first', () => {
+  it.each(ROUTE_SECTIONS)(
+    'la sección %i declara si hubo corrección o no la hubo',
+    (index) => {
+      // Sin defecto observado, "sin corrección" es el resultado válido; con
+      // defecto, R6 exige la medición antes y después del mismo elemento.
+      expect(actaSection(index)).toMatch(
+        /Sin corrección \(R6\)|antes[\s\S]*despu[ée]s/,
+      )
+    },
+  )
+
+  it('no se declara ningún breakpoint personalizado', () => {
+    const styles = read('src/styles.css')
+
+    expect(styles).not.toMatch(/--breakpoint-/)
+    expect(styles).not.toContain('@custom-media')
+  })
+
+  it('las superficies vivas no inventan variantes de ancho propias', () => {
+    const arbitraryVariants = productionSources().flatMap((path) => [
+      ...readFileSync(path, 'utf8').matchAll(/\b(?:min|max)-\[[^\]]+\]:/g),
+    ])
+
+    expect(arbitraryVariants).toEqual([])
+  })
+})
