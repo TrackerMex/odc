@@ -421,3 +421,54 @@ describe('ui-surfaces-monthly-summary R10: existing summary assertions stay inta
     )
   })
 })
+
+// --- ui-responsive-375 -------------------------------------------------------
+//
+// El acta `progress/verify_ui-responsive-375.md` es el entregable de la feature:
+// R1, R3, R7 y R8 solo se pueden observar en un navegador real, así que lo que
+// Vitest puede afirmar es que su sección correspondiente existe, está rellenada
+// con medidas y no sigue en `PENDIENTE`. La medición la toma
+// `frontend/e2e/responsive-375.spec.ts` bajo el gate de R1.
+const ACTA = 'progress/verify_ui-responsive-375.md'
+const ACTA_HEADINGS = [
+  '## 0. Gate de medición',
+  '## 1. /login',
+  '## 2. / (portada ejecutiva)',
+  '## 3. /tasks',
+  '## 4. /odcs/new',
+  '## 5. /odcs/$id',
+  '## 6. /monthly-summary',
+  '## 7. Área táctil',
+  '## 8. Veredicto humano',
+] as const
+
+function actaSection(index: number): string {
+  const acta = readRepo(ACTA)
+  const heading = ACTA_HEADINGS[index]
+  const start = acta.indexOf(heading)
+  expect(start, `el acta declara "${heading}"`).toBeGreaterThanOrEqual(0)
+  const nextHeading = ACTA_HEADINGS[index + 1]
+  const end = nextHeading ? acta.indexOf(nextHeading, start) : -1
+  return acta.slice(start + heading.length, end < 0 ? acta.length : end)
+}
+
+describe('ui-responsive-375 R1: el acta abre con el gate de medición', () => {
+  it.each([
+    'window.innerWidth',
+    'document.documentElement.clientWidth',
+    'window.devicePixelRatio',
+    'min-width: 40rem',
+    'min-width: 48rem',
+  ])('la sección 0 registra la lectura "%s"', (reading) => {
+    expect(actaSection(0)).toContain(reading)
+  })
+
+  it('la sección 0 nombra el instrumento y no sigue pendiente', () => {
+    const gate = actaSection(0)
+
+    expect(gate).not.toContain('PENDIENTE')
+    // R1 descarta `resize_window` como método único: el acta debe nombrar
+    // Playwright (`setViewportSize`) o la emulación de dispositivo de Chrome.
+    expect(gate).toMatch(/setViewportSize|emulación de dispositivo/)
+  })
+})
