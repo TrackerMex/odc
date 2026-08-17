@@ -52,6 +52,8 @@ la paginación que mide R8).
 **Superficies observadas:** `LoginForm`, dentro del contenedor `p-6 md:p-10` +
 `max-w-sm` de `routes/login.tsx`.
 
+- Anchos medidos: `document.documentElement.scrollWidth` = 375 · `document.documentElement.clientWidth` = 375 → sin scroll horizontal de página (R3).
+
 | Elemento | Medida a 375px | Observación |
 |---|---|---|
 | Tarjeta del formulario | 327 × 310.5px | `max-w-sm` (384px) no llega a aplicarse: manda el `p-6` del contenedor. Cabe con 24px de margen a cada lado |
@@ -66,6 +68,8 @@ Veredicto: **correcto a 375px**. Sin corrección (R6).
 **Superficies observadas:** `AppLayout`, `AppSidebar`, `SidebarTrigger` y
 `ExecutiveDashboard` (con `OdcStatusBadge`), con sesión DIRECTOR_OPS y
 ADMINISTRACION.
+
+- Anchos medidos: `document.documentElement.scrollWidth` = 375 · `document.documentElement.clientWidth` = 375 → sin scroll horizontal de página (R3).
 
 | Elemento | Medida a 375px | Observación |
 |---|---|---|
@@ -85,6 +89,8 @@ Veredicto: **correcto a 375px**. Sin corrección (R6).
 
 **Superficies observadas:** `ExecutiveTasks`.
 
+- Anchos medidos: `document.documentElement.scrollWidth` = 375 · `document.documentElement.clientWidth` = 375 → sin scroll horizontal de página (R3).
+
 | Elemento | Medida a 375px | Observación |
 |---|---|---|
 | `main` | 375px | ancho exacto del viewport |
@@ -97,6 +103,8 @@ Veredicto: **correcto a 375px**. Sin corrección (R6).
 
 **Superficies observadas:** `OdcForm` (sesión DIRECTOR_OPS) y `RolePlaceholder`
 (sesión ADMINISTRACION, que no puede crear órdenes).
+
+- Anchos medidos: `document.documentElement.scrollWidth` = 375 · `document.documentElement.clientWidth` = 375 → sin scroll horizontal de página (R3).
 
 | Elemento | Medida a 375px | Observación |
 |---|---|---|
@@ -115,6 +123,8 @@ Veredicto: **correcto a 375px**. Sin corrección (R6).
 `AdminBudgetActions`, `GeneralApprovalActions`, `RegisterPaymentForm`,
 `PaymentEvidenceForm`, `UploadInvoiceForm` y `OdcForm` (edición del creador),
 más los estados transitorios `OdcPagePending` y `OdcPageError`.
+
+- Anchos medidos: `document.documentElement.scrollWidth` = 375 · `document.documentElement.clientWidth` = 375 → sin scroll horizontal de página (R3).
 
 | Estado / sesión | Bloque expuesto | Medida a 375px |
 |---|---|---|
@@ -147,6 +157,8 @@ Veredicto: **correcto a 375px**. Sin corrección (R6).
 **Superficies observadas:** `MonthlySummary` y `MonthlySummarySlide` (render de
 PDF fuera de pantalla), sobre el corte `2026-07`, que es el que tiene compras
 pagadas (12).
+
+- Anchos medidos: `document.documentElement.scrollWidth` = 375 · `document.documentElement.clientWidth` = 375 → sin scroll horizontal de página (R3).
 
 | Elemento | Medida a 375px | Observación |
 |---|---|---|
