@@ -58,3 +58,50 @@ test.describe('ui-responsive-375 R1: el viewport medido es de verdad 375px', () 
     expectGateHolds(gate)
   })
 })
+
+const SEED_PASSWORD = process.env.SEED_PASSWORD ?? 'odc-dev-password'
+
+test.describe('ui-responsive-375 R3: cero scroll horizontal de página', () => {
+  test('las seis rutas de producción caben en 375px', async ({
+    page,
+    context,
+  }) => {
+    const signIn = await context.request.post('/api/auth/login', {
+      data: { email: 'ops@odc.local', password: SEED_PASSWORD },
+    })
+    expect(signIn.ok(), 'la sesión sembrada DIRECTOR_OPS existe').toBe(true)
+
+    const { items } = await (
+      await context.request.get('/api/odcs?page=1')
+    ).json()
+    expect(items.length, 'hay al menos una ODC para abrir el detalle').toBeGreaterThan(0)
+
+    const routes = [
+      '/login',
+      '/',
+      '/tasks',
+      '/odcs/new',
+      `/odcs/${items[0].id}`,
+      '/monthly-summary',
+    ]
+
+    for (const route of routes) {
+      await page.goto(route, { waitUntil: 'networkidle' })
+
+      // Ninguna observación cuenta sin la cabecera de R1 en la misma ruta.
+      expectGateHolds(await readViewportGate(page))
+
+      const { scrollWidth, clientWidth } = await page.evaluate(() => ({
+        scrollWidth: document.documentElement.scrollWidth,
+        clientWidth: document.documentElement.clientWidth,
+      }))
+      // eslint-disable-next-line no-console -- la salida alimenta el acta.
+      console.log(`R3 ${route}: scrollWidth=${scrollWidth} clientWidth=${clientWidth}`)
+
+      // El margen de 1px absorbe el redondeo sub-pixel. El desbordamiento
+      // interno de un contenedor con overflow-x-auto (la tabla del resumen)
+      // no cuenta: lo prohibido es el scroll horizontal de la página.
+      expect(scrollWidth, `scroll horizontal de página en ${route}`).toBeLessThanOrEqual(clientWidth + 1)
+    }
+  })
+})

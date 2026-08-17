@@ -556,3 +556,32 @@ describe('ui-responsive-375 R2: el inventario auditado son las superficies vivas
     )
   })
 })
+
+describe('ui-responsive-375 R3: cada ruta registra su par de anchos medidos', () => {
+  const measured = (section: string, property: string) => {
+    const match = section.match(
+      new RegExp(`documentElement\\.${property}\`?\\s*=\\s*(\\d+)`),
+    )
+    expect(match, `la sección registra documentElement.${property}`).not.toBeNull()
+    return Number(match![1])
+  }
+
+  it.each(ROUTE_SECTIONS)(
+    'la sección %i cumple scrollWidth <= clientWidth + 1',
+    (index) => {
+      const section = actaSection(index)
+      const scrollWidth = measured(section, 'scrollWidth')
+      const clientWidth = measured(section, 'clientWidth')
+
+      // El margen de 1px absorbe el redondeo sub-pixel (R3).
+      expect(scrollWidth).toBeLessThanOrEqual(clientWidth + 1)
+    },
+  )
+
+  // El desbordamiento interno de la tabla del resumen mensual está prescrito
+  // por MASTER §6 y §8: el acta debe distinguirlo del scroll de página.
+  it('la sección 6 declara que el overflow de la tabla no es defecto', () => {
+    expect(actaSection(6)).toMatch(/overflow-x/)
+    expect(actaSection(6)).toMatch(/no es defecto|interno/)
+  })
+})
