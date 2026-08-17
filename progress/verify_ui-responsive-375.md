@@ -150,7 +150,16 @@ que expone además los bloques de pago y factura):
 - Ningún valor (`dd`, `break-words text-right`) pasa de 1 línea ni se parte de
   forma ilegible.
 
-Veredicto: **correcto a 375px**. Sin corrección (R6).
+**R7-2** — `odc-detail.tsx:40`, `grid-cols-[minmax(0,1fr)_minmax(0,1.5fr)]` sin
+prefijo responsive. A 375px la fila mide 309px y las dos columnas se resuelven
+en `118.797px` (etiqueta) y `178.203px` (valor). El `minmax(0,…)` cumple su
+función: el desbordamiento horizontal medido es de `0px` tanto en las 13 `dt`
+como en las 13 `dd`. La etiqueta más larga, `Fecha de entrada a almacén`, ocupa
+3 líneas de `118.8px`; otras cuatro ocupan 2. Envuelve, no se trunca, y el par
+etiqueta/valor sigue siendo legible porque el valor conserva su línea única.
+Veredicto: **correcto a 375px**, sin corrección.
+
+Veredicto de la ruta: **correcto a 375px**. Sin corrección (R6).
 
 ## 6. /monthly-summary
 
@@ -171,7 +180,38 @@ pagadas (12).
 | Enlace de página `1` | 32 × 32px | ver sección 7 |
 | `MonthlySummarySlide` | 1120px de ancho, `left` -1200, `right` -80 | íntegramente fuera del lienzo, dentro del contenedor `fixed` con `aria-hidden="true"` |
 
-Veredicto: **correcto a 375px**. Sin corrección (R6).
+**R7-1** — `monthly-summary.tsx:287`, `grid-cols-3` sin prefijo responsive. A
+375px la tarjeta ofrece 277px de contenido y las tres columnas se resuelven en
+`92.3281px`, `92.3281px` y `92.3438px`. Con los datos del corte 2026-07 los tres
+importes caben sin partirse: `Compras registradas` = `12`, `Ticket promedio` =
+`$118,783.33` e `Ingreso a almacén` = `5 días`, los tres en **una sola línea** y
+con desbordamiento horizontal medido de `0px` (`scrollWidth` 92 = `clientWidth`
+92 en los tres valores). Las etiquetas sí envuelven a 2 líneas
+(`Compras registradas`, `Ingreso a almacén`), lo que es envolver, no truncar.
+Veredicto: **correcto a 375px**, sin corrección.
+
+> Margen medido, para que quede con número y no como impresión: `$118,783.33`
+> son 11 caracteres y encajan justos. Sustituyendo el nodo por importes más
+> largos con el mismo estilo, el valor deja de caber en su columna y la pisa:
+> `$1,425,400.00` desborda `10px`, `$12,345,678.90` `19px` y `$999,999,999.99`
+> `28px`, siempre en una línea porque un importe no tiene puntos de corte. Es
+> decir: la tarjeta aguanta hasta importes de seis cifras y se rompe a partir de
+> siete. Con los datos observados **no hay defecto** y R6 prohíbe cambiar una
+> clase de una superficie sin defecto observado, así que aquí no se corrige
+> nada; queda anotado como deuda con nombre y medida para decisión humana, igual
+> que los 44px de la sección 7.
+
+**R7-3** — `monthly-summary-slide.tsx:12`, `w-[1120px]` dentro del contenedor
+`fixed top-0 left-[-1200px]` con `aria-hidden="true"` de `monthly-summary.tsx`.
+Medido a 375px: el `section` del slide ocupa `1120px` con `left` = `-1200px` y
+`right` = `-80px`, es decir íntegramente a la izquierda del lienzo. Contraste
+directo contra la medición de R3: `document.documentElement.scrollWidth` = 375
+con el nodo en el DOM y 375 tras retirarlo del árbol en la misma sesión, o sea
+una contribución de **0 px** al `scrollWidth` de la página.
+Veredicto: **correcto a 375px**, sin corrección; la excepción de R4 sigue
+justificada.
+
+Veredicto de la ruta: **correcto a 375px**. Sin corrección (R6).
 
 ## 7. Área táctil
 
