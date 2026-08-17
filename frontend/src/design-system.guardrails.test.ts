@@ -646,3 +646,73 @@ describe('ui-responsive-375 R4: la precondición de 375px se conserva en la fuen
     expect(summary).toContain('aria-hidden="true"')
   })
 })
+
+// Patrones responsive vigentes en las superficies vivas. Esta feature verifica
+// 375px: no puede retirarlos ni debilitarlos, y si una corrección de R6
+// exigiera cambiar uno, se conserva el patrón y se busca otra salida.
+const STACKED_ACTION_ROWS = [
+  'general-approval-actions',
+  'admin-budget-actions',
+  'register-payment-form',
+  'payment-evidence-form',
+  'upload-invoice-form',
+  'odc-form',
+] as const
+
+describe('ui-responsive-375 R5: los patrones responsive vigentes siguen intactos', () => {
+  it.each(STACKED_ACTION_ROWS)(
+    '%s.tsx apila la fila de acciones bajo sm',
+    (surface) => {
+      expect(surfaceSource(surface)).toMatch(/flex flex-col[^"'`]*sm:flex-row/)
+    },
+  )
+
+  it('odc-detail.tsx conserva la rejilla apilada con min-w-0', () => {
+    const detail = surfaceSource('odc-detail')
+
+    expect(detail).toContain('grid min-w-0')
+    expect([...detail.matchAll(/sm:grid-cols-2/g)]).toHaveLength(3)
+  })
+
+  it('odc-form.tsx conserva el min-w-0 del formulario', () => {
+    expect(surfaceSource('odc-form')).toContain('min-w-0')
+  })
+
+  it('executive-dashboard.tsx oculta la cabecera de columnas bajo lg', () => {
+    expect(surfaceSource('executive-dashboard')).toMatch(/hidden[^"'`]*lg:grid\b/)
+  })
+
+  it('pagination.tsx oculta las etiquetas de página bajo sm', () => {
+    expect([
+      ...read('src/components/ui/pagination.tsx').matchAll(/hidden sm:block/g),
+    ]).toHaveLength(2)
+  })
+
+  it('table.tsx conserva el wrapper con overflow horizontal', () => {
+    expect(read('src/components/ui/table.tsx')).toContain('overflow-x-auto')
+  })
+
+  it('los diálogos acotan su ancho en base y lo amplían desde sm', () => {
+    expect(read('src/components/ui/dialog.tsx')).toContain(
+      'max-w-[calc(100%-2rem)]',
+    )
+    expect(read('src/components/ui/dialog.tsx')).toContain('sm:max-w-md')
+    expect(surfaceSource('odc-document-preview')).toContain('sm:max-w-5xl')
+  })
+
+  it('el sidebar sigue pasando a Sheet por debajo de 768px', () => {
+    expect(read('src/hooks/use-mobile.ts')).toContain('MOBILE_BREAKPOINT = 768')
+    expect(read('src/components/ui/sidebar.tsx')).toContain('useIsMobile')
+  })
+
+  // Las cuatro aserciones en riesgo del plan siguen vivas; la de la fila de
+  // acciones es la que más directamente choca con un cambio responsive.
+  it('la guarda equivalente de este archivo conserva su aserción de fila apilada', () => {
+    expect(read('src/design-system.guardrails.test.ts')).toContain(
+      "expect(surfaceSource('general-approval-actions')).toMatch(",
+    )
+    expect(read('src/components/odc/general-approval-actions.test.tsx')).toContain(
+      'expect(busy?.className).toMatch(/flex-col.*sm:flex-row/)',
+    )
+  })
+})
