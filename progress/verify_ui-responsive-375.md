@@ -245,4 +245,22 @@ cortos son los controles densos: el disparador del sidebar y la paginación.
 
 ## 8. Veredicto humano
 
-PENDIENTE
+**APROBADO** — 2026-08-17.
+
+Aprobación verbal del humano en la sesión de Claude Code, transcrita aquí por el
+leader. Se declara explícitamente que **no la tecleó el humano en este archivo**:
+la cita literal es «sí, así está bien», dada tras el reporte del resultado de la
+auditoría y de las dos deudas de abajo. Mismo procedimiento que en la feature 14
+(aprobación real en chat + commit dedicado), no una casilla auto-marcada.
+
+Alcance de lo aprobado:
+
+- El resultado de la auditoría: a 375px no se rompe nada en las seis rutas vivas
+  (`scrollWidth == clientWidth == 375`), y por tanto cero cambios en
+  `frontend/src/components/`.
+- Las dos deudas medidas quedan **sin corregir**, con dueño declarado:
+  1. Área táctil por debajo de 44 × 44px (R8, previsto por la spec): corregirla
+     contradice el dial de densidad fijado en la feature 23.
+  2. `grid-cols-3` del resumen mensual (no previsto): desborda 10-28px a partir
+     de importes de siete cifras. Sin defecto con los datos reales, y R6 prohibía
+     tocarlo en esta feature.
