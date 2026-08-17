@@ -472,3 +472,87 @@ describe('ui-responsive-375 R1: el acta abre con el gate de medición', () => {
     expect(gate).toMatch(/setViewportSize|emulación de dispositivo/)
   })
 })
+
+// Las seis secciones de ruta del acta, en el orden de ACTA_HEADINGS.
+const ROUTE_SECTIONS = [1, 2, 3, 4, 5, 6] as const
+
+// Superficies montadas en rutas de producción, según §"Superficies en alcance"
+// de la spec. Ninguna superficie sin ruta entra aquí (feature 30).
+const MOUNTED_SURFACES = [
+  'LoginForm',
+  'AppLayout',
+  'AppSidebar',
+  'SidebarTrigger',
+  'ExecutiveDashboard',
+  'OdcStatusBadge',
+  'ExecutiveTasks',
+  'OdcForm',
+  'OdcDetail',
+  'OdcDocumentPreview',
+  'AdminBudgetActions',
+  'GeneralApprovalActions',
+  'RegisterPaymentForm',
+  'PaymentEvidenceForm',
+  'UploadInvoiceForm',
+  'MonthlySummary',
+  'MonthlySummarySlide',
+  'OdcPagePending',
+  'OdcPageError',
+  'RolePlaceholder',
+] as const
+
+// Cada bloque de acciones de `/odcs/$id` exige su propio estado (R2).
+const ACTION_STATES = [
+  'PENDIENTE_ADMIN',
+  'PRESUPUESTO_APROBADO',
+  'COMPRA_APROBADA',
+  'EVIDENCIA_PAGO_SUBIDA',
+  'PAGO_REGISTRADO',
+] as const
+
+const SUPERSEDED_SURFACES = [
+  'admin-dashboard',
+  'general-dashboard',
+  'odc-dashboard',
+] as const
+
+describe('ui-responsive-375 R2: el inventario auditado son las superficies vivas', () => {
+  it.each(ROUTE_SECTIONS)(
+    'la sección %i del acta está observada, no pendiente',
+    (index) => {
+      // `\b` deja fuera `PENDIENTE_ADMIN`, que es un estado de ODC observado,
+      // no una sección sin rellenar.
+      expect(actaSection(index)).not.toMatch(/\bPENDIENTE\b/)
+    },
+  )
+
+  it.each(MOUNTED_SURFACES)('el acta observa %s', (surface) => {
+    expect(readRepo(ACTA)).toContain(surface)
+  })
+
+  it.each(ACTION_STATES)(
+    'el acta observa el bloque de acciones de %s',
+    (state) => {
+      expect(actaSection(5)).toContain(state)
+    },
+  )
+
+  it.each(SUPERSEDED_SURFACES)(
+    'no audita ni menciona la superficie sin ruta %s',
+    (surface) => {
+      expect(readRepo(ACTA)).not.toContain(surface)
+    },
+  )
+
+  // La guarda de alcanzabilidad de la feature 30 sigue en verde y sin editarse:
+  // si alguien la debilita, esta feature deja de auditar el inventario real.
+  it.each([
+    "expect(reachable.has(executiveDashboard)).toBe(true)",
+    "'components/odc/monthly-summary-slide.tsx',",
+    "'components/odc/odc-detail.tsx',",
+  ])('production-reachability.test.ts conserva %s', (assertion) => {
+    expect(read('src/components/odc/production-reachability.test.ts')).toContain(
+      assertion,
+    )
+  })
+})
