@@ -716,3 +716,38 @@ describe('ui-responsive-375 R5: los patrones responsive vigentes siguen intactos
     )
   })
 })
+
+// Los tres puntos que la spec identificó de antemano. Ninguno puede quedar sin
+// respuesta: el veredicto es "correcto a 375px" o "defecto".
+const VERDICT = /correcto a 375px|defecto/
+const MEASURED_PIXELS = /\d+(?:\.\d+)?px/
+
+function verdictBlock(section: string, id: string): string {
+  const start = section.indexOf(id)
+  expect(start, `el acta emite el veredicto ${id}`).toBeGreaterThanOrEqual(0)
+  const rest = section.slice(start)
+  const next = rest.indexOf('**R7-', id.length)
+  return next < 0 ? rest : rest.slice(0, next)
+}
+
+describe('ui-responsive-375 R7: los tres sospechosos reciben veredicto', () => {
+  it.each([
+    ['**R7-1**', 6, 'monthly-summary.tsx', 'grid-cols-3'],
+    ['**R7-2**', 5, 'odc-detail.tsx', 'grid-cols-[minmax'],
+    ['**R7-3**', 6, 'monthly-summary-slide.tsx', 'w-['],
+  ])('%s queda cerrado en la sección %i', (id, index, file, marker) => {
+    const block = verdictBlock(actaSection(index), id)
+
+    expect(block).toContain(file)
+    expect(block).toContain(marker)
+    expect(block).toMatch(MEASURED_PIXELS)
+    expect(block).toMatch(VERDICT)
+  })
+
+  it('R7-3 se cierra con la medición de scrollWidth de R3', () => {
+    const block = verdictBlock(actaSection(6), '**R7-3**')
+
+    expect(block).toContain('scrollWidth')
+    expect(block).toMatch(/\b0\s*px|cero p[íi]xeles/)
+  })
+})
