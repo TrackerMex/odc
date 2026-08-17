@@ -847,3 +847,35 @@ describe('ui-responsive-375 R9: el acta existe y está levantada', () => {
     expect(plan).toContain('verify_ui-responsive-375.md')
   })
 })
+
+function surfaceTestFiles(directory = `${projectDir}/src/components`): string[] {
+  return readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
+    const path = `${directory}/${entry.name}`
+    if (entry.isDirectory()) return surfaceTestFiles(path)
+    return entry.name.includes('.test.') ? [path] : []
+  })
+}
+
+describe('ui-responsive-375 R10: no se edita ninguna aserción ajena', () => {
+  // Toda la cobertura de esta feature vive en este archivo y en
+  // e2e/responsive-375.spec.ts. Si un R-id suyo aparece dentro del test de una
+  // superficie viva es que se tocó una aserción que no era suya.
+  it.each(surfaceTestFiles().map((path) => relative(projectDir, path).replace(/\\/g, '/')))(
+    '%s no contiene aserciones de esta feature',
+    (path) => {
+      expect(read(path)).not.toContain('ui-responsive-375')
+    },
+  )
+
+  it('las cuatro aserciones en riesgo del plan siguen listadas y vivas', () => {
+    const plan = readRepo('progress/ui-redesign-plan.md')
+
+    expect(plan).toContain('flex-col.*sm:flex-row')
+    expect(read('src/components/odc/executive-dashboard.test.tsx')).toContain(
+      'toMatch(/focus-visible:ring/)',
+    )
+    expect(read('src/components/odc/monthly-summary.test.tsx')).toContain(
+      "'odc-filter-results',",
+    )
+  })
+})
