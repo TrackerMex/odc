@@ -1,5 +1,5 @@
-import { readFileSync } from 'node:fs'
-import { resolve } from 'node:path'
+import { readFileSync, readdirSync } from 'node:fs'
+import { relative, resolve } from 'node:path'
 import { describe, expect, it } from 'vitest'
 
 // R13 y R15 son los requisitos de "no regresión" de la spec: estos tests son
@@ -583,5 +583,66 @@ describe('ui-responsive-375 R3: cada ruta registra su par de anchos medidos', ()
   it('la sección 6 declara que el overflow de la tabla no es defecto', () => {
     expect(actaSection(6)).toMatch(/overflow-x/)
     expect(actaSection(6)).toMatch(/no es defecto|interno/)
+  })
+})
+
+// Toda la fuente de producción del frontend, que es donde R4 prohíbe un ancho
+// fijo mayor que el viewport auditado.
+function productionSources(directory = `${projectDir}/src`): string[] {
+  return readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
+    const path = `${directory}/${entry.name}`
+    if (entry.isDirectory()) return productionSources(path)
+    if (!entry.name.endsWith('.tsx')) return []
+    if (entry.name.includes('.test.') || entry.name.includes('.spec.')) return []
+    return [path]
+  })
+}
+
+// `w-[<n>px]` / `min-w-[<n>px]` y su equivalente en rem. `max-w-` queda fuera a
+// propósito: acota, no fija. El grupo 1 recoge la cadena de prefijos, que es lo
+// que distingue un ancho de escritorio (`sm:w-…`) de uno que se aplica a 375px.
+const FIXED_WIDTH = /(?:^|[\s"'`])((?:[a-z0-9]+:)*)(?:min-)?w-\[(\d+(?:\.\d+)?)(px|rem)\]/g
+const RESPONSIVE_PREFIX = /\b(?:sm|md|lg|xl|2xl):/
+const AUDITED_VIEWPORT = 375
+const ROOT_PIXELS_PER_REM = 16
+
+function surfacesWithFixedWidthAboveViewport(): string[] {
+  const offenders = new Set<string>()
+  for (const path of productionSources()) {
+    const source = readFileSync(path, 'utf8')
+    for (const match of source.matchAll(FIXED_WIDTH)) {
+      const [, prefixes, value, unit] = match
+      if (RESPONSIVE_PREFIX.test(prefixes)) continue
+      const pixels =
+        unit === 'rem' ? Number(value) * ROOT_PIXELS_PER_REM : Number(value)
+      if (pixels > AUDITED_VIEWPORT) {
+        offenders.add(relative(projectDir, path).replace(/\\/g, '/'))
+      }
+    }
+  }
+  return [...offenders].sort()
+}
+
+describe('ui-responsive-375 R4: la precondición de 375px se conserva en la fuente', () => {
+  it('routes/__root.tsx conserva la meta viewport', () => {
+    const root = read('src/routes/__root.tsx')
+
+    expect(root).toContain("name: 'viewport'")
+    expect(root).toContain("content: 'width=device-width, initial-scale=1'")
+  })
+
+  // La única excepción admitida, codificada por nombre: es el render del PDF,
+  // vive fuera del lienzo y no aporta scrollWidth (ver sección 6 del acta).
+  it('solo el slide del PDF declara un ancho fijo mayor que el viewport', () => {
+    expect(surfacesWithFixedWidthAboveViewport()).toEqual([
+      'src/components/odc/monthly-summary-slide.tsx',
+    ])
+  })
+
+  it('la excepción sigue condicionada al contenedor fuera de pantalla', () => {
+    const summary = surfaceSource('monthly-summary')
+
+    expect(summary).toMatch(/fixed top-0 left-\[-\d+px\]/)
+    expect(summary).toContain('aria-hidden="true"')
   })
 })
