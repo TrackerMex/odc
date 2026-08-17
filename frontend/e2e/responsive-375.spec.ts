@@ -52,7 +52,7 @@ test.describe('ui-responsive-375 R1: el viewport medido es de verdad 375px', () 
     await page.goto('/login')
 
     const gate = await readViewportGate(page)
-    // eslint-disable-next-line no-console -- la salida es la cabecera del acta.
+    // La salida es la cabecera del acta (R1).
     console.log('R1 gate:', JSON.stringify(gate))
 
     expectGateHolds(gate)
@@ -95,7 +95,7 @@ test.describe('ui-responsive-375 R3: cero scroll horizontal de página', () => {
         scrollWidth: document.documentElement.scrollWidth,
         clientWidth: document.documentElement.clientWidth,
       }))
-      // eslint-disable-next-line no-console -- la salida alimenta el acta.
+      // La salida alimenta el acta (R3).
       console.log(`R3 ${route}: scrollWidth=${scrollWidth} clientWidth=${clientWidth}`)
 
       // El margen de 1px absorbe el redondeo sub-pixel. El desbordamiento

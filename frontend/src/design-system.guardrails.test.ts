@@ -447,8 +447,10 @@ function actaSection(index: number): string {
   const heading = ACTA_HEADINGS[index]
   const start = acta.indexOf(heading)
   expect(start, `el acta declara "${heading}"`).toBeGreaterThanOrEqual(0)
-  const nextHeading = ACTA_HEADINGS[index + 1]
-  const end = nextHeading ? acta.indexOf(nextHeading, start) : -1
+  const end =
+    index + 1 < ACTA_HEADINGS.length
+      ? acta.indexOf(ACTA_HEADINGS[index + 1], start)
+      : -1
   return acta.slice(start + heading.length, end < 0 ? acta.length : end)
 }
 
