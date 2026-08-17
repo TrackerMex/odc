@@ -541,3 +541,35 @@ _El historial comenzará aquí cuando se complete la primera sesión._
   desfasado sobre la §8 y `current.md` sin actualizar.
 - **Verificación final:** `./init.sh` exit 0, 471 tests backend y 596 frontend.
 - **Estado final:** done. Queda #29.
+
+## Sesión 2026-08-17 — ui-copy-es-and-title (id: 29)
+
+- **Alcance:** los dos defectos ajenos al refactor visual que la revisión del
+  2026-08-10 dejó anotados (login rotulado `Email`/`Password` en inglés, `<title>`
+  todavía `TanStack Start Starter`), más un tercero que el `spec_author` verificó
+  al inspeccionar la fuente: zod 4.4.3 emitía `Invalid email address` y
+  `Too small: expected string to have >=1 characters` **visibles en el formulario**.
+  El humano confirmó explícitamente meter ese tercero como R2.
+- **Implementación:** 5 líneas en 3 archivos — `login-form.tsx` (dos `FieldLabel`),
+  `login-schema.ts` (mensaje por regla) y `__root.tsx` (`title`). Textos:
+  `Correo electrónico`, `Contraseña`, `Ingresa un correo electrónico válido.`,
+  `Ingresa tu contraseña.`, `ODC — Órdenes de compra`.
+- **TDD:** 8 commits, par `test`→`feat` por requisito. C4 limpio a la primera por
+  segunda vez consecutiva.
+- **El punto delicado:** cambiar copy rompe `getByLabelText`, así que hubo que
+  actualizar `login-form.test.tsx` y `e2e/login.spec.ts`. El reviewer revisó ese
+  diff línea por línea con el criterio correcto — actualizar un localizador es
+  legítimo, relajar una aserción es rechazo — y confirmó que **solo cambian
+  localizadores**, ninguna aserción cambió de significado.
+- **Verificación:** textos comparados por codepoints contra la spec (la raya del
+  título es U+2014). R2 quedó verificado en Chromium real por el reviewer, no solo
+  en jsdom: formulario vacío y correo inválido muestran ambos mensajes en español,
+  y el título se ve en la pestaña y en el SSR. El implementer no había podido por
+  una caída del stack de Docker; el reviewer lo reparó con `docker compose up -d`
+  sin matar el `wslrelay` que retenía puertos.
+- **Revisión:** APROBADO sin defectos bloqueantes
+  (`progress/review_ui-copy-es-and-title.md`). Dos observaciones menores: los
+  sub-items de `tasks.md` sin marcar (corregido al cerrar) y la rama "correo vacío"
+  de R2 sin test propio en jsdom (sí comprobada en navegador) — queda anotada.
+- **Verificación final:** `./init.sh` exit 0, 471 tests backend y 601 frontend.
+- **Estado final:** done. **30/30 — no queda ninguna feature abierta.**

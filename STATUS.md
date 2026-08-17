@@ -1,8 +1,8 @@
 # ODC — Status
 
 **Última actualización**: 2026-08-17
-**Features completadas**: 29/30 (`feature_list.json`)
-**Pendientes**: 1; siguiente #29
+**Features completadas**: 30/30 (`feature_list.json`)
+**Pendientes**: ninguna
 **En producción**: no
 
 ---
@@ -96,8 +96,18 @@ Requiere `.env` en la raíz (plantilla en `.env.example`): `DATABASE_URL`,
   área táctil bajo 44×44px (choca con el dial de densidad de la #23) y el
   `grid-cols-3` del resumen mensual, que desborda a partir de importes de siete
   cifras.
-- Siguiente: #29. Sigue el pipeline `spec_author` → aprobación humana →
-  `implementer` → `reviewer`.
+- **#29 `ui-copy-es-and-title` done** (2026-08-17): login rotulado en español
+  (`Correo electrónico` / `Contraseña`), mensajes de validación de `loginSchema`
+  en español —zod v4 los emitía en inglés a la vista, defecto encontrado al
+  especificar— y `<title>` global `ODC — Órdenes de compra` en `__root.tsx`.
+  5 líneas en 3 archivos. Verificado en Chromium real, no solo en jsdom.
+- **No queda ninguna feature abierta.** Lo siguiente es decisión de producto, no
+  del backlog. Candidatos ya anotados y sin dueño: las dos deudas de la #28
+  (área táctil bajo 44×44px, `grid-cols-3` del resumen mensual a siete cifras),
+  el copy en inglés de las primitivas `ui/` (`pagination.tsx`, `sheet.tsx`,
+  `sidebar.tsx`, hallazgo de la #29), re-saturar las 8 badges de dark
+  (`progress/ui-redesign-plan.md`), la rama "correo vacío" de R2 sin test en
+  jsdom, y la deuda de backend de más abajo (migraciones antes de producción).
 - Deuda anotada (tests): `general-approval-actions.test.tsx:163` es flaky —
   solo falla con la suite completa, por una carrera de render (`waitFor`
   seguido de `getByText` síncrono). Re-correr antes de culpar a un cambio.
@@ -105,6 +115,19 @@ Requiere `.env` en la raíz (plantilla en `.env.example`): `DATABASE_URL`,
 ---
 
 ## Última sesión
+
+**2026-08-17** — Cierre de `ui-copy-es-and-title` (#29) → **30/30, backlog vacío**.
+
+- Los dos defectos anotados el 2026-08-10 (copy inglés en login, `<title>` del
+  starter) más un tercero encontrado al especificar: zod v4 emitía los mensajes
+  de validación en inglés, visibles en el formulario. Aprobado meterlo como R2.
+- 8 commits, par `test`→`feat` por requisito; C4 limpio a la primera. Actualizar
+  `getByLabelText` en los tests era inevitable al cambiar copy: el reviewer
+  verificó línea por línea que solo cambiaron localizadores, ninguna aserción.
+- R2 verificado en Chromium real por el reviewer, no solo en jsdom.
+- `./init.sh` verde: 471 tests backend, 601 frontend.
+
+---
 
 **2026-08-17** — Cierre de `ui-responsive-375` (#28) → **29/30**.
 
