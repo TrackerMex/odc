@@ -106,7 +106,7 @@ export function LoginForm({
                 data-testid="email-field"
                 data-invalid={!!fieldErrors.email}
               >
-                <FieldLabel htmlFor="email">Email</FieldLabel>
+                <FieldLabel htmlFor="email">Correo electrónico</FieldLabel>
                 <Input
                   ref={emailRef}
                   id="email"
@@ -139,7 +139,7 @@ export function LoginForm({
                 data-testid="password-field"
                 data-invalid={!!fieldErrors.password}
               >
-                <FieldLabel htmlFor="password">Password</FieldLabel>
+                <FieldLabel htmlFor="password">Contraseña</FieldLabel>
                 <Input
                   ref={passwordRef}
                   id="password"
