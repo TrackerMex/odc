@@ -47,6 +47,30 @@ describe('R1: login field labels are in Spanish and keep their association', () 
   })
 })
 
+describe('R2: login validation messages are in Spanish', () => {
+  it('shows the Spanish message when the email is malformed', () => {
+    render(<LoginForm />)
+
+    fillAndSubmit('not-an-email', 'secret123')
+
+    const emailField = screen.getByTestId('email-field')
+    expect(within(emailField).getByRole('alert').textContent).toBe(
+      'Ingresa un correo electrónico válido.',
+    )
+  })
+
+  it('shows the Spanish message when the password is empty', () => {
+    render(<LoginForm />)
+
+    fillAndSubmit('user@example.com', '')
+
+    const passwordField = screen.getByTestId('password-field')
+    expect(within(passwordField).getByRole('alert').textContent).toBe(
+      'Ingresa tu contraseña.',
+    )
+  })
+})
+
 describe('R7: login form validates email/password with zod before submitting', () => {
   beforeEach(() => {
     vi.mocked(login).mockReset()
