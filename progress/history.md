@@ -676,3 +676,15 @@ estado: implementación aprobada; init inicial verde
 - TDD: rojo `784c9a6` → implementación `f53561b`; guardas históricas de dependencias actualizadas en `1054c8f` por la excepción aprobada.
 - Verificación visual ADMIN en 375/768/1024/1440, claro/oscuro: 1/1 Playwright, sin overflow y con interacción correcta.
 - `./init.sh` final verde: 484 backend, 656 frontend, builds y lint backend.
+
+---
+
+## 2026-09-13 — Búsqueda y filtros estables en executive-workspace-v2
+
+- El usuario reportó overflow del importe pagado, salto al inicio al buscar/filtrar y solicitó resultados automáticos mientras escribe.
+- Causa del salto: las rutas reemplazaban todo el dashboard por el estado pending desde 0 ms. Se conserva la vista durante consultas rápidas con `pendingMs: 1000` y `resetScroll: false` ya existente.
+- La búsqueda compartida de dashboard y Mis tareas aplica debounce de 300 ms; Enter y el botón buscan inmediatamente sin duplicar la consulta.
+- El selector de gráfica usa columnas flexibles, tipografía adaptable y corte seguro para contener importes largos.
+- TDD: rojo `b9bbbf2` → implementación `9c4c640`. Vitest focalizado 7/7 y Playwright R3/R4/R13 1/1 verdes.
+- Navegador local: importe `scrollWidth === clientWidth`; búsqueda y filtro conservaron el campo en `top: 480px` y `scrollY: 528` durante las actualizaciones.
+- `./init.sh` final verde: 484 backend, 656 frontend, builds y lint. Docker backend/frontend reconstruidos, activos y accesibles en `localhost:3000`.

@@ -1,13 +1,11 @@
-# Sesión actual
+# Sesión activa
+
+> Este archivo describe el estado de la sesión en curso.
+> Al cerrar la sesión, mueve este contenido a progress/history.md y deja solo esta plantilla.
 
 ```
-feature: executive-workspace-v2 (ajustes de dashboard)
-inicio: 2026-09-13
+feature: ninguna
+inicio: —
 agentes lanzados: ninguno
-estado: in_progress
+estado: limpio
 ```
-
-- Evitar overflow del importe acumulado en la gráfica.
-- Mantener scroll al buscar o cambiar filtros.
-- Aplicar búsqueda automática con debounce.
-- Verificar dashboard en navegador y cerrar documentación.

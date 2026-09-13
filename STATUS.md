@@ -53,7 +53,10 @@ Requiere `.env` en la raíz (plantilla en `.env.example`): `DATABASE_URL`,
   la validación tardía del proveedor. Evidencia en
   [progress/review_executive-workspace-v2.md](progress/review_executive-workspace-v2.md).
   Revisión independiente final: **ship**, tres correcciones materiales resueltas.
-- **Verificación #32**: init final verde (484 backend / 656 frontend), 3 pruebas
+- **Ajuste de filtros #32**: búsqueda automática a los 300 ms, Enter inmediato
+  sin duplicar consultas, posición estable al buscar/filtrar e importes largos
+  contenidos dentro del selector de la gráfica.
+- **Verificación #32**: último init verde (484 backend / 656 frontend), 3 pruebas
   PostgreSQL aisladas y 5 Playwright (matriz 24 combinaciones y flujos).
   El typecheck adicional conserva 18 errores previos en tests, sin errores nuevos
   de aplicación; es deuda F11 del plan, fuera del gate de build actual.
