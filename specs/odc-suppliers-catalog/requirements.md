@@ -89,8 +89,9 @@ Ontracking GPS Remote.
   continuar el flujo de creación/edición sin cambios de comportamiento
   respecto a `odc-create-draft` (R2, R7, R11 de esa spec siguen cumpliéndose
   igual); IF el valor de `supplier` no coincide con ningún nombre del
-  catálogo THEN THE SYSTEM SHALL responder HTTP 400 sin crear ni modificar la
-  ODC.
+  catálogo y cambia el valor almacenado THEN THE SYSTEM SHALL responder HTTP
+  400 sin crear ni modificar la ODC. Un `PATCH` SHALL poder conservar sin
+  cambios el proveedor de una ODC histórica creada antes del catálogo.
   *Verificación*: tests de `CreateDraftUseCase` y `UpdateDraftUseCase` con
   `SupplierRepository` mockeado — un `supplier` existente en el catálogo deja
   pasar la creación/edición igual que antes; un `supplier` que no matchea
@@ -131,3 +132,10 @@ Ontracking GPS Remote.
 > de esta spec (catálogo de 22 proveedores, R1-R5, alcance y fuera de
 > alcance). Esta nota deja constancia verificable de esa aprobación para que
 > el reviewer pueda re-evaluar C6.
+
+## Enmienda posterior solicitada
+
+- 2026-09-13: el usuario reportó que una ODC histórica en borrador devolvía
+  400 al actualizarse. Se permite conservar su proveedor anterior sin
+  incorporarlo al catálogo; cualquier cambio de proveedor mantiene la
+  validación exacta de R5.

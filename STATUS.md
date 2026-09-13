@@ -75,6 +75,8 @@ Requiere `.env` en la raíz (plantilla en `.env.example`): `DATABASE_URL`,
   vez que pasa esto con `spec_author`, ver memoria de Claude
   `spec-author-checkbox-unreliable`); se resolvió con aprobación humana real
   + commit de spec dedicado, reviewer aprobó en la re-revisión.
+  Las ODC históricas pueden conservar su proveedor anterior al editar otros
+  campos; cualquier proveedor nuevo sigue validándose contra el catálogo.
 - **Frontend completo (5/5 features de negocio, #9-#13)**: fundación
   TanStack Start + shadcn/ui + sesión (#9), dashboard/creación/edición de ODC
   para `DIRECTOR_OPS` (#10), flujos de `ADMINISTRACION` (#11), aprobación de

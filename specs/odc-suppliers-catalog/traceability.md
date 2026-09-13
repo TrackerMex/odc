@@ -12,7 +12,7 @@ tags: [harness, spec]
 | R2 | `supplier.orm-entity.spec.ts::R2`, `supplier.typeorm.repository.spec.ts::R2`, `suppliers.module.spec.ts::R2` | `1fa5727` feat(suppliers): add suppliers table persistence and repository token (R2) |
 | R3 | `seed-suppliers.usecase.spec.ts::R3` | `faf1cda` feat(suppliers): add idempotent catalog seed use-case (R3) |
 | R4 | `list-suppliers.usecase.spec.ts::R4`, `supplier.controller.spec.ts::R4` | `5a70597` feat(suppliers): add GET /api/suppliers listing sorted alphabetically (R4) |
-| R5 | `create-draft.usecase.spec.ts::R5`, `update-draft.usecase.spec.ts::R5`, `odc.controller.spec.ts::R5` | `743bc9c` feat(odc): validate supplier against suppliers catalog on create/update (R5) |
+| R5 | `create-draft.usecase.spec.ts::R5`, `update-draft.usecase.spec.ts::R5`, `odc.controller.spec.ts::R5` — catálogo estricto y compatibilidad del proveedor histórico sin cambios | `743bc9c` validación original; rojo `2b1f996` → `c54559b` compatibilidad histórica |
 
 Regla: el reviewer no aprueba si alguna fila queda "pendiente".
 Convención de commit: `feat(<scope>): <desc> (R1,R2)`.

@@ -697,3 +697,11 @@ estado: implementación aprobada; init inicial verde
 - Se eliminó el remount por `query.q`; el estado local conserva escritura en curso y se sincroniza cuando la URL cambia mediante atrás/adelante.
 - TDD: rojo `5605a9b` → `60cd5e6`. Prueba focalizada 7/7, ESLint focalizado y `./init.sh` verde con 484 backend / 656 frontend.
 - Verificación real: al completar `man` como `mantenimiento`, el input conservó foco, valor, resultados y URL actualizados. Frontend Docker reconstruido y activo.
+
+---
+
+## 2026-09-13 — Compatibilidad de proveedores históricos al editar borradores
+
+- El PATCH de `ODC-2026-00013` devolvía 400 porque conservaba “Seguridad y Suministros del Norte S.A.”, nombre anterior que no existe en el catálogo de 22 proveedores.
+- El backend ahora omite la revalidación únicamente cuando el proveedor recibido coincide con el ya almacenado. Crear o cambiar a un proveedor fuera del catálogo continúa rechazado.
+- TDD: rojo `2b1f996` → `c54559b`; 14/14 pruebas focalizadas y `./init.sh` verde con 485 backend / 656 frontend. No se modificaron datos de negocio durante la investigación.
