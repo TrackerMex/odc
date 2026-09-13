@@ -640,12 +640,16 @@ describe('ui-responsive-375 R4: la precondición de 375px se conserva en la fuen
     expect(root).toContain("content: 'width=device-width, initial-scale=1'")
   })
 
-  // La única excepción admitida, codificada por nombre: es el render del PDF,
-  // vive fuera del lienzo y no aporta scrollWidth (ver sección 6 del acta).
-  it('solo el slide del PDF declara un ancho fijo mayor que el viewport', () => {
+  // La #31 añade una tabla ancha con scroll local, autorizada por R4/R7.
+  it('solo PDF y tabla prioritaria admiten ancho superior al viewport', () => {
     expect(surfacesWithFixedWidthAboveViewport()).toEqual([
+      'src/components/odc/executive-dashboard.tsx',
       'src/components/odc/monthly-summary-slide.tsx',
     ])
+    expect(surfaceSource('executive-dashboard')).toContain(
+      'Tabla de tareas prioritarias',
+    )
+    expect(surfaceSource('executive-dashboard')).toContain('overflow-x-auto')
   })
 
   it('la excepción sigue condicionada al contenedor fuera de pantalla', () => {
