@@ -50,6 +50,28 @@ for (const account of accounts) {
         await expect(page.getByRole('link', { name: 'Crear ODC' })).toHaveCount(
           account === 'ops' ? 1 : 0,
         )
+        const statusBounds = await page
+          .getByRole('table', { name: 'Tareas prioritarias' })
+          .locator('[data-status]')
+          .evaluateAll((badges) =>
+            badges.map((badge) => ({
+              label: badge.textContent,
+              right: badge.getBoundingClientRect().right,
+              cellRight: badge.closest('td')!.getBoundingClientRect().right,
+              height: badge.clientHeight,
+              contentHeight: badge.scrollHeight,
+            })),
+          )
+        for (const badge of statusBounds) {
+          expect(
+            badge.right,
+            `${badge.label} stays in its cell`,
+          ).toBeLessThanOrEqual(badge.cellRight)
+          expect(
+            badge.contentHeight,
+            `${badge.label} is fully readable`,
+          ).toBeLessThanOrEqual(badge.height + 1)
+        }
 
         if (width === 375) {
           const toggle = page.getByRole('button', { name: /Cambiar a modo/ })
