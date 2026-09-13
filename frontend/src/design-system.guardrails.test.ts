@@ -900,3 +900,14 @@ describe('ui-responsive-375 R10: no se edita ninguna aserción ajena', () => {
     )
   })
 })
+
+describe('frontend-dashboard-template R8: template provenance', () => {
+  it('records the source revision, adapted files and MIT notice', () => {
+    const notice = read('THIRD_PARTY_NOTICES.md')
+    expect(notice).toContain('6f99c0b04b7169f9ef12dc99946bc4faaeb40b9b')
+    expect(notice).toContain('app-layout.tsx')
+    expect(notice).toContain('executive-dashboard.tsx')
+    expect(notice).toContain('Copyright (c) 2026 Shadcn Dashboard')
+    expect(notice).toContain('Permission is hereby granted, free of charge')
+  })
+})
