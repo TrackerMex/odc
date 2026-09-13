@@ -48,6 +48,17 @@ function renderAppLayout(pathname = '/', role = user.role) {
   )
 }
 
+describe('executive-workspace-v2 R1: persistent navigation', () => {
+  it('keeps an opaque sticky header below dialogs and above route content', () => {
+    renderAppLayout('/odcs/order-1')
+    const header = screen.getByRole('navigation', { name: 'Ubicación actual' }).closest('header')!
+    expect(header.className).toContain('sticky')
+    expect(header.className).toContain('top-0')
+    expect(header.className).toContain('bg-card')
+    expect(header.className).toContain('z-20')
+  })
+})
+
 describe('R1: frontend-dashboard-template shell preserves route context, permissions and controls', () => {
   it.each([
     ['/', 'Resumen ejecutivo'],
