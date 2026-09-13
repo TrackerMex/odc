@@ -226,6 +226,18 @@ body {
   view-transition-name: odc-route-content;
 }
 
+.odc-app-shell [data-slot='sidebar-inner'] {
+  background: var(--card);
+}
+
+@media (max-width: 767px) {
+  .odc-app-shell header button,
+  .odc-executive-dashboard a {
+    min-width: 44px;
+    min-height: 44px;
+  }
+}
+
 @keyframes odc-route-enter {
   from {
     opacity: 0;
@@ -272,6 +284,14 @@ body {
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .odc-app-shell *,
+  [data-mobile='true'],
+  [data-mobile='true'] *,
+  [data-slot='sheet-overlay'] {
+    transition-duration: 0s !important;
+    animation: none !important;
+  }
+
   .odc-filter-results,
   ::view-transition-old(root),
   ::view-transition-new(root),

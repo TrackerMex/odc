@@ -205,7 +205,7 @@ function Metric({
 
 function Pulse({ dashboard }: { dashboard: ExecutiveDashboardResponse }) {
   const { pulse, priority } = dashboard
-  const oldestOrder = dashboard.oldestActiveOrders[0]
+  const oldestOrder = dashboard.oldestActiveOrders.at(0)
   const maximum = Math.max(pulse.current.totalCents, pulse.previous.totalCents)
   const comparison =
     pulse.totalCentsChangePercent === null
@@ -274,10 +274,14 @@ function Pulse({ dashboard }: { dashboard: ExecutiveDashboardResponse }) {
             label="Variación de compras"
             value={
               pulse.purchaseCountChangePercent === null
-                ? 'Sin base de comparación'
+                ? '—'
                 : formatPercentChange(pulse.purchaseCountChangePercent)
             }
-            detail="Frente al mes anterior"
+            detail={
+              pulse.purchaseCountChangePercent === null
+                ? 'Sin base de comparación'
+                : 'Frente al mes anterior'
+            }
           />
           <Metric
             label="Mayor antigüedad"

@@ -92,7 +92,7 @@ export function NavUser({
               </DropdownMenuLabel>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={handleLogout}>
+            <DropdownMenuItem className="max-md:min-h-11" onClick={handleLogout}>
               <LogOutIcon />
               Cerrar sesión
             </DropdownMenuItem>
