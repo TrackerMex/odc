@@ -129,7 +129,20 @@ export interface ExecutiveOrder {
 export interface ExecutiveDashboardResponse {
   month: string
   role: ExecutiveDashboardRole
-  priority: { total: number; items: ExecutiveTask[] }
+  priority: {
+    total: number
+    items: ExecutiveTask[]
+    page: number
+    pageSize: number
+  }
+  actionableTotal: number
+  createdOrders: number
+  monthlyTrend: Array<{
+    month: string
+    purchaseCount: number
+    totalCents: number
+  }>
+  statusDistribution: Array<{ status: OdcStatus; count: number }>
   pulse: {
     current: { purchaseCount: number; totalCents: number }
     previous: { month: string; purchaseCount: number; totalCents: number }
@@ -149,6 +162,7 @@ export interface ExecutiveTaskPage {
   total: number
   page: number
   pageSize: number
+  month?: string
 }
 
 export interface Supplier {

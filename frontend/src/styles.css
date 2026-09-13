@@ -230,11 +230,34 @@ body {
   background: var(--card);
 }
 
+.odc-app-shell {
+  --app-header-height: 58px;
+}
+
+.odc-app-shell :is(input, textarea, button, a, [tabindex]) {
+  scroll-margin-top: calc(var(--app-header-height) + 1rem);
+}
+
+@media (min-width: 768px) {
+  .odc-app-shell {
+    --app-header-height: 64px;
+  }
+}
+
 @media (max-width: 767px) {
   .odc-app-shell header button,
   .odc-executive-dashboard a {
     min-width: 44px;
     min-height: 44px;
+  }
+  .odc-app-shell main :is(button, a, summary),
+  .odc-app-shell input:not([type='checkbox']):not([type='hidden']):not([aria-hidden='true']),
+  .odc-app-shell [data-slot='select-trigger'],
+  [data-slot='select-item'] {
+    min-height: 44px;
+  }
+  .odc-app-shell main :is(button, a, summary) {
+    min-width: 44px;
   }
 }
 
@@ -287,7 +310,9 @@ body {
   .odc-app-shell *,
   [data-mobile='true'],
   [data-mobile='true'] *,
-  [data-slot='sheet-overlay'] {
+  [data-slot='sheet-overlay'],
+  [data-slot='dialog-content'],
+  [data-slot='dialog-overlay'] {
     transition-duration: 0s !important;
     animation: none !important;
   }

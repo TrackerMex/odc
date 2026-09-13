@@ -485,7 +485,7 @@ export function OdcForm({
         </CardFooter>
       </Card>
 
-      <aside className="space-y-5 xl:sticky xl:top-6 xl:self-start">
+      <aside className="space-y-5 xl:sticky xl:top-[calc(var(--app-header-height)+1rem)] xl:self-start">
         <Card>
           <CardHeader>
             <CardTitle>Resumen</CardTitle>

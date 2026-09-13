@@ -24,7 +24,7 @@ function AppHeader({ pathname }: { pathname: string }) {
             : 'Resumen ejecutivo'
 
   return (
-    <header className="flex h-[58px] shrink-0 items-center justify-between gap-3 border-b px-3 md:h-16 md:px-6">
+    <header className="sticky top-0 z-20 flex h-[58px] shrink-0 items-center justify-between gap-3 border-b bg-card px-3 md:h-16 md:px-6">
       <div className="flex min-w-0 items-center gap-3">
         <SidebarTrigger
           className="size-11 shrink-0 md:size-9"

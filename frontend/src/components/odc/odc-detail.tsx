@@ -215,7 +215,7 @@ export function OdcDetail({
         {actions}
       </div>
 
-      <Card className="xl:sticky xl:top-6 xl:self-start">
+      <Card className="xl:sticky xl:top-[calc(var(--app-header-height)+1rem)] xl:self-start">
         <CardHeader>
           <CardTitle>Historial</CardTitle>
           <CardDescription>Seguimiento de la orden</CardDescription>

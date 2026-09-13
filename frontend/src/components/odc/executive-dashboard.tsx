@@ -1,12 +1,8 @@
 import {
   ArrowRightIcon,
   CalendarDaysIcon,
-  ChartNoAxesCombinedIcon,
   CircleAlertIcon,
-  FilePenLineIcon,
   PlusIcon,
-  ReceiptTextIcon,
-  WalletCardsIcon,
 } from 'lucide-react'
 import { Link } from '@tanstack/react-router'
 import {
@@ -16,36 +12,19 @@ import {
   AlertTitle,
 } from '@/components/ui/alert'
 import { Button, buttonVariants } from '@/components/ui/button'
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card'
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table'
+import { Card } from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
 import { Skeleton } from '@/components/ui/skeleton'
-import {
-  formatCurrency,
-  formatMonth,
-  formatPercentChange,
-  statusLabel,
-} from '@/lib/odc'
+import { formatCurrency, formatMonth, statusLabel } from '@/lib/odc'
 import type {
   ExecutiveDashboardResponse,
   ExecutiveDashboardRole,
-  ExecutiveTask,
-  ExecutiveTaskNextAction,
 } from '@/lib/odc'
 import { cn } from '@/lib/utils'
-import { OdcStatusBadge } from './odc-status-badge'
+import { ExecutiveAnalytics } from './executive-analytics'
+import { ExecutiveTaskTable } from './executive-task-table'
+import { executiveSearchParams, isExecutiveMonth } from '@/lib/executive-query'
+import type { ExecutiveQuery } from '@/lib/executive-query'
 
 const roleCopy: Record<ExecutiveDashboardRole, { label: string }> = {
   DIRECTOR_OPS: { label: 'Operaciones' },
@@ -53,67 +32,19 @@ const roleCopy: Record<ExecutiveDashboardRole, { label: string }> = {
   DIRECTOR_GENERAL: { label: 'Dirección General' },
 }
 
-const actionLabel: Record<ExecutiveTaskNextAction, string> = {
-  EDITAR_Y_REENVIAR: 'Reabrir y editar',
-  VALIDAR_PRESUPUESTO: 'Validar presupuesto',
-  APROBAR_COMPRA: 'Aprobar compra',
-  REGISTRAR_PAGO: 'Registrar pago',
-  CARGAR_EVIDENCIA_PAGO: 'Cargar evidencia de pago',
-  COMPLETAR_FACTURA: 'Completar factura',
-}
-
-const opsAction = {
-  EDITAR_Y_REENVIAR: { label: 'Reabrir y editar', icon: FilePenLineIcon },
-  REGISTRAR_PAGO: { label: 'Registrar pago', icon: WalletCardsIcon },
-  COMPLETAR_FACTURA: { label: 'Completar factura', icon: ReceiptTextIcon },
-}
-
-function isOpsAction(
-  nextAction: ExecutiveTaskNextAction,
-): nextAction is keyof typeof opsAction {
-  return nextAction in opsAction
-}
-
 const detailLinkClass =
-  'rounded-(--radius) outline-none hover:underline underline-offset-4 focus-visible:ring-3 focus-visible:ring-ring'
-
-function PriorityAction({
-  role,
-  task,
-}: {
-  role: ExecutiveDashboardRole
-  task: ExecutiveTask
-}) {
-  if (role === 'DIRECTOR_OPS' && isOpsAction(task.nextAction)) {
-    const action = opsAction[task.nextAction]
-    const Icon = action.icon
-    return (
-      <Link
-        to="/odcs/$id"
-        params={{ id: task.id }}
-        className={cn(
-          detailLinkClass,
-          'inline-flex items-center gap-2 text-xs font-medium text-primary',
-        )}
-      >
-        <Icon className="size-4 shrink-0" aria-hidden="true" />
-        {action.label}
-      </Link>
-    )
-  }
-  return (
-    <span className="text-xs font-medium text-foreground">
-      {actionLabel[task.nextAction]}
-    </span>
-  )
-}
+  'rounded-sm outline-none hover:underline underline-offset-4 focus-visible:ring-3 focus-visible:ring-ring'
 
 function DashboardHeader({
   userName,
   dashboard,
+  query,
+  onQueryChange,
 }: {
   userName: string
   dashboard: ExecutiveDashboardResponse
+  query: ExecutiveQuery
+  onQueryChange: (query: ExecutiveQuery) => void
 }) {
   return (
     <section
@@ -131,11 +62,34 @@ function DashboardHeader({
           {roleCopy[dashboard.role].label}
         </p>
       </div>
-      <div className="flex flex-wrap items-center gap-3 lg:justify-end">
-        <span className="inline-flex items-center gap-2 text-xs text-muted-foreground">
-          <CalendarDaysIcon className="size-4" aria-hidden="true" />
-          {formatMonth(dashboard.month)}
-        </span>
+      <div className="flex flex-wrap items-end gap-3 lg:justify-end">
+        <div className="space-y-1.5">
+          <label
+            htmlFor="dashboard-month"
+            className="flex items-center gap-2 text-xs text-muted-foreground"
+          >
+            <CalendarDaysIcon className="size-4" aria-hidden="true" />
+            Periodo estadístico
+          </label>
+          <Input
+            id="dashboard-month"
+            type="month"
+            min="1000-01"
+            max="9999-12"
+            value={query.month}
+            onChange={(event) => {
+              if (isExecutiveMonth(event.target.value))
+                onQueryChange({
+                  ...query,
+                  month: event.target.value,
+                  page: 1,
+                  invalid: undefined,
+                })
+            }}
+            className="w-auto"
+          />
+          <span className="sr-only">{formatMonth(dashboard.month)}</span>
+        </div>
         {dashboard.role === 'DIRECTOR_OPS' ? (
           <Link
             to="/odcs/new"
@@ -178,246 +132,6 @@ function AmountBar({
         style={{ width: `${(cents / scale) * 100}%` }}
       />
     </div>
-  )
-}
-
-function Metric({
-  label,
-  value,
-  detail,
-}: {
-  label: string
-  value: string
-  detail: string
-}) {
-  return (
-    <div className="min-w-0 p-4 odd:border-r nth-[-n+2]:border-b xl:p-6">
-      <dt className="text-xs text-muted-foreground">{label}</dt>
-      <dd className="mt-3 break-words text-2xl font-semibold tracking-tight tabular-nums">
-        {value}
-      </dd>
-      <dd className="mt-1 break-words text-xs text-muted-foreground">
-        {detail}
-      </dd>
-    </div>
-  )
-}
-
-function Pulse({ dashboard }: { dashboard: ExecutiveDashboardResponse }) {
-  const { pulse, priority } = dashboard
-  const oldestOrder = dashboard.oldestActiveOrders.at(0)
-  const maximum = Math.max(pulse.current.totalCents, pulse.previous.totalCents)
-  const comparison =
-    pulse.totalCentsChangePercent === null
-      ? 'Sin base de comparación'
-      : formatPercentChange(pulse.totalCentsChangePercent)
-  return (
-    <section aria-labelledby="pulse-title" className="min-w-0">
-      <h2 id="pulse-title" className="sr-only">
-        Pulso operativo
-      </h2>
-      <Card className="grid gap-0 py-0 shadow-none lg:grid-cols-[1.1fr_1fr]">
-        <div className="min-w-0 border-b p-5 lg:border-r lg:border-b-0 xl:p-6">
-          <h3 className="flex items-center gap-2 text-sm font-medium">
-            <ChartNoAxesCombinedIcon
-              className="size-4 text-muted-foreground"
-              aria-hidden="true"
-            />
-            Compras pagadas
-          </h3>
-          <p className="mt-3 break-words text-3xl font-semibold tracking-tight tabular-nums xl:text-4xl">
-            {formatCurrency(pulse.current.totalCents)}
-          </p>
-          <p className="mt-2 text-xs text-muted-foreground">
-            <span className="font-medium text-foreground">{comparison}</span>
-            {pulse.totalCentsChangePercent !== null
-              ? ' de gasto frente al mes anterior'
-              : ''}
-          </p>
-          <div className="mt-6 space-y-4">
-            {[{ ...pulse.current, month: dashboard.month }, pulse.previous].map(
-              (period, index) => (
-                <div key={period.month} className="space-y-2">
-                  <div className="flex flex-wrap justify-between gap-x-3 gap-y-1 text-xs text-muted-foreground">
-                    <span>{formatMonth(period.month)}</span>
-                    <span className="tabular-nums">
-                      {formatCurrency(period.totalCents)}
-                    </span>
-                  </div>
-                  <AmountBar
-                    label={formatMonth(period.month)}
-                    cents={period.totalCents}
-                    maximum={maximum}
-                    muted={index === 1}
-                  />
-                </div>
-              ),
-            )}
-          </div>
-        </div>
-        <dl className="grid min-w-0 grid-cols-2">
-          <Metric
-            label="Compras del periodo"
-            value={String(pulse.current.purchaseCount)}
-            detail={`${pulse.previous.purchaseCount} en ${formatMonth(pulse.previous.month)}`}
-          />
-          <Metric
-            label="Tareas pendientes"
-            value={String(priority.total)}
-            detail={
-              priority.total === 0
-                ? 'Sin tareas pendientes'
-                : 'Requieren tu intervención'
-            }
-          />
-          <Metric
-            label="Variación de compras"
-            value={
-              pulse.purchaseCountChangePercent === null
-                ? '—'
-                : formatPercentChange(pulse.purchaseCountChangePercent)
-            }
-            detail={
-              pulse.purchaseCountChangePercent === null
-                ? 'Sin base de comparación'
-                : 'Frente al mes anterior'
-            }
-          />
-          <Metric
-            label="Mayor antigüedad"
-            value={oldestOrder ? `${oldestOrder.ageDays} días` : 'Sin órdenes'}
-            detail={
-              oldestOrder ? oldestOrder.odcNumber : 'No hay órdenes activas'
-            }
-          />
-        </dl>
-      </Card>
-    </section>
-  )
-}
-
-function PriorityQueue({
-  dashboard,
-}: {
-  dashboard: ExecutiveDashboardResponse
-}) {
-  const { priority } = dashboard
-  return (
-    <section aria-labelledby="priority-title" className="min-w-0">
-      <Card className="gap-0 py-0 shadow-none">
-        <CardHeader className="border-b p-5">
-          <div className="flex flex-wrap items-center gap-2">
-            <CardTitle>
-              <h2 id="priority-title" className="text-base font-semibold">
-                Prioridad inmediata
-              </h2>
-            </CardTitle>
-            <span className="rounded-badge border px-1.5 py-0.5 text-xs text-muted-foreground tabular-nums">
-              {priority.total}
-            </span>
-          </div>
-          <CardDescription className="text-xs">
-            {priority.total === 0
-              ? 'No tienes pendientes en este momento.'
-              : `${priority.total} ${priority.total === 1 ? 'tarea requiere' : 'tareas requieren'} atención.`}
-          </CardDescription>
-        </CardHeader>
-        {priority.items.length === 0 ? (
-          <CardContent className="p-5 text-sm text-muted-foreground">
-            Cuando haya una orden que requiera tu intervención aparecerá aquí.
-          </CardContent>
-        ) : (
-          <div
-            role="region"
-            aria-label="Tabla de tareas prioritarias"
-            tabIndex={0}
-            className="overflow-x-auto outline-none focus-visible:ring-3 focus-visible:ring-inset focus-visible:ring-ring [&>[data-slot=table-container]]:overflow-visible"
-          >
-            <Table
-              aria-label="Tareas prioritarias"
-              className="min-w-[680px] table-fixed text-xs"
-            >
-              <TableHeader className="static bg-muted/45">
-                <TableRow className="hover:bg-transparent">
-                  <TableHead className="w-[35%] px-5 text-xs text-muted-foreground">
-                    Orden / proveedor
-                  </TableHead>
-                  <TableHead className="w-[22%] text-xs text-muted-foreground">
-                    Estado
-                  </TableHead>
-                  <TableHead className="w-[18%] text-right text-xs text-muted-foreground">
-                    Importe
-                  </TableHead>
-                  <TableHead className="w-[25%] pr-5 text-xs text-muted-foreground">
-                    Siguiente acción
-                  </TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {priority.items.slice(0, 5).map((task) => (
-                  <TableRow
-                    key={task.id}
-                    className="motion-reduce:transition-none"
-                  >
-                    <TableCell className="px-5 py-4 whitespace-normal">
-                      <Link
-                        to="/odcs/$id"
-                        params={{ id: task.id }}
-                        className={cn(
-                          detailLinkClass,
-                          'block break-words font-medium',
-                        )}
-                      >
-                        <span>{task.odcNumber}</span>
-                        <span className="mt-1 block font-normal text-muted-foreground">
-                          {task.supplier}
-                        </span>
-                        <span className="mt-1 block font-normal text-muted-foreground">
-                          {task.description}
-                        </span>
-                      </Link>
-                      <p className="mt-1 text-muted-foreground tabular-nums">
-                        <span className="sr-only">Antigüedad: </span>
-                        {task.ageDays} {task.ageDays === 1 ? 'día' : 'días'}
-                      </p>
-                    </TableCell>
-                    <TableCell className="py-4 whitespace-normal">
-                      <OdcStatusBadge
-                        status={task.status}
-                        className="h-auto max-w-full whitespace-normal"
-                      />
-                    </TableCell>
-                    <TableCell className="py-4 text-right font-medium tabular-nums">
-                      {formatCurrency(task.totalCents)}
-                    </TableCell>
-                    <TableCell className="py-4 pr-5 whitespace-normal">
-                      <PriorityAction role={dashboard.role} task={task} />
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-        )}
-        {priority.total > priority.items.length ? (
-          <div className="flex flex-wrap items-center justify-between gap-3 border-t px-5 py-4 text-xs text-muted-foreground">
-            <p>
-              Se muestran las {priority.items.length} tareas más antiguas de{' '}
-              {priority.total}.
-            </p>
-            <Link
-              to="/tasks"
-              className={cn(
-                detailLinkClass,
-                'inline-flex items-center font-medium text-primary',
-              )}
-            >
-              Ver todas las tareas
-            </Link>
-          </div>
-        ) : null}
-      </Card>
-    </section>
   )
 }
 
@@ -481,7 +195,7 @@ function AgeingAlerts({
   return (
     <section
       aria-labelledby="ageing-alerts-title"
-      className="min-w-0 border-t p-5"
+      className="min-w-0 border-t p-5 lg:border-t-0 lg:border-l"
     >
       <h2
         id="ageing-alerts-title"
@@ -529,18 +243,52 @@ function AgeingAlerts({
 export function ExecutiveDashboard({
   userName,
   dashboard,
+  query = { month: dashboard.month, page: dashboard.priority.page },
+  onQueryChange = (next) =>
+    window.location.assign(`/?${executiveSearchParams(next)}`),
 }: {
   userName: string
   dashboard: ExecutiveDashboardResponse
+  query?: ExecutiveQuery
+  onQueryChange?: (query: ExecutiveQuery) => void
 }) {
   return (
-    <main className="odc-executive-dashboard min-w-0 flex-1 p-4 sm:p-6 xl:p-8">
+    <main className="odc-executive-dashboard odc-executive-workspace min-w-0 flex-1 p-4 sm:p-6 xl:p-8">
       <div className="mx-auto max-w-[1400px] space-y-6">
-        <DashboardHeader userName={userName} dashboard={dashboard} />
-        <Pulse dashboard={dashboard} />
-        <div className="grid min-w-0 items-start gap-6 xl:grid-cols-[minmax(0,2.5fr)_minmax(0,1fr)]">
-          <PriorityQueue dashboard={dashboard} />
-          <Card className="min-w-0 gap-0 py-0 shadow-none">
+        <DashboardHeader
+          userName={userName}
+          dashboard={dashboard}
+          query={query}
+          onQueryChange={onQueryChange}
+        />
+        {query.invalid && (
+          <p role="alert" className="text-sm text-destructive">
+            La dirección contenía filtros inválidos. Se muestran valores
+            válidos; ajusta los filtros para continuar.
+          </p>
+        )}
+        <ExecutiveAnalytics dashboard={dashboard} />
+        <ExecutiveTaskTable
+          title="Prioridad inmediata"
+          page={dashboard.priority}
+          role={dashboard.role}
+          query={query}
+          onChange={onQueryChange}
+          dashboard
+        />
+        <Link
+          to="/tasks"
+          search={{ month: 'all', page: 1 }}
+          className={cn(
+            detailLinkClass,
+            'inline-flex items-center text-sm font-medium text-primary',
+          )}
+        >
+          Ver pendientes de todos los meses
+          <ArrowRightIcon className="ml-2 size-4" aria-hidden="true" />
+        </Link>
+        <div>
+          <Card className="grid min-w-0 gap-0 py-0 shadow-none lg:grid-cols-2">
             <TopSuppliers dashboard={dashboard} />
             <AgeingAlerts dashboard={dashboard} />
           </Card>
@@ -572,12 +320,18 @@ export function ExecutiveDashboardLoading() {
   )
 }
 
-export function ExecutiveDashboardError({ onRetry }: { onRetry: () => void }) {
+export function ExecutiveDashboardError({
+  onRetry,
+  title = 'No pudimos cargar el resumen ejecutivo',
+}: {
+  onRetry: () => void
+  title?: string
+}) {
   return (
     <main className="flex min-h-[60vh] items-center justify-center p-6">
       <Alert variant="destructive" className="max-w-lg rounded-card">
         <CircleAlertIcon aria-hidden="true" />
-        <AlertTitle>No pudimos cargar el resumen ejecutivo</AlertTitle>
+        <AlertTitle>{title}</AlertTitle>
         <AlertDescription>
           Verifica tu conexión e inténtalo de nuevo.
         </AlertDescription>

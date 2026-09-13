@@ -51,6 +51,8 @@ El mes vigente se obtiene con `Intl.DateTimeFormat` y `timeZone: 'America/Mexico
 
 `createdAt` usa `@CreateDateColumn()` sin tipo/zona explícitos. Antes de implementar filtros por creación, verificar tipo SQL real, zona de sesión de PostgreSQL, configuración del driver y cómo se escriben/leen los timestamps existentes. No atribuir UTC a timestamps históricos por suposición. Tras documentar la convención observada, convertir los límites locales `[inicioMes, inicioMesSiguiente)` a esa representación mediante parámetros y funciones de zona explícitas; usar comparación de rango sobre la columna para filtrar. Las pruebas reales deberán incluir ambos lados del límite y lecturas coherentes con la API. Si la convención histórica no puede determinarse, registrar esa cuestión y pedir la decisión necesaria antes de convertir datos; esta feature no autoriza una migración de timestamps.
 
+Verificado el 2026-09-13: columna real `timestamp without time zone DEFAULT now()`, sesión PostgreSQL UTC y runtime Node UTC. Mapper no escribe `createdAt`; pg interpreta timestamps en la zona del proceso. Se conserva esa convención UTC y se convierten exclusivamente los límites del mes mexicano mediante `AT TIME ZONE`, sin transformar filas existentes. Pruebas reales sobre tablas temporales de una única conexión verifican 05:59:59/06:00:00 UTC en ambos extremos de septiembre y mantienen intactas las tablas públicas. Un despliegue nuevo debe conservar DB/runtime UTC mientras este tipo siga sin zona explícita.
+
 Importes: centavos enteros del backend; presentación MXN con formateadores actuales. Comparaciones contra cero producen `null`, distinto de 0. Escala visual común y finita, meses ausentes cero, sin falsa mejora cuando aumenta gasto.
 
 ## Estado de consulta y navegación

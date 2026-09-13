@@ -30,7 +30,11 @@ vi.mock('@/lib/api', async (importOriginal) => {
 const emptyDashboard = {
   month: '2026-07',
   role: 'DIRECTOR_OPS',
-  priority: { total: 0, items: [] },
+  priority: { total: 0, items: [], page: 1, pageSize: 10 },
+  actionableTotal: 0,
+  createdOrders: 0,
+  monthlyTrend: [],
+  statusDistribution: [],
   pulse: {
     current: { purchaseCount: 0, totalCents: 0 },
     previous: { month: '2026-06', purchaseCount: 0, totalCents: 0 },

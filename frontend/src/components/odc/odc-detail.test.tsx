@@ -375,7 +375,11 @@ describe('R3: semantic rejection and protected preview surfaces', () => {
     const historyCard = screen
       .getByText('Historial')
       .closest('[data-slot="card"]')
-    expect(historyCard?.className).toMatch(/xl:sticky.*xl:top-6.*xl:self-start/)
+    expect(historyCard?.className).toContain('xl:sticky')
+    expect(historyCard?.className).toContain(
+      'xl:top-[calc(var(--app-header-height)+1rem)]',
+    )
+    expect(historyCard?.className).toContain('xl:self-start')
     expect(container.firstElementChild?.className).toMatch(/_22rem/)
 
     fireEvent.click(

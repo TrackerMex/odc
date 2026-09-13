@@ -4,11 +4,20 @@ const accounts = ['ops', 'admin', 'dg'] as const
 const widths = [375, 768, 1024, 1440]
 
 for (const account of accounts) {
-  test(`frontend-dashboard-template R1,R2,R7: ${account} shell and dashboard across themes and widths`, async ({
+  test(`executive-workspace-v2 R1,R14: ${account} shell and dashboard across themes and widths`, async ({
     page,
     context,
   }, testInfo) => {
-    test.setTimeout(120_000)
+    test.setTimeout(180_000)
+    const hydrationErrors: string[] = []
+    page.on('pageerror', (error) => hydrationErrors.push(error.message))
+    page.on('console', (message) => {
+      if (
+        message.type() === 'error' &&
+        /hydrat|did not match/i.test(message.text())
+      )
+        hydrationErrors.push(message.text())
+    })
     const signIn = await context.request.post('/api/auth/login', {
       data: {
         email: `${account}@odc.local`,
@@ -28,6 +37,9 @@ for (const account of accounts) {
         if (isDark !== (theme === 'dark'))
           await page.getByRole('button', { name: /Cambiar a modo/ }).click()
         await expect(page.locator('html')).toHaveCSS('color-scheme', theme)
+        await page.reload()
+        await expect(page.locator('#dashboard-title')).toBeVisible()
+        await expect(page.locator('html')).toHaveCSS('color-scheme', theme)
         const measurements = await page.evaluate(() => ({
           width: innerWidth,
           scroll: document.documentElement.scrollWidth,
@@ -39,11 +51,24 @@ for (const account of accounts) {
         expect(measurements.width).toBe(width)
         expect(measurements.scroll).toBeLessThanOrEqual(measurements.client + 1)
         expect(measurements.header).toBe(width < 768 ? 58 : 64)
+        await page.evaluate(() => window.scrollTo(0, 400))
+        await expect(page.locator('.odc-app-shell > main > header')).toHaveCSS(
+          'position',
+          'sticky',
+        )
+        const fixedHeader = (await page
+          .locator('.odc-app-shell > main > header')
+          .boundingBox())!
+        expect(fixedHeader.y).toBeGreaterThanOrEqual(0)
+        expect(fixedHeader.y).toBeLessThanOrEqual(1)
+        await page.evaluate(() => window.scrollTo(0, 0))
         const panel = page.getByRole('region', { name: 'Pulso operativo' })
         const priority = page.getByRole('region', {
           name: 'Prioridad inmediata',
           exact: true,
         })
+        await expect(panel).toBeVisible()
+        await expect(priority).toBeVisible()
         expect((await panel.boundingBox())!.y).toBeLessThan(
           (await priority.boundingBox())!.y,
         )
@@ -79,7 +104,9 @@ for (const account of accounts) {
           expect(size.height).toBeGreaterThanOrEqual(44)
           expect(size.width).toBeGreaterThanOrEqual(44)
           const targets = await page
-            .locator('.odc-executive-dashboard a')
+            .locator(
+              '.odc-executive-dashboard a, .odc-executive-dashboard button, .odc-executive-dashboard input:not([aria-hidden="true"]):not([type="hidden"]), .odc-executive-dashboard summary',
+            )
             .evaluateAll((elements) =>
               elements.map((element) => ({
                 name: element.textContent,
@@ -123,6 +150,7 @@ for (const account of accounts) {
         })
       }
     }
+    expect(hydrationErrors).toEqual([])
     await page.emulateMedia({ reducedMotion: 'reduce' })
     await expect(
       page.locator('.odc-app-shell [data-slot="sidebar-container"]'),

@@ -3,6 +3,30 @@
 > Sobrescribe `../MASTER.md`. Solo se documentan las desviaciones.
 > Componentes activos: `executive-dashboard.tsx`, `executive-tasks.tsx`.
 
+## Enmienda aprobada 2026-09-13 — executive-workspace-v2 (#32)
+
+La aprobación humana de #32 sustituye las restricciones de composición de #31 y
+de la antigua lista de tareas. Se conserva el shell Modern, Inter y tokens.
+
+- Orden: cabecera/periodo, cuatro KPI, tendencia de 12 meses y distribución por
+  estado, tabla operativa, proveedores y pendientes antiguos. La tendencia ocupa
+  más ancho que la distribución en escritorio; móvil apila la composición.
+- KPI: importe pagado, compras pagadas, ODC creadas en el mes y tareas accionables
+  de todos los meses. Comparaciones solo de las magnitudes de pago definidas.
+- Ambas tablas usan `max-w-[1400px]`, filtros del servidor y 10 filas; mantienen
+  scroll horizontal local con foco. Mis tareas ya no es una lista de una columna.
+- Gráfica específica SVG con escala cero, datos reales y tabla textual accesible.
+  Su ancho mínimo mantiene legibles 12 meses; scroll local, nunca de página.
+- Labels en sentence case/tracking normal en ambas superficies. La anterior
+  obligación de tracking de label solo se aplica donde siguen existiendo labels
+  en mayúsculas, como el resumen mensual.
+- Header sticky opaco 58/64px; asides y foco usan esa altura más separación.
+  Controles visibles móviles de al menos 44px, diálogos encima de la navegación.
+- Mes de creación para tareas/cohorte, fecha de pago para compras. El periodo del
+  dashboard no oculta pendientes antiguos; filtros de tabla no alteran métricas.
+- Creación con revisión modal y folio posterior, cancelación sin escritura y
+  recuperación de envío sobre la identidad persistida. Sin nuevas dependencias.
+
 ## Enmienda aprobada 2026-09-13 — frontend-dashboard-template
 
 La spec #31 aprobada reemplaza las reglas visuales siguientes solo en el shell y

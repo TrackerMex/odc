@@ -1,5 +1,7 @@
 import { createIsomorphicFn } from '@tanstack/react-start'
 import type { SessionUser } from './session'
+import { executiveSearchParams } from './executive-query'
+import type { ExecutiveQuery } from './executive-query'
 import type {
   MonthlyPurchaseSummary,
   ExecutiveDashboardResponse,
@@ -148,15 +150,19 @@ export function getMonthlyPurchaseSummary(
 
 export function getExecutiveDashboard(
   month: string,
+  filters: Partial<ExecutiveQuery> = {},
 ): Promise<ExecutiveDashboardResponse> {
-  const query = new URLSearchParams({ month })
+  const query = executiveSearchParams({ ...filters, month })
   return apiFetch<ExecutiveDashboardResponse>(
     `/api/odcs/executive-dashboard?${query.toString()}`,
   )
 }
 
-export function getExecutiveTasks(page = 1): Promise<ExecutiveTaskPage> {
-  const query = new URLSearchParams({ page: String(page) })
+export function getExecutiveTasks(
+  page = 1,
+  filters: Partial<ExecutiveQuery> = {},
+): Promise<ExecutiveTaskPage> {
+  const query = executiveSearchParams({ ...filters, page })
   return apiFetch<ExecutiveTaskPage>(
     `/api/odcs/executive-dashboard/tasks?${query.toString()}`,
   )

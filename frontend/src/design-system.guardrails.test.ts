@@ -30,6 +30,8 @@ const SURFACES = [
   'odc-status-badge',
   'executive-dashboard',
   'executive-tasks',
+  'executive-task-table',
+  'executive-analytics',
   'monthly-summary',
 ] as const
 
@@ -102,14 +104,12 @@ describe('ui-surfaces-dashboards R5: las etiquetas usan el tracking de label del
     }
   })
 
-  it.each(
-    SURFACES.filter(
-      (surface) =>
-        !['odc-status-badge', 'executive-dashboard'].includes(surface),
-    ),
-  )('%s.tsx declara el tracking de label', (surface) => {
-    expect(surfaceSource(surface)).toContain('tracking-[0.06em]')
-  })
+  it.each(SURFACES.filter((surface) => surface === 'monthly-summary'))(
+    '%s.tsx declara el tracking de label',
+    (surface) => {
+      expect(surfaceSource(surface)).toContain('tracking-[0.06em]')
+    },
+  )
 })
 
 describe('ui-surfaces-dashboards R6: las acciones no sobreescriben la densidad de la primitiva', () => {
@@ -298,7 +298,11 @@ describe('ui-surfaces-dashboards R12: las 3 aserciones en riesgo siguen intactas
 describe('ui-surfaces-dashboards R13: los tests no fijan valores visuales inventados', () => {
   const FEATURE_TESTS = [
     'src/design-system.guardrails.test.ts',
-    ...SURFACES.map((surface) => `src/components/odc/${surface}.test.tsx`),
+    ...SURFACES.filter(
+      (surface) =>
+        !['executive-task-table', 'executive-analytics'].includes(surface),
+    ).map((surface) => `src/components/odc/${surface}.test.tsx`),
+    'src/components/odc/executive-workspace.test.tsx',
   ]
   // Un valor arbitrario de Tailwind (`max-w-[1400px]`, `tracking-[0.06em]`) es
   // donde se cuela un número inventado. Los cuatro trackings prohibidos se
@@ -640,16 +644,21 @@ describe('ui-responsive-375 R4: la precondición de 375px se conserva en la fuen
     expect(root).toContain("content: 'width=device-width, initial-scale=1'")
   })
 
-  // La #31 añade una tabla ancha con scroll local, autorizada por R4/R7.
-  it('solo PDF y tabla prioritaria admiten ancho superior al viewport', () => {
+  // #32 permite tabla compartida y serie de 12 meses, siempre con scroll local.
+  it('executive-workspace-v2 R14: solo PDF, tabla operativa y gráfica admiten ancho superior al viewport', () => {
     expect(surfacesWithFixedWidthAboveViewport()).toEqual([
-      'src/components/odc/executive-dashboard.tsx',
+      'src/components/odc/executive-analytics.tsx',
+      'src/components/odc/executive-task-table.tsx',
       'src/components/odc/monthly-summary-slide.tsx',
     ])
-    expect(surfaceSource('executive-dashboard')).toContain(
+    expect(surfaceSource('executive-task-table')).toContain(
       'Tabla de tareas prioritarias',
     )
-    expect(surfaceSource('executive-dashboard')).toContain('overflow-x-auto')
+    expect(surfaceSource('executive-task-table')).toContain('overflow-x-auto')
+    expect(surfaceSource('executive-analytics')).toContain(
+      'Gráfica mensual desplazable',
+    )
+    expect(surfaceSource('executive-analytics')).toContain('overflow-x-auto')
   })
 
   it('la excepción sigue condicionada al contenedor fuera de pantalla', () => {
@@ -692,10 +701,10 @@ describe('ui-responsive-375 R5: los patrones responsive vigentes siguen intactos
   })
 
   it('frontend-dashboard-template R4: la prioridad conserva una tabla con scroll local', () => {
-    expect(surfaceSource('executive-dashboard')).toContain(
+    expect(surfaceSource('executive-task-table')).toContain(
       'Tabla de tareas prioritarias',
     )
-    expect(surfaceSource('executive-dashboard')).toContain('overflow-x-auto')
+    expect(surfaceSource('executive-task-table')).toContain('overflow-x-auto')
   })
 
   it('pagination.tsx oculta las etiquetas de página bajo sm', () => {

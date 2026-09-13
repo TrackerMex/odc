@@ -1,162 +1,116 @@
-import { useState } from 'react'
-import {
-  ArrowLeftIcon,
-  CircleAlertIcon,
-  FilePenLineIcon,
-  ReceiptTextIcon,
-  WalletCardsIcon,
-} from 'lucide-react'
 import { Link } from '@tanstack/react-router'
-import {
-  Alert,
-  AlertAction,
-  AlertDescription,
-  AlertTitle,
-} from '@/components/ui/alert'
 import { Button, buttonVariants } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card'
-import { getExecutiveTasks } from '@/lib/api'
-import { formatCurrency } from '@/lib/odc'
-import type {
-  ExecutiveDashboardRole,
-  ExecutiveTask,
-  ExecutiveTaskPage,
-} from '@/lib/odc'
-import { OdcStatusBadge } from './odc-status-badge'
-
-const actionLabel = {
-  EDITAR_Y_REENVIAR: 'Reabrir y editar',
-  VALIDAR_PRESUPUESTO: 'Validar presupuesto',
-  APROBAR_COMPRA: 'Aprobar compra',
-  REGISTRAR_PAGO: 'Registrar pago',
-  CARGAR_EVIDENCIA_PAGO: 'Cargar evidencia de pago',
-  COMPLETAR_FACTURA: 'Completar factura',
-} as const
-
-const opsActions = {
-  EDITAR_Y_REENVIAR: { label: 'Reabrir y editar', icon: FilePenLineIcon },
-  REGISTRAR_PAGO: { label: 'Registrar pago', icon: WalletCardsIcon },
-  COMPLETAR_FACTURA: { label: 'Completar factura', icon: ReceiptTextIcon },
-} as const
-
-function TaskAction({
-  role,
-  task,
-}: {
-  role: ExecutiveDashboardRole
-  task: ExecutiveTask
-}) {
-  if (role === 'DIRECTOR_OPS' && task.nextAction in opsActions) {
-    const action = opsActions[task.nextAction as keyof typeof opsActions]
-    const Icon = action.icon
-    return <Link to="/odcs/$id" params={{ id: task.id }} className={buttonVariants({ variant: 'outline', size: 'sm' })}><Icon aria-hidden="true" />{action.label}</Link>
-  }
-  return <p className="shrink-0 text-right text-sm text-muted-foreground"><span className="block text-xs font-semibold tracking-[0.06em] uppercase">Siguiente acción</span><span className="text-foreground">{actionLabel[task.nextAction]}</span></p>
-}
+  currentBusinessMonth,
+  executiveSearchParams,
+  isExecutiveMonth,
+} from '@/lib/executive-query'
+import type { ExecutiveQuery } from '@/lib/executive-query'
+import type { ExecutiveDashboardRole, ExecutiveTaskPage } from '@/lib/odc'
+import { ExecutiveTaskTable } from './executive-task-table'
 
 export function ExecutiveTasks({
   initialPage,
   role,
+  query = {
+    month: initialPage.month ?? currentBusinessMonth(),
+    page: initialPage.page,
+  },
+  onQueryChange = (next) =>
+    window.location.assign(`/tasks?${executiveSearchParams(next)}`),
 }: {
   initialPage: ExecutiveTaskPage
   role: ExecutiveDashboardRole
+  query?: ExecutiveQuery
+  onQueryChange?: (query: ExecutiveQuery) => void
 }) {
-  const [taskPage, setTaskPage] = useState(initialPage)
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState(false)
-
-  async function loadPage(page: number) {
-    setLoading(true)
-    setError(false)
-    try {
-      setTaskPage(await getExecutiveTasks(page))
-    } catch {
-      setError(true)
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const first = taskPage.total === 0 ? 0 : (taskPage.page - 1) * taskPage.pageSize + 1
-  const last = Math.min(taskPage.page * taskPage.pageSize, taskPage.total)
-
   return (
-    <main className="min-w-0 flex-1 p-4 sm:p-6">
-      {/* Lista de una sola columna: el ancho de consola de 1400px no aplica
-          (enmienda firmada 2026-08-11 de pages/dashboard.md). */}
-      <div className="mx-auto max-w-4xl">
-        <header className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-          <div className="max-w-2xl">
-            <p className="text-sm font-medium text-muted-foreground">Bandeja de trabajo</p>
-            <h1 className="mt-2 text-2xl font-semibold tracking-tight">Todas las tareas</h1>
+    <main className="odc-executive-workspace min-w-0 flex-1 p-4 sm:p-6 xl:p-8">
+      <div className="mx-auto max-w-[1400px] space-y-6">
+        <header className="flex flex-wrap items-center justify-between gap-4">
+          <div>
+            <h1 className="text-2xl font-semibold tracking-tight">
+              Mis tareas
+            </h1>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Órdenes que requieren una acción de tu rol.
+            </p>
           </div>
           <Link to="/" className={buttonVariants({ variant: 'outline' })}>
-            <ArrowLeftIcon aria-hidden="true" /> Volver a la bandeja
+            Volver al dashboard
           </Link>
         </header>
-
-        {error ? (
-          <Alert variant="destructive" className="mb-4">
-            <CircleAlertIcon aria-hidden="true" />
-            <AlertTitle>No pudimos cargar las tareas</AlertTitle>
-            <AlertDescription>Verifica tu conexión e inténtalo de nuevo.</AlertDescription>
-            <AlertAction><Button size="sm" variant="outline" onClick={() => loadPage(taskPage.page)}>Reintentar</Button></AlertAction>
-          </Alert>
-        ) : null}
-
-        <section
-          aria-labelledby="all-tasks-title"
-          aria-busy={loading}
-          className="transition-opacity duration-150 motion-reduce:transition-none"
-        >
-          <Card>
-            <CardHeader className="border-b border-border/60">
-              <CardTitle id="all-tasks-title">Tareas accionables</CardTitle>
-              <CardDescription>
-                {taskPage.total === 0 ? 'No tienes pendientes en este momento.' : `Mostrando ${first}–${last} de ${taskPage.total} tareas.`}
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              {taskPage.items.length === 0 ? (
-                <div className="flex min-h-20 items-center rounded-card border border-dashed px-5 text-sm text-muted-foreground">
-                  Cuando haya una orden que requiera tu intervención aparecerá aquí.
-                </div>
-              ) : (
-                <ul
-                  key={taskPage.page}
-                  className="odc-filter-results divide-y divide-border/70"
-                  aria-label="Todas las tareas accionables"
-                >
-                  {taskPage.items.map((task) => (
-                    <li key={task.id} className="py-3 first:pt-0 last:pb-0">
-                      <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                        <Link to="/odcs/$id" params={{ id: task.id }} className="group min-w-0 rounded-(--radius) outline-none focus-visible:ring-3 focus-visible:ring-ring/30">
-                          <div className="flex flex-wrap items-center gap-2"><span className="font-medium group-hover:underline group-hover:underline-offset-4">{task.odcNumber}</span><OdcStatusBadge status={task.status} /><span className="text-xs text-muted-foreground">{task.ageDays} {task.ageDays === 1 ? 'día' : 'días'}</span></div>
-                          <p className="mt-1 text-sm text-muted-foreground sm:truncate">{task.description} · {task.supplier}</p>
-                          <p className="mt-1 text-sm font-medium tabular-nums">{formatCurrency(task.totalCents)}</p>
-                        </Link>
-                        <TaskAction role={role} task={task} />
-                      </div>
-                    </li>
-                  ))}
-                </ul>
-              )}
-              {taskPage.total > taskPage.pageSize ? (
-                <nav className="mt-5 flex items-center justify-between gap-3" aria-label="Paginación de tareas">
-                  <Button variant="outline" onClick={() => loadPage(taskPage.page - 1)} disabled={loading || taskPage.page === 1}>Anterior</Button>
-                  <span className="text-sm tabular-nums text-muted-foreground">Página {taskPage.page}</span>
-                  <Button variant="outline" onClick={() => loadPage(taskPage.page + 1)} disabled={loading || last === taskPage.total}>Siguiente</Button>
-                </nav>
-              ) : null}
-            </CardContent>
-          </Card>
-        </section>
+        {query.invalid && (
+          <p role="alert" className="text-sm text-destructive">
+            La dirección contenía filtros inválidos. Se muestran valores
+            válidos; ajusta los filtros para continuar.
+          </p>
+        )}
+        <div className="flex flex-wrap items-end gap-3">
+          <div className="space-y-1.5">
+            <label
+              htmlFor="tasks-month"
+              className="block text-xs font-medium text-muted-foreground"
+            >
+              Mes de creación
+            </label>
+            <Input
+              id="tasks-month"
+              type="month"
+              min="1000-01"
+              max="9999-12"
+              value={query.month === 'all' ? '' : query.month}
+              onChange={(event) => {
+                if (isExecutiveMonth(event.target.value))
+                  onQueryChange({
+                    ...query,
+                    month: event.target.value,
+                    page: 1,
+                    invalid: undefined,
+                  })
+              }}
+              className="w-auto"
+            />
+          </div>
+          <Button
+            variant={query.month === 'all' ? 'secondary' : 'outline'}
+            onClick={() =>
+              onQueryChange({
+                ...query,
+                month: 'all',
+                page: 1,
+                invalid: undefined,
+              })
+            }
+          >
+            Todos los meses
+          </Button>
+          <Button
+            variant="ghost"
+            onClick={() =>
+              onQueryChange({
+                ...query,
+                month: currentBusinessMonth(),
+                page: 1,
+                invalid: undefined,
+              })
+            }
+          >
+            Mes actual
+          </Button>
+        </div>
+        <ExecutiveTaskTable
+          title="Tareas accionables"
+          page={initialPage}
+          role={role}
+          query={query}
+          onChange={onQueryChange}
+        />
+        <p className="text-xs text-muted-foreground">
+          La bandeja incluye tareas accionables. Las órdenes completadas se
+          consultan en el resumen mensual.
+        </p>
       </div>
     </main>
   )
