@@ -1,12 +1,12 @@
 ---
 feature: "frontend-dashboard-template"
-status: draft
+status: approved
 tags: [harness, spec, frontend, dashboard]
 ---
 
 # Requisitos — [[frontend-dashboard-template]]
 
-> Propuesta pendiente de aprobación humana. Ver [[design]] y [[../../docs/architecture|architecture]].
+> Aprobada por el usuario el 2026-09-13, casilla marcada por el humano y confirmada en chat: «ya lo aprobe». Ver [[design]] y [[../../docs/architecture|architecture]].
 
 ## Alcance
 
@@ -44,4 +44,4 @@ Esta propuesta, solo después de aprobarse, reemplaza las cláusulas de composic
 
 ## Aprobación
 
-- [ ] Aprobado por humano (fecha: ____)
+- [X] Aprobado por humano (fecha: 2026-09-13)

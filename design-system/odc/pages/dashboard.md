@@ -3,6 +3,24 @@
 > Sobrescribe `../MASTER.md`. Solo se documentan las desviaciones.
 > Componentes activos: `executive-dashboard.tsx`, `executive-tasks.tsx`.
 
+## Enmienda aprobada 2026-09-13 — frontend-dashboard-template
+
+La spec #31 aprobada reemplaza las reglas visuales siguientes solo en el shell y
+`executive-dashboard.tsx`; `executive-tasks.tsx` conserva sus reglas actuales.
+
+- Panel financiero unido mediante divisores, con comparación de dos importes mensuales
+  y cuatro métricas. No se dibuja una serie temporal ni se requieren tooltips para leer valores.
+- Orden constante de DOM y vista: panel, prioridad, proveedores, antigüedad. Desde 1280px
+  prioridad ocupa dos tercios y el contexto la columna derecha; debajo se apilan.
+- Shell enmarcado, sidebar expandido 232px, encabezado 64px (58px móvil).
+- Labels, encabezados y columnas en sentence case y tracking normal; Inter y todos
+  los tokens semánticos de color y radio se conservan.
+- La tabla de prioridad es semántica, mantiene columnas y scroll local accesible en móvil.
+  Sustituye la regla anterior de ocultar columnas bajo `lg` y las aserciones de composición de listas.
+- Los contadores se integran en los encabezados; sin tarjeta o sombra propia por cada métrica.
+- Padding de escritorio hasta 32px para el nuevo dashboard, 16px móvil. Los enlaces y
+  controles del shell/dashboard tienen área táctil mínima 44px en móvil.
+
 ## Layout
 
 - `executive-dashboard.tsx`: `max-w-[1400px]`, no `max-w-7xl`. Es una consola de
