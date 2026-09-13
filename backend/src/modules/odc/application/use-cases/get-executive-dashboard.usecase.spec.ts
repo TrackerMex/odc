@@ -12,6 +12,8 @@ function dashboard(
   return {
     priority: {
       total: 2,
+      page: 1,
+      pageSize: 10,
       items: [
         {
           id: 'old',
@@ -33,6 +35,10 @@ function dashboard(
         },
       ],
     },
+    actionableTotal: 2,
+    createdOrders: 2,
+    monthlyTrend: [],
+    statusDistribution: [],
     pulse: {
       current: { purchaseCount: 3, totalCents: 3_000 },
       previous: { purchaseCount: 2, totalCents: 1_500 },
@@ -61,6 +67,7 @@ describe('R1,R2,R5,R6,R7,R10: GetExecutiveDashboardUseCase', () => {
       viewer,
       '2026-07',
       '2026-06',
+      {},
     );
     expect(result).toMatchObject({
       month: '2026-07',

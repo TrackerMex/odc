@@ -31,7 +31,7 @@ function rawQuery(rows: unknown[]) {
 }
 
 describe('R2,R5,R6,R7,R11: executive dashboard TypeORM snapshot', () => {
-  it('uses four bounded queries, keeps private drafts/rejections scoped to their creator, and aggregates monthly data', async () => {
+  it('uses bounded queries, keeps private drafts/rejections scoped to their creator, and aggregates monthly data', async () => {
     const metricsQuery = rawQuery([
       { month: '2026-06', purchaseCount: '2', totalCents: '1500' },
       { month: '2026-07', purchaseCount: '3', totalCents: '3000' },
@@ -40,12 +40,14 @@ describe('R2,R5,R6,R7,R11: executive dashboard TypeORM snapshot', () => {
       { supplier: 'Proveedor A', purchaseCount: '2', totalCents: '2000' },
     ]);
     const manager = {
+      count: jest.fn().mockResolvedValue(7),
       findAndCount: jest.fn().mockResolvedValue([[order()], 7]),
       find: jest.fn().mockResolvedValue([order({ id: 'oldest' })]),
       createQueryBuilder: jest
         .fn()
         .mockReturnValueOnce(metricsQuery)
-        .mockReturnValueOnce(suppliersQuery),
+        .mockReturnValueOnce(suppliersQuery)
+        .mockReturnValueOnce(rawQuery([])),
     };
     const repository = new PurchaseOrderTypeOrmRepository({
       manager,
@@ -59,7 +61,7 @@ describe('R2,R5,R6,R7,R11: executive dashboard TypeORM snapshot', () => {
 
     expect(manager.findAndCount).toHaveBeenCalledTimes(1);
     expect(manager.find).toHaveBeenCalledTimes(1);
-    expect(manager.createQueryBuilder).toHaveBeenCalledTimes(2);
+    expect(manager.createQueryBuilder).toHaveBeenCalledTimes(3);
     const priorityCall = manager.findAndCount.mock.calls.at(0) as unknown;
     const [, priorityOptions] = priorityCall as [
       unknown,
@@ -67,7 +69,10 @@ describe('R2,R5,R6,R7,R11: executive dashboard TypeORM snapshot', () => {
     ];
     expect(priorityCall).toEqual([
       PurchaseOrderOrmEntity,
-      expect.objectContaining({ take: 5, order: { createdAt: 'ASC' } }),
+      expect.objectContaining({
+        take: 10,
+        order: { createdAt: 'ASC', id: 'ASC' },
+      }),
     ]);
     expect(priorityOptions.where).toEqual(
       expect.arrayContaining([
@@ -76,7 +81,10 @@ describe('R2,R5,R6,R7,R11: executive dashboard TypeORM snapshot', () => {
     );
     expect(manager.find).toHaveBeenCalledWith(
       PurchaseOrderOrmEntity,
-      expect.objectContaining({ take: 5, order: { createdAt: 'ASC' } }),
+      expect.objectContaining({
+        take: 5,
+        order: { createdAt: 'ASC', id: 'ASC' },
+      }),
     );
     expect(result).toMatchObject({
       priority: { total: 7, items: [{ id: 'odc-1' }] },
@@ -107,10 +115,12 @@ describe('R2,R5,R6,R7,R11: executive dashboard TypeORM snapshot', () => {
     'limits %s priority tasks to its authorized statuses',
     async (role, expectedStatuses) => {
       const manager = {
+        count: jest.fn().mockResolvedValue(0),
         findAndCount: jest.fn().mockResolvedValue([[], 0]),
         find: jest.fn().mockResolvedValue([]),
         createQueryBuilder: jest
           .fn()
+          .mockReturnValueOnce(rawQuery([]))
           .mockReturnValueOnce(rawQuery([]))
           .mockReturnValueOnce(rawQuery([])),
       };
@@ -127,9 +137,9 @@ describe('R2,R5,R6,R7,R11: executive dashboard TypeORM snapshot', () => {
       const priorityCall = manager.findAndCount.mock.calls.at(0) as unknown;
       const [, options] = priorityCall as [
         unknown,
-        { where: { status: unknown } },
+        { where: { status: unknown }[] },
       ];
-      const status = options.where.status as { value?: unknown } | string;
+      const status = options.where[0].status as { value?: unknown } | string;
       expect(typeof status === 'string' ? [status] : status.value).toEqual(
         expectedStatuses,
       );

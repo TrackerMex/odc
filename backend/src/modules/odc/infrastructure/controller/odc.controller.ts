@@ -416,6 +416,7 @@ export class OdcController {
         await this.getExecutiveDashboardUseCase.execute(
           query.month,
           actorFrom(request),
+          query,
         ),
       );
     } catch (error) {
@@ -432,6 +433,7 @@ export class OdcController {
       return await this.getExecutiveTasksUseCase.execute(
         query.page,
         actorFrom(request),
+        query,
       );
     } catch (error) {
       rethrowDomainError(error);

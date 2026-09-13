@@ -2,17 +2,22 @@ import { Injectable } from '@nestjs/common';
 import {
   And,
   DataSource,
+  Equal,
+  FindOperator,
   FindOptionsSelect,
   FindOptionsWhere,
   In,
+  ILike,
   LessThan,
   Like,
   MoreThanOrEqual,
   Not,
+  Raw,
 } from 'typeorm';
 import { OdcStatusHistoryEntry } from '../../domain/entities/odc-status-history-entry.entity';
 import {
   nextOdcNumber,
+  ODC_STATUSES,
   OdcStatus,
   PurchaseOrder,
 } from '../../domain/entities/purchase-order.entity';
@@ -24,6 +29,7 @@ import {
   ExecutiveDashboardData,
   ExecutiveDashboardOrder,
   ExecutiveTaskPage,
+  ExecutiveTableFilter,
   OdcViewer,
   PurchaseOrderRepository,
 } from '../../domain/repositories/purchase-order.repository';
@@ -34,6 +40,7 @@ import {
   toDomain,
   toOrmValues,
 } from '../mappers/purchase-order.mapper';
+import { shiftMonth } from '../../domain/executive-period';
 
 @Injectable()
 export class PurchaseOrderTypeOrmRepository implements PurchaseOrderRepository {
@@ -172,48 +179,64 @@ export class PurchaseOrderTypeOrmRepository implements PurchaseOrderRepository {
     viewer: OdcViewer,
     month: string,
     previousMonth: string,
+    filters: ExecutiveTableFilter = {},
   ): Promise<ExecutiveDashboardData> {
-    const priorityPromise = this.dataSource.manager.findAndCount(
+    const priorityPromise = this.getExecutiveTasks(
+      viewer,
+      filters.page ?? 1,
+      10,
+      { ...filters, month: 'all' },
+    );
+    const actionablePromise = this.dataSource.manager.count(
       PurchaseOrderOrmEntity,
-      {
-        select: executiveOrderSelection(),
-        where: buildExecutiveTaskWhere(viewer),
-        order: { createdAt: 'ASC' },
-        take: EXECUTIVE_DASHBOARD_LIMIT,
-      },
+      { where: buildExecutiveTaskWhere(viewer) },
     );
     const oldestActivePromise = this.dataSource.manager.find(
       PurchaseOrderOrmEntity,
       {
         select: executiveOrderSelection(),
         where: { status: In(ACTIVE_EXECUTIVE_STATUSES) },
-        order: { createdAt: 'ASC' },
+        order: { createdAt: 'ASC', id: 'ASC' },
         take: EXECUTIVE_DASHBOARD_LIMIT,
       },
     );
     const monthlyMetricsPromise = this.monthlyExecutiveMetrics(
-      previousMonth,
+      shiftMonth(month, -11),
       month,
     );
     const suppliersPromise = this.topExecutiveSuppliers(month);
 
     const [
-      [priorityRows, priorityTotal],
+      priority,
       oldestActiveRows,
       metrics,
       suppliers,
+      actionableTotal,
+      distribution,
     ] = await Promise.all([
       priorityPromise,
       oldestActivePromise,
       monthlyMetricsPromise,
       suppliersPromise,
+      actionablePromise,
+      this.createdOrderDistribution(viewer, month),
     ]);
 
     return {
-      priority: {
-        total: priorityTotal,
-        items: priorityRows.map(toExecutiveDashboardOrder),
-      },
+      priority,
+      actionableTotal,
+      createdOrders: distribution.reduce(
+        (total, item) => total + item.count,
+        0,
+      ),
+      statusDistribution: distribution,
+      monthlyTrend: Array.from({ length: 12 }, (_, index) => {
+        const period = shiftMonth(month, index - 11);
+        return {
+          month: period,
+          ...(metrics.get(period) ?? EMPTY_MONTHLY_METRICS),
+        };
+      }),
       pulse: {
         current: metrics.get(month) ?? EMPTY_MONTHLY_METRICS,
         previous: metrics.get(previousMonth) ?? EMPTY_MONTHLY_METRICS,
@@ -227,13 +250,19 @@ export class PurchaseOrderTypeOrmRepository implements PurchaseOrderRepository {
     viewer: OdcViewer,
     page: number,
     pageSize: number,
+    filters: ExecutiveTableFilter = {},
   ): Promise<ExecutiveTaskPage> {
+    const direction =
+      (filters.order ??
+        (viewer.role === 'ADMINISTRACION' ? 'newest' : 'oldest')) === 'newest'
+        ? 'DESC'
+        : 'ASC';
     const [rows, total] = await this.dataSource.manager.findAndCount(
       PurchaseOrderOrmEntity,
       {
         select: executiveOrderSelection(),
-        where: buildExecutiveTaskWhere(viewer),
-        order: { createdAt: 'ASC' },
+        where: buildFilteredTaskWhere(viewer, filters),
+        order: { createdAt: direction, id: direction },
         skip: (page - 1) * pageSize,
         take: pageSize,
       },
@@ -244,6 +273,34 @@ export class PurchaseOrderTypeOrmRepository implements PurchaseOrderRepository {
       page,
       pageSize,
     };
+  }
+
+  private async createdOrderDistribution(
+    viewer: OdcViewer,
+    month: string,
+  ): Promise<ExecutiveDashboardData['statusDistribution']> {
+    const rows = await this.dataSource.manager
+      .createQueryBuilder(PurchaseOrderOrmEntity, 'odc')
+      .select('odc.status', 'status')
+      .addSelect('COUNT(odc.id)', 'count')
+      .where('(odc.status != :draft OR odc.createdById = :viewer)', {
+        draft: 'BORRADOR',
+        viewer: viewer.userId,
+      })
+      .andWhere(
+        `odc.createdAt >= (:start::timestamp AT TIME ZONE 'America/Mexico_City' AT TIME ZONE 'UTC')`,
+        { start: monthStart(month) },
+      )
+      .andWhere(
+        `odc.createdAt < (:end::timestamp AT TIME ZONE 'America/Mexico_City' AT TIME ZONE 'UTC')`,
+        { end: nextMonthStart(month) },
+      )
+      .groupBy('odc.status')
+      .getRawMany<{ status: OdcStatus; count: string }>();
+    return ODC_STATUSES.map((status) => ({
+      status,
+      count: Number(rows.find((row) => row.status === status)?.count ?? 0),
+    }));
   }
 
   private async monthlyExecutiveMetrics(
@@ -420,4 +477,40 @@ function buildExecutiveTaskWhere(
     case 'DIRECTOR_GENERAL':
       return { status: 'PRESUPUESTO_APROBADO' };
   }
+}
+
+function buildFilteredTaskWhere(
+  viewer: OdcViewer,
+  filters: ExecutiveTableFilter,
+): FindOptionsWhere<PurchaseOrderOrmEntity>[] {
+  const base = buildExecutiveTaskWhere(viewer);
+  const branches = Array.isArray(base) ? base : [base];
+  return branches.flatMap((branch) => {
+    const where = { ...branch };
+    if (filters.status) {
+      const allowed =
+        typeof branch.status === 'string'
+          ? Equal(branch.status)
+          : (branch.status as FindOperator<OdcStatus>);
+      where.status = And(allowed, Equal(filters.status));
+    }
+    if (filters.month && filters.month !== 'all') {
+      // Current DB defaults and Node runtime store/read these naive timestamps as UTC.
+      where.createdAt = Raw(
+        (alias) =>
+          `${alias} >= (:creationStart::timestamp AT TIME ZONE 'America/Mexico_City' AT TIME ZONE 'UTC') AND ${alias} < (:creationEnd::timestamp AT TIME ZONE 'America/Mexico_City' AT TIME ZONE 'UTC')`,
+        {
+          creationStart: monthStart(filters.month),
+          creationEnd: nextMonthStart(filters.month),
+        },
+      );
+    }
+    const search = filters.q?.trim();
+    if (!search) return [where];
+    const pattern = `%${search.replace(/[\\%_]/g, '\\$&')}%`;
+    return [
+      { ...where, odcNumber: ILike(pattern) },
+      { ...where, supplier: ILike(pattern) },
+    ];
+  });
 }

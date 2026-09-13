@@ -42,9 +42,13 @@ describe('R1,R10: GET /api/odcs/executive-dashboard', () => {
         { user: { sub: 'session-user', role: 'ADMINISTRACION' } },
       ),
     ).resolves.toEqual({ month: '2026-07' });
-    expect(execute).toHaveBeenCalledWith('2026-07', {
-      userId: 'session-user',
-      role: 'ADMINISTRACION',
-    });
+    expect(execute).toHaveBeenCalledWith(
+      '2026-07',
+      {
+        userId: 'session-user',
+        role: 'ADMINISTRACION',
+      },
+      { month: '2026-07' },
+    );
   });
 });

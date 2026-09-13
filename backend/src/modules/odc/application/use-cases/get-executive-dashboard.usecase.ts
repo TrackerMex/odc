@@ -7,6 +7,7 @@ import type {
   ExecutiveTaskNextAction,
   OdcViewer,
   PurchaseOrderRepository,
+  ExecutiveTableFilter,
 } from '../../domain/repositories/purchase-order.repository';
 import type { OdcStatus } from '../../domain/entities/purchase-order.entity';
 
@@ -28,7 +29,16 @@ export interface ExecutiveDashboardTaskResponse extends ExecutiveDashboardOrderR
 export interface ExecutiveDashboardResponse {
   month: string;
   role: UserRole;
-  priority: { total: number; items: ExecutiveDashboardTaskResponse[] };
+  priority: {
+    total: number;
+    items: ExecutiveDashboardTaskResponse[];
+    page: number;
+    pageSize: number;
+  };
+  actionableTotal: number;
+  createdOrders: number;
+  monthlyTrend: ExecutiveDashboardData['monthlyTrend'];
+  statusDistribution: ExecutiveDashboardData['statusDistribution'];
   pulse: {
     current: { purchaseCount: number; totalCents: number };
     previous: { month: string; purchaseCount: number; totalCents: number };
@@ -109,8 +119,9 @@ function mapPriorityOrders(
   role: UserRole,
   now: Date,
 ): ExecutiveDashboardTaskResponse[] {
-  return mapOrders(orders, now).map((order) => ({
+  return orders.map((order) => ({
     ...order,
+    ageDays: ageDays(order.createdAt, now),
     nextAction: nextActionFor(role, order.status),
   }));
 }
@@ -125,6 +136,7 @@ export class GetExecutiveDashboardUseCase {
   async execute(
     month: string,
     viewer: OdcViewer,
+    filters: ExecutiveTableFilter = {},
   ): Promise<ExecutiveDashboardResponse> {
     if (!DASHBOARD_ROLES.includes(viewer.role)) {
       throw new OdcAccessDeniedError(
@@ -137,14 +149,21 @@ export class GetExecutiveDashboardUseCase {
       viewer,
       month,
       previous,
+      filters,
     );
     const now = new Date();
 
     return {
       month,
       role: viewer.role,
+      actionableTotal: dashboard.actionableTotal,
+      createdOrders: dashboard.createdOrders,
+      monthlyTrend: dashboard.monthlyTrend,
+      statusDistribution: dashboard.statusDistribution,
       priority: {
         total: dashboard.priority.total,
+        page: dashboard.priority.page,
+        pageSize: dashboard.priority.pageSize,
         items: mapPriorityOrders(dashboard.priority.items, viewer.role, now),
       },
       pulse: {

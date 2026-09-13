@@ -70,7 +70,13 @@ export interface ExecutiveDashboardData {
   priority: {
     total: number;
     items: ExecutiveDashboardOrder[];
+    page: number;
+    pageSize: number;
   };
+  actionableTotal: number;
+  createdOrders: number;
+  monthlyTrend: { month: string; purchaseCount: number; totalCents: number }[];
+  statusDistribution: { status: OdcStatus; count: number }[];
   pulse: {
     current: { purchaseCount: number; totalCents: number };
     previous: { purchaseCount: number; totalCents: number };
@@ -84,6 +90,14 @@ export interface ExecutiveTaskPage {
   total: number;
   page: number;
   pageSize: number;
+}
+
+export interface ExecutiveTableFilter {
+  month?: string;
+  q?: string;
+  status?: OdcStatus;
+  order?: 'newest' | 'oldest';
+  page?: number;
 }
 
 export interface PurchaseOrderRepository {
@@ -111,10 +125,12 @@ export interface PurchaseOrderRepository {
     viewer: OdcViewer,
     month: string,
     previousMonth: string,
+    filters?: ExecutiveTableFilter,
   ): Promise<ExecutiveDashboardData>;
   getExecutiveTasks(
     viewer: OdcViewer,
     page: number,
     pageSize: number,
+    filters?: ExecutiveTableFilter,
   ): Promise<ExecutiveTaskPage>;
 }

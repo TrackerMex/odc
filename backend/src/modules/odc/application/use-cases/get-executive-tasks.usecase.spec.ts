@@ -11,7 +11,7 @@ describe('R12: GetExecutiveTasksUseCase', () => {
     const getExecutiveTasks = jest.fn().mockResolvedValue({
       total: 21,
       page: 2,
-      pageSize: 20,
+      pageSize: 10,
       items: [
         {
           id: 'task-1',
@@ -36,12 +36,13 @@ describe('R12: GetExecutiveTasksUseCase', () => {
     expect(getExecutiveTasks).toHaveBeenCalledWith(
       { userId: 'ops-1', role: 'DIRECTOR_OPS' },
       2,
-      20,
+      10,
+      { month: '2026-07' },
     );
     expect(result).toMatchObject({
       total: 21,
       page: 2,
-      pageSize: 20,
+      pageSize: 10,
       items: [{ ageDays: 20, nextAction: 'REGISTRAR_PAGO' }],
     });
   });

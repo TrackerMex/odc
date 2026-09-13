@@ -6,10 +6,12 @@ import type {
   ExecutiveTaskNextAction,
   OdcViewer,
   PurchaseOrderRepository,
+  ExecutiveTableFilter,
 } from '../../domain/repositories/purchase-order.repository';
 import type { OdcStatus } from '../../domain/entities/purchase-order.entity';
+import { currentBusinessMonth } from '../../domain/executive-period';
 
-const PAGE_SIZE = 20;
+const PAGE_SIZE = 10;
 const DAY_IN_MILLISECONDS = 24 * 60 * 60 * 1000;
 const EXECUTIVE_ROLES: readonly UserRole[] = [
   'DIRECTOR_OPS',
@@ -27,6 +29,7 @@ export interface ExecutiveTaskPageResponse {
   total: number;
   page: number;
   pageSize: number;
+  month: string;
 }
 
 function nextActionFor(
@@ -60,20 +63,24 @@ export class GetExecutiveTasksUseCase {
   async execute(
     page: number | undefined,
     viewer: OdcViewer,
+    filters: ExecutiveTableFilter = {},
   ): Promise<ExecutiveTaskPageResponse> {
     if (!EXECUTIVE_ROLES.includes(viewer.role)) {
       throw new OdcAccessDeniedError(
         'This role does not have access to executive tasks',
       );
     }
+    const month = filters.month ?? currentBusinessMonth();
     const result = await this.purchaseOrderRepository.getExecutiveTasks(
       viewer,
       page ?? 1,
       PAGE_SIZE,
+      { ...filters, month },
     );
     const now = new Date();
     return {
       ...result,
+      month,
       items: result.items.map((task) => ({
         ...task,
         ageDays: Math.max(
