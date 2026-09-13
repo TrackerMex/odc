@@ -4,6 +4,7 @@ import { executiveSearchParams } from './executive-query'
 import type { ExecutiveQuery } from './executive-query'
 import type {
   MonthlyPurchaseSummary,
+  NotificationFeed,
   ExecutiveDashboardResponse,
   ExecutiveTaskPage,
   Odc,
@@ -16,6 +17,8 @@ import {
   expireClientSession,
   resetClientSessionExpiration,
 } from './session-expiration'
+
+export const ODC_MUTATED_EVENT = 'odc:mutated'
 
 export class ApiError extends Error {
   constructor(
@@ -104,6 +107,15 @@ export async function apiFetch<T>(
     resetClientSessionExpiration()
   }
 
+  if (
+    path.startsWith('/api/odcs') &&
+    init?.method !== undefined &&
+    init.method !== 'GET' &&
+    !isServer()
+  ) {
+    window.dispatchEvent(new Event(ODC_MUTATED_EVENT))
+  }
+
   return response.json() as Promise<T>
 }
 
@@ -174,6 +186,17 @@ export function getOdc(id: string): Promise<Odc> {
 
 export function listSuppliers(): Promise<Supplier[]> {
   return apiFetch<Supplier[]>('/api/suppliers')
+}
+
+export function getNotifications(): Promise<NotificationFeed> {
+  return apiFetch<NotificationFeed>('/api/notifications')
+}
+
+export function markNotificationsRead(): Promise<{ success: true }> {
+  return apiFetch<{ success: true }>(
+    '/api/notifications/read',
+    jsonRequest('POST'),
+  )
 }
 
 export function createOdc(payload: OdcPayload): Promise<Odc> {

@@ -11,7 +11,12 @@ const navigateMock = vi.hoisted(() => vi.fn())
 
 vi.mock('@/lib/api', async (importOriginal) => {
   const actual = await importOriginal<typeof ApiModule>()
-  return { ...actual, logout: vi.fn() }
+  return {
+    ...actual,
+    logout: vi.fn(),
+    getNotifications: vi.fn().mockResolvedValue({ items: [], unreadCount: 0 }),
+    markNotificationsRead: vi.fn().mockResolvedValue({ success: true }),
+  }
 })
 
 vi.mock('@tanstack/react-router', async (importOriginal) => {

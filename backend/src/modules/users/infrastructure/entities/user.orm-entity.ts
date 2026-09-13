@@ -23,6 +23,9 @@ export class UserOrmEntity {
   @Column({ type: 'varchar' })
   role: UserRole;
 
+  @Column({ type: 'timestamp', nullable: true })
+  notificationsReadAt: Date | null;
+
   @CreateDateColumn()
   createdAt: Date;
 }

@@ -22,7 +22,7 @@ describe('odc-notifications R1-R3: notification use cases', () => {
     await expect(
       new GetNotificationsUseCase(repository).execute(viewer),
     ).resolves.toBe(feed);
-    expect(repository.listForUser).toHaveBeenCalledWith(viewer, 20);
+    expect(repository.listForUser.mock.calls).toEqual([[viewer, 20]]);
   });
 
   it('persists a read cutoff for only the authenticated user', async () => {
@@ -32,10 +32,9 @@ describe('odc-notifications R1-R3: notification use cases', () => {
     await expect(
       new MarkNotificationsReadUseCase(repository).execute(viewer.userId),
     ).resolves.toEqual({ success: true });
-    expect(repository.markAllRead).toHaveBeenCalledWith(
-      viewer.userId,
-      new Date('2026-09-13T19:00:00Z'),
-    );
+    expect(repository.markAllRead.mock.calls).toEqual([
+      [viewer.userId, new Date('2026-09-13T19:00:00Z')],
+    ]);
     jest.useRealTimers();
   });
 });

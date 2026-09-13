@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { apiFetch, ApiError } from './api'
+import { apiFetch, ApiError, ODC_MUTATED_EVENT } from './api'
 import {
   expireClientSession,
   resetClientSessionExpiration,
@@ -111,5 +111,21 @@ describe('session-isolation R9: apiFetch centralizes protected 401 expiration', 
     await apiFetch('/api/auth/login', { method: 'POST' })
 
     expect(resetClientSessionExpiration).toHaveBeenCalledOnce()
+  })
+})
+
+describe('odc-notifications R5: successful mutations refresh the feed', () => {
+  beforeEach(() => vi.stubGlobal('fetch', vi.fn()))
+
+  it('announces a successful ODC mutation and ignores reads', async () => {
+    const listener = vi.fn()
+    window.addEventListener(ODC_MUTATED_EVENT, listener)
+    vi.mocked(fetch).mockResolvedValue(jsonResponse(200, {}))
+
+    await apiFetch('/api/odcs/odc-1/submit', { method: 'POST' })
+    await apiFetch('/api/odcs/odc-1')
+
+    expect(listener).toHaveBeenCalledTimes(1)
+    window.removeEventListener(ODC_MUTATED_EVENT, listener)
   })
 })

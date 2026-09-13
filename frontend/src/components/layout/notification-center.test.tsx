@@ -1,19 +1,25 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import type * as ApiModule from '@/lib/api'
-import { ODC_MUTATED_EVENT } from '@/lib/api'
+import {
+  getNotifications,
+  markNotificationsRead,
+  ODC_MUTATED_EVENT,
+} from '@/lib/api'
 import { NotificationCenter } from './notification-center'
 
-vi.mock('@/lib/api', async (importOriginal) => {
-  const actual = await importOriginal<typeof ApiModule>()
-  return {
-    ...actual,
-    getNotifications: vi.fn(),
-    markNotificationsRead: vi.fn(),
-  }
-})
+vi.mock('@tanstack/react-router', () => ({
+  Link: ({ children, to, params, viewTransition, ...props }: any) => (
+    <a href={to.replace('$id', params.id)} {...props}>
+      {children}
+    </a>
+  ),
+}))
 
-import { getNotifications, markNotificationsRead } from '@/lib/api'
+vi.mock('@/lib/api', () => ({
+  ODC_MUTATED_EVENT: 'odc:mutated',
+  getNotifications: vi.fn(),
+  markNotificationsRead: vi.fn(),
+}))
 
 const feed = {
   unreadCount: 1,
@@ -51,7 +57,7 @@ describe('odc-notifications R4-R6: header notification center', () => {
     expect(screen.getByText('Presupuesto aprobado')).toBeTruthy()
     expect(screen.getByText(/Ana Administración/)).toBeTruthy()
     expect(
-      screen.getByRole('link', { name: /ODC-2026-00002/ }).getAttribute('href'),
+      screen.getByRole('menuitem', { name: /ODC-2026-00002/ }).getAttribute('href'),
     ).toBe('/odcs/odc-2')
   })
 
@@ -70,7 +76,10 @@ describe('odc-notifications R4-R6: header notification center', () => {
   })
 
   it('keeps the shell usable and offers retry when loading fails', async () => {
-    vi.mocked(getNotifications).mockRejectedValueOnce(new Error('offline'))
+    vi.mocked(getNotifications)
+      .mockRejectedValueOnce(new Error('offline'))
+      .mockRejectedValueOnce(new Error('offline'))
+      .mockResolvedValue(feed)
     render(<NotificationCenter />)
     fireEvent.click(screen.getByRole('button', { name: 'Notificaciones' }))
 

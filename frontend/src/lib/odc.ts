@@ -23,6 +23,22 @@ export interface OdcHistoryEntry {
   createdAt: string | null
 }
 
+export interface NotificationItem {
+  id: string
+  odcId: string
+  odcNumber: string
+  fromStatus: OdcStatus | null
+  toStatus: OdcStatus
+  actorName: string
+  createdAt: string
+  isRead: boolean
+}
+
+export interface NotificationFeed {
+  items: NotificationItem[]
+  unreadCount: number
+}
+
 export interface Odc {
   id: string | null
   odcNumber: string | null

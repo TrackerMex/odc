@@ -2,6 +2,7 @@ import type { CSSProperties, ReactNode } from 'react'
 import { Link } from '@tanstack/react-router'
 import { ChevronRightIcon } from 'lucide-react'
 import { AppSidebar } from '@/components/layout/app-sidebar'
+import { NotificationCenter } from '@/components/layout/notification-center'
 import { ThemeToggle } from '@/lib/theme'
 import {
   SidebarInset,
@@ -51,7 +52,10 @@ function AppHeader({ pathname }: { pathname: string }) {
           </ol>
         </nav>
       </div>
-      <ThemeToggle />
+      <div className="flex items-center gap-1">
+        <NotificationCenter />
+        <ThemeToggle />
+      </div>
     </header>
   )
 }

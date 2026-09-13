@@ -36,7 +36,10 @@ describe('odc-notifications R1-R3: notification projection', () => {
       isRead: false,
     });
     expect(query).toHaveBeenCalledTimes(2);
-    const [feedSql, feedParameters] = query.mock.calls[0] as [string, unknown[]];
+    const [feedSql, feedParameters] = query.mock.calls[0] as [
+      string,
+      unknown[],
+    ];
     expect(feedSql).toContain('odc_status_history');
     expect(feedSql).toContain(`h."toStatus" <> 'BORRADOR'`);
     expect(feedSql).toContain('o."createdById" = $1');

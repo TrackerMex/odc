@@ -12,6 +12,7 @@ import { AuthModule } from './modules/auth/auth.module';
 import { JwtAuthGuard } from './modules/auth/infrastructure/guards/jwt-auth.guard';
 import { RolesGuard } from './modules/auth/infrastructure/guards/roles.guard';
 import { OdcModule } from './modules/odc/odc.module';
+import { NotificationsModule } from './modules/notifications/notifications.module';
 import { SuppliersModule } from './modules/suppliers/suppliers.module';
 import { UsersModule } from './modules/users/users.module';
 
@@ -30,6 +31,7 @@ export const configModuleOptions: ConfigModuleOptions = {
     UsersModule,
     AuthModule,
     OdcModule,
+    NotificationsModule,
     SuppliersModule,
   ],
   controllers: [HealthController],
