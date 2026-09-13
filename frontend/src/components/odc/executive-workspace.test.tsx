@@ -90,7 +90,7 @@ describe('executive-workspace-v2 R3,R4,R6,R7,R8,R9,R10: working analytical dashb
     vi.useFakeTimers()
     const onQueryChange = vi.fn()
     try {
-      render(
+      const view = render(
         <ExecutiveDashboard
           {...{
             userName: 'Ana',
@@ -103,6 +103,7 @@ describe('executive-workspace-v2 R3,R4,R6,R7,R8,R9,R10: working analytical dashb
       const search = screen.getByRole('textbox', {
         name: 'Buscar por folio o proveedor',
       })
+      search.focus()
       fireEvent.change(search, { target: { value: '  ACME  ' } })
       act(() => vi.advanceTimersByTime(299))
       expect(onQueryChange).not.toHaveBeenCalled()
@@ -110,6 +111,15 @@ describe('executive-workspace-v2 R3,R4,R6,R7,R8,R9,R10: working analytical dashb
       expect(onQueryChange).toHaveBeenLastCalledWith(
         expect.objectContaining({ month: '2026-09', q: 'ACME', page: 1 }),
       )
+      view.rerender(
+        <ExecutiveDashboard
+          userName="Ana"
+          dashboard={dashboard}
+          query={{ month: '2026-09', page: 1, q: 'ACME' }}
+          onQueryChange={onQueryChange}
+        />,
+      )
+      expect(document.activeElement).toBe(search)
 
       fireEvent.change(search, { target: { value: '  ODC-2026  ' } })
       fireEvent.submit(search.closest('form')!)
@@ -123,6 +133,30 @@ describe('executive-workspace-v2 R3,R4,R6,R7,R8,R9,R10: working analytical dashb
       expect(onQueryChange).toHaveBeenCalledTimes(2)
       act(() => vi.advanceTimersByTime(300))
       expect(onQueryChange).toHaveBeenCalledTimes(2)
+
+      view.rerender(
+        <ExecutiveDashboard
+          userName="Ana"
+          dashboard={dashboard}
+          query={{ month: '2026-09', page: 1, q: 'ODC-2026' }}
+          onQueryChange={onQueryChange}
+        />,
+      )
+      view.rerender(
+        <ExecutiveDashboard
+          userName="Ana"
+          dashboard={dashboard}
+          query={{ month: '2026-09', page: 1, q: 'ACME' }}
+          onQueryChange={onQueryChange}
+        />,
+      )
+      expect(
+        (
+          screen.getByRole('textbox', {
+            name: 'Buscar por folio o proveedor',
+          }) as HTMLInputElement
+        ).value,
+      ).toBe('ACME')
     } finally {
       vi.useRealTimers()
     }
