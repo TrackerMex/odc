@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
-import { fireEvent, render, screen, within } from '@testing-library/react'
+import { act, fireEvent, render, screen, within } from '@testing-library/react'
 import { renderToString } from 'react-dom/server'
 import { ExecutiveAnalytics } from './executive-analytics'
 import type * as RouterModule from '@tanstack/react-router'
@@ -86,27 +86,46 @@ describe('executive-workspace-v2 R3,R4,R6,R7,R8,R9,R10: working analytical dashb
     ).toBeTruthy()
   })
 
-  it('submits literal search once and resets pagination while retaining the selected statistical month', () => {
+  it('searches automatically after 300 ms and Enter submits once immediately', () => {
+    vi.useFakeTimers()
     const onQueryChange = vi.fn()
-    render(
-      <ExecutiveDashboard
-        {...{
-          userName: 'Ana',
-          dashboard,
-          query: { month: '2026-09', page: 2 },
-          onQueryChange,
-        }}
-      />,
-    )
-    const search = screen.getByRole('textbox', {
-      name: 'Buscar por folio o proveedor',
-    })
-    fireEvent.change(search, { target: { value: '  ACME  ' } })
-    expect(onQueryChange).not.toHaveBeenCalled()
-    fireEvent.submit(search.closest('form')!)
-    expect(onQueryChange).toHaveBeenCalledWith(
-      expect.objectContaining({ month: '2026-09', q: 'ACME', page: 1 }),
-    )
+    try {
+      render(
+        <ExecutiveDashboard
+          {...{
+            userName: 'Ana',
+            dashboard,
+            query: { month: '2026-09', page: 2 },
+            onQueryChange,
+          }}
+        />,
+      )
+      const search = screen.getByRole('textbox', {
+        name: 'Buscar por folio o proveedor',
+      })
+      fireEvent.change(search, { target: { value: '  ACME  ' } })
+      act(() => vi.advanceTimersByTime(299))
+      expect(onQueryChange).not.toHaveBeenCalled()
+      act(() => vi.advanceTimersByTime(1))
+      expect(onQueryChange).toHaveBeenLastCalledWith(
+        expect.objectContaining({ month: '2026-09', q: 'ACME', page: 1 }),
+      )
+
+      fireEvent.change(search, { target: { value: '  ODC-2026  ' } })
+      fireEvent.submit(search.closest('form')!)
+      expect(onQueryChange).toHaveBeenLastCalledWith(
+        expect.objectContaining({
+          month: '2026-09',
+          q: 'ODC-2026',
+          page: 1,
+        }),
+      )
+      expect(onQueryChange).toHaveBeenCalledTimes(2)
+      act(() => vi.advanceTimersByTime(300))
+      expect(onQueryChange).toHaveBeenCalledTimes(2)
+    } finally {
+      vi.useRealTimers()
+    }
   })
 
   it('navigates a page with every active filter and clears only table filters', () => {
