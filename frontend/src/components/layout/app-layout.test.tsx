@@ -1,11 +1,11 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { fireEvent, render, screen } from '@testing-library/react'
+import { fireEvent, render, screen, within } from '@testing-library/react'
 import { logout } from '@/lib/api'
 import type * as ApiModule from '@/lib/api'
 import { useSessionStore } from '@/stores/session.store'
 import type * as RouterModule from '@tanstack/react-router'
 import { AppLayout } from './app-layout'
-import { ThemeProvider } from '@/lib/theme'
+import { THEME_STORAGE_KEY, ThemeProvider } from '@/lib/theme'
 
 const navigateMock = vi.hoisted(() => vi.fn())
 
@@ -38,15 +38,81 @@ const user = {
   role: 'DIRECTOR_OPS',
 }
 
-function renderAppLayout() {
+function renderAppLayout(pathname = '/', role = user.role) {
   return render(
     <ThemeProvider>
-      <AppLayout user={user}>
+      <AppLayout user={{ ...user, role }} pathname={pathname}>
         <div>protected content</div>
       </AppLayout>
     </ThemeProvider>,
   )
 }
+
+describe('R1: frontend-dashboard-template shell preserves route context, permissions and controls', () => {
+  it.each([
+    ['/', 'Resumen ejecutivo'],
+    ['/tasks', 'Mis tareas'],
+    ['/odcs/new', 'Nueva orden'],
+    ['/odcs/uncached-order', 'Detalle de orden'],
+    ['/monthly-summary', 'Resumen mensual'],
+  ])('identifies %s without fetching an order folio', (pathname, title) => {
+    renderAppLayout(pathname)
+
+    const breadcrumb = screen.getByRole('navigation', {
+      name: 'Ubicación actual',
+    })
+    expect(
+      within(breadcrumb).getByText(title).getAttribute('aria-current'),
+    ).toBe('page')
+    expect(screen.getAllByText('TrackerMex').length).toBeGreaterThan(0)
+    expect(screen.getByText('ODC')).toBeTruthy()
+    expect(screen.getByText('protected content')).toBeTruthy()
+  })
+
+  it.each(['DIRECTOR_OPS', 'ADMINISTRACION', 'DIRECTOR_GENERAL'])(
+    'offers active tasks and only permitted links to %s',
+    (role) => {
+      renderAppLayout('/tasks', role)
+
+      expect(
+        screen.getByRole('link', { name: 'Mis tareas' }).getAttribute('href'),
+      ).toBe('/tasks')
+      expect(
+        screen
+          .getByRole('link', { name: 'Mis tareas' })
+          .getAttribute('aria-current'),
+      ).toBe('page')
+      expect(
+        screen
+          .getByRole('link', { name: 'Resumen ejecutivo' })
+          .getAttribute('aria-current'),
+      ).toBeNull()
+      expect(Boolean(screen.queryByRole('link', { name: 'Nueva orden' }))).toBe(
+        role === 'DIRECTOR_OPS',
+      )
+      expect(
+        Boolean(screen.queryByRole('link', { name: 'Resumen mensual' })),
+      ).toBe(role === 'DIRECTOR_OPS')
+    },
+  )
+
+  it('keeps the stored theme, header toggle and desktop sidebar collapse', () => {
+    window.localStorage.setItem(THEME_STORAGE_KEY, 'dark')
+    renderAppLayout()
+
+    const header = document.querySelector('header')!
+    fireEvent.click(
+      within(header).getByRole('button', { name: 'Cambiar a modo claro' }),
+    )
+    expect(window.localStorage.getItem(THEME_STORAGE_KEY)).toBe('light')
+    const sidebar = document.querySelector('[data-slot="sidebar"]')!
+    expect(sidebar.getAttribute('data-state')).toBe('expanded')
+    fireEvent.click(
+      within(header).getByRole('button', { name: 'Alternar navegación' }),
+    )
+    expect(sidebar.getAttribute('data-state')).toBe('collapsed')
+  })
+})
 
 describe('R11: authenticated layout shows fullName/role and a logout control, no section nav', () => {
   beforeEach(() => {
