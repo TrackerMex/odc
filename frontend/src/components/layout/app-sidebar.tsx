@@ -5,11 +5,11 @@ import {
   ClipboardListIcon,
   FilePlus2Icon,
   LayoutDashboardIcon,
+  ListTodoIcon,
 } from 'lucide-react'
 import { Link } from '@tanstack/react-router'
 
 import { NavUser } from '@/components/nav-user'
-import { ThemeToggle } from '@/lib/theme'
 import {
   Sidebar,
   SidebarContent,
@@ -21,6 +21,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarRail,
+  SidebarTrigger,
 } from '@/components/ui/sidebar'
 
 type AppSidebarProps = ComponentProps<typeof Sidebar> & {
@@ -32,7 +33,7 @@ type NavigationItemProps = {
   icon: LucideIcon
   isActive: boolean
   title: string
-  href: '/' | '/odcs/new' | '/monthly-summary'
+  href: '/' | '/tasks' | '/odcs/new' | '/monthly-summary'
 }
 
 function NavigationItem({
@@ -46,9 +47,11 @@ function NavigationItem({
       <SidebarMenuButton
         render={<Link to={href} viewTransition />}
         isActive={isActive}
+        aria-current={isActive ? 'page' : undefined}
         tooltip={title}
+        className="h-11 rounded-md data-active:bg-sidebar-primary data-active:text-sidebar-primary-foreground data-active:hover:bg-sidebar-primary data-active:hover:text-sidebar-primary-foreground"
       >
-        <Icon />
+        <Icon aria-hidden="true" />
         <span>{title}</span>
       </SidebarMenuButton>
     </SidebarMenuItem>
@@ -59,32 +62,50 @@ export function AppSidebar({ pathname = '', user, ...props }: AppSidebarProps) {
   const canManageOrders = user.role === 'DIRECTOR_OPS'
 
   return (
-    <Sidebar collapsible="icon" {...props}>
-      <SidebarHeader className="gap-2 p-2">
-        <div className="flex min-w-0 items-center gap-3 rounded-xl px-3 py-2 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0">
-          <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
-            <ClipboardListIcon className="size-4" aria-hidden="true" />
+    <Sidebar
+      collapsible="icon"
+      className="border-r-0 p-2.5 group-data-[collapsible=icon]:px-1 [&_[data-slot=sidebar-inner]]:rounded-lg [&_[data-slot=sidebar-inner]]:border"
+      {...props}
+    >
+      <SidebarHeader className="gap-0 px-3 pt-6 pb-0 group-data-[collapsible=icon]:px-0">
+        <div className="flex min-w-0 items-center gap-2.5 px-1 pb-6 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0">
+          <div className="flex h-10 w-9 shrink-0 items-center justify-center rounded-md bg-sidebar-primary text-sidebar-primary-foreground group-data-[collapsible=icon]:size-8">
+            <ClipboardListIcon className="size-5" aria-hidden="true" />
           </div>
           <div className="min-w-0 group-data-[collapsible=icon]:hidden">
-            <p className="truncate text-sm font-semibold leading-none">ODC</p>
-            <p className="mt-1 truncate text-xs text-sidebar-foreground/70">
+            <p className="text-2xl font-semibold leading-none tracking-tight">
+              ODC
+            </p>
+            <p className="mt-1 text-xs text-muted-foreground">
               Órdenes de compra
             </p>
           </div>
+          <SidebarTrigger
+            className="ml-auto size-11 md:hidden"
+            aria-label="Cerrar navegación"
+          />
         </div>
-        <div className="flex justify-end px-1 group-data-[collapsible=icon]:justify-center">
-          <ThemeToggle />
-        </div>
+        <p className="border-t px-1 py-4 text-sm font-medium group-data-[collapsible=icon]:hidden">
+          TrackerMex
+        </p>
       </SidebarHeader>
       <SidebarContent>
-        <SidebarGroup>
-          <SidebarGroupLabel>Navegación</SidebarGroupLabel>
-          <SidebarMenu>
+        <SidebarGroup className="px-3 group-data-[collapsible=icon]:px-0">
+          <SidebarGroupLabel className="px-2 font-normal">
+            Espacio de trabajo
+          </SidebarGroupLabel>
+          <SidebarMenu className="gap-1">
             <NavigationItem
               icon={LayoutDashboardIcon}
               href="/"
               isActive={pathname === '/'}
-              title="Bandeja de trabajo"
+              title="Resumen ejecutivo"
+            />
+            <NavigationItem
+              icon={ListTodoIcon}
+              href="/tasks"
+              isActive={pathname === '/tasks'}
+              title="Mis tareas"
             />
             {canManageOrders ? (
               <NavigationItem
@@ -105,10 +126,13 @@ export function AppSidebar({ pathname = '', user, ...props }: AppSidebarProps) {
           </SidebarMenu>
         </SidebarGroup>
       </SidebarContent>
-      <SidebarFooter>
+      <SidebarFooter className="mx-3 border-t px-0 py-4 group-data-[collapsible=icon]:mx-0">
         <NavUser user={user} />
       </SidebarFooter>
-      <SidebarRail />
+      <SidebarRail
+        aria-label="Alternar navegación"
+        title="Alternar navegación"
+      />
     </Sidebar>
   )
 }
