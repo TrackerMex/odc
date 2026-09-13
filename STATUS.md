@@ -1,8 +1,8 @@
 # ODC — Status
 
 **Última actualización**: 2026-09-13
-**Features completadas**: 31/31 (`feature_list.json`)
-**Pendientes**: ninguna feature abierta
+**Features completadas**: 31/32 (`feature_list.json`)
+**Pendientes**: #32 `executive-workspace-v2`, spec preparada; aprobación humana pendiente
 **En producción**: no
 
 ---
@@ -37,6 +37,18 @@ Requiere `.env` en la raíz (plantilla en `.env.example`): `DATABASE_URL`,
 
 ## Estado actual
 
+- **Revisión integral (2026-09-13)**: 25 hallazgos priorizados en
+  [plans/002-system-review.md](plans/002-system-review.md). Incluye UX, integridad,
+  archivos, consultas y preparación productiva; no se han implementado sus cambios.
+- **#32 `executive-workspace-v2` spec preparada**: gráficas reales de 12 meses,
+  indicadores y distribución por estado, filtros/paginación de 10, mes de creación
+  en Mis tareas, prioridades ADMIN recientes, header fijo y resumen de creación
+  con folio posterior. Requisitos en
+  [specs/executive-workspace-v2/requirements.md](specs/executive-workspace-v2/requirements.md),
+  casilla de aprobación vacía. Reutiliza shell/componentes actuales.
+- **Límite del gate actual**: init inicial y final verdes (471 backend / 618 frontend),
+  pero typecheck adicional del frontend detecta 18 errores en tests. La revisión
+  documenta esa deuda y la discrepancia de hidratación del tema oscuro.
 - **Backend completo (8/8 features de negocio, #1-#8)**: fundación NestJS +
   auth JWT en cookie httpOnly + módulo `odc` con máquina de estados T1-T10
   completa (crear/editar/submit/aprobar presupuesto/aprobar compra/rechazar/
@@ -235,8 +247,9 @@ del plan maestro → **14/14 completadas**.
   archivos/161 tests, build cliente+SSR y lint sin errores.
 - El usuario pusheó los cambios manualmente al terminar la sesión.
 
-**Próxima sesión**: sin feature pendiente del plan maestro — definir qué
-sigue (nueva feature, deuda técnica anotada arriba, o cierre del proyecto).
+**Próxima sesión**: aprobar la spec #32 y después implementar con TDD y revisión.
+Los riesgos de integridad, archivos y producción del informe requieren entregas
+posteriores; el diagnóstico no los declara resueltos.
 
 ---
 
@@ -288,5 +301,6 @@ Próximos pasos:
 - **Frontend**: TanStack Start + React 19 + Tailwind 4, Vite (puerto 3000,
   proxy `/api` configurable para local o Docker), Vitest. `shadcn/ui`
   (base `@base-ui/react`, preset base "neutral") agregado 2026-07-21.
-- **Infra dev**: Docker Compose (solo PostgreSQL). Archivos subidos a
-  `backend/uploads/` (disco local, gitignored).
+- **Infra dev**: Docker Compose para PostgreSQL, backend y frontend.
+  Archivos en Cloudinary; la caducidad de enlaces está pendiente de corrección
+  según F02 del informe. No hay despliegue productivo verificado.

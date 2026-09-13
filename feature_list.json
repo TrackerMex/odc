@@ -179,5 +179,11 @@
     "name": "frontend-dashboard-template",
     "status": "done",
     "priority": "P1"
+  },
+  {
+    "id": 32,
+    "name": "executive-workspace-v2",
+    "status": "spec_ready",
+    "priority": "P1"
   }
 ]

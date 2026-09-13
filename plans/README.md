@@ -1,6 +1,6 @@
 # Implementation Plans
 
-Generado por el skill improve el 2026-07-18 (variante `plan`, sin audit).
+Índice de planes y revisiones. Actualizado el 2026-09-13.
 Cada ejecutor: lee el plan completo antes de empezar, respeta sus condiciones
 de STOP y actualiza su fila al terminar.
 
@@ -8,7 +8,9 @@ de STOP y actualiza su fila al terminar.
 
 | Plan | Título | Priority | Effort | Depends on | Status |
 |------|--------|----------|--------|------------|--------|
-| 001  | Orquestar el desarrollo completo del Sistema de Gestión de Compras (ODC) | P1 | L | — | IN PROGRESS (Fase 0 hecha 2026-07-18; F1–F13 pendientes) |
+| [001](001-odc-purchase-system.md) | Desarrollo del Sistema de Gestión de Compras (ODC), alcance v1 | P1 | L | — | DONE (F1–F13 completadas; no equivale a despliegue productivo) |
+| [002](002-system-review.md) | Revisión integral: dashboard, operación y fiabilidad | P1 | L | 001 | DONE (diagnóstico; mejoras pendientes) |
+| [Spec #32](../specs/executive-workspace-v2/requirements.md) | Workspace ejecutivo v2: analítica, filtros y creación revisable | P1 | L | 002 | TODO (spec preparada, aprobación humana pendiente) |
 
 Valores de Status: TODO | IN PROGRESS | DONE | BLOCKED (con motivo de una línea) | REJECTED (con justificación de una línea)
 

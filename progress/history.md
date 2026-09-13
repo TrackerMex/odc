@@ -611,3 +611,27 @@ estado: done, revisión independiente aprobada
 - Ajuste de movimiento reducido verde. Init final exit 0: 471 backend, 618 frontend. Matriz final 3/3; regresión de seis rutas móvil 2/2. Implementación final 755b2af; reviewer_dashboard ejecuta comprobación independiente.
 - Hallazgo del reviewer: estado largo fuera de su celda. Test rojo 9a4a722 y fix a36ba90; matriz repetida 3/3, tests focalizados 228/228 y lint verdes. Init independiente definitivo en ejecución sobre a36ba90.
 - Reviewer APROBADO: init final independiente exit 0 con builds, lint, 471 backend y 618 frontend verdes. Sin hallazgos abiertos. Feature #31 done, STATUS actualizado, 31/31 completadas. Capturas finales guardadas y app local abierta para revisión.
+
+---
+
+## 2026-09-13 — Revisión integral y propuesta executive-workspace-v2 (#32)
+
+# Sesión activa
+
+> Este archivo describe el estado de la sesión en curso.
+> Al cerrar la sesión, mueve este contenido a progress/history.md y deja solo esta plantilla.
+
+```
+feature: revisión integral y propuesta de workspace ejecutivo v2
+inicio: 2026-09-13
+agentes lanzados: audit_product_design, audit_ui_evidence, audit_backend_reliability, spec_author_workspace_v2
+estado: auditoría terminada; #32 spec preparada, aprobación pendiente
+```
+
+- Petición: revisión de todo el sistema con filtros, header fijo, confirmación de creación, prioridades ADMIN recientes primero y Mis tareas por mes con paginación; ampliada con gráficas/estadísticas/filtros/paginación del dashboard.
+- Usuario confirmó: resumen antes de guardar y folio después; Mis tareas por mes de creación actual con histórico y pendientes antiguos visibles en dashboard.
+- init.sh inicial verde: 471 backend y 618 frontend, builds y lint. Typecheck adicional frontend detecta 18 errores en tests, fuera del gate actual.
+- Código de aplicación sin modificar. Auditoría valida integridad de creación/transiciones, archivos, UX, consultas y preparación para producción. Requisitos nuevos respetarán el gate humano de AGENTS.md.
+- Informe plans/002-system-review.md con 25 hallazgos, evidencia y límites. Spec #32 con 14 requisitos y casilla humana vacía; mes de creación y resumen/folio incorporados según respuestas del usuario.
+- init.sh final exit 0: builds, lint configurado, 471 backend y 618 frontend. Ningún archivo de aplicación modificado. Metadata de #32 verificada: spec_ready, 14 requisitos, aprobación vacía; no equivale a implementación.
+- STATUS e índice de planes actualizados. Pendiente: aprobación humana de specs/executive-workspace-v2/requirements.md para implementar la primera fase; demás hallazgos mantienen su prioridad y alcance separados.
