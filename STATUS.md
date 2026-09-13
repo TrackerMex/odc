@@ -1,8 +1,8 @@
 # ODC — Status
 
-**Última actualización**: 2026-08-17
-**Features completadas**: 30/30 (`feature_list.json`)
-**Pendientes**: ninguna
+**Última actualización**: 2026-09-13
+**Features completadas**: 30/31 (`feature_list.json`)
+**Pendientes**: #31 `frontend-dashboard-template`, propuesta escrita; aprobación humana pendiente
 **En producción**: no
 
 ---
@@ -101,8 +101,8 @@ Requiere `.env` en la raíz (plantilla en `.env.example`): `DATABASE_URL`,
   en español —zod v4 los emitía en inglés a la vista, defecto encontrado al
   especificar— y `<title>` global `ODC — Órdenes de compra` en `__root.tsx`.
   5 líneas en 3 archivos. Verificado en Chromium real, no solo en jsdom.
-- **No queda ninguna feature abierta.** Lo siguiente es decisión de producto, no
-  del backlog. Candidatos ya anotados y sin dueño: las dos deudas de la #28
+- **Las 30 features originales están cerradas.** La #31 está especificada y
+  pendiente de aprobación humana. Otros candidatos ya anotados y sin dueño: las dos deudas de la #28
   (área táctil bajo 44×44px, `grid-cols-3` del resumen mensual a siete cifras),
   el copy en inglés de las primitivas `ui/` (`pagination.tsx`, `sheet.tsx`,
   `sidebar.tsx`, hallazgo de la #29), re-saturar las 8 badges de dark
@@ -115,6 +115,16 @@ Requiere `.env` en la raíz (plantilla en `.env.example`): `DATABASE_URL`,
 ---
 
 ## Última sesión
+
+**2026-09-13** — Propuesta de `frontend-dashboard-template` (#31).
+
+- Elegida la demo Modern tras comparar Analytics, eCommerce y Modern; Orders Table como referencia complementaria.
+- Spec en `specs/frontend-dashboard-template/`, sin aprobar. Maqueta documental en `preview.html`, con datos ficticios y temas claro/oscuro.
+- Alcance propuesto: shell autenticado y dashboard ejecutivo para los tres roles, conservando contratos y permisos.
+- Código de producción sin modificar. Verificación inicial y final verdes: 471 tests backend y 601 frontend, builds y lint. En la verificación intermedia hubo un timeout del calendario; reintento aislado y completo verdes sin cambios de código.
+- Siguiente paso: aprobación humana de la propuesta antes de implementar.
+
+---
 
 **2026-08-17** — Cierre de `ui-copy-es-and-title` (#29) → **30/30, backlog vacío**.
 

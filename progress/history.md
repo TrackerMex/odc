@@ -573,3 +573,15 @@ _El historial comenzará aquí cuando se complete la primera sesión._
   de R2 sin test propio en jsdom (sí comprobada en navegador) — queda anotada.
 - **Verificación final:** `./init.sh` exit 0, 471 tests backend y 601 frontend.
 - **Estado final:** done. **30/30 — no queda ninguna feature abierta.**
+
+---
+
+## 2026-09-13 — Propuesta frontend-dashboard-template (#31)
+
+- Petición: rediseñar el frontend con shadcndashboard y elegir el demo más adecuado para ODC.
+- Referencia clonada fuera del repo, commit 6f99c0b04b7169f9ef12dc99946bc4faaeb40b9b, MIT. Comparados Analytics, eCommerce y Modern en oscuro; elegido Modern, con Orders Table como referencia complementaria. Demos Pro solo como referencia visual; código público MIT como base disponible.
+- Subagente spec_author redactó requisitos, diseño, tareas y trazabilidad. Feature en spec_ready, frontmatter draft y aprobación sin marcar; no se ha implementado ni declarado done.
+- Alcance propuesto: shell autenticado y dashboard ejecutivo para los tres roles; preservar TanStack, contratos, permisos, Inter y tokens semánticos. Panel financiero dividido, tabla prioritaria y proveedores/antigüedad.
+- Maqueta documental en specs/frontend-dashboard-template/preview.html con usuario y datos explícitamente ficticios. Inspección a 1440px en ambos temas, 375px en ambos temas y 768px en claro; medidas sin desbordamiento de página a 375/768/1024px. Menú móvil y tema comprobados. Ajustada composición de 768px tras inspección. Esto no acredita todavía la UI de producción ni R7 completo.
+- Código de aplicación sin modificar. init.sh inicial verde: 471 backend y 601 frontend. Segundo init: timeout de 5000ms en un test existente del calendario (600/601 frontend); reintento aislado 2/2 verde. Tercer init completo verde, exit 0: 471 backend, 601 frontend, builds y lint. No se cambió código ni configuración para el reintento.
+- STATUS.md actualizado. Pendiente: aprobación humana de specs/frontend-dashboard-template/requirements.md antes de implementar.

@@ -173,5 +173,11 @@
     "name": "ui-dead-surfaces-audit",
     "status": "done",
     "priority": "P1"
+  },
+  {
+    "id": 31,
+    "name": "frontend-dashboard-template",
+    "status": "spec_ready",
+    "priority": "P1"
   }
 ]
