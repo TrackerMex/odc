@@ -31,9 +31,8 @@ export class UpdateDraftUseCase {
     if (order.createdById !== actor.userId) {
       throw new OdcAccessDeniedError('Only the creator can edit this ODC');
     }
-    // R5 (odc-suppliers-catalog): only validate when the PATCH brings a
-    // supplier value.
-    if (input.supplier !== undefined) {
+    // Grandfather unchanged suppliers from ODCs created before the catalog.
+    if (input.supplier !== undefined && input.supplier !== order.supplier) {
       const supplier = await this.supplierRepository.findByName(input.supplier);
       if (supplier === null) {
         throw new UnknownSupplierError(input.supplier);
