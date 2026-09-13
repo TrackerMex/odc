@@ -1,11 +1,9 @@
 import {
-  AlertTriangleIcon,
   ArrowRightIcon,
   CalendarDaysIcon,
+  ChartNoAxesCombinedIcon,
   CircleAlertIcon,
-  Clock3Icon,
   FilePenLineIcon,
-  ListChecksIcon,
   PlusIcon,
   ReceiptTextIcon,
   WalletCardsIcon,
@@ -25,6 +23,14 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table'
 import { Skeleton } from '@/components/ui/skeleton'
 import {
   formatCurrency,
@@ -68,6 +74,9 @@ function isOpsAction(
   return nextAction in opsAction
 }
 
+const detailLinkClass =
+  'rounded-(--radius) outline-none hover:underline underline-offset-4 focus-visible:ring-3 focus-visible:ring-ring'
+
 function PriorityAction({
   role,
   task,
@@ -82,16 +91,18 @@ function PriorityAction({
       <Link
         to="/odcs/$id"
         params={{ id: task.id }}
-        className={cn(buttonVariants({ variant: 'outline', size: 'sm' }))}
+        className={cn(
+          detailLinkClass,
+          'inline-flex items-center gap-2 text-xs font-medium text-primary',
+        )}
       >
-        <Icon aria-hidden="true" />
+        <Icon className="size-4 shrink-0" aria-hidden="true" />
         {action.label}
       </Link>
     )
   }
-
   return (
-    <span className="text-sm font-medium text-foreground">
+    <span className="text-xs font-medium text-foreground">
       {actionLabel[task.nextAction]}
     </span>
   )
@@ -104,35 +115,179 @@ function DashboardHeader({
   userName: string
   dashboard: ExecutiveDashboardResponse
 }) {
-  const copy = roleCopy[dashboard.role]
   return (
     <section
       aria-label="Resumen ejecutivo"
-      className="flex flex-col gap-5 border-b border-border/70 pb-6 sm:flex-row sm:items-end sm:justify-between"
+      className="flex min-w-0 flex-col gap-5 lg:flex-row lg:items-center lg:justify-between"
     >
-      <div className="max-w-2xl">
-        <p className="text-xs font-semibold tracking-[0.06em] text-muted-foreground uppercase">
-          {copy.label}
-        </p>
+      <div className="min-w-0">
         <h1
           id="dashboard-title"
-          className="mt-2 text-2xl font-semibold tracking-tight"
+          className="break-words text-2xl font-semibold tracking-tight"
         >
           Buen día, {userName}
         </h1>
+        <p className="mt-1 text-sm text-muted-foreground">
+          {roleCopy[dashboard.role].label}
+        </p>
       </div>
-      <div className="flex flex-wrap items-center gap-2 sm:justify-end">
-        <span className="inline-flex h-8 items-center gap-2 rounded-(--radius) bg-muted px-3 text-sm text-muted-foreground">
+      <div className="flex flex-wrap items-center gap-3 lg:justify-end">
+        <span className="inline-flex items-center gap-2 text-xs text-muted-foreground">
           <CalendarDaysIcon className="size-4" aria-hidden="true" />
           {formatMonth(dashboard.month)}
         </span>
         {dashboard.role === 'DIRECTOR_OPS' ? (
-          <Link to="/odcs/new" className={buttonVariants({ size: 'sm' })}>
+          <Link
+            to="/odcs/new"
+            className={cn(buttonVariants({ size: 'sm' }), 'max-md:min-h-11')}
+          >
             <PlusIcon aria-hidden="true" />
             Crear ODC
           </Link>
         ) : null}
       </div>
+    </section>
+  )
+}
+
+function AmountBar({
+  label,
+  cents,
+  maximum,
+  muted = false,
+}: {
+  label: string
+  cents: number
+  maximum: number
+  muted?: boolean
+}) {
+  const scale = Math.max(1, maximum)
+  return (
+    <div
+      role="meter"
+      aria-label={label}
+      aria-valuemin={0}
+      aria-valuemax={scale}
+      aria-valuenow={cents}
+      aria-valuetext={formatCurrency(cents)}
+      className="h-1.5 overflow-hidden rounded-sm bg-muted"
+    >
+      <div
+        aria-hidden="true"
+        className={cn('h-full rounded-sm bg-primary', muted && 'opacity-40')}
+        style={{ width: `${(cents / scale) * 100}%` }}
+      />
+    </div>
+  )
+}
+
+function Metric({
+  label,
+  value,
+  detail,
+}: {
+  label: string
+  value: string
+  detail: string
+}) {
+  return (
+    <div className="min-w-0 p-4 odd:border-r nth-[-n+2]:border-b xl:p-6">
+      <dt className="text-xs text-muted-foreground">{label}</dt>
+      <dd className="mt-3 break-words text-2xl font-semibold tracking-tight tabular-nums">
+        {value}
+      </dd>
+      <dd className="mt-1 break-words text-xs text-muted-foreground">
+        {detail}
+      </dd>
+    </div>
+  )
+}
+
+function Pulse({ dashboard }: { dashboard: ExecutiveDashboardResponse }) {
+  const { pulse, priority } = dashboard
+  const oldestOrder = dashboard.oldestActiveOrders[0]
+  const maximum = Math.max(pulse.current.totalCents, pulse.previous.totalCents)
+  const comparison =
+    pulse.totalCentsChangePercent === null
+      ? 'Sin base de comparación'
+      : formatPercentChange(pulse.totalCentsChangePercent)
+  return (
+    <section aria-labelledby="pulse-title" className="min-w-0">
+      <h2 id="pulse-title" className="sr-only">
+        Pulso operativo
+      </h2>
+      <Card className="grid gap-0 py-0 shadow-none lg:grid-cols-[1.1fr_1fr]">
+        <div className="min-w-0 border-b p-5 lg:border-r lg:border-b-0 xl:p-6">
+          <h3 className="flex items-center gap-2 text-sm font-medium">
+            <ChartNoAxesCombinedIcon
+              className="size-4 text-muted-foreground"
+              aria-hidden="true"
+            />
+            Compras pagadas
+          </h3>
+          <p className="mt-3 break-words text-3xl font-semibold tracking-tight tabular-nums xl:text-4xl">
+            {formatCurrency(pulse.current.totalCents)}
+          </p>
+          <p className="mt-2 text-xs text-muted-foreground">
+            <span className="font-medium text-foreground">{comparison}</span>
+            {pulse.totalCentsChangePercent !== null
+              ? ' de gasto frente al mes anterior'
+              : ''}
+          </p>
+          <div className="mt-6 space-y-4">
+            {[{ ...pulse.current, month: dashboard.month }, pulse.previous].map(
+              (period, index) => (
+                <div key={period.month} className="space-y-2">
+                  <div className="flex flex-wrap justify-between gap-x-3 gap-y-1 text-xs text-muted-foreground">
+                    <span>{formatMonth(period.month)}</span>
+                    <span className="tabular-nums">
+                      {formatCurrency(period.totalCents)}
+                    </span>
+                  </div>
+                  <AmountBar
+                    label={formatMonth(period.month)}
+                    cents={period.totalCents}
+                    maximum={maximum}
+                    muted={index === 1}
+                  />
+                </div>
+              ),
+            )}
+          </div>
+        </div>
+        <dl className="grid min-w-0 grid-cols-2">
+          <Metric
+            label="Compras del periodo"
+            value={String(pulse.current.purchaseCount)}
+            detail={`${pulse.previous.purchaseCount} en ${formatMonth(pulse.previous.month)}`}
+          />
+          <Metric
+            label="Tareas pendientes"
+            value={String(priority.total)}
+            detail={
+              priority.total === 0
+                ? 'Sin tareas pendientes'
+                : 'Requieren tu intervención'
+            }
+          />
+          <Metric
+            label="Variación de compras"
+            value={
+              pulse.purchaseCountChangePercent === null
+                ? 'Sin base de comparación'
+                : formatPercentChange(pulse.purchaseCountChangePercent)
+            }
+            detail="Frente al mes anterior"
+          />
+          <Metric
+            label="Mayor antigüedad"
+            value={oldestOrder ? `${oldestOrder.ageDays} días` : 'Sin órdenes'}
+            detail={
+              oldestOrder ? oldestOrder.odcNumber : 'No hay órdenes activas'
+            }
+          />
+        </dl>
+      </Card>
     </section>
   )
 }
@@ -145,254 +300,115 @@ function PriorityQueue({
   const { priority } = dashboard
   return (
     <section aria-labelledby="priority-title" className="min-w-0">
-      <Card>
-        <CardHeader className="border-b border-border/60 bg-muted/30">
-          <div className="flex flex-wrap items-start justify-between gap-4">
-            <div>
-              <CardDescription>Atención inmediata</CardDescription>
-              <CardTitle id="priority-title" className="mt-1 text-xl">
+      <Card className="gap-0 py-0 shadow-none">
+        <CardHeader className="border-b p-5">
+          <div className="flex flex-wrap items-center gap-2">
+            <CardTitle>
+              <h2 id="priority-title" className="text-base font-semibold">
                 Prioridad inmediata
-              </CardTitle>
-              <p className="mt-1 text-sm text-muted-foreground">
-                {priority.total === 0
-                  ? 'No tienes pendientes en este momento.'
-                  : `${priority.total} ${priority.total === 1 ? 'tarea requiere' : 'tareas requieren'} atención.`}
-              </p>
-            </div>
-            <span className="tabular-nums text-2xl font-semibold tracking-tight text-muted-foreground">
+              </h2>
+            </CardTitle>
+            <span className="rounded-badge border px-1.5 py-0.5 text-xs text-muted-foreground tabular-nums">
               {priority.total}
             </span>
           </div>
-        </CardHeader>
-        <CardContent>
-          {priority.items.length === 0 ? (
-            <div className="flex min-h-20 items-center rounded-card border border-dashed px-5 text-sm text-muted-foreground">
-              Cuando haya una orden que requiera tu intervención aparecerá aquí.
-            </div>
-          ) : (
-            <>
-              <div className="hidden grid-cols-[minmax(0,1.8fr)_minmax(8rem,0.8fr)_minmax(6rem,0.55fr)_minmax(7rem,0.7fr)_minmax(9rem,0.9fr)] gap-4 border-b border-border/60 pb-3 text-xs font-semibold tracking-[0.06em] text-muted-foreground uppercase lg:grid">
-                <span>Orden / proveedor</span>
-                <span>Estado</span>
-                <span>Antigüedad</span>
-                <span className="text-right">Importe</span>
-                <span className="text-right">Siguiente acción</span>
-              </div>
-              <ul
-                className="divide-y divide-border/70"
-                aria-label="Tareas prioritarias"
-              >
-                {priority.items.map((task) => (
-                  <li
-                    key={task.id}
-                    className="grid gap-3 py-3 first:pt-0 last:pb-0 lg:grid-cols-[minmax(0,1.8fr)_minmax(8rem,0.8fr)_minmax(6rem,0.55fr)_minmax(7rem,0.7fr)_minmax(9rem,0.9fr)] lg:items-center lg:gap-4"
-                  >
-                    <Link
-                      to="/odcs/$id"
-                      params={{ id: task.id }}
-                      className="group min-w-0 rounded-(--radius) outline-none focus-visible:ring-3 focus-visible:ring-ring/30"
-                    >
-                      <div className="flex flex-wrap items-center gap-2">
-                        <span className="font-medium group-hover:underline group-hover:underline-offset-4">
-                          {task.odcNumber}
-                        </span>
-                      </div>
-                      <p className="mt-1 truncate text-sm text-muted-foreground">
-                        {task.description}
-                      </p>
-                      <p className="mt-1 truncate text-sm text-muted-foreground">
-                        Proveedor: {task.supplier}
-                      </p>
-                    </Link>
-                    <div className="lg:contents">
-                      <div className="lg:justify-self-start">
-                        <span className="mr-2 text-xs font-semibold tracking-[0.06em] text-muted-foreground uppercase lg:hidden">
-                          Estado
-                        </span>
-                        <OdcStatusBadge status={task.status} />
-                      </div>
-                      <p className="text-sm tabular-nums lg:text-muted-foreground">
-                        <span className="mr-2 text-xs font-semibold tracking-[0.06em] text-muted-foreground uppercase lg:hidden">
-                          Antigüedad
-                        </span>
-                        {task.ageDays} {task.ageDays === 1 ? 'día' : 'días'}
-                      </p>
-                      <p className="text-sm font-medium tabular-nums lg:text-right">
-                        <span className="mr-2 text-xs font-semibold tracking-[0.06em] text-muted-foreground uppercase lg:hidden">
-                          Importe
-                        </span>
-                        {formatCurrency(task.totalCents)}
-                      </p>
-                      <div className="lg:text-right">
-                        <span className="mr-2 text-xs font-semibold tracking-[0.06em] text-muted-foreground uppercase lg:hidden">
-                          Siguiente acción
-                        </span>
-                        <PriorityAction role={dashboard.role} task={task} />
-                      </div>
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            </>
-          )}
-          {priority.total > priority.items.length ? (
-            <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-border/60 pt-4 text-sm text-muted-foreground">
-              <p>
-                Se muestran las {priority.items.length} tareas más antiguas de{' '}
-                {priority.total}.
-              </p>
-              <Link
-                to="/tasks"
-                className="font-medium text-foreground underline-offset-4 hover:underline focus-visible:rounded-sm focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/30"
-              >
-                Ver todas las tareas
-              </Link>
-            </div>
-          ) : null}
-        </CardContent>
-      </Card>
-    </section>
-  )
-}
-
-function Metric({
-  icon: Icon,
-  label,
-  value,
-  detail,
-}: {
-  icon: typeof ListChecksIcon
-  label: string
-  value: string
-  detail: string
-}) {
-  return (
-    <div className="min-w-0 rounded-card bg-muted/55 p-4 ring-1 ring-foreground/5 dark:ring-foreground/10">
-      <div className="flex items-center justify-between gap-3">
-        <p className="text-xs font-semibold tracking-[0.06em] text-muted-foreground uppercase">
-          {label}
-        </p>
-        <Icon className="size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
-      </div>
-      <p className="mt-3 truncate text-2xl font-semibold tracking-tight tabular-nums">
-        {value}
-      </p>
-      <p className="mt-1 min-h-5 text-sm text-muted-foreground">{detail}</p>
-    </div>
-  )
-}
-
-function Pulse({ dashboard }: { dashboard: ExecutiveDashboardResponse }) {
-  const { pulse, priority } = dashboard
-  const oldestOrder = dashboard.oldestActiveOrders[0]
-  return (
-    <section aria-labelledby="pulse-title" className="min-w-0">
-      <div className="mb-3 flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <p className="text-sm text-muted-foreground">
-            Comparado con {formatMonth(pulse.previous.month)}
-          </p>
-          <h2 id="pulse-title" className="mt-1 text-xl font-semibold tracking-tight">
-            Pulso operativo
-          </h2>
-        </div>
-        <p className="text-sm text-muted-foreground">
-          {formatMonth(dashboard.month)}
-        </p>
-      </div>
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        <Metric
-          icon={ListChecksIcon}
-          label="Tareas prioritarias"
-          value={String(priority.total)}
-          detail={
-            priority.total === 0
-              ? 'Sin tareas pendientes'
-              : priority.total === 1
-              ? 'requiere atención'
-              : 'requieren atención'
-          }
-        />
-        <Metric
-          icon={WalletCardsIcon}
-          label="Compras pagadas"
-          value={String(pulse.current.purchaseCount)}
-          detail={`${formatPercentChange(pulse.purchaseCountChangePercent)} vs. mes anterior`}
-        />
-        <Metric
-          icon={ReceiptTextIcon}
-          label="Importe pagado"
-          value={formatCurrency(pulse.current.totalCents)}
-          detail={`${formatPercentChange(pulse.totalCentsChangePercent)} vs. mes anterior`}
-        />
-        <Metric
-          icon={Clock3Icon}
-          label="Mayor antigüedad"
-          value={oldestOrder ? `${oldestOrder.ageDays} días` : 'Sin órdenes'}
-          detail={oldestOrder ? oldestOrder.odcNumber : 'No hay órdenes activas'}
-        />
-      </div>
-    </section>
-  )
-}
-
-function AgeingAlerts({
-  dashboard,
-}: {
-  dashboard: ExecutiveDashboardResponse
-}) {
-  return (
-    <section aria-labelledby="ageing-alerts-title" className="min-w-0">
-      <Card className="h-full border-status-pending/50">
-        <CardHeader>
-          <div className="flex items-center gap-2">
-            <AlertTriangleIcon
-              className="size-5 shrink-0 text-status-pending"
-              aria-hidden="true"
-            />
-            <CardTitle id="ageing-alerts-title">
-              Alertas: órdenes con mayor antigüedad
-            </CardTitle>
-          </div>
-          <CardDescription>
-            Órdenes activas que llevan más tiempo abiertas y conviene
-            destrabar primero.
+          <CardDescription className="text-xs">
+            {priority.total === 0
+              ? 'No tienes pendientes en este momento.'
+              : `${priority.total} ${priority.total === 1 ? 'tarea requiere' : 'tareas requieren'} atención.`}
           </CardDescription>
         </CardHeader>
-        <CardContent>
-          {dashboard.oldestActiveOrders.length === 0 ? (
-            <p className="rounded-card border border-dashed p-4 text-sm text-muted-foreground">
-              No hay órdenes activas con antigüedad para mostrar.
-            </p>
-          ) : (
-            <ul
-              className="divide-y divide-border/70"
-              aria-label="Órdenes con mayor antigüedad"
+        {priority.items.length === 0 ? (
+          <CardContent className="p-5 text-sm text-muted-foreground">
+            Cuando haya una orden que requiera tu intervención aparecerá aquí.
+          </CardContent>
+        ) : (
+          <div
+            role="region"
+            aria-label="Tabla de tareas prioritarias"
+            tabIndex={0}
+            className="overflow-x-auto outline-none focus-visible:ring-3 focus-visible:ring-inset focus-visible:ring-ring [&>[data-slot=table-container]]:overflow-visible"
+          >
+            <Table
+              aria-label="Tareas prioritarias"
+              className="min-w-[680px] table-fixed text-xs"
             >
-              {dashboard.oldestActiveOrders.map((order) => (
-                <li key={order.id} className="py-3 first:pt-0 last:pb-0">
-                  <Link
-                    to="/odcs/$id"
-                    params={{ id: order.id }}
-                    className="group flex min-w-0 items-center justify-between gap-3 rounded-(--radius) outline-none focus-visible:ring-3 focus-visible:ring-ring/30"
+              <TableHeader className="static bg-muted/45">
+                <TableRow className="hover:bg-transparent">
+                  <TableHead className="w-[35%] px-5 text-xs text-muted-foreground">
+                    Orden / proveedor
+                  </TableHead>
+                  <TableHead className="w-[22%] text-xs text-muted-foreground">
+                    Estado
+                  </TableHead>
+                  <TableHead className="w-[18%] text-right text-xs text-muted-foreground">
+                    Importe
+                  </TableHead>
+                  <TableHead className="w-[25%] pr-5 text-xs text-muted-foreground">
+                    Siguiente acción
+                  </TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {priority.items.slice(0, 5).map((task) => (
+                  <TableRow
+                    key={task.id}
+                    className="motion-reduce:transition-none"
                   >
-                    <span className="min-w-0">
-                      <span className="block font-medium group-hover:underline group-hover:underline-offset-4">
-                        {order.odcNumber}
-                      </span>
-                      <span className="block truncate text-sm text-muted-foreground">
-                        {order.supplier} · {statusLabel(order.status)}
-                      </span>
-                    </span>
-                    <span className="shrink-0 text-right text-sm tabular-nums">
-                      {order.ageDays} días
-                    </span>
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          )}
-        </CardContent>
+                    <TableCell className="px-5 py-4 whitespace-normal">
+                      <Link
+                        to="/odcs/$id"
+                        params={{ id: task.id }}
+                        className={cn(
+                          detailLinkClass,
+                          'block break-words font-medium',
+                        )}
+                      >
+                        <span>{task.odcNumber}</span>
+                        <span className="mt-1 block font-normal text-muted-foreground">
+                          {task.supplier}
+                        </span>
+                        <span className="mt-1 block font-normal text-muted-foreground">
+                          {task.description}
+                        </span>
+                      </Link>
+                      <p className="mt-1 text-muted-foreground tabular-nums">
+                        <span className="sr-only">Antigüedad: </span>
+                        {task.ageDays} {task.ageDays === 1 ? 'día' : 'días'}
+                      </p>
+                    </TableCell>
+                    <TableCell className="py-4 whitespace-normal">
+                      <OdcStatusBadge status={task.status} />
+                    </TableCell>
+                    <TableCell className="py-4 text-right font-medium tabular-nums">
+                      {formatCurrency(task.totalCents)}
+                    </TableCell>
+                    <TableCell className="py-4 pr-5 whitespace-normal">
+                      <PriorityAction role={dashboard.role} task={task} />
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        )}
+        {priority.total > priority.items.length ? (
+          <div className="flex flex-wrap items-center justify-between gap-3 border-t px-5 py-4 text-xs text-muted-foreground">
+            <p>
+              Se muestran las {priority.items.length} tareas más antiguas de{' '}
+              {priority.total}.
+            </p>
+            <Link
+              to="/tasks"
+              className={cn(
+                detailLinkClass,
+                'inline-flex items-center font-medium text-primary',
+              )}
+            >
+              Ver todas las tareas
+            </Link>
+          </div>
+        ) : null}
       </Card>
     </section>
   )
@@ -403,43 +419,102 @@ function TopSuppliers({
 }: {
   dashboard: ExecutiveDashboardResponse
 }) {
+  const suppliers = dashboard.topSuppliers.slice(0, 5)
+  const maximum = Math.max(
+    0,
+    ...suppliers.map((supplier) => supplier.totalCents),
+  )
   return (
-    <section aria-labelledby="suppliers-title" className="min-w-0">
-      <Card className="h-full">
-        <CardHeader>
-          <CardTitle id="suppliers-title">Proveedores del periodo</CardTitle>
-          <CardDescription>
-            Compras pagadas agrupadas por proveedor.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          {dashboard.topSuppliers.length === 0 ? (
-            <p className="rounded-card border border-dashed p-4 text-sm text-muted-foreground">
-              No hay compras pagadas en este periodo.
-            </p>
-          ) : (
-            <ol
-              className="divide-y divide-border/70"
-              aria-label="Proveedores del periodo"
-            >
-              {dashboard.topSuppliers.map((supplier) => (
-                <li
-                  key={supplier.supplier}
-                  className="flex items-center justify-between gap-3 py-3 first:pt-0 last:pb-0"
-                >
-                  <span className="min-w-0 truncate font-medium">
-                    {supplier.supplier}
+    <section aria-labelledby="suppliers-title" className="min-w-0 p-5">
+      <h2
+        id="suppliers-title"
+        className="text-base font-semibold tracking-tight"
+      >
+        Proveedores del periodo
+      </h2>
+      <p className="mt-1 text-xs text-muted-foreground">
+        Compras pagadas agrupadas por proveedor.
+      </p>
+      {suppliers.length === 0 ? (
+        <p className="mt-5 text-sm text-muted-foreground">
+          No hay compras pagadas en este periodo.
+        </p>
+      ) : (
+        <ol aria-label="Proveedores del periodo" className="mt-6 space-y-6">
+          {suppliers.map((supplier) => (
+            <li key={supplier.supplier} className="min-w-0">
+              <p className="break-words text-xs font-medium">
+                {supplier.supplier}
+              </p>
+              <div className="mt-2 mb-2 flex flex-wrap justify-between gap-2 text-xs text-muted-foreground tabular-nums">
+                <span>
+                  {supplier.purchaseCount}{' '}
+                  {supplier.purchaseCount === 1 ? 'compra' : 'compras'}
+                </span>
+                <span>{formatCurrency(supplier.totalCents)}</span>
+              </div>
+              <AmountBar
+                label={supplier.supplier}
+                cents={supplier.totalCents}
+                maximum={maximum}
+              />
+            </li>
+          ))}
+        </ol>
+      )}
+    </section>
+  )
+}
+
+function AgeingAlerts({
+  dashboard,
+}: {
+  dashboard: ExecutiveDashboardResponse
+}) {
+  return (
+    <section
+      aria-labelledby="ageing-alerts-title"
+      className="min-w-0 border-t p-5"
+    >
+      <h2
+        id="ageing-alerts-title"
+        className="text-base font-semibold tracking-tight"
+      >
+        Órdenes más antiguas
+      </h2>
+      {dashboard.oldestActiveOrders.length === 0 ? (
+        <p className="mt-4 text-sm text-muted-foreground">
+          No hay órdenes activas con antigüedad para mostrar.
+        </p>
+      ) : (
+        <ul className="mt-3 divide-y" aria-label="Órdenes con mayor antigüedad">
+          {dashboard.oldestActiveOrders.slice(0, 5).map((order) => (
+            <li key={order.id} className="py-3 last:pb-0">
+              <Link
+                to="/odcs/$id"
+                params={{ id: order.id }}
+                className={cn(
+                  detailLinkClass,
+                  'flex min-w-0 items-start justify-between gap-3 text-xs',
+                )}
+              >
+                <span className="min-w-0 break-words">
+                  <span className="block font-medium">{order.odcNumber}</span>
+                  <span className="mt-1 block text-muted-foreground">
+                    {order.supplier}
                   </span>
-                  <span className="shrink-0 text-right text-sm tabular-nums text-muted-foreground">
-                    {supplier.purchaseCount} compras ·{' '}
-                    {formatCurrency(supplier.totalCents)}
+                  <span className="mt-1 block text-muted-foreground">
+                    {statusLabel(order.status)}
                   </span>
-                </li>
-              ))}
-            </ol>
-          )}
-        </CardContent>
-      </Card>
+                </span>
+                <span className="shrink-0 text-status-pending tabular-nums">
+                  {order.ageDays} {order.ageDays === 1 ? 'día' : 'días'}
+                </span>
+              </Link>
+            </li>
+          ))}
+        </ul>
+      )}
     </section>
   )
 }
@@ -452,16 +527,16 @@ export function ExecutiveDashboard({
   dashboard: ExecutiveDashboardResponse
 }) {
   return (
-    <main className="min-w-0 flex-1 p-4 sm:p-6">
+    <main className="odc-executive-dashboard min-w-0 flex-1 p-4 sm:p-6 xl:p-8">
       <div className="mx-auto max-w-[1400px] space-y-6">
         <DashboardHeader userName={userName} dashboard={dashboard} />
-        <div className="space-y-6 transition-opacity duration-200 motion-reduce:transition-none">
+        <Pulse dashboard={dashboard} />
+        <div className="grid min-w-0 items-start gap-6 xl:grid-cols-[minmax(0,2.5fr)_minmax(0,1fr)]">
           <PriorityQueue dashboard={dashboard} />
-          <Pulse dashboard={dashboard} />
-          <div className="grid min-w-0 gap-4 md:grid-cols-2">
-            <AgeingAlerts dashboard={dashboard} />
+          <Card className="min-w-0 gap-0 py-0 shadow-none">
             <TopSuppliers dashboard={dashboard} />
-          </div>
+            <AgeingAlerts dashboard={dashboard} />
+          </Card>
         </div>
       </div>
     </main>
@@ -471,18 +546,19 @@ export function ExecutiveDashboard({
 export function ExecutiveDashboardLoading() {
   return (
     <main
-      className="min-w-0 flex-1 p-4 sm:p-6"
+      className="min-w-0 flex-1 p-4 sm:p-6 xl:p-8"
       aria-label="Cargando resumen ejecutivo"
       aria-busy="true"
     >
-      <div className="mx-auto max-w-[1400px] space-y-6">
-        <Skeleton className="h-32 w-full motion-reduce:animate-none" />
-        <Skeleton className="h-96 w-full motion-reduce:animate-none" />
-        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-          <Skeleton className="h-32 w-full motion-reduce:animate-none" />
-          <Skeleton className="h-32 w-full motion-reduce:animate-none" />
-          <Skeleton className="h-32 w-full motion-reduce:animate-none" />
-          <Skeleton className="h-32 w-full motion-reduce:animate-none" />
+      <p role="status" className="sr-only">
+        Cargando resumen ejecutivo
+      </p>
+      <div className="mx-auto max-w-[1400px] space-y-6" aria-hidden="true">
+        <Skeleton className="h-16 w-full motion-reduce:animate-none" />
+        <Skeleton className="h-72 w-full motion-reduce:animate-none" />
+        <div className="grid gap-6 xl:grid-cols-[minmax(0,2.5fr)_minmax(0,1fr)]">
+          <Skeleton className="h-96 motion-reduce:animate-none" />
+          <Skeleton className="h-96 motion-reduce:animate-none" />
         </div>
       </div>
     </main>
@@ -492,14 +568,19 @@ export function ExecutiveDashboardLoading() {
 export function ExecutiveDashboardError({ onRetry }: { onRetry: () => void }) {
   return (
     <main className="flex min-h-[60vh] items-center justify-center p-6">
-      <Alert variant="destructive" className="max-w-lg">
+      <Alert variant="destructive" className="max-w-lg rounded-card">
         <CircleAlertIcon aria-hidden="true" />
         <AlertTitle>No pudimos cargar el resumen ejecutivo</AlertTitle>
         <AlertDescription>
           Verifica tu conexión e inténtalo de nuevo.
         </AlertDescription>
         <AlertAction>
-          <Button size="sm" variant="outline" onClick={onRetry}>
+          <Button
+            size="sm"
+            variant="outline"
+            className="max-md:min-h-11"
+            onClick={onRetry}
+          >
             <ArrowRightIcon aria-hidden="true" />
             Reintentar
           </Button>
