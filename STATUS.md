@@ -1,8 +1,8 @@
 # ODC — Status
 
 **Última actualización**: 2026-09-13
-**Features completadas**: 31/32 (`feature_list.json`)
-**Pendientes**: #32 `executive-workspace-v2`, spec preparada; aprobación humana pendiente
+**Features completadas**: 32/32 (`feature_list.json`)
+**Pendientes del registro**: ninguno; las entregas restantes de la auditoría están en el plan 002
 **En producción**: no
 
 ---
@@ -39,16 +39,23 @@ Requiere `.env` en la raíz (plantilla en `.env.example`): `DATABASE_URL`,
 
 - **Revisión integral (2026-09-13)**: 25 hallazgos priorizados en
   [plans/002-system-review.md](plans/002-system-review.md). Incluye UX, integridad,
-  archivos, consultas y preparación productiva; no se han implementado sus cambios.
-- **#32 `executive-workspace-v2` spec preparada**: gráficas reales de 12 meses,
+  archivos, consultas y preparación productiva. #32 resuelve el workspace;
+  integridad/archivos y las demás entregas del plan conservan su alcance propio.
+- **#32 `executive-workspace-v2` done**: gráficas reales de 12 meses,
   indicadores y distribución por estado, filtros/paginación de 10, mes de creación
   en Mis tareas, prioridades ADMIN recientes, header fijo y resumen de creación
   con folio posterior. Requisitos en
   [specs/executive-workspace-v2/requirements.md](specs/executive-workspace-v2/requirements.md),
-  casilla de aprobación vacía. Reutiliza shell/componentes actuales.
-- **Límite del gate actual**: init inicial y final verdes (471 backend / 618 frontend),
-  pero typecheck adicional del frontend detecta 18 errores en tests. La revisión
-  documenta esa deuda y la discrepancia de hidratación del tema oscuro.
+  aprobados antes de código. Reutiliza shell/componentes actuales, sin dependencias nuevas.
+  Header de 58/64px, tablas de 10 con URL, creación por mes México y recuperación
+  de envío sobre el mismo id; se corrigieron la hidratación del tema/gráfica y
+  la validación tardía del proveedor. Evidencia en
+  [progress/review_executive-workspace-v2.md](progress/review_executive-workspace-v2.md).
+  Revisión independiente final: **ship**, tres correcciones materiales resueltas.
+- **Verificación #32**: init final verde (484 backend / 655 frontend), 3 pruebas
+  PostgreSQL aisladas y 5 Playwright (matriz 24 combinaciones y flujos).
+  El typecheck adicional conserva 18 errores previos en tests, sin errores nuevos
+  de aplicación; es deuda F11 del plan, fuera del gate de build actual.
 - **Backend completo (8/8 features de negocio, #1-#8)**: fundación NestJS +
   auth JWT en cookie httpOnly + módulo `odc` con máquina de estados T1-T10
   completa (crear/editar/submit/aprobar presupuesto/aprobar compra/rechazar/

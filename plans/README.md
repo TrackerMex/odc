@@ -10,7 +10,7 @@ de STOP y actualiza su fila al terminar.
 |------|--------|----------|--------|------------|--------|
 | [001](001-odc-purchase-system.md) | Desarrollo del Sistema de Gestión de Compras (ODC), alcance v1 | P1 | L | — | DONE (F1–F13 completadas; no equivale a despliegue productivo) |
 | [002](002-system-review.md) | Revisión integral: dashboard, operación y fiabilidad | P1 | L | 001 | DONE (diagnóstico; mejoras pendientes) |
-| [Spec #32](../specs/executive-workspace-v2/requirements.md) | Workspace ejecutivo v2: analítica, filtros y creación revisable | P1 | L | 002 | TODO (spec preparada, aprobación humana pendiente) |
+| [Spec #32](../specs/executive-workspace-v2/requirements.md) | Workspace ejecutivo v2: analítica, filtros y creación revisable | P1 | L | 002 | DONE (484 backend / 655 frontend, PostgreSQL y navegador verdes; review ship) |
 
 Valores de Status: TODO | IN PROGRESS | DONE | BLOCKED (con motivo de una línea) | REJECTED (con justificación de una línea)
 

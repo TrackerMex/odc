@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-07-27T13:30:05.3596696-06:00",
+  "generatedAt": "2026-09-13T02:14:41.6887774-06:00",
   "title": "Design System: ODC",
   "extensions": {
     "colorMeta": {
@@ -72,6 +72,29 @@
       "description": "Etiqueta semántica para comunicar el estado de una orden, sin comportarse como acción.",
       "html": "<span class=\"ds-status ds-status--approved\">Compra aprobada</span>",
       "css": ".ds-status { display: inline-flex; align-items: center; min-height: 1.5rem; padding: 0 .625rem; border-radius: 1rem; font: 500 .75rem/1 ui-sans-serif, system-ui, sans-serif; } .ds-status--approved { background: #dbeafe; color: #1e40af; } @media (prefers-color-scheme: dark) { .ds-status--approved { background: #172554; color: #bfdbfe; } }"
+    },
+    {
+      "name": "Métrica ejecutiva #32",
+      "kind": "card",
+      "refersTo": "executive-metric",
+      "description": "Dashboard aprobado #32: cuatro agregados completos e independientes de filtros/página. Fecha de pago para importe/compras; creación para cohorte; tareas de todos los meses. La analítica los acompaña con 12 meses SVG y ocho estados con cantidades explícitas y alternativa textual.",
+      "html": "<dl class=\"ds-executive-metric\"><dt>ODC creadas</dt><dd>0</dd><dd class=\"ds-executive-criterion\">Por fecha de creación · ejemplo sin datos</dd></dl>",
+      "css": ".ds-executive-metric { margin: 0; padding: 1.25rem; border: 1px solid var(--border); border-radius: var(--radius-card, .625rem); background: var(--card); color: var(--foreground); font-family: 'Inter Variable', ui-sans-serif, system-ui, sans-serif; } .ds-executive-metric dt, .ds-executive-criterion { font-size: .75rem; line-height: 1.5; color: var(--muted-foreground); } .ds-executive-metric dd { margin: .75rem 0 0; font-size: 1.5rem; font-weight: 600; font-variant-numeric: tabular-nums; } .ds-executive-metric .ds-executive-criterion { margin-top: 1rem; padding-top: .75rem; border-top: 1px solid var(--border); font-size: .75rem; font-weight: 400; }"
+    },
+    {
+      "name": "Tabla ejecutiva #32",
+      "kind": "custom",
+      "refersTo": "executive-table",
+      "description": "Dashboard/Mis tareas: tabla semántica con búsqueda explícita, estado y orden en servidor, 10 filas por página y consulta en URL. Ancho mínimo 820px dentro de región desplazable con foco; conserva descripción, creación y siguiente acción. Las acciones abren el flujo permitido. Muestra de estructura, sin órdenes ficticias.",
+      "html": "<section class=\"ds-executive-table\"><header><h3>Prioridad inmediata</h3><p>Pendientes de todos los meses</p></header><div class=\"ds-executive-scroll\" role=\"region\" aria-label=\"Tabla de tareas prioritarias\" tabindex=\"0\"><table><thead><tr><th>Orden / proveedor</th><th>Estado</th><th>Creación</th><th>Importe</th><th>Siguiente acción</th></tr></thead><tbody><tr><td colspan=\"5\">No tienes pendientes en este periodo.</td></tr></tbody></table></div><footer>Mostrando 0–0 de 0 · Página 1 de 1</footer></section>",
+      "css": ".ds-executive-table { border: 1px solid var(--border); border-radius: var(--radius-card, .625rem); background: var(--card); color: var(--foreground); font: 400 .75rem/1.5 'Inter Variable', ui-sans-serif, system-ui, sans-serif; } .ds-executive-table header { padding: 1.25rem; } .ds-executive-table h3 { margin: 0; font-size: 1rem; font-weight: 600; } .ds-executive-table p { margin: .25rem 0 0; color: var(--muted-foreground); } .ds-executive-scroll { overflow-x: auto; } .ds-executive-scroll:focus-visible { outline: 3px solid var(--ring); outline-offset: -3px; } .ds-executive-table table { min-width: 820px; width: 100%; border-collapse: collapse; } .ds-executive-table th, .ds-executive-table td { padding: .75rem 1.25rem; text-align: left; border-top: 1px solid var(--border); } .ds-executive-table th { background: color-mix(in oklab, var(--muted) 45%, transparent); color: var(--muted-foreground); font-weight: 500; } .ds-executive-table th:nth-child(4) { text-align: right; } .ds-executive-table footer { padding: 1rem 1.25rem; border-top: 1px solid var(--border); color: var(--muted-foreground); font-variant-numeric: tabular-nums; }"
+    },
+    {
+      "name": "Revisión de nueva ODC #32",
+      "kind": "custom",
+      "description": "Dialog existente: payload validado, total estimado MXN y destino antes de escribir; confirmar nombra el destino, cancelar conserva campos. Tras crear, folio/estado reales y detalle; reintentar envío conserva el id. Shell sticky 58/64px, asides/foco +16px, controles móviles 44px. Muestra del resumen, sin ejecutar escrituras.",
+      "html": "<section class=\"ds-executive-review\" aria-labelledby=\"ds-review-title\"><h3 id=\"ds-review-title\">Revisar orden de compra</h3><p>Confirma los datos y el destino antes de crear la ODC.</p><dl><dt>Total estimado (MXN)</dt><dd>—</dd><dt>Destino</dt><dd>Borrador</dd></dl><button type=\"button\">Volver a editar</button></section>",
+      "css": ".ds-executive-review { padding: 1.25rem; max-height: calc(100dvh - 2rem); overflow-y: auto; border-radius: var(--radius-card, .625rem); background: var(--popover); color: var(--popover-foreground); font: 400 .875rem/1.5 'Inter Variable', ui-sans-serif, system-ui, sans-serif; } .ds-executive-review h3 { margin: 0; font-size: 1.125rem; font-weight: 600; } .ds-executive-review p, .ds-executive-review dt { color: var(--muted-foreground); } .ds-executive-review dd { margin: .25rem 0 1rem; font-weight: 600; overflow-wrap: anywhere; } .ds-executive-review button { min-height: 44px; padding: 0 .75rem; border: 1px solid var(--border); border-radius: var(--radius, .375rem); background: var(--background); color: var(--foreground); font: inherit; cursor: pointer; transition: background 150ms ease-out; } .ds-executive-review button:hover { background: var(--muted); } .ds-executive-review button:focus-visible { outline: 3px solid var(--ring); outline-offset: 2px; } @media (prefers-reduced-motion: reduce) { .ds-executive-review button { transition: none; } }"
     }
   ],
   "narrative": {

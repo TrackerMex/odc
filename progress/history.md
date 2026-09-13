@@ -635,3 +635,34 @@ estado: auditoría terminada; #32 spec preparada, aprobación pendiente
 - Informe plans/002-system-review.md con 25 hallazgos, evidencia y límites. Spec #32 con 14 requisitos y casilla humana vacía; mes de creación y resumen/folio incorporados según respuestas del usuario.
 - init.sh final exit 0: builds, lint configurado, 471 backend y 618 frontend. Ningún archivo de aplicación modificado. Metadata de #32 verificada: spec_ready, 14 requisitos, aprobación vacía; no equivale a implementación.
 - STATUS e índice de planes actualizados. Pendiente: aprobación humana de specs/executive-workspace-v2/requirements.md para implementar la primera fase; demás hallazgos mantienen su prioridad y alcance separados.
+
+---
+# Sesión activa
+
+> Este archivo describe el estado de la sesión en curso.
+> Al cerrar la sesión, mueve este contenido a progress/history.md y deja solo esta plantilla.
+
+```
+feature: executive-workspace-v2 (#32)
+inicio: 2026-09-13
+agentes lanzados: investigate_creation_timezone
+estado: implementación aprobada; init inicial verde
+```
+
+- Usuario marcó [X] en requirements.md y confirmó «ya aprobé, implementa todo».
+- Init inicial exit 0: 471 backend, 618 frontend, builds/lint configurado.
+- Plan: consultas/analítica y pruebas de fechas; tablas/gráficas; header/tema; confirmación y recuperación; integración, matriz visual y revisión independiente.
+- Se conserva el alcance aprobado R1–R14 de #32; el resto del informe mantiene sus entregas propias.
+- Backend R2–R10 implementado: DTOs validados, filtro de creación México sobre UTC verificado, páginas de 10/orden estable, búsqueda literal, serie 12 meses/cohorte y totales independientes. Rojo 091f44a, 25 focalizadas y 3 PostgreSQL aisladas verdes. UI en curso.
+- R14 tema: agente theme_hydration_fix entregó rojo 226e3a5/fix 56474f1, 20 tests tema/layout verdes. Agente creation_confirmation trabaja solo OdcForm y su test en R11/R12.
+- Interfaz R1–R10/R13 implementada con componentes compartidos; tabla servidor/URL, serie SVG accesible y cuatro agregados. R11/R12 entregados en 37956d9 (19 pruebas verdes). Detector Impeccable sobre siete superficies: `[]`.
+- Verificación actual: build backend/frontend verde, 484 backend verdes; frontend 653/654 con un timeout de DatePicker durante ejecuciones concurrentes. Se repetirá init aislado. Typecheck adicional: mismos 18 errores históricos en tests, ninguno en código de aplicación.
+- Navegador: primera matriz capturó 24 combinaciones y verificó dimensiones/scroll, pero detectó hidratación del estado pending del router. Se retiró el render manual de pending y se conserva pendingComponent; investigación read-only de la sincronización SSR/cliente en curso. R13 recuperación pasa esperando preparación del cliente; revisión de creación con escrituras interceptadas en curso.
+- Investigación cerrada: títulos SVG con múltiples hijos quedaban vacíos en SSR de React 19; regresión roja 0542704 y fix 0652537. La medición de geometría espera preparación del documento y restauración de scroll, sin sleeps fijos.
+- Reviewer independiente: composición/roles/periodos/recuperación correctos; pidió ejes ≥12px efectivos, evidencia final y cierre documental. Rojo e5a1ca4 (8.555px) y fix 67bff4d; matriz 24 combinaciones verde, cero errores de hidratación. Proveedor corregido sin validación de closure anterior; controles del modal no pisan su encabezado.
+- Init final aislado exit 0: 484 backend, 655 frontend, ambos builds y lint backend. Timeout anterior de DatePicker no se repite. Validación adicional frontend y última captura de modal en curso, sin cambios de aplicación posteriores a 67bff4d.
+
+- Cierre final: reviewer independiente `ship`, las tres correcciones resueltas. Feature #32 done; 32/32 del registro completadas. R1–R14 trazables; diseño/STATUS/planes sincronizados y capturas conservadas.
+- Init exit 0 (484 backend / 655 frontend), PostgreSQL 3/3, matriz dashboard 3/3 (24 combinaciones), flujos 2/2, lint frontend de archivos cambiados corregido y typecheck sin errores nuevos de aplicación (18 históricos de tests).
+- Implementación UI `192d74e`; hidratación SVG `0652537`; legibilidad/proveedor/modal `67bff4d`; ajuste de lint en prueba `33c1f7c`. No migraciones, nuevas dependencias ni escrituras reales de creación/envío durante verificación.
+- Las siguientes entregas de la auditoría siguen documentadas en plans/002-system-review.md; no se declara despliegue ni certificación de producción.

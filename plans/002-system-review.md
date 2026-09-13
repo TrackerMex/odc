@@ -98,7 +98,7 @@ Lo que funciona: roles y estados textuales, datos reales, tokens coherentes, val
 
 ## Secuencia y límites
 
-1. **Workspace ejecutivo v2:** dashboard analítico, tablas, periodos, header y creación revisable con recuperación del envío sin recrear la ODC. [Spec #32](../specs/executive-workspace-v2/requirements.md), [diseño](../specs/executive-workspace-v2/design.md) y [tareas verificables](../specs/executive-workspace-v2/tasks.md) preparados para aprobación. Incluye estabilidad del tema y filtros/página en URL; el retorno al origen desde detalle de F17 queda para el recorrido completo.
+1. **Workspace ejecutivo v2 — completado 2026-09-13:** dashboard analítico, tablas, periodos, header y creación revisable con recuperación del envío sin recrear la ODC. [Spec #32](../specs/executive-workspace-v2/requirements.md) aprobada e implementada; [acta de verificación](../progress/review_executive-workspace-v2.md) con revisión independiente `ship`, 484+655 pruebas, PostgreSQL y navegador verdes. Incluye estabilidad del tema/gráfica y filtros/página en URL; el retorno al origen desde detalle de F17 queda para el recorrido completo. Las evidencias anteriores de este informe describen la base auditada, no sustituyen el acta posterior.
 2. **Integridad y archivos antes de producción:** F02–F08, empezando por caducidad/multipart y concurrencia; casos de integración acompañan la solución. No desplegar con estos puntos abiertos.
 3. **Recorrido completo:** retorno al origen de F17, F18, F20–F23, archivo de órdenes e historial de responsables. Lo compartido con v2 se implementa allí, sin duplicarlo después.
 4. **Entrega operable:** F09–F11 y F25, con migraciones, recuperación ensayada, observabilidad y mediciones reales. Definir infraestructura antes de aprovisionarla.

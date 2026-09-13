@@ -59,6 +59,14 @@ components:
     textColor: "{colors.foreground}"
     rounded: "{rounded.card}"
     padding: "{spacing.section}"
+  executive-metric:
+    textColor: "{colors.foreground}"
+    rounded: "{rounded.card}"
+    padding: "1.25rem"
+  executive-table:
+    textColor: "{colors.foreground}"
+    rounded: "{rounded.card}"
+    padding: "0"
 ---
 
 > **DERIVADO — NO EDITAR A MANO.**
@@ -151,6 +159,12 @@ La aplicación usa un shell con sidebar de 16rem en escritorio, colapsable a 3re
 
 El ritmo parte de una cuadrícula de 0.25rem: controles compactos de 2rem de alto, separaciones de 0.5rem–0.75rem dentro de acciones y 1rem dentro de tarjetas. Las vistas de datos llegan a 1400px o ancho completo; no se centra el contenido en 1200px dejando aire lateral en una herramienta de escritorio de uso diario. Los títulos de página escalan de forma moderada en pantallas pequeñas; las tarjetas y listados conservan su jerarquía sin depender de grandes espacios vacíos.
 
+### Executive workspace — enmienda aprobada #32
+
+El dashboard y Mis tareas extienden el shell Modern existente, según `design-system/odc/pages/dashboard.md`: ambas superficies usan hasta 1400px, padding de 16px/24px/32px y separaciones de 24px. La composición concreta pertenece al brief de superficie, no redefine el layout de otras páginas.
+
+El encabezado autenticado queda fijo al desplazar, opaco, con altura de 58px bajo 768px y 64px desde ese ancho. Los resúmenes laterales adhesivos y el margen de desplazamiento del foco suman 16px a esa altura; los diálogos permanecen por encima. Los controles móviles de este espacio ofrecen áreas visibles de al menos 44×44px. Tablas y gráfica conservan desplazamiento horizontal local accesible por teclado sin ensanchar la página.
+
 ## Elevation & Depth
 
 ODC usa capas suavemente elevadas. Las superficies descansan sobre el color de fondo con `shadow-xs` y un borde de 1px; los diálogos aumentan a `shadow-xl` para señalar una decisión que bloquea el flujo. Los bordes y el cambio tonal separan la mayoría de los elementos, así que las sombras nunca son pesadas ni difusas por defecto.
@@ -221,6 +235,16 @@ Los controles tienen esquinas cerradas y consistentes: botones, campos y áreas 
 - **Surface:** fondo popover, radio de 0.625rem y padding de 1.25rem.
 - **Backdrop:** negro al 30% con desenfoque suave cuando el navegador lo permite.
 - **Motion:** fade y zoom discretos de 100ms al abrir y cerrar.
+
+### Executive workspace components — enmienda aprobada #32
+
+**Character:** datos completos y acciones concretas, con Inter, navy y tokens vigentes; etiquetas en sentence case y tracking normal dentro del dashboard y Mis tareas.
+
+- **Métrica ejecutiva:** cifra tabular de 24px, etiqueta/criterio de 12px y divisor antes del criterio. Usa el radio de tarjeta vigente, padding del token `executive-metric` y ninguna sombra; las cuatro cifras mantienen su definición aunque cambie la tabla.
+- **Tabla operativa compartida:** tabla semántica con cabecera, filtros etiquetados, contador integrado y pie de paginación. Conserva folio, proveedor, descripción, estado, creación/antigüedad, importe y siguiente acción. Ancho mínimo local de 820px, texto de 12px, filas con divisores y sin elevación; contenido largo se ajusta dentro de las celdas. Búsqueda explícita, estado y orden consultan el servidor, con 10 filas por página. Las filas conducen al flujo permitido y no ejecutan transiciones.
+- **Analítica:** línea SVG para 12 meses, escala desde cero y tabla textual desplegable equivalente; distribución con ocho etiquetas de estado, cantidades explícitas y barras navy. Los ejes usan 16 unidades SVG en un viewBox de 720px con ancho mínimo de 560px: al menos 12px efectivos de lectura. No comprimir la gráfica hasta volver ilegibles sus meses.
+- **Revisión de nueva ODC:** el Dialog existente muestra el payload validado, total estimado MXN y destino antes de escribir. Descripción y comentarios respetan saltos y ajustan palabras largas; el contenido tiene scroll vertical local con altura máxima de viewport menos 32px. «Volver a editar» conserva campos; la acción principal nombra Borrador o Administración y se bloquea al procesar. El resultado muestra folio/estado reales y acceso al detalle; un envío fallido conserva la identidad del borrador para reintentar solo ese envío.
+- **Estados de consulta:** carga anunciada, vacío propio por sección y error recuperable conservan el contexto solicitado. No presentar datos previos como nuevos ni una creación de resultado incierto como confirmada. Mantener foco visible, Escape y devolución de foco en el modal; conservar tema persistido desde el primer pintado y movimiento reducido.
 
 ## Do's and Don'ts
 

@@ -1,6 +1,6 @@
 ---
 feature: "executive-workspace-v2"
-status: draft
+status: approved
 tags: [harness, spec, dashboard, tasks, frontend, backend]
 ---
 
