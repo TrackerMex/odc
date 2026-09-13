@@ -79,6 +79,7 @@ for (const account of accounts) {
             name: 'Alternar navegación',
             exact: true,
           })
+          await expect(menu).toHaveAttribute('aria-expanded', 'false')
           await menu.focus()
           await page.keyboard.press('Enter')
           const sheet = page.locator('[data-mobile="true"]')
@@ -102,5 +103,20 @@ for (const account of accounts) {
     await expect(
       page.locator('.odc-app-shell [data-slot="sidebar-container"]'),
     ).toHaveCSS('transition-duration', '0s')
+    await page.setViewportSize({ width: 375, height: 1000 })
+    const mobileMenu = page.getByRole('button', {
+      name: 'Alternar navegación',
+      exact: true,
+    })
+    await expect(mobileMenu).toHaveAttribute('aria-expanded', 'false')
+    await mobileMenu.press('Enter')
+    await expect(page.locator('[data-mobile="true"]')).toHaveCSS(
+      'transition-duration',
+      '0s',
+    )
+    await expect(page.locator('[data-slot="sheet-overlay"]')).toHaveCSS(
+      'transition-duration',
+      '0s',
+    )
   })
 }
