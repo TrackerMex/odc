@@ -688,3 +688,12 @@ estado: implementación aprobada; init inicial verde
 - TDD: rojo `b9bbbf2` → implementación `9c4c640`. Vitest focalizado 7/7 y Playwright R3/R4/R13 1/1 verdes.
 - Navegador local: importe `scrollWidth === clientWidth`; búsqueda y filtro conservaron el campo en `top: 480px` y `scrollY: 528` durante las actualizaciones.
 - `./init.sh` final verde: 484 backend, 656 frontend, builds y lint. Docker backend/frontend reconstruidos, activos y accesibles en `localhost:3000`.
+
+---
+
+## 2026-09-13 — Foco continuo en la búsqueda automática
+
+- El usuario detectó que cada actualización automática recreaba los filtros y expulsaba el cursor del campo.
+- Se eliminó el remount por `query.q`; el estado local conserva escritura en curso y se sincroniza cuando la URL cambia mediante atrás/adelante.
+- TDD: rojo `5605a9b` → `60cd5e6`. Prueba focalizada 7/7, ESLint focalizado y `./init.sh` verde con 484 backend / 656 frontend.
+- Verificación real: al completar `man` como `mantenimiento`, el input conservó foco, valor, resultados y URL actualizados. Frontend Docker reconstruido y activo.

@@ -20,6 +20,7 @@ tags: [harness, spec, traceability]
 - R14 SSR: rojo `0542704` → `0652537`, títulos SVG de un solo string; 7/7 pruebas de workspace verdes. R14 ejes: rojo `e5a1ca4` (8.555px efectivos) → `67bff4d` (≥12px medidos).
 - Ajuste R7 solicitado: rojo `784c9a6` → componente interactivo shadcn/Recharts `f53561b`; selector de importe/compras, tooltip, escala desde cero y tabla textual. Guardas de dependencia actualizadas en `1054c8f`. Playwright ADMIN pasó 8 combinaciones de tema/ancho y `init.sh` final pasó 484 backend / 656 frontend.
 - Ajustes de filtros solicitados: rojo `b9bbbf2` → `9c4c640`; búsqueda automática a 300 ms con Enter inmediato, transición de consulta sin salto en dashboard y Mis tareas, e importe acumulado contenido. Vitest focalizado 7/7, Playwright R3/R4/R13 1/1 y comprobación visual local verdes.
+- Ajuste de foco solicitado: rojo `5605a9b` → `60cd5e6`; el filtro deja de remontarse al cambiar `q`, conserva el input activo y sincroniza navegación histórica. Verificado en navegador escribiendo `man` → `mantenimiento`: mismo input activo después de actualizar URL y resultados.
 - R11 proveedor: navegador rojo `88981de` → `67bff4d`, sin revalidar el valor anterior al cerrar el selector; 26 pruebas formulario/workspace verdes. E2E de creación intercepta todas las escrituras; no crea datos de negocio.
 - Matriz `frontend/e2e/dashboard-template.spec.ts`: 3 pruebas / 24 combinaciones verdes; 375/768/1024/1440, OPS/ADMIN/DG, claro/oscuro, sin desbordamiento global ni errores de hidratación. Contraste de tokens ≥4.5:1 cubierto por `frontend/src/styles.tokens.test.ts::R5`.
 
@@ -27,7 +28,7 @@ tags: [harness, spec, traceability]
 |---|---|---|
 | R1 | `frontend/src/components/layout/app-layout.test.tsx::R1`; `frontend/e2e/dashboard-template.spec.ts::R1,R14`; `frontend/e2e/executive-workspace.spec.ts::R1,R11,R12,R14` — header/aside y scroll reales | rojo `043ef67` → `192d74e`; E2E `8fddbef` |
 | R2 | `backend/src/modules/odc/application/use-cases/executive-workspace.spec.ts::R2,R3,R4`; `backend/test/executive-workspace.e2e-spec.ts::R2-R10` — límites México/UTC y all | rojo `091f44a` → `8854dc9 feat(workspace): add filtered pages and real monthly analytics` |
-| R3 | mismos tests R2,R3,R4 y PostgreSQL R2-R10; `executive-workspace.test.tsx` — búsqueda literal, automática a 300 ms, Enter inmediato, roles y filtros completos | backend rojo `091f44a` → `8854dc9`; UI rojo `b9bbbf2` → `9c4c640` |
+| R3 | mismos tests R2,R3,R4 y PostgreSQL R2-R10; `executive-workspace.test.tsx` — búsqueda literal, automática a 300 ms, Enter inmediato, foco continuo, navegación histórica, roles y filtros completos | backend rojo `091f44a` → `8854dc9`; UI rojo `b9bbbf2` → `9c4c640`; foco rojo `5605a9b` → `60cd5e6` |
 | R4 | mismos tests R2,R3,R4 y PostgreSQL R2-R10 — páginas 10/10/7 y orden estable | rojo `091f44a` → `8854dc9` |
 | R5 | `executive-workspace.spec.ts::R5,R7,R8,R9`; PostgreSQL R2-R10 — ADMIN DESC antes de paginar | rojo `091f44a` → `8854dc9` |
 | R6 | `frontend/src/components/odc/executive-workspace.test.tsx::R3,R4,R6,R7,R8,R9,R10`; PostgreSQL R2-R10 — periodo independiente | rojo `0962e9f` → `192d74e`; backend `8854dc9` |

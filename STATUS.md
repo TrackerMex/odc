@@ -54,8 +54,8 @@ Requiere `.env` en la raíz (plantilla en `.env.example`): `DATABASE_URL`,
   [progress/review_executive-workspace-v2.md](progress/review_executive-workspace-v2.md).
   Revisión independiente final: **ship**, tres correcciones materiales resueltas.
 - **Ajuste de filtros #32**: búsqueda automática a los 300 ms, Enter inmediato
-  sin duplicar consultas, posición estable al buscar/filtrar e importes largos
-  contenidos dentro del selector de la gráfica.
+  sin duplicar consultas, foco continuo mientras llegan resultados, posición
+  estable al buscar/filtrar e importes largos contenidos en la gráfica.
 - **Verificación #32**: último init verde (484 backend / 656 frontend), 3 pruebas
   PostgreSQL aisladas y 5 Playwright (matriz 24 combinaciones y flujos).
   El typecheck adicional conserva 18 errores previos en tests, sin errores nuevos
