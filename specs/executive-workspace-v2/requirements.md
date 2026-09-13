@@ -59,4 +59,4 @@ Tras aprobación, R4–R10 sustituyen los límites de cinco prioridades, el orde
 
 ## Aprobación
 
-- [ ] Aprobado por humano (fecha: ____)
+- [X] Aprobado por humano (fecha: 2026-09-13)
