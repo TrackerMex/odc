@@ -438,6 +438,22 @@ describe('frontend-dashboard-template R2: financial panel, priority and operatin
 })
 
 describe('executive-workspace-v2 R7,R9: real twelve-month trend, comparison and edge cases', () => {
+  it('uses the requested interactive chart to switch between paid amount and purchase count', () => {
+    render(<ExecutiveDashboard userName="Ana" dashboard={dashboard} />)
+
+    const amount = screen.getByRole('button', { name: /importe pagado/i })
+    const purchases = screen.getByRole('button', { name: /compras/i })
+
+    expect(amount.getAttribute('data-active')).toBe('true')
+    expect(amount.textContent).toContain('$12,500.00')
+    expect(purchases.textContent).toContain('12')
+
+    fireEvent.click(purchases)
+
+    expect(amount.getAttribute('data-active')).toBe('false')
+    expect(purchases.getAttribute('data-active')).toBe('true')
+  })
+
   it('shows twelve chronological months on a shared zero-based scale with equivalent text data', () => {
     render(<ExecutiveDashboard userName="Ana" dashboard={dashboard} />)
     const panel = screen.getByRole('region', { name: /pulso operativo/i })
