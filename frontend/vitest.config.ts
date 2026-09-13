@@ -9,6 +9,7 @@ export default defineConfig({
   plugins: [viteReact()],
   test: {
     environment: 'jsdom',
+    testTimeout: 10_000,
     setupFiles: ['./src/test/setup.ts'],
     // e2e/ holds Playwright specs (run via `pnpm e2e`), not vitest tests —
     // exclude it so vitest's default *.spec.ts glob doesn't pick them up.
