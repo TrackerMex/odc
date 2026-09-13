@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { fireEvent, render, screen, within } from '@testing-library/react'
 import { ApiError } from '@/lib/api'
 import type { Odc, Supplier } from '@/lib/odc'
+import type { SessionUser } from '@/lib/session'
 import { OdcForm } from './odc-form'
 
 const suppliers: Supplier[] = [
@@ -44,7 +45,7 @@ function draftOdc(): Odc {
   return { ...rejectedOdc(), status: 'BORRADOR', rejectionReason: null }
 }
 
-const user = {
+const user: SessionUser = {
   id: 'u1',
   email: 'ops@odc.local',
   fullName: 'Ana Pérez',
@@ -120,7 +121,9 @@ describe('R2,R3,R4,R5,R6: ODC form metadata, fields and live total', () => {
 
     const review = await screen.findByRole('dialog')
     expect(persist).not.toHaveBeenCalled()
-    fireEvent.click(within(review).getByRole('button', { name: /confirmar envío/i }))
+    fireEvent.click(
+      within(review).getByRole('button', { name: /confirmar envío/i }),
+    )
     await vi.waitFor(() => expect(persist).toHaveBeenCalled())
     expect(persist.mock.calls[0][0]).toMatchObject({ supplier: 'Suntech' })
     expect(submit).toHaveBeenCalledWith('o1')
@@ -151,41 +154,88 @@ describe('R2,R3,R4,R5,R6: ODC form metadata, fields and live total', () => {
 })
 
 async function fillNewOrder() {
-  fireEvent.change(screen.getByLabelText(/descripción/i), { target: { value: '  Sensores GPS  ' } })
-  fireEvent.change(screen.getByLabelText(/cantidad/i), { target: { value: '3' } })
-  fireEvent.change(screen.getByLabelText(/unidad/i), { target: { value: 'pieza' } })
-  fireEvent.change(screen.getByLabelText(/precio unitario/i), { target: { value: '149.90' } })
+  fireEvent.change(screen.getByLabelText(/descripción/i), {
+    target: { value: '  Sensores GPS  ' },
+  })
+  fireEvent.change(screen.getByLabelText(/cantidad/i), {
+    target: { value: '3' },
+  })
+  fireEvent.change(screen.getByLabelText(/unidad/i), {
+    target: { value: 'pieza' },
+  })
+  fireEvent.change(screen.getByLabelText(/precio unitario/i), {
+    target: { value: '149.90' },
+  })
   fireEvent.click(screen.getByRole('combobox', { name: /proveedor/i }))
   fireEvent.click(await screen.findByRole('option', { name: 'Suntech' }))
   fireEvent.click(screen.getByRole('button', { name: /añadir comentarios/i }))
-  fireEvent.change(screen.getByLabelText('Comentarios'), { target: { value: 'Entrega urgente' } })
+  fireEvent.change(screen.getByLabelText('Comentarios'), {
+    target: { value: 'Entrega urgente' },
+  })
 }
 
 describe('workspace v2 R11,R12: reviewed creation and safe send recovery', () => {
   it('reviews the validated snapshot, cancels without writes and confirms a single draft with its real folio', async () => {
     let resolveSave!: (odc: Odc) => void
-    const persist = vi.fn().mockImplementation(() => new Promise<Odc>((resolve) => { resolveSave = resolve }))
+    const persist = vi.fn().mockImplementation(
+      () =>
+        new Promise<Odc>((resolve) => {
+          resolveSave = resolve
+        }),
+    )
     const submit = vi.fn()
     const onSuccess = vi.fn()
-    render(<OdcForm user={user} suppliers={suppliers} persist={persist} submit={submit} onSuccess={onSuccess} />)
+    render(
+      <OdcForm
+        user={user}
+        suppliers={suppliers}
+        persist={persist}
+        submit={submit}
+        onSuccess={onSuccess}
+      />,
+    )
     await fillNewOrder()
-    fireEvent.click(screen.getByRole('button', { name: /guardar como borrador/i }))
+    fireEvent.click(
+      screen.getByRole('button', { name: /guardar como borrador/i }),
+    )
     const review = await screen.findByRole('dialog')
-    for (const value of ['Sensores GPS', 'Suntech', 'pieza', 'Entrega urgente', 'Borrador']) {
+    for (const value of [
+      'Sensores GPS',
+      'Suntech',
+      'pieza',
+      'Entrega urgente',
+      'Borrador',
+    ]) {
       expect(within(review).getByText(value)).toBeTruthy()
     }
     expect(review.textContent).toMatch(/449[.,]70/)
     expect(review.textContent).toMatch(/149[.,]90/)
     expect(persist).not.toHaveBeenCalled()
-    fireEvent.click(within(review).getByRole('button', { name: /volver a editar/i }))
+    fireEvent.click(
+      within(review).getByRole('button', { name: /volver a editar/i }),
+    )
     await vi.waitFor(() => expect(screen.queryByRole('dialog')).toBeNull())
-    expect(screen.getByDisplayValue('  Sensores GPS  ')).toBeTruthy()
-    fireEvent.click(screen.getByRole('button', { name: /guardar como borrador/i }))
-    const confirm = within(await screen.findByRole('dialog')).getByRole('button', { name: /confirmar borrador/i })
+    expect(
+      screen.getByLabelText<HTMLTextAreaElement>(/descripción/i).value,
+    ).toBe('  Sensores GPS  ')
+    fireEvent.click(
+      screen.getByRole('button', { name: /guardar como borrador/i }),
+    )
+    const confirm = within(await screen.findByRole('dialog')).getByRole(
+      'button',
+      { name: /confirmar borrador/i },
+    )
     fireEvent.click(confirm)
     fireEvent.click(confirm)
     expect(persist).toHaveBeenCalledTimes(1)
-    expect(persist).toHaveBeenCalledWith({ description: 'Sensores GPS', quantity: 3, unit: 'pieza', unitPriceCents: 14990, supplier: 'Suntech', comments: 'Entrega urgente' })
+    expect(persist).toHaveBeenCalledWith({
+      description: 'Sensores GPS',
+      quantity: 3,
+      unit: 'pieza',
+      unitPriceCents: 14990,
+      supplier: 'Suntech',
+      comments: 'Entrega urgente',
+    })
     resolveSave(draftOdc())
     const detail = await screen.findByRole('button', { name: /ver detalle/i })
     expect(screen.getByRole('status').textContent).toContain('ODC-2026-00001')
@@ -198,9 +248,19 @@ describe('workspace v2 R11,R12: reviewed creation and safe send recovery', () =>
 
   it('closes review with Escape, restores focus and does not create', async () => {
     const persist = vi.fn()
-    render(<OdcForm user={user} suppliers={suppliers} persist={persist} submit={vi.fn()} onSuccess={vi.fn()} />)
+    render(
+      <OdcForm
+        user={user}
+        suppliers={suppliers}
+        persist={persist}
+        submit={vi.fn()}
+        onSuccess={vi.fn()}
+      />,
+    )
     await fillNewOrder()
-    const trigger = screen.getByRole('button', { name: /enviar a administración/i })
+    const trigger = screen.getByRole('button', {
+      name: /enviar a administración/i,
+    })
     trigger.focus()
     fireEvent.click(trigger)
     const review = await screen.findByRole('dialog')
@@ -214,15 +274,38 @@ describe('workspace v2 R11,R12: reviewed creation and safe send recovery', () =>
     const draft = draftOdc()
     const sent = { ...draft, status: 'PENDIENTE_ADMIN' as const }
     const persist = vi.fn().mockResolvedValue(draft)
-    const submit = vi.fn().mockRejectedValueOnce(new ApiError(409, 'Conflict')).mockResolvedValue(sent)
+    const submit = vi
+      .fn()
+      .mockRejectedValueOnce(new ApiError(409, 'Conflict'))
+      .mockResolvedValue(sent)
     const onSuccess = vi.fn()
-    render(<OdcForm user={user} suppliers={suppliers} persist={persist} submit={submit} onSuccess={onSuccess} />)
+    render(
+      <OdcForm
+        user={user}
+        suppliers={suppliers}
+        persist={persist}
+        submit={submit}
+        onSuccess={onSuccess}
+      />,
+    )
     await fillNewOrder()
-    fireEvent.click(screen.getByRole('button', { name: /enviar a administración/i }))
-    fireEvent.click(within(await screen.findByRole('dialog')).getByRole('button', { name: /confirmar envío/i }))
-    const retry = await screen.findByRole('button', { name: /reintentar envío/i })
-    expect(screen.getByRole('alert').textContent).toContain('La orden ODC-2026-00001 quedó guardada como borrador')
-    expect((screen.getByLabelText(/descripción/i) as HTMLTextAreaElement).disabled).toBe(true)
+    fireEvent.click(
+      screen.getByRole('button', { name: /enviar a administración/i }),
+    )
+    fireEvent.click(
+      within(await screen.findByRole('dialog')).getByRole('button', {
+        name: /confirmar envío/i,
+      }),
+    )
+    const retry = await screen.findByRole('button', {
+      name: /reintentar envío/i,
+    })
+    expect(screen.getByRole('alert').textContent).toContain(
+      'La orden ODC-2026-00001 quedó guardada como borrador',
+    )
+    expect(
+      screen.getByLabelText<HTMLTextAreaElement>(/descripción/i).disabled,
+    ).toBe(true)
     expect(onSuccess).not.toHaveBeenCalled()
     expect(screen.getByRole('button', { name: /abrir detalle/i })).toBeTruthy()
     fireEvent.click(retry)
@@ -236,15 +319,104 @@ describe('workspace v2 R11,R12: reviewed creation and safe send recovery', () =>
     const persist = vi.fn().mockRejectedValue(new TypeError('Failed to fetch'))
     const submit = vi.fn()
     const onSuccess = vi.fn()
-    render(<OdcForm user={user} suppliers={suppliers} persist={persist} submit={submit} onSuccess={onSuccess} />)
+    render(
+      <OdcForm
+        user={user}
+        suppliers={suppliers}
+        persist={persist}
+        submit={submit}
+        onSuccess={onSuccess}
+      />,
+    )
     await fillNewOrder()
-    fireEvent.click(screen.getByRole('button', { name: /guardar como borrador/i }))
-    fireEvent.click(within(await screen.findByRole('dialog')).getByRole('button', { name: /confirmar borrador/i }))
-    expect((await screen.findByRole('alert')).textContent).toMatch(/no pudimos confirmar.*revisa.*antes de/i)
+    fireEvent.click(
+      screen.getByRole('button', { name: /guardar como borrador/i }),
+    )
+    fireEvent.click(
+      within(await screen.findByRole('dialog')).getByRole('button', {
+        name: /confirmar borrador/i,
+      }),
+    )
+    expect((await screen.findByRole('alert')).textContent).toMatch(
+      /no pudimos confirmar.*revisa.*antes de/i,
+    )
     expect(persist).toHaveBeenCalledTimes(1)
     expect(submit).not.toHaveBeenCalled()
     expect(onSuccess).not.toHaveBeenCalled()
     expect(screen.queryByRole('button', { name: /ver detalle/i })).toBeNull()
+    expect(
+      screen.getByRole('button', {
+        name: /guardar como borrador/i,
+      }).disabled,
+    ).toBe(true)
+  })
+
+  it.each([
+    [400, /revisa los datos del formulario/i],
+    [403, /no tienes permiso/i],
+  ])(
+    'preserves the form and existing error message after a confirmed %s rejection',
+    async (status, message) => {
+      const persist = vi
+        .fn()
+        .mockRejectedValue(new ApiError(status, 'Rejected'))
+      render(
+        <OdcForm
+          user={user}
+          suppliers={suppliers}
+          persist={persist}
+          submit={vi.fn()}
+          onSuccess={vi.fn()}
+        />,
+      )
+      await fillNewOrder()
+      fireEvent.click(
+        screen.getByRole('button', { name: /guardar como borrador/i }),
+      )
+      fireEvent.click(
+        within(await screen.findByRole('dialog')).getByRole('button', {
+          name: /confirmar borrador/i,
+        }),
+      )
+      expect((await screen.findByRole('alert')).textContent).toMatch(message)
+      expect(
+        screen.getByLabelText<HTMLTextAreaElement>(/descripción/i).disabled,
+      ).toBe(false)
+      expect(
+        screen.getByLabelText<HTMLTextAreaElement>(/descripción/i).value,
+      ).toBe('  Sensores GPS  ')
+      expect(persist).toHaveBeenCalledTimes(1)
+    },
+  )
+
+  it('retries an existing saved draft without another PATCH after submit fails', async () => {
+    const draft = draftOdc()
+    const sent = { ...draft, status: 'PENDIENTE_ADMIN' as const }
+    const persist = vi.fn().mockResolvedValue(draft)
+    const submit = vi
+      .fn()
+      .mockRejectedValueOnce(new ApiError(409, 'Conflict'))
+      .mockResolvedValue(sent)
+    const onSuccess = vi.fn()
+    render(
+      <OdcForm
+        user={user}
+        suppliers={suppliers}
+        initialOdc={draft}
+        persist={persist}
+        submit={submit}
+        onSuccess={onSuccess}
+      />,
+    )
+    fireEvent.click(
+      screen.getByRole('button', { name: /enviar a administración/i }),
+    )
+    fireEvent.click(
+      await screen.findByRole('button', { name: /reintentar envío/i }),
+    )
+    await vi.waitFor(() => expect(onSuccess).toHaveBeenCalledWith(sent))
+    expect(persist).toHaveBeenCalledTimes(1)
+    expect(submit.mock.calls).toEqual([['o1'], ['o1']])
   })
 })
 
@@ -483,7 +655,9 @@ describe('R8: progressive comments, dense fields and total hierarchy', () => {
     fireEvent.change(comments, { target: { value: 'Entrega urgente' } })
     fireEvent.click(trigger)
     fireEvent.click(trigger)
-    expect(screen.getByLabelText('Comentarios').value).toBe('Entrega urgente')
+    expect(
+      screen.getByLabelText<HTMLTextAreaElement>('Comentarios').value,
+    ).toBe('Entrega urgente')
   })
 
   it('opens existing comments and renders the dense grid, breakdown and footer', () => {

@@ -14,6 +14,7 @@ import {
   formatDate,
   formatUnitPriceInput,
   odcFormSchema,
+  statusLabel,
 } from '@/lib/odc'
 import type {
   Odc,
@@ -39,6 +40,14 @@ import {
   FieldLabel,
 } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
 import {
   Select,
   SelectContent,
@@ -108,6 +117,15 @@ export function OdcForm({
     valuesFromOdc(initialOdc),
   )
   const [persistedOdc, setPersistedOdc] = useState(initialOdc)
+  const [review, setReview] = useState<{
+    action: 'save' | 'send'
+    payload: OdcPayload
+  } | null>(null)
+  const [completedOdc, setCompletedOdc] = useState<Odc | null>(null)
+  const [recoveryOdc, setRecoveryOdc] = useState<Odc | null>(null)
+  const [uncertainCreation, setUncertainCreation] = useState(false)
+  const operationPending = useRef(false)
+  const reviewTriggerRef = useRef<HTMLElement | null>(null)
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({})
   const [operationError, setOperationError] = useState<string | null>(null)
   const [pendingAction, setPendingAction] = useState<'save' | 'send' | null>(
@@ -126,7 +144,12 @@ export function OdcForm({
   const unitPriceCents = Number.isFinite(Number(values.unitPrice))
     ? Math.round(Number(values.unitPrice) * 100)
     : 0
-  const disabled = pendingAction !== null || suppliers.length === 0
+  const fieldsDisabled =
+    pendingAction !== null ||
+    !!completedOdc ||
+    !!recoveryOdc ||
+    uncertainCreation
+  const disabled = fieldsDisabled || suppliers.length === 0
 
   function updateField(field: OdcFormField, value: string) {
     setValues((current) => ({ ...current, [field]: value }))
@@ -174,14 +197,35 @@ export function OdcForm({
     return buildOdcPayload(result.data)
   }
 
-  async function runAction(action: 'save' | 'send') {
+  function runAction(action: 'save' | 'send') {
+    if (operationPending.current || disabled) return
     const payload = validatedPayload()
     if (!payload) return
+    if (!initialOdc) {
+      reviewTriggerRef.current = document.activeElement as HTMLElement
+      setReview({ action, payload })
+      return
+    }
+    void persistAndSend(action, payload)
+  }
 
+  function finish(odc: Odc) {
+    setPersistedOdc(odc)
+    setRecoveryOdc(null)
+    if (initialOdc) onSuccess(odc)
+    else setCompletedOdc(odc)
+  }
+
+  async function persistAndSend(action: 'save' | 'send', payload?: OdcPayload) {
+    if (operationPending.current || completedOdc || uncertainCreation) return
+    operationPending.current = true
     setPendingAction(action)
     setOperationError(null)
+    let saved = payload ? undefined : recoveryOdc
     try {
-      const saved = await persist(payload)
+      if (payload) saved = await persist(payload)
+      if (!saved?.id || !saved.odcNumber)
+        throw new Error('Missing saved ODC identity')
       setPersistedOdc(saved)
       setValues(valuesFromOdc(saved))
 
@@ -191,22 +235,38 @@ export function OdcForm({
           title: 'ODC guardada',
           description: 'La orden quedó como borrador.',
         })
-        onSuccess(saved)
+        finish(saved)
         return
       }
 
-      if (!saved.id) throw new Error('Created ODC has no id')
       const sent = await submit(saved.id)
       toast.add({
         type: 'success',
         title: 'ODC enviada',
         description: 'Administración ya puede validar el presupuesto.',
       })
-      onSuccess(sent)
+      finish(sent)
     } catch (error) {
-      setOperationError(operationErrorMessage(error))
+      const uncertain = !(error instanceof ApiError) || error.status >= 500
+      if (saved?.id && saved.odcNumber && action === 'send') {
+        setRecoveryOdc(saved)
+        setOperationError(
+          uncertain
+            ? 'No pudimos confirmar el envío. Revisa el detalle antes de volver a enviarla.'
+            : operationErrorMessage(error),
+        )
+      } else if (uncertain) {
+        if (!initialOdc) setUncertainCreation(true)
+        setOperationError(
+          'No pudimos confirmar si se guardó la orden. Revisa tus órdenes antes de volver a guardarla.',
+        )
+      } else {
+        setOperationError(operationErrorMessage(error))
+      }
     } finally {
+      operationPending.current = false
       setPendingAction(null)
+      setReview(null)
     }
   }
 
@@ -246,7 +306,7 @@ export function OdcForm({
                   updateField('description', event.target.value)
                 }
                 placeholder="Describe el bien o servicio"
-                disabled={pendingAction !== null}
+                disabled={fieldsDisabled}
                 onBlur={() => validateField('description')}
                 aria-invalid={!!fieldErrors.description}
                 aria-describedby={
@@ -271,7 +331,7 @@ export function OdcForm({
                     updateField('quantity', event.target.value)
                   }
                   placeholder="1"
-                  disabled={pendingAction !== null}
+                  disabled={fieldsDisabled}
                   onBlur={() => validateField('quantity')}
                   aria-invalid={!!fieldErrors.quantity}
                   aria-describedby={
@@ -288,7 +348,7 @@ export function OdcForm({
                   value={values.unit}
                   onChange={(event) => updateField('unit', event.target.value)}
                   placeholder="pieza, servicio, lote…"
-                  disabled={pendingAction !== null}
+                  disabled={fieldsDisabled}
                   onBlur={() => validateField('unit')}
                   aria-invalid={!!fieldErrors.unit}
                   aria-describedby={fieldErrors.unit ? 'unit-error' : undefined}
@@ -308,7 +368,7 @@ export function OdcForm({
                     updateField('unitPrice', event.target.value)
                   }
                   placeholder="0.00"
-                  disabled={pendingAction !== null}
+                  disabled={fieldsDisabled}
                   onBlur={() => validateField('unitPrice')}
                   aria-invalid={!!fieldErrors.unitPrice}
                   aria-describedby={
@@ -330,7 +390,7 @@ export function OdcForm({
                 onOpenChange={(open) => {
                   if (!open) validateField('supplier')
                 }}
-                disabled={pendingAction !== null || suppliers.length === 0}
+                disabled={disabled}
               >
                 <SelectTrigger
                   ref={supplierRef}
@@ -383,7 +443,7 @@ export function OdcForm({
                       updateField('comments', event.target.value)
                     }
                     placeholder="Información adicional para la compra"
-                    disabled={pendingAction !== null}
+                    disabled={fieldsDisabled}
                     aria-invalid={!!fieldErrors.comments}
                   />
                   <FieldError
@@ -481,14 +541,146 @@ export function OdcForm({
           >
             <p className="font-medium">No se completó la operación</p>
             <p className="mt-1">{operationError}</p>
-            {persistedOdc?.odcNumber ? (
+            {recoveryOdc ? (
               <p className="mt-2 text-foreground">
-                La orden {persistedOdc.odcNumber} sí quedó guardada.
+                La orden {recoveryOdc.odcNumber} quedó guardada como{' '}
+                {statusLabel(recoveryOdc.status).toLocaleLowerCase('es-MX')}.
               </p>
+            ) : null}
+            {recoveryOdc ? (
+              <div className="mt-4 flex flex-col gap-2">
+                <Button
+                  type="button"
+                  className="min-h-11"
+                  disabled={pendingAction !== null}
+                  onClick={() => void persistAndSend('send')}
+                >
+                  {pendingAction ? 'Enviando…' : 'Reintentar envío'}
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="min-h-11"
+                  disabled={pendingAction !== null}
+                  onClick={() => onSuccess(recoveryOdc)}
+                >
+                  Abrir detalle para editar
+                </Button>
+              </div>
             ) : null}
           </div>
         ) : null}
+        {completedOdc ? (
+          <div className="space-y-4 rounded-card border bg-card p-4">
+            <p role="status">
+              Orden {completedOdc.odcNumber} ·{' '}
+              {statusLabel(completedOdc.status)}
+            </p>
+            <Button
+              type="button"
+              className="min-h-11 w-full"
+              onClick={() => onSuccess(completedOdc)}
+            >
+              Ver detalle
+            </Button>
+          </div>
+        ) : null}
       </aside>
+      <Dialog
+        open={review !== null}
+        onOpenChange={(open) => {
+          if (!open && !operationPending.current) setReview(null)
+        }}
+      >
+        <DialogContent
+          finalFocus={reviewTriggerRef}
+          showCloseButton={pendingAction === null}
+          className="max-h-[calc(100dvh-2rem)] overflow-y-auto sm:max-w-lg [&_[data-slot=dialog-close]]:size-11"
+          aria-busy={pendingAction !== null}
+        >
+          <DialogHeader>
+            <DialogTitle>Revisar orden de compra</DialogTitle>
+            <DialogDescription>
+              Confirma los datos y el destino antes de crear la ODC.
+            </DialogDescription>
+          </DialogHeader>
+          {review ? (
+            <dl className="grid gap-4 [&_dt]:text-muted-foreground [&_dd]:mt-1 [&_dd]:break-words">
+              <div>
+                <dt>Proveedor</dt>
+                <dd>{review.payload.supplier}</dd>
+              </div>
+              <div>
+                <dt>Descripción / concepto</dt>
+                <dd className="whitespace-pre-wrap">
+                  {review.payload.description}
+                </dd>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <dt>Cantidad</dt>
+                  <dd>{review.payload.quantity}</dd>
+                </div>
+                <div>
+                  <dt>Unidad</dt>
+                  <dd>{review.payload.unit}</dd>
+                </div>
+              </div>
+              <div>
+                <dt>Precio unitario (MXN)</dt>
+                <dd>{formatCurrency(review.payload.unitPriceCents)}</dd>
+              </div>
+              {review.payload.comments ? (
+                <div>
+                  <dt>Comentarios</dt>
+                  <dd className="whitespace-pre-wrap">
+                    {review.payload.comments}
+                  </dd>
+                </div>
+              ) : null}
+              <div className="border-t pt-4">
+                <dt>Total estimado (MXN)</dt>
+                <dd className="text-2xl font-semibold tabular-nums">
+                  {formatCurrency(
+                    review.payload.quantity * review.payload.unitPriceCents,
+                  )}
+                </dd>
+              </div>
+              <div>
+                <dt>Destino</dt>
+                <dd className="font-medium">
+                  {review.action === 'save' ? 'Borrador' : 'Administración'}
+                </dd>
+              </div>
+            </dl>
+          ) : null}
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              className="min-h-11"
+              disabled={pendingAction !== null}
+              onClick={() => setReview(null)}
+            >
+              Volver a editar
+            </Button>
+            <Button
+              type="button"
+              className="min-h-11"
+              disabled={pendingAction !== null}
+              onClick={() => {
+                if (review) void persistAndSend(review.action, review.payload)
+              }}
+            >
+              {pendingAction
+                ? 'Procesando…'
+                : review?.action === 'save'
+                  ? 'Confirmar borrador'
+                  : 'Confirmar envío a Administración'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </form>
   )
 }
