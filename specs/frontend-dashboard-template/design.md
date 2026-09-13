@@ -1,12 +1,12 @@
 ---
 feature: "frontend-dashboard-template"
-status: draft
+status: implemented
 tags: [harness, spec, frontend, dashboard]
 ---
 
 # Diseño — [[frontend-dashboard-template]]
 
-> Ver [[requirements]] y [[../../docs/architecture|architecture]]. Propuesta: no habilita implementación.
+> Ver [[requirements]] aprobados por el usuario y [[../../docs/architecture|architecture]]. Adaptación implementada; evidencia en [[../../progress/verify_frontend-dashboard-template]].
 
 ## Decisiones técnicas
 
