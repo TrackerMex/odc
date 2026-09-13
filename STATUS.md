@@ -1,7 +1,7 @@
 # ODC — Status
 
 **Última actualización**: 2026-09-13
-**Features completadas**: 32/32 (`feature_list.json`)
+**Features completadas**: 33/33 (`feature_list.json`)
 **Pendientes del registro**: ninguno; las entregas restantes de la auditoría están en el plan 002
 **En producción**: no
 
@@ -37,6 +37,13 @@ Requiere `.env` en la raíz (plantilla en `.env.example`): `DATABASE_URL`,
 
 ## Estado actual
 
+- **#33 `odc-notifications` done**: campana persistente en el header para los
+  tres roles, alimentada por el historial transaccional de las ODC. Muestra
+  creación y cambios de estado con folio, actor, tiempo, contador por usuario,
+  enlaces al detalle y «Marcar todas como leídas». Actualiza al abrir, volver a
+  la ventana, cada 30 segundos y después de mutaciones locales. Los borradores
+  siguen siendo privados de su creador. Verificación: API real para tres roles,
+  navegador local y `./init.sh` verde con 489 backend / 661 frontend.
 - **Revisión integral (2026-09-13)**: 25 hallazgos priorizados en
   [plans/002-system-review.md](plans/002-system-review.md). Incluye UX, integridad,
   archivos, consultas y preparación productiva. #32 resuelve el workspace;

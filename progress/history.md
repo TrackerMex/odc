@@ -705,3 +705,14 @@ estado: implementación aprobada; init inicial verde
 - El PATCH de `ODC-2026-00013` devolvía 400 porque conservaba “Seguridad y Suministros del Norte S.A.”, nombre anterior que no existe en el catálogo de 22 proveedores.
 - El backend ahora omite la revalidación únicamente cuando el proveedor recibido coincide con el ya almacenado. Crear o cambiar a un proveedor fuera del catálogo continúa rechazado.
 - TDD: rojo `2b1f996` → `c54559b`; 14/14 pruebas focalizadas y `./init.sh` verde con 485 backend / 656 frontend. No se modificaron datos de negocio durante la investigación.
+
+---
+
+## 2026-09-13 — Notificaciones de actividad de ODC
+
+- Se implementó la feature 33 con aprobación explícita del usuario: creación y cambios de estado visibles desde una campana común a los tres roles.
+- El historial existente es la fuente de eventos; `users.notificationsReadAt` persiste el corte de lectura por usuario. No se duplicaron eventos ni se alteraron transiciones.
+- El feed devuelve 20 eventos recientes, conteo no leído exacto, actor, folio, estado y fecha. Los borradores solo son visibles para su creador; los eventos posteriores se comparten entre los tres roles.
+- El panel accesible ofrece badge, lectura, carga/error/vacío, enlaces al detalle y refresco al abrir, enfocar, cada 30 segundos o tras una mutación ODC exitosa.
+- TDD: rojo `0e3cc9f` → `56e6002`. API real verificada con OPS, Administración y Dirección General; navegador oscuro verificado con 67 eventos no leídos y scroll local.
+- `./init.sh` verde: 489 backend, 661 frontend, builds y lint.
