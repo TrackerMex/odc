@@ -585,3 +585,29 @@ _El historial comenzará aquí cuando se complete la primera sesión._
 - Maqueta documental en specs/frontend-dashboard-template/preview.html con usuario y datos explícitamente ficticios. Inspección a 1440px en ambos temas, 375px en ambos temas y 768px en claro; medidas sin desbordamiento de página a 375/768/1024px. Menú móvil y tema comprobados. Ajustada composición de 768px tras inspección. Esto no acredita todavía la UI de producción ni R7 completo.
 - Código de aplicación sin modificar. init.sh inicial verde: 471 backend y 601 frontend. Segundo init: timeout de 5000ms en un test existente del calendario (600/601 frontend); reintento aislado 2/2 verde. Tercer init completo verde, exit 0: 471 backend, 601 frontend, builds y lint. No se cambió código ni configuración para el reintento.
 - STATUS.md actualizado. Pendiente: aprobación humana de specs/frontend-dashboard-template/requirements.md antes de implementar.
+
+---
+
+## 2026-09-13 — Implementación frontend-dashboard-template (#31)
+
+# Sesión activa
+
+> Este archivo describe el estado de la sesión en curso.
+> Al cerrar la sesión, mueve este contenido a progress/history.md y deja solo esta plantilla.
+
+```
+feature: frontend-dashboard-template (#31)
+inicio: 2026-09-13
+agentes lanzados: implementer_shell, reviewer_dashboard
+estado: done, revisión independiente aprobada
+```
+
+- Humano marcó aprobación en requirements.md y confirmó «ya lo aprobe» en chat.
+- init.sh inicial verde: 471 backend, 601 frontend, builds y lint.
+- Plan: TDD por grupos R1 shell; R2–R6 dashboard; R7 verificación adaptable; R8 procedencia y revisión independiente.
+- Docker Compose iniciado para verificar la aplicación real. Sin cambios de backend ni datos de negocio.
+- Shell y dashboard implementados con commits test-primero. 240 pruebas focalizadas verdes; lint de archivos modificados verde.
+- 24 combinaciones visuales (375/768/1024/1440, claro/oscuro, OPS/ADMIN/DG) verdes. Ajuste final de movimiento reducido del menú móvil, con test rojo reproducido (200ms frente a 0ms).
+- Ajuste de movimiento reducido verde. Init final exit 0: 471 backend, 618 frontend. Matriz final 3/3; regresión de seis rutas móvil 2/2. Implementación final 755b2af; reviewer_dashboard ejecuta comprobación independiente.
+- Hallazgo del reviewer: estado largo fuera de su celda. Test rojo 9a4a722 y fix a36ba90; matriz repetida 3/3, tests focalizados 228/228 y lint verdes. Init independiente definitivo en ejecución sobre a36ba90.
+- Reviewer APROBADO: init final independiente exit 0 con builds, lint, 471 backend y 618 frontend verdes. Sin hallazgos abiertos. Feature #31 done, STATUS actualizado, 31/31 completadas. Capturas finales guardadas y app local abierta para revisión.

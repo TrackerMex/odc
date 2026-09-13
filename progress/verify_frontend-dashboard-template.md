@@ -18,6 +18,7 @@ Fecha: 2026-09-13. Aplicación real en Docker Compose, Chromium, datos locales e
 - Tokens originales preservados. `styles.tokens.test.ts` comprueba contraste ≥4.5:1 de texto principal/secundario y estados; los enlaces conservan el primario auditado en ambos temas.
 - Movimiento reducido: transición de sidebar desktop, panel móvil y overlay = 0s. La tabla es una región nombrada y enfocable con teclado, sin ocultar columnas.
 - Comprobación manual adicional de tabla a 375px: foco en región y ArrowRight desplazó scrollLeft a 40px (ancho visible 326px, contenido 680px).
+- Revisión detectó estado largo fuera de celda (43px). Tras a36ba90 la matriz comprueba que cada badge queda dentro de su columna y todo su texto cabe en altura. Repetición completa: 3/3 verde, 24 combinaciones; captura ADMIN768 inspeccionada con estado en dos líneas.
 - Capturas de la matriz bajo `frontend/test-results/dashboard-template-*/{rol}-{ancho}-{tema}.png` (artefactos locales ignorados por Git y regenerables al correr la matriz).
 - Capturas de entrega copiadas a `C:/Users/alex/.codex/visualizations/2026/09/13/01a09963-d969-7083-a380-3590108d7551/` con prefijo `odc-dashboard-live-`.
 

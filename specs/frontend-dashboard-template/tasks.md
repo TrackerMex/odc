@@ -1,6 +1,6 @@
 ---
 feature: "frontend-dashboard-template"
-status: implemented
+status: done
 tags: [harness, spec, frontend, dashboard]
 ---
 
@@ -54,4 +54,4 @@ tags: [harness, spec, frontend, dashboard]
 
 - [x] (1) Comprobación inicial: correspondencia con la plantilla, avisos de código copiado, ausencia de dependencias/endpoints nuevos y cobertura de R1–R7.
 - [x] (2) Documentar procedencia final, incluir MIT si corresponde y ejecutar `./init.sh` y verificación visual de la app.
-- [ ] (3) Revisar diff y trazabilidad con checks verdes; commit convencional y cierre de estado/progreso según AGENTS.md.
+- [x] (3) Revisar diff y trazabilidad con checks verdes; commit convencional y cierre de estado/progreso según AGENTS.md.

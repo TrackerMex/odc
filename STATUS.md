@@ -1,8 +1,8 @@
 # ODC — Status
 
 **Última actualización**: 2026-09-13
-**Features completadas**: 30/31 (`feature_list.json`)
-**Pendientes**: #31 `frontend-dashboard-template`, propuesta escrita; aprobación humana pendiente
+**Features completadas**: 31/31 (`feature_list.json`)
+**Pendientes**: ninguna feature abierta
 **En producción**: no
 
 ---
@@ -101,9 +101,9 @@ Requiere `.env` en la raíz (plantilla en `.env.example`): `DATABASE_URL`,
   en español —zod v4 los emitía en inglés a la vista, defecto encontrado al
   especificar— y `<title>` global `ODC — Órdenes de compra` en `__root.tsx`.
   5 líneas en 3 archivos. Verificado en Chromium real, no solo en jsdom.
-- **Las 30 features originales están cerradas.** La #31 está especificada y
-  pendiente de aprobación humana. Otros candidatos ya anotados y sin dueño: las dos deudas de la #28
-  (área táctil bajo 44×44px, `grid-cols-3` del resumen mensual a siete cifras),
+- **#31 `frontend-dashboard-template` done** (2026-09-13): Modern + Orders Table adaptados al shell y dashboard, con datos reales, navegación por rol, panel unido, tabla prioritaria y contexto operativo. Temas, teclado, estados largos y movimiento reducido verificados en 24 combinaciones. Aviso MIT y procedencia en `frontend/THIRD_PARTY_NOTICES.md`.
+- **Las 31 features están cerradas.** Otros candidatos ya anotados y sin dueño: las deudas de la #28
+  (área táctil bajo 44×44px fuera del shell/dashboard ajustados en #31, `grid-cols-3` del resumen mensual a siete cifras),
   el copy en inglés de las primitivas `ui/` (`pagination.tsx`, `sheet.tsx`,
   `sidebar.tsx`, hallazgo de la #29), re-saturar las 8 badges de dark
   (`progress/ui-redesign-plan.md`), la rama "correo vacío" de R2 sin test en
@@ -116,13 +116,14 @@ Requiere `.env` en la raíz (plantilla en `.env.example`): `DATABASE_URL`,
 
 ## Última sesión
 
-**2026-09-13** — Propuesta de `frontend-dashboard-template` (#31).
+**2026-09-13** — Cierre de `frontend-dashboard-template` (#31).
 
 - Elegida la demo Modern tras comparar Analytics, eCommerce y Modern; Orders Table como referencia complementaria.
-- Spec en `specs/frontend-dashboard-template/`, sin aprobar. Maqueta documental en `preview.html`, con datos ficticios y temas claro/oscuro.
-- Alcance propuesto: shell autenticado y dashboard ejecutivo para los tres roles, conservando contratos y permisos.
-- Código de producción sin modificar. Verificación inicial y final verdes: 471 tests backend y 601 frontend, builds y lint. En la verificación intermedia hubo un timeout del calendario; reintento aislado y completo verdes sin cambios de código.
-- Siguiente paso: aprobación humana de la propuesta antes de implementar.
+- Spec aprobada por humano antes de implementar; commits test-primero y trazabilidad completa.
+- Shell autenticado y dashboard ejecutivo implementados para los tres roles, conservando contratos y permisos.
+- Init del implementer y revisión independiente verdes: 471 tests backend y 618 frontend, builds y lint. Matriz visual 3/3 tests (24 combinaciones); regresión móvil 2/2 en seis rutas.
+- Hallazgo de revisión corregido: estados largos ajustan su texto dentro de la columna. Código final a36ba90; revisión APROBADO en `progress/review_frontend-dashboard-template.md`.
+- STATUS, tareas e historial actualizados; ninguna feature abierta. La aplicación sigue en entorno local, sin despliegue de producción.
 
 ---
 

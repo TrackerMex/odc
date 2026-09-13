@@ -19,6 +19,7 @@ Adaptación aprobada de Modern + Orders Table al shell autenticado y dashboard d
 - R2–R6: test efd77fb (13 fallos iniciales); implementación 31d5695. Guard de anchura alineado con scroll local aprobado en 05e742a.
 - R7/R8: test 1cccb99, targets de tema inicialmente 32px y aviso MIT inexistente. Test 2b0f493 reprodujo transición móvil de 200ms con movimiento reducido. Implementación 755b2af.
 - La matriz espera la hidratación del menú antes de enviar Enter (4ea8e4a); el primer arranque frío de Vite puede superar los cinco segundos. No se cambiaron controles para compensar la espera del test.
+- Hallazgo del reviewer R7: el estado «Pendiente de Administración» excedía su celda 43px. Test rojo 9a4a722; fix a36ba90 permite salto de línea y altura automática solo en el badge de prioridad. Matriz final 3/3 verde, incluyendo límites de celda y ausencia de recorte vertical; tests focalizados 228/228 y lint verdes tras este ajuste.
 - Detalle de requisitos y commits en `specs/frontend-dashboard-template/traceability.md`.
 
 ## Validación
@@ -31,4 +32,4 @@ Adaptación aprobada de Modern + Orders Table al shell autenticado y dashboard d
 - Regresión móvil existente: 2/2 tests, seis rutas con scrollWidth = clientWidth = 375.
 - Evidencia y limitaciones de desarrollo en `progress/verify_frontend-dashboard-template.md`.
 
-Revisión independiente requerida antes de marcar done.
+Revisión independiente APROBADA en `progress/review_frontend-dashboard-template.md`: init definitivo sobre a36ba90, exit 0, 471 backend y 618 frontend, builds y lint verdes. Sin hallazgos abiertos.

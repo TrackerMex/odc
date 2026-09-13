@@ -14,7 +14,7 @@ tags: [harness, spec, frontend, dashboard]
 | R4 | frontend/src/components/odc/executive-dashboard.test.tsx::frontend-dashboard-template R4: complete and accessible priority table | test efd77fb; feat 31d5695 |
 | R5 | frontend/src/components/odc/executive-dashboard.test.tsx::frontend-dashboard-template R5: supplier bars and independent empty states | test efd77fb; feat 31d5695 |
 | R6 | frontend/src/components/odc/executive-dashboard.test.tsx::frontend-dashboard-template R6: loading announcement and recovery | test efd77fb; feat 31d5695 |
-| R7 | frontend/e2e/dashboard-template.spec.ts::frontend-dashboard-template R1,R2,R7 (tres roles, cuatro anchos, dos temas, teclado, targets y movimiento reducido); frontend/src/styles.tokens.test.ts::R5 contraste | test 1cccb99, 2b0f493; feat 755b2af |
+| R7 | frontend/e2e/dashboard-template.spec.ts::frontend-dashboard-template R1,R2,R7 (tres roles, cuatro anchos, dos temas, teclado, targets, movimiento reducido y límites de estados largos); frontend/src/styles.tokens.test.ts::R5 contraste | test 1cccb99, 2b0f493, 9a4a722; feat 755b2af; fix a36ba90 |
 | R8 | frontend/src/design-system.guardrails.test.ts::frontend-dashboard-template R8: template provenance; init.sh | test 1cccb99; feat 755b2af |
 
 El implementer actualiza cada fila tras su commit. No declarar `done` con filas pendientes. Adjuntar evidencia visual de R7 junto a los tests, sin sustituir comprobaciones funcionales. Ver [[../../docs/specs|specs]] y [[../../CHECKPOINTS|CHECKPOINTS]].
