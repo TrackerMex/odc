@@ -1,6 +1,8 @@
 import { describe, expect, it, vi } from 'vitest'
 import { fireEvent, render, screen, within } from '@testing-library/react'
 import type * as RouterModule from '@tanstack/react-router'
+import type { ComponentProps } from 'react'
+import { ODC_STATUSES } from '@/lib/odc'
 import type { ExecutiveDashboardResponse } from '@/lib/odc'
 import {
   ExecutiveDashboard,
@@ -12,8 +14,21 @@ vi.mock('@tanstack/react-router', async (importOriginal) => {
   const actual = await importOriginal<typeof RouterModule>()
   return {
     ...actual,
-    Link: ({ children, to, params, ...props }: any) => (
-      <a href={params?.id ? `/odcs/${params.id}` : to} {...props}>
+    Link: ({
+      children,
+      to,
+      params,
+      search,
+      ...props
+    }: ComponentProps<'a'> & {
+      to: string
+      params?: { id?: string }
+      search?: Record<string, string | number>
+    }) => (
+      <a
+        href={`${params?.id ? `/odcs/${params.id}` : to}${search ? `?${new URLSearchParams(Object.entries(search).map(([key, value]) => [key, String(value)]))}` : ''}`}
+        {...props}
+      >
         {children}
       </a>
     ),
@@ -25,6 +40,8 @@ const dashboard: ExecutiveDashboardResponse = {
   role: 'DIRECTOR_OPS',
   priority: {
     total: 6,
+    page: 1,
+    pageSize: 10,
     items: [
       {
         id: 'draft-1',
@@ -61,6 +78,17 @@ const dashboard: ExecutiveDashboardResponse = {
       },
     ],
   },
+  actionableTotal: 6,
+  createdOrders: 9,
+  monthlyTrend: Array.from({ length: 12 }, (_, index) => ({
+    month: new Date(Date.UTC(2025, 7 + index, 1)).toISOString().slice(0, 7),
+    purchaseCount: index === 11 ? 8 : index === 10 ? 4 : 0,
+    totalCents: index === 11 ? 750_000 : index === 10 ? 500_000 : 0,
+  })),
+  statusDistribution: ODC_STATUSES.map((status) => ({
+    status,
+    count: status === 'COMPLETADA' ? 9 : 0,
+  })),
   pulse: {
     current: { purchaseCount: 8, totalCents: 750_000 },
     previous: { month: '2026-06', purchaseCount: 4, totalCents: 500_000 },
@@ -158,14 +186,14 @@ describe('frontend-dashboard-template R4: filas semánticas con foco y contexto'
   })
 })
 
-describe('R3: executive priority makes the oldest actionable work visible first', () => {
-  it('renders task context, total overflow and detail links before secondary metrics', () => {
+describe('executive-workspace-v2 R5,R10: executive priority preserves the actionable work context', () => {
+  it('renders task context, filtered total and links to details and all-month tasks', () => {
     render(<ExecutiveDashboard userName="Ana Pérez" dashboard={dashboard} />)
 
     expect(
       screen.getByRole('region', { name: /prioridad inmediata/i }),
     ).toBeTruthy()
-    expect(screen.getByText(/6 tareas requieren atención/i)).toBeTruthy()
+    expect(screen.getByText('Mostrando 1–3 de 6')).toBeTruthy()
     expect(screen.getByText(/Sensores para almacén/i)).toBeTruthy()
     expect(screen.getByText('26 días')).toBeTruthy()
     expect(
@@ -175,9 +203,9 @@ describe('R3: executive priority makes the oldest actionable work visible first'
     ).toBe('/odcs/draft-1')
     expect(
       screen
-        .getByRole('link', { name: /ver todas las tareas/i })
+        .getByRole('link', { name: /ver pendientes de todos los meses/i })
         .getAttribute('href'),
-    ).toBe('/tasks')
+    ).toBe('/tasks?month=all&page=1')
     expect(screen.getByText(/Pulso operativo/i)).toBeTruthy()
   })
 
@@ -188,6 +216,7 @@ describe('R3: executive priority makes the oldest actionable work visible first'
         dashboard={{
           ...dashboard,
           priority: {
+            ...dashboard.priority,
             total: 1,
             items: [
               {
@@ -238,16 +267,19 @@ describe('R2: executive dashboard makes each priority task scannable', () => {
   })
 })
 
-describe('R3: executive dashboard surfaces four real operating metrics', () => {
-  it('renders priority, purchases, paid amount and oldest active work without a chart', () => {
+describe('executive-workspace-v2 R9: executive dashboard surfaces four real operating metrics', () => {
+  it('renders actionable total, purchases, paid amount and orders created with their criteria', () => {
     render(<ExecutiveDashboard userName="Ana Pérez" dashboard={dashboard} />)
 
     const pulse = screen.getByRole('region', { name: /pulso operativo/i })
     expect(pulse.textContent).toContain('Tareas pendientes')
     expect(pulse.textContent).toContain('Compras pagadas')
     expect(pulse.textContent).toContain('Compras del periodo')
-    expect(pulse.textContent).toContain('Mayor antigüedad')
-    expect(pulse.textContent).toContain('22 días')
+    expect(pulse.textContent).toContain('ODC creadas')
+    expect(within(pulse).getByText('9')).toBeTruthy()
+    expect(pulse.textContent).toContain('Por fecha de creación')
+    expect(pulse.textContent).toContain('Todos los meses · sin filtros')
+    expect(pulse.textContent).not.toContain('Mayor antigüedad')
   })
 })
 
@@ -307,7 +339,11 @@ describe('R8: executive dashboard communicates loading and empty task states', (
     render(
       <ExecutiveDashboard
         userName="Luz Admin"
-        dashboard={{ ...dashboard, priority: { total: 0, items: [] } }}
+        dashboard={{
+          ...dashboard,
+          actionableTotal: 0,
+          priority: { ...dashboard.priority, total: 0, items: [] },
+        }}
       />,
     )
 
@@ -401,19 +437,33 @@ describe('frontend-dashboard-template R2: financial panel, priority and operatin
   })
 })
 
-describe('frontend-dashboard-template R3: real monthly comparison and edge cases', () => {
-  it('uses the two reported months, a shared scale and the total task count', () => {
+describe('executive-workspace-v2 R7,R9: real twelve-month trend, comparison and edge cases', () => {
+  it('shows twelve chronological months on a shared zero-based scale with equivalent text data', () => {
     render(<ExecutiveDashboard userName="Ana" dashboard={dashboard} />)
     const panel = screen.getByRole('region', { name: /pulso operativo/i })
-    const bars = within(panel).getAllByRole('meter')
-    expect(bars).toHaveLength(2)
-    expect(bars[0].getAttribute('aria-label')).toMatch(/julio de 2026/i)
-    expect(bars[1].getAttribute('aria-label')).toMatch(/junio de 2026/i)
-    expect(bars[0].getAttribute('aria-valuenow')).toBe('750000')
-    expect(bars[1].getAttribute('aria-valuenow')).toBe('500000')
-    expect(
-      bars.every((bar) => bar.getAttribute('aria-valuemax') === '750000'),
-    ).toBe(true)
+    const chart = screen.getByRole('img', { name: /compras pagadas por mes/i })
+    const points = chart.querySelectorAll('circle')
+    expect(points).toHaveLength(12)
+    expect(points[0].textContent).toContain('agosto de 2025: $0.00')
+    expect(points[10].textContent).toContain('junio de 2026: $5,000.00')
+    expect(points[11].textContent).toContain('julio de 2026: $7,500.00')
+    expect(Number(points[11].getAttribute('cy'))).toBeLessThan(
+      Number(points[10].getAttribute('cy')),
+    )
+    expect(Number(points[10].getAttribute('cy'))).toBeLessThan(
+      Number(points[0].getAttribute('cy')),
+    )
+    expect(chart.textContent).toContain('Escala desde cero')
+    fireEvent.click(screen.getByText('Ver datos de la gráfica'))
+    const rows = within(
+      screen.getByRole('table', { name: 'Importes pagados por mes' }),
+    ).getAllByRole('row')
+    expect(rows).toHaveLength(13)
+    expect(rows[1].textContent).toContain('agosto de 2025')
+    expect(rows[11].textContent).toContain('$5,000.00')
+    expect(rows[12].textContent).toContain('julio de 2026')
+    expect(rows[12].textContent).toContain('$7,500.00')
+    expect(within(rows[12]).getByText('8')).toBeTruthy()
     expect(within(panel).getByText('6')).toBeTruthy()
     expect(panel.textContent).toContain('+50%')
     expect(panel.textContent).not.toMatch(/mejora|ahorro/)
@@ -427,6 +477,16 @@ describe('frontend-dashboard-template R3: real monthly comparison and edge cases
           userName="Ana"
           dashboard={{
             ...dashboard,
+            monthlyTrend: dashboard.monthlyTrend.map((item) => ({
+              ...item,
+              totalCents: 0,
+              purchaseCount: 0,
+            })),
+            createdOrders: 0,
+            statusDistribution: dashboard.statusDistribution.map((item) => ({
+              ...item,
+              count: 0,
+            })),
             pulse: {
               current: { purchaseCount: 0, totalCents: 0 },
               previous: { month: '2026-06', purchaseCount: 0, totalCents: 0 },
@@ -438,17 +498,25 @@ describe('frontend-dashboard-template R3: real monthly comparison and edge cases
         />,
       )
       const panel = screen.getByRole('region', { name: /pulso operativo/i })
-      for (const bar of within(panel).getAllByRole('meter')) {
-        expect(bar.getAttribute('aria-valuenow')).toBe('0')
-        expect(bar.getAttribute('aria-valuemax')).toBe('1')
-        expect(
-          bar.querySelector<HTMLElement>('[aria-hidden="true"]')?.style.width,
-        ).toBe('0%')
+      const points = screen
+        .getByRole('img', { name: /compras pagadas por mes/i })
+        .querySelectorAll('circle')
+      expect(points).toHaveLength(12)
+      const baseline = points[0].getAttribute('cy')
+      for (const point of points) {
+        expect(point.textContent).toContain('$0.00')
+        expect(point.getAttribute('cy')).toBe(baseline)
+        expect(Number.isFinite(Number(point.getAttribute('cy')))).toBe(true)
       }
       expect(panel.textContent).toContain(
         change === null ? 'Sin base de comparación' : '0%',
       )
-      expect(panel.textContent).toContain('Sin órdenes')
+      expect(
+        screen.getByText('No se crearon órdenes visibles en este mes.'),
+      ).toBeTruthy()
+      expect(
+        screen.getByText(/No hay órdenes activas con antigüedad/),
+      ).toBeTruthy()
     },
   )
 })
@@ -465,16 +533,25 @@ describe('frontend-dashboard-template R4: complete and accessible priority table
       within(table)
         .getAllByRole('columnheader')
         .map((x) => x.textContent),
-    ).toEqual(['Orden / proveedor', 'Estado', 'Importe', 'Siguiente acción'])
+    ).toEqual([
+      'Orden / proveedor',
+      'Estado',
+      'Creación',
+      'Importe',
+      'Siguiente acción',
+    ])
     const rows = within(table).getAllByRole('row').slice(1)
     expect(
       rows.map((row) => row.querySelector('a')?.getAttribute('href')),
     ).toEqual(['/odcs/draft-1', '/odcs/purchase-1', '/odcs/invoice-1'])
     expect(rows[0].textContent).toContain('26 días')
+    expect(rows[0].querySelector('time')?.getAttribute('datetime')).toBe(
+      dashboard.priority.items[0].createdAt,
+    )
     expect(rows[0].textContent).toContain('$2,500.00')
   })
 
-  it('omits the overflow link when every task is shown', () => {
+  it('executive-workspace-v2 R10: keeps all-month access even when every task is shown', () => {
     render(
       <ExecutiveDashboard
         userName="Ana"
@@ -485,8 +562,10 @@ describe('frontend-dashboard-template R4: complete and accessible priority table
       />,
     )
     expect(
-      screen.queryByRole('link', { name: /ver todas las tareas/i }),
-    ).toBeNull()
+      screen
+        .getByRole('link', { name: /ver pendientes de todos los meses/i })
+        .getAttribute('href'),
+    ).toBe('/tasks?month=all&page=1')
   })
 })
 

@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from 'vitest'
-import { render, screen } from '@testing-library/react'
+import { render, screen, within } from '@testing-library/react'
 import type * as RouterModule from '@tanstack/react-router'
+import type { ComponentProps } from 'react'
 import type { ExecutiveTaskPage } from '@/lib/odc'
 import { ExecutiveTasks } from './executive-tasks'
 
@@ -9,8 +10,21 @@ vi.mock('@tanstack/react-router', async (importOriginal) => {
   const actual = await importOriginal<typeof RouterModule>()
   return {
     ...actual,
-    Link: ({ children, to, params, ...props }: any) => (
-      <a href={params?.id ? `/odcs/${params.id}` : to} {...props}>
+    Link: ({
+      children,
+      to,
+      params,
+      search,
+      ...props
+    }: ComponentProps<'a'> & {
+      to: string
+      params?: { id?: string }
+      search?: Record<string, string | number>
+    }) => (
+      <a
+        href={`${params?.id ? `/odcs/${params.id}` : to}${search ? `?${new URLSearchParams(Object.entries(search).map(([key, value]) => [key, String(value)]))}` : ''}`}
+        {...props}
+      >
         {children}
       </a>
     ),
@@ -20,7 +34,8 @@ vi.mock('@tanstack/react-router', async (importOriginal) => {
 const taskPage: ExecutiveTaskPage = {
   total: 2,
   page: 1,
-  pageSize: 20,
+  pageSize: 10,
+  month: '2026-07',
   items: [
     {
       id: 'draft-1',
@@ -47,21 +62,23 @@ const taskPage: ExecutiveTaskPage = {
   ],
 }
 
-describe('ui-surfaces-dashboards R9: filas multilínea densas sin ruido en el hover', () => {
+describe('executive-workspace-v2 R4,R10: filas de tabla densas con contexto y foco', () => {
   it('no supera py-3 en la fila de tarea y conserva el foco y el importe', () => {
     render(<ExecutiveTasks initialPage={taskPage} role="DIRECTOR_OPS" />)
 
     const link = screen.getByRole('link', { name: /ODC-2026-00001/i })
-    const row = link.closest('li')!
-    expect(row.className).toMatch(/\bpy-[23]\b/)
-    expect(row.className).not.toMatch(/\bpy-4\b/)
+    const row = link.closest('tr')!
+    for (const cell of within(row).getAllByRole('cell')) {
+      expect(cell.className).toMatch(/\bpy-[23]\b/)
+      expect(cell.className).not.toMatch(/\bpy-4\b/)
+    }
     expect(link.className).toContain('focus-visible:ring-3')
-    expect(link.querySelector('.tabular-nums')!.className).toContain(
+    expect(within(row).getByText('$2,500.00').className).toContain(
       'font-medium',
     )
     for (const node of [row, link]) {
       expect(node.className).not.toMatch(
-        /hover:bg-|hover:shadow|translate-y|scale-|cursor-pointer/,
+        /hover:shadow|translate-y|scale-|cursor-pointer/,
       )
     }
   })
@@ -78,14 +95,8 @@ describe('ui-surfaces-dashboards R7: la tarjeta heterogénea no miente con un co
   })
 })
 
-describe('ui-surfaces-dashboards R3,R4: consola de trabajo densa, no landing', () => {
-  // Excepción firmada: enmienda 2026-08-11 de `design-system/odc/pages/dashboard.md`,
-  // "el ancho de consola no aplica a listas de una columna". Los 1400px son para
-  // las superficies de rejilla de colas; esta es una lista de una sola columna y
-  // a ese ancho deja 663px de hueco entre el importe y su acción (medido en vivo
-  // con el viewport a 1466px). Va a `max-w-4xl`, ni a 1400px ni al `max-w-5xl`
-  // original.
-  it('usa el ancho de lista de una columna y el padding de página', () => {
+describe('executive-workspace-v2 R2,R10: consola de tareas con tabla y periodo explícito', () => {
+  it('usa el ancho de consola de tabla y el padding de página', () => {
     const { container } = render(
       <ExecutiveTasks initialPage={taskPage} role="DIRECTOR_OPS" />,
     )
@@ -96,20 +107,29 @@ describe('ui-surfaces-dashboards R3,R4: consola de trabajo densa, no landing', (
     expect(main.className).toContain('p-4')
     expect(main.className).toContain('sm:p-6')
     expect(main.className).not.toContain('lg:p-8')
-    expect(container.querySelector('.max-w-4xl')).toBeTruthy()
-    expect(container.querySelector('.max-w-\\[1400px\\]')).toBeNull()
+    expect(container.querySelector('.max-w-4xl')).toBeNull()
+    expect(container.querySelector('.max-w-\\[1400px\\]')).toBeTruthy()
     expect(container.querySelector('.max-w-5xl')).toBeNull()
+    expect(
+      screen.getByRole('region', { name: 'Tabla de tareas accionables' })
+        .tabIndex,
+    ).toBe(0)
   })
 
   it('reduce el header a un escalón tipográfico y suelta el párrafo de onboarding', () => {
     render(<ExecutiveTasks initialPage={taskPage} role="DIRECTOR_OPS" />)
 
     const heading = screen.getByRole('heading', { level: 1 })
-    expect(heading.textContent).toBe('Todas las tareas')
+    expect(heading.textContent).toBe('Mis tareas')
     expect(heading.className).toContain('text-2xl')
     expect(heading.className).not.toContain('text-3xl')
     expect(heading.className).not.toContain('sm:text-4xl')
     expect(screen.queryByText(/prioriza las órdenes más antiguas/i)).toBeNull()
-    expect(screen.getByText('Bandeja de trabajo')).toBeTruthy()
+    expect(
+      screen.getByLabelText<HTMLInputElement>('Mes de creación').value,
+    ).toBe('2026-07')
+    expect(
+      screen.getByText('Órdenes que requieren una acción de tu rol.'),
+    ).toBeTruthy()
   })
 })
