@@ -71,9 +71,17 @@ function TaskFilters({
 }) {
   const [search, setSearch] = useState(query.q ?? '')
   const searchTimer = useRef<ReturnType<typeof setTimeout>>(undefined)
+  const previousQuery = useRef(query.q)
   const id = useId()
 
   useEffect(() => () => clearTimeout(searchTimer.current), [])
+  useEffect(() => {
+    const previous = previousQuery.current
+    previousQuery.current = query.q
+    setSearch((value) =>
+      (value.trim() || undefined) === previous ? (query.q ?? '') : value,
+    )
+  }, [query.q])
 
   const applySearch = (value: string) => {
     clearTimeout(searchTimer.current)
@@ -255,7 +263,7 @@ export function ExecutiveTaskTable({
           )}
         </CardHeader>
         <TaskFilters
-          key={`${query.q ?? ''}:${query.month}`}
+          key={query.month}
           query={query}
           role={role}
           onChange={onChange}
