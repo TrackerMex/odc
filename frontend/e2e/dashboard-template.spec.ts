@@ -40,6 +40,14 @@ for (const account of accounts) {
         await page.reload()
         await expect(page.locator('#dashboard-title')).toBeVisible()
         await expect(page.locator('html')).toHaveCSS('color-scheme', theme)
+        // Confirm client interaction before measuring restored scroll positions.
+        await page.getByRole('button', { name: /Cambiar a modo/ }).click()
+        await expect(page.locator('html')).toHaveCSS(
+          'color-scheme',
+          theme === 'dark' ? 'light' : 'dark',
+        )
+        await page.getByRole('button', { name: /Cambiar a modo/ }).click()
+        await expect(page.locator('html')).toHaveCSS('color-scheme', theme)
         const measurements = await page.evaluate(() => ({
           width: innerWidth,
           scroll: document.documentElement.scrollWidth,

@@ -165,10 +165,7 @@ export function ExecutiveAnalytics({
                     stroke="currentColor"
                     strokeWidth="2"
                   >
-                    <title>
-                      {formatMonth(point.month)}:{' '}
-                      {formatCurrency(point.totalCents)}
-                    </title>
+                    <title>{`${formatMonth(point.month)}: ${formatCurrency(point.totalCents)}`}</title>
                   </circle>
                   <text
                     x={point.x}
