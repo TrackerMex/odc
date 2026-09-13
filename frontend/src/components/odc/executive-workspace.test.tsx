@@ -63,7 +63,7 @@ describe('executive-workspace-v2 R3,R4,R6,R7,R8,R9,R10: working analytical dashb
     const titles = [...document.querySelectorAll('svg circle title')]
     expect(titles).toHaveLength(12)
     expect(titles[0].textContent).toBe('enero de 2026: $0.00')
-    expect(titles.every((title) => title.textContent!.length > 0)).toBe(true)
+    expect(titles.every((title) => title.textContent.length > 0)).toBe(true)
   })
   it('renders all ten rows, filtered pagination and complete independent indicators', () => {
     render(<ExecutiveDashboard userName="Ana" dashboard={dashboard} />)
