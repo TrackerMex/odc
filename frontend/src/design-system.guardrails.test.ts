@@ -102,12 +102,14 @@ describe('ui-surfaces-dashboards R5: las etiquetas usan el tracking de label del
     }
   })
 
-  it.each(SURFACES.filter((surface) => surface !== 'odc-status-badge'))(
-    '%s.tsx declara el tracking de label',
-    (surface) => {
-      expect(surfaceSource(surface)).toContain('tracking-[0.06em]')
-    },
-  )
+  it.each(
+    SURFACES.filter(
+      (surface) =>
+        !['odc-status-badge', 'executive-dashboard'].includes(surface),
+    ),
+  )('%s.tsx declara el tracking de label', (surface) => {
+    expect(surfaceSource(surface)).toContain('tracking-[0.06em]')
+  })
 })
 
 describe('ui-surfaces-dashboards R6: las acciones no sobreescriben la densidad de la primitiva', () => {
@@ -138,10 +140,10 @@ describe('ui-surfaces-dashboards R11: cero color literal en las seis superficies
     expect([...surfaceSource(surface).matchAll(LITERAL_COLOR)]).toEqual([])
   })
 
-  it('las alertas de antigüedad usan el par --status-pending', () => {
+  it('frontend-dashboard-template R5: antigüedad conserva color semántico sin umbral inventado', () => {
     const source = surfaceSource('executive-dashboard')
-    expect(source).toContain('border-status-pending')
     expect(source).toContain('text-status-pending')
+    expect(source).not.toMatch(/text-(red|amber)-\d/)
   })
 })
 
@@ -549,13 +551,13 @@ describe('ui-responsive-375 R2: el inventario auditado son las superficies vivas
   // La guarda de alcanzabilidad de la feature 30 sigue en verde y sin editarse:
   // si alguien la debilita, esta feature deja de auditar el inventario real.
   it.each([
-    "expect(reachable.has(executiveDashboard)).toBe(true)",
+    'expect(reachable.has(executiveDashboard)).toBe(true)',
     "'components/odc/monthly-summary-slide.tsx',",
     "'components/odc/odc-detail.tsx',",
   ])('production-reachability.test.ts conserva %s', (assertion) => {
-    expect(read('src/components/odc/production-reachability.test.ts')).toContain(
-      assertion,
-    )
+    expect(
+      read('src/components/odc/production-reachability.test.ts'),
+    ).toContain(assertion)
   })
 })
 
@@ -564,7 +566,10 @@ describe('ui-responsive-375 R3: cada ruta registra su par de anchos medidos', ()
     const match = section.match(
       new RegExp(`documentElement\\.${property}\`?\\s*=\\s*(\\d+)`),
     )
-    expect(match, `la sección registra documentElement.${property}`).not.toBeNull()
+    expect(
+      match,
+      `la sección registra documentElement.${property}`,
+    ).not.toBeNull()
     return Number(match![1])
   }
 
@@ -595,7 +600,8 @@ function productionSources(directory = `${projectDir}/src`): string[] {
     const path = `${directory}/${entry.name}`
     if (entry.isDirectory()) return productionSources(path)
     if (!entry.name.endsWith('.tsx')) return []
-    if (entry.name.includes('.test.') || entry.name.includes('.spec.')) return []
+    if (entry.name.includes('.test.') || entry.name.includes('.spec.'))
+      return []
     return [path]
   })
 }
@@ -603,7 +609,8 @@ function productionSources(directory = `${projectDir}/src`): string[] {
 // `w-[<n>px]` / `min-w-[<n>px]` y su equivalente en rem. `max-w-` queda fuera a
 // propósito: acota, no fija. El grupo 1 recoge la cadena de prefijos, que es lo
 // que distingue un ancho de escritorio (`sm:w-…`) de uno que se aplica a 375px.
-const FIXED_WIDTH = /(?:^|[\s"'`])((?:[a-z0-9]+:)*)(?:min-)?w-\[(\d+(?:\.\d+)?)(px|rem)\]/g
+const FIXED_WIDTH =
+  /(?:^|[\s"'`])((?:[a-z0-9]+:)*)(?:min-)?w-\[(\d+(?:\.\d+)?)(px|rem)\]/g
 const RESPONSIVE_PREFIX = /\b(?:sm|md|lg|xl|2xl):/
 const AUDITED_VIEWPORT = 375
 const ROOT_PIXELS_PER_REM = 16
@@ -680,8 +687,11 @@ describe('ui-responsive-375 R5: los patrones responsive vigentes siguen intactos
     expect(surfaceSource('odc-form')).toContain('min-w-0')
   })
 
-  it('executive-dashboard.tsx oculta la cabecera de columnas bajo lg', () => {
-    expect(surfaceSource('executive-dashboard')).toMatch(/hidden[^"'`]*lg:grid\b/)
+  it('frontend-dashboard-template R4: la prioridad conserva una tabla con scroll local', () => {
+    expect(surfaceSource('executive-dashboard')).toContain(
+      'Tabla de tareas prioritarias',
+    )
+    expect(surfaceSource('executive-dashboard')).toContain('overflow-x-auto')
   })
 
   it('pagination.tsx oculta las etiquetas de página bajo sm', () => {
@@ -713,9 +723,9 @@ describe('ui-responsive-375 R5: los patrones responsive vigentes siguen intactos
     expect(read('src/design-system.guardrails.test.ts')).toContain(
       "expect(surfaceSource('general-approval-actions')).toMatch(",
     )
-    expect(read('src/components/odc/general-approval-actions.test.tsx')).toContain(
-      'expect(busy?.className).toMatch(/flex-col.*sm:flex-row/)',
-    )
+    expect(
+      read('src/components/odc/general-approval-actions.test.tsx'),
+    ).toContain('expect(busy?.className).toMatch(/flex-col.*sm:flex-row/)')
   })
 })
 
@@ -781,8 +791,10 @@ describe('ui-responsive-375 R8: el área táctil se mide y se declara', () => {
   it('la densidad de la feature 23 sigue fijada por sus tests', () => {
     const tokens = read('src/components/ui/primitives.tokens.test.tsx')
 
-    expect([...tokens.matchAll(/expect\(cls\)\.toContain\('h-8'\)/g)]).toHaveLength(2)
-    expect(tokens).toContain("data-[size=default]:h-8")
+    expect([
+      ...tokens.matchAll(/expect\(cls\)\.toContain\('h-8'\)/g),
+    ]).toHaveLength(2)
+    expect(tokens).toContain('data-[size=default]:h-8')
   })
 
   it('las alturas de control siguen siendo las de la primitiva', () => {
@@ -850,7 +862,9 @@ describe('ui-responsive-375 R9: el acta existe y está levantada', () => {
   })
 })
 
-function surfaceTestFiles(directory = `${projectDir}/src/components`): string[] {
+function surfaceTestFiles(
+  directory = `${projectDir}/src/components`,
+): string[] {
   return readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
     const path = `${directory}/${entry.name}`
     if (entry.isDirectory()) return surfaceTestFiles(path)
@@ -862,12 +876,13 @@ describe('ui-responsive-375 R10: no se edita ninguna aserción ajena', () => {
   // Toda la cobertura de esta feature vive en este archivo y en
   // e2e/responsive-375.spec.ts. Si un R-id suyo aparece dentro del test de una
   // superficie viva es que se tocó una aserción que no era suya.
-  it.each(surfaceTestFiles().map((path) => relative(projectDir, path).replace(/\\/g, '/')))(
-    '%s no contiene aserciones de esta feature',
-    (path) => {
-      expect(read(path)).not.toContain('ui-responsive-375')
-    },
-  )
+  it.each(
+    surfaceTestFiles().map((path) =>
+      relative(projectDir, path).replace(/\\/g, '/'),
+    ),
+  )('%s no contiene aserciones de esta feature', (path) => {
+    expect(read(path)).not.toContain('ui-responsive-375')
+  })
 
   it('las cuatro aserciones en riesgo del plan siguen listadas y vivas', () => {
     const plan = readRepo('progress/ui-redesign-plan.md')

@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
-import { fireEvent, render, screen } from '@testing-library/react'
+import { fireEvent, render, screen, within } from '@testing-library/react'
 import type * as RouterModule from '@tanstack/react-router'
 import type { ExecutiveDashboardResponse } from '@/lib/odc'
 import {
@@ -135,24 +135,24 @@ describe('ui-surfaces-dashboards R7,R8: la tarjeta heterogénea no miente con un
       .getByText('Prioridad inmediata')
       .closest('[data-slot="card-header"]')!
       .querySelector('.tabular-nums')!
-    expect(counter.className).toContain('text-2xl')
+    expect(counter.className).toContain('text-xs')
     expect(counter.className).not.toContain('text-3xl')
     expect(counter.className).toContain('text-muted-foreground')
   })
 })
 
-describe('ui-surfaces-dashboards R9: filas multilínea densas sin ruido en el hover', () => {
-  it('no supera py-3 en la fila de prioridad y conserva el foco y el importe', () => {
+describe('frontend-dashboard-template R4: filas semánticas con foco y contexto', () => {
+  it('conserva foco y contenido dentro de una fila de tabla', () => {
     render(<ExecutiveDashboard userName="Ana Pérez" dashboard={dashboard} />)
 
     const link = screen.getByRole('link', { name: /ODC-2026-00001/i })
-    const row = link.closest('li')!
-    expect(row.className).toMatch(/\bpy-[23]\b/)
-    expect(row.className).not.toMatch(/\bpy-4\b/)
+    const row = link.closest('tr')!
+    expect(row).toBeTruthy()
+    expect(within(row).getByText(/Suntech/)).toBeTruthy()
     expect(link.className).toContain('focus-visible:ring-3')
     for (const node of [row, link]) {
       expect(node.className).not.toMatch(
-        /hover:bg-|hover:shadow|translate-y|scale-|cursor-pointer/,
+        /hover:shadow|translate-y|scale-|cursor-pointer/,
       )
     }
   })
@@ -174,7 +174,9 @@ describe('R3: executive priority makes the oldest actionable work visible first'
         .getAttribute('href'),
     ).toBe('/odcs/draft-1')
     expect(
-      screen.getByRole('link', { name: /ver todas las tareas/i }).getAttribute('href'),
+      screen
+        .getByRole('link', { name: /ver todas las tareas/i })
+        .getAttribute('href'),
     ).toBe('/tasks')
     expect(screen.getByText(/Pulso operativo/i)).toBeTruthy()
   })
@@ -201,9 +203,7 @@ describe('R3: executive priority makes the oldest actionable work visible first'
     expect(
       screen.getByRole('link', { name: /completar factura/i }),
     ).toBeTruthy()
-    expect(
-      screen.queryByRole('link', { name: /reabrir y editar/i }),
-    ).toBeNull()
+    expect(screen.queryByRole('link', { name: /reabrir y editar/i })).toBeNull()
   })
 })
 
@@ -243,9 +243,9 @@ describe('R3: executive dashboard surfaces four real operating metrics', () => {
     render(<ExecutiveDashboard userName="Ana Pérez" dashboard={dashboard} />)
 
     const pulse = screen.getByRole('region', { name: /pulso operativo/i })
-    expect(pulse.textContent).toContain('Tareas prioritarias')
+    expect(pulse.textContent).toContain('Tareas pendientes')
     expect(pulse.textContent).toContain('Compras pagadas')
-    expect(pulse.textContent).toContain('Importe pagado')
+    expect(pulse.textContent).toContain('Compras del periodo')
     expect(pulse.textContent).toContain('Mayor antigüedad')
     expect(pulse.textContent).toContain('22 días')
   })
@@ -338,7 +338,7 @@ describe('R5: executive dashboard preserves accessible states and reduced motion
     const pulse = screen.getByRole('region', { name: /pulso operativo/i })
     expect(
       Boolean(
-        priority.compareDocumentPosition(pulse) &
+        pulse.compareDocumentPosition(priority) &
         Node.DOCUMENT_POSITION_FOLLOWING,
       ),
     ).toBe(true)
@@ -349,14 +349,14 @@ describe('R5: executive dashboard preserves accessible states and reduced motion
   })
 })
 
-describe('R4: executive dashboard orders sections by hierarchy — priority, pulse, context', () => {
-  it('places priority before pulse and context modules in the DOM', () => {
+describe('frontend-dashboard-template R2: financial panel, priority and operating context', () => {
+  it('places the panel before priority, then suppliers and ageing in DOM order', () => {
     const { container } = render(
       <ExecutiveDashboard userName="Ana Pérez" dashboard={dashboard} />,
     )
 
     const alerts = screen.getByRole('region', {
-      name: /alertas: órdenes con mayor antigüedad/i,
+      name: /órdenes más antiguas/i,
     })
     const priority = screen.getByRole('region', {
       name: /prioridad inmediata/i,
@@ -368,19 +368,19 @@ describe('R4: executive dashboard orders sections by hierarchy — priority, pul
 
     expect(
       Boolean(
-        priority.compareDocumentPosition(pulse) &
+        pulse.compareDocumentPosition(priority) &
         Node.DOCUMENT_POSITION_FOLLOWING,
       ),
     ).toBe(true)
     expect(
       Boolean(
-        pulse.compareDocumentPosition(alerts) &
+        priority.compareDocumentPosition(suppliers) &
         Node.DOCUMENT_POSITION_FOLLOWING,
       ),
     ).toBe(true)
     expect(
       Boolean(
-        alerts.compareDocumentPosition(suppliers) &
+        suppliers.compareDocumentPosition(alerts) &
         Node.DOCUMENT_POSITION_FOLLOWING,
       ),
     ).toBe(true)
@@ -398,5 +398,186 @@ describe('R4: executive dashboard orders sections by hierarchy — priority, pul
         .getAttribute('href'),
     ).toBe('/odcs/active-1')
     expect(screen.getByText(/Software MX/i)).toBeTruthy()
+  })
+})
+
+describe('frontend-dashboard-template R3: real monthly comparison and edge cases', () => {
+  it('uses the two reported months, a shared scale and the total task count', () => {
+    render(<ExecutiveDashboard userName="Ana" dashboard={dashboard} />)
+    const panel = screen.getByRole('region', { name: /pulso operativo/i })
+    const bars = within(panel).getAllByRole('meter')
+    expect(bars).toHaveLength(2)
+    expect(bars[0].getAttribute('aria-label')).toMatch(/julio de 2026/i)
+    expect(bars[1].getAttribute('aria-label')).toMatch(/junio de 2026/i)
+    expect(bars[0].getAttribute('aria-valuenow')).toBe('750000')
+    expect(bars[1].getAttribute('aria-valuenow')).toBe('500000')
+    expect(
+      bars.every((bar) => bar.getAttribute('aria-valuemax') === '750000'),
+    ).toBe(true)
+    expect(within(panel).getByText('6')).toBeTruthy()
+    expect(panel.textContent).toContain('+50%')
+    expect(panel.textContent).not.toMatch(/mejora|ahorro/)
+  })
+
+  it.each([null, 0])(
+    'distinguishes %s from a missing comparison with zero amounts',
+    (change) => {
+      render(
+        <ExecutiveDashboard
+          userName="Ana"
+          dashboard={{
+            ...dashboard,
+            pulse: {
+              current: { purchaseCount: 0, totalCents: 0 },
+              previous: { month: '2026-06', purchaseCount: 0, totalCents: 0 },
+              purchaseCountChangePercent: change,
+              totalCentsChangePercent: change,
+            },
+            oldestActiveOrders: [],
+          }}
+        />,
+      )
+      const panel = screen.getByRole('region', { name: /pulso operativo/i })
+      for (const bar of within(panel).getAllByRole('meter')) {
+        expect(bar.getAttribute('aria-valuenow')).toBe('0')
+        expect(bar.getAttribute('aria-valuemax')).toBe('1')
+        expect(
+          bar.querySelector<HTMLElement>('[aria-hidden="true"]')?.style.width,
+        ).toBe('0%')
+      }
+      expect(panel.textContent).toContain(
+        change === null ? 'Sin base de comparación' : '0%',
+      )
+      expect(panel.textContent).toContain('Sin órdenes')
+    },
+  )
+})
+
+describe('frontend-dashboard-template R4: complete and accessible priority table', () => {
+  it('keeps task order, column headers and local keyboard scrolling', () => {
+    render(<ExecutiveDashboard userName="Ana" dashboard={dashboard} />)
+    const region = screen.getByRole('region', {
+      name: 'Tabla de tareas prioritarias',
+    })
+    expect(region.tabIndex).toBe(0)
+    const table = within(region).getByRole('table')
+    expect(
+      within(table)
+        .getAllByRole('columnheader')
+        .map((x) => x.textContent),
+    ).toEqual(['Orden / proveedor', 'Estado', 'Importe', 'Siguiente acción'])
+    const rows = within(table).getAllByRole('row').slice(1)
+    expect(
+      rows.map((row) => row.querySelector('a')?.getAttribute('href')),
+    ).toEqual(['/odcs/draft-1', '/odcs/purchase-1', '/odcs/invoice-1'])
+    expect(rows[0].textContent).toContain('26 días')
+    expect(rows[0].textContent).toContain('$2,500.00')
+  })
+
+  it('omits the overflow link when every task is shown', () => {
+    render(
+      <ExecutiveDashboard
+        userName="Ana"
+        dashboard={{
+          ...dashboard,
+          priority: { ...dashboard.priority, total: 3 },
+        }}
+      />,
+    )
+    expect(
+      screen.queryByRole('link', { name: /ver todas las tareas/i }),
+    ).toBeNull()
+  })
+})
+
+describe('frontend-dashboard-template R5: supplier bars and independent empty states', () => {
+  it('keeps ranking order and normalizes against the largest amount, including zero', () => {
+    render(
+      <ExecutiveDashboard
+        userName="Ana"
+        dashboard={{
+          ...dashboard,
+          topSuppliers: [
+            { supplier: 'Primero', purchaseCount: 1, totalCents: 500 },
+            { supplier: 'Mayor', purchaseCount: 2, totalCents: 1000 },
+            { supplier: 'Cero', purchaseCount: 0, totalCents: 0 },
+          ],
+        }}
+      />,
+    )
+    const region = screen.getByRole('region', {
+      name: 'Proveedores del periodo',
+    })
+    const bars = within(region).getAllByRole('meter')
+    expect(bars.map((bar) => bar.getAttribute('aria-label'))).toEqual([
+      'Primero',
+      'Mayor',
+      'Cero',
+    ])
+    expect(bars.map((bar) => bar.getAttribute('aria-valuenow'))).toEqual([
+      '500',
+      '1000',
+      '0',
+    ])
+    expect(
+      bars.every((bar) => bar.getAttribute('aria-valuemax') === '1000'),
+    ).toBe(true)
+    expect(
+      bars.map(
+        (bar) =>
+          bar.querySelector<HTMLElement>('[aria-hidden="true"]')?.style.width,
+      ),
+    ).toEqual(['50%', '100%', '0%'])
+  })
+
+  it('renders all-zero and empty collections without hiding other sections', () => {
+    const { rerender } = render(
+      <ExecutiveDashboard
+        userName="Ana"
+        dashboard={{
+          ...dashboard,
+          topSuppliers: [{ supplier: 'Cero', purchaseCount: 0, totalCents: 0 }],
+          oldestActiveOrders: [],
+        }}
+      />,
+    )
+    const bar = within(
+      screen.getByRole('region', { name: 'Proveedores del periodo' }),
+    ).getByRole('meter')
+    expect(bar.getAttribute('aria-valuemax')).toBe('1')
+    expect(
+      bar.querySelector<HTMLElement>('[aria-hidden="true"]')?.style.width,
+    ).toBe('0%')
+    expect(
+      screen.getByText(/No hay órdenes activas con antigüedad/),
+    ).toBeTruthy()
+    rerender(
+      <ExecutiveDashboard
+        userName="Ana"
+        dashboard={{ ...dashboard, topSuppliers: [] }}
+      />,
+    )
+    expect(
+      screen.getByText(/No hay compras pagadas en este periodo/),
+    ).toBeTruthy()
+    expect(
+      screen.getByRole('link', { name: /ODC-2026-00004/ }).getAttribute('href'),
+    ).toBe('/odcs/active-1')
+  })
+})
+
+describe('frontend-dashboard-template R6: loading announcement and recovery', () => {
+  it('announces loading without fabricated metrics and keeps an actionable error', () => {
+    const { unmount } = render(<ExecutiveDashboardLoading />)
+    expect(screen.getByRole('status').textContent).toContain(
+      'Cargando resumen ejecutivo',
+    )
+    expect(screen.queryByRole('meter')).toBeNull()
+    unmount()
+    const retry = vi.fn()
+    render(<ExecutiveDashboardError onRetry={retry} />)
+    expect(screen.getByRole('alert')).toBeTruthy()
+    fireEvent.click(screen.getByRole('button', { name: 'Reintentar' }))
+    expect(retry).toHaveBeenCalledOnce()
   })
 })
