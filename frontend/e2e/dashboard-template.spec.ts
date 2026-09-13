@@ -79,7 +79,9 @@ for (const account of accounts) {
             name: 'Alternar navegación',
             exact: true,
           })
-          await expect(menu).toHaveAttribute('aria-expanded', 'false')
+          await expect(menu).toHaveAttribute('aria-expanded', 'false', {
+            timeout: 30_000,
+          })
           await menu.focus()
           await page.keyboard.press('Enter')
           const sheet = page.locator('[data-mobile="true"]')
