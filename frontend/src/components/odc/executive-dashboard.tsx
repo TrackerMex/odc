@@ -382,7 +382,10 @@ function PriorityQueue({
                       </p>
                     </TableCell>
                     <TableCell className="py-4 whitespace-normal">
-                      <OdcStatusBadge status={task.status} />
+                      <OdcStatusBadge
+                        status={task.status}
+                        className="h-auto max-w-full whitespace-normal"
+                      />
                     </TableCell>
                     <TableCell className="py-4 text-right font-medium tabular-nums">
                       {formatCurrency(task.totalCents)}
