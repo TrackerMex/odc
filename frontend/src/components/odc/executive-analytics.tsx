@@ -136,7 +136,7 @@ export function ExecutiveAnalytics({
                     y={198 - fraction * 155}
                     textAnchor="end"
                     fill="var(--muted-foreground)"
-                    fontSize="11"
+                    fontSize="16"
                   >
                     {new Intl.NumberFormat('es-MX', {
                       notation: 'compact',
@@ -172,7 +172,7 @@ export function ExecutiveAnalytics({
                     y="222"
                     textAnchor="middle"
                     fill="var(--muted-foreground)"
-                    fontSize="11"
+                    fontSize="16"
                   >
                     {new Intl.DateTimeFormat('es-MX', {
                       month: 'short',

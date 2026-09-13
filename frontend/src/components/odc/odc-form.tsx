@@ -387,9 +387,6 @@ export function OdcForm({
               <Select
                 value={values.supplier || null}
                 onValueChange={(value) => updateField('supplier', value ?? '')}
-                onOpenChange={(open) => {
-                  if (!open) validateField('supplier')
-                }}
                 disabled={disabled}
               >
                 <SelectTrigger
@@ -598,7 +595,7 @@ export function OdcForm({
           className="max-h-[calc(100dvh-2rem)] overflow-y-auto sm:max-w-lg [&_[data-slot=dialog-close]]:size-11"
           aria-busy={pendingAction !== null}
         >
-          <DialogHeader>
+          <DialogHeader className="pr-12">
             <DialogTitle>Revisar orden de compra</DialogTitle>
             <DialogDescription>
               Confirma los datos y el destino antes de crear la ODC.

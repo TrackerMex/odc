@@ -71,12 +71,17 @@ for (const account of accounts) {
         })
         await expect(panel).toBeVisible()
         await expect(priority).toBeVisible()
-        const chartTextSizes = await page.locator('svg[role="img"] text').evaluateAll(
-          (labels) => labels.map((label) => {
-            const text = label as SVGTextElement
-            return Number.parseFloat(getComputedStyle(text).fontSize) * text.getScreenCTM()!.a
-          }),
-        )
+        const chartTextSizes = await page
+          .locator('svg[role="img"] text')
+          .evaluateAll((labels) =>
+            labels.map((label) => {
+              const text = label as SVGTextElement
+              return (
+                Number.parseFloat(getComputedStyle(text).fontSize) *
+                text.getScreenCTM()!.a
+              )
+            }),
+          )
         expect(Math.min(...chartTextSizes)).toBeGreaterThanOrEqual(12)
         expect((await panel.boundingBox())!.y).toBeLessThan(
           (await priority.boundingBox())!.y,
