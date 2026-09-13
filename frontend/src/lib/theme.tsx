@@ -10,7 +10,8 @@ const THEME_STORAGE_KEY = 'odc-theme'
 
 export const themeInitScript = `(() => {
   try {
-    const storedTheme = window.localStorage.getItem('${THEME_STORAGE_KEY}')
+    let storedTheme
+    try { storedTheme = window.localStorage.getItem('${THEME_STORAGE_KEY}') } catch {}
     const theme =
       storedTheme === 'dark' || storedTheme === 'light'
         ? storedTheme
@@ -36,10 +37,11 @@ function getSystemTheme(): Theme {
 
 export function getInitialTheme(): Theme {
   if (typeof window === 'undefined') return 'light'
-  const storedTheme = window.localStorage.getItem(THEME_STORAGE_KEY)
-  return storedTheme === 'dark' || storedTheme === 'light'
-    ? storedTheme
-    : getSystemTheme()
+  try {
+    const storedTheme = window.localStorage.getItem(THEME_STORAGE_KEY)
+    if (storedTheme === 'dark' || storedTheme === 'light') return storedTheme
+  } catch {}
+  return getSystemTheme()
 }
 
 export function applyTheme(theme: Theme) {
@@ -49,19 +51,27 @@ export function applyTheme(theme: Theme) {
 }
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
-  const [theme, setTheme] = useState<Theme>(getInitialTheme)
+  const [theme, setTheme] = useState<Theme | null>(null)
 
   useEffect(() => {
+    if (theme === null) {
+      setTheme(getInitialTheme())
+      return
+    }
     applyTheme(theme)
-    window.localStorage.setItem(THEME_STORAGE_KEY, theme)
+    try {
+      window.localStorage.setItem(THEME_STORAGE_KEY, theme)
+    } catch {}
   }, [theme])
 
   function toggleTheme() {
-    setTheme((currentTheme) => (currentTheme === 'dark' ? 'light' : 'dark'))
+    setTheme((currentTheme) =>
+      (currentTheme ?? getInitialTheme()) === 'dark' ? 'light' : 'dark',
+    )
   }
 
   return (
-    <ThemeContext.Provider value={{ theme, toggleTheme }}>
+    <ThemeContext.Provider value={{ theme: theme ?? 'light', toggleTheme }}>
       {children}
     </ThemeContext.Provider>
   )
