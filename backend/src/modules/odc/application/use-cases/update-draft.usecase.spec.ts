@@ -239,4 +239,29 @@ describe('R5: PATCH validates supplier against the suppliers catalog when the pa
     expect(supplierRepository.findByName).not.toHaveBeenCalled();
     expect(repository.update).toHaveBeenCalledTimes(1);
   });
+
+  it('preserves an unchanged legacy supplier while editing other fields', async () => {
+    const legacySupplier = 'Seguridad y Suministros del Norte S.A.';
+    const repository = createRepositoryMock();
+    repository.findById.mockResolvedValue(
+      buildOrder({ supplier: legacySupplier }),
+    );
+    repository.update.mockImplementation((order: PurchaseOrder) =>
+      Promise.resolve(order),
+    );
+    const supplierRepository = createSupplierRepositoryMock();
+    supplierRepository.findByName.mockResolvedValue(null);
+    const useCase = new UpdateDraftUseCase(repository, supplierRepository);
+
+    const updated = await useCase.execute(
+      ODC_ID,
+      { description: 'Equipo actualizado', supplier: legacySupplier },
+      opsActor,
+    );
+
+    expect(supplierRepository.findByName).not.toHaveBeenCalled();
+    expect(repository.update).toHaveBeenCalledTimes(1);
+    expect(updated.description).toBe('Equipo actualizado');
+    expect(updated.supplier).toBe(legacySupplier);
+  });
 });
