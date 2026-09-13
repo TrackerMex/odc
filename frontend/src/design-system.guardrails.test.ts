@@ -147,7 +147,8 @@ describe('ui-surfaces-dashboards R11: cero color literal en las seis superficies
   })
 })
 
-// Congelado en la aprobación de la spec (2026-08-10).
+// Base aprobada en 2026-08-10; Recharts se añadió por solicitud explícita
+// del usuario para la gráfica interactiva el 2026-09-13.
 const FROZEN_DEPENDENCIES = [
   '@base-ui/react',
   '@fontsource-variable/geist',
@@ -170,6 +171,7 @@ const FROZEN_DEPENDENCIES = [
   'react',
   'react-day-picker',
   'react-dom',
+  'recharts',
   'tailwind-merge',
   'tailwindcss',
   'tw-animate-css',
@@ -197,8 +199,8 @@ const FROZEN_DEV_DEPENDENCIES = [
   'vitest',
 ]
 
-describe('R15: sin dependencias nuevas y sin color literal en las primitivas', () => {
-  it('no añade dependencias a frontend/package.json', () => {
+describe('R15: dependencias aprobadas y sin color literal en las primitivas', () => {
+  it('conserva la lista aprobada en frontend/package.json', () => {
     const pkg = JSON.parse(read('package.json'))
     expect(Object.keys(pkg.dependencies).sort()).toEqual(
       [...FROZEN_DEPENDENCIES].sort(),
@@ -354,7 +356,7 @@ describe('ui-surfaces-dashboards R14: la verificación en navegador existe', () 
   })
 })
 
-describe('ui-surfaces-dashboards R15: alcance cerrado, sin tokens ni dependencias nuevas', () => {
+describe('ui-surfaces-dashboards R15: alcance cerrado y dependencias aprobadas', () => {
   it('las utilidades de estado de las superficies activas ya existen en @theme inline', () => {
     const theme = read('src/styles.css')
     const used = new Set(
@@ -377,7 +379,7 @@ describe('ui-surfaces-dashboards R15: alcance cerrado, sin tokens ni dependencia
     ]).toHaveLength(16)
   })
 
-  it('no añade dependencias a frontend/package.json', () => {
+  it('conserva la cantidad de dependencias aprobada', () => {
     const pkg = JSON.parse(read('package.json'))
     expect(
       Object.keys({ ...pkg.dependencies, ...pkg.devDependencies }),

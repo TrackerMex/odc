@@ -586,7 +586,7 @@ describe('ui-dark-mode-chroma R10: la enmienda queda registrada en la spec de la
   })
 })
 
-describe('ui-dark-mode-chroma R11: sin dependencias nuevas en frontend', () => {
+describe('ui-dark-mode-chroma R11: dependencias aprobadas en frontend', () => {
   // Lista congelada. La conversión oklch -> sRGB de este archivo se amplía a
   // mano; añadir culori o colorjs.io para el gamut rompe aquí a propósito.
   const FROZEN_DEPENDENCIES = [
@@ -625,6 +625,7 @@ describe('ui-dark-mode-chroma R11: sin dependencias nuevas en frontend', () => {
     'react',
     'react-day-picker',
     'react-dom',
+    'recharts',
     'shadcn',
     'tailwind-merge',
     'tailwindcss',
