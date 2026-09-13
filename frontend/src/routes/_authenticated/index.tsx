@@ -41,7 +41,7 @@ export const Route = createFileRoute('/_authenticated/')({
   loader: async ({ context, deps }) => {
     return loadAuthenticatedDashboard(context.user, deps)
   },
-  pendingMs: 0,
+  pendingMs: 1_000,
   pendingMinMs: 0,
   pendingComponent: ExecutiveDashboardLoading,
   errorComponent: DashboardLoadError,
@@ -71,7 +71,11 @@ function Home() {
       dashboard={dashboard}
       query={query}
       onQueryChange={(search) => {
-        void router.navigate({ to: '/', search: { ...search }, resetScroll: false })
+        void router.navigate({
+          to: '/',
+          search: { ...search },
+          resetScroll: false,
+        })
       }}
     />
   )

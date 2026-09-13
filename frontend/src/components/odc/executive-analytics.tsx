@@ -142,7 +142,7 @@ export function ExecutiveAnalytics({
               </CardDescription>
             </div>
             <div
-              className="flex"
+              className="grid min-w-0 grid-cols-2"
               role="group"
               aria-label="Métrica de la gráfica"
             >
@@ -153,13 +153,13 @@ export function ExecutiveAnalytics({
                     type="button"
                     data-active={activeTrend === metric}
                     aria-pressed={activeTrend === metric}
-                    className="flex min-h-11 flex-1 flex-col justify-center gap-1 border-t px-5 py-3 text-left outline-none transition-colors data-[active=true]:bg-muted/50 focus-visible:ring-3 focus-visible:ring-inset focus-visible:ring-ring motion-reduce:transition-none sm:min-w-36 sm:border-t-0 sm:border-l sm:px-6 sm:py-5"
+                    className="flex min-h-11 min-w-0 flex-col justify-center gap-1 border-t px-4 py-3 text-left outline-none transition-colors data-[active=true]:bg-muted/50 focus-visible:ring-3 focus-visible:ring-inset focus-visible:ring-ring motion-reduce:transition-none sm:border-t-0 sm:border-l sm:px-5 sm:py-5"
                     onClick={() => setActiveTrend(metric)}
                   >
                     <span className="text-xs text-muted-foreground">
                       {trendChartConfig[metric].label}
                     </span>
-                    <span className="text-lg leading-none font-semibold tabular-nums sm:text-2xl">
+                    <span className="max-w-full text-base leading-tight font-semibold tabular-nums [overflow-wrap:anywhere] sm:text-lg xl:text-xl 2xl:text-2xl">
                       {metric === 'totalCents'
                         ? formatCurrency(trendTotals[metric])
                         : trendTotals[metric].toLocaleString('es-MX')}

@@ -1,4 +1,4 @@
-import { useId, useState } from 'react'
+import { useEffect, useId, useRef, useState } from 'react'
 import { Link } from '@tanstack/react-router'
 import { SearchIcon } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -70,18 +70,24 @@ function TaskFilters({
   onChange: (query: ExecutiveQuery) => void
 }) {
   const [search, setSearch] = useState(query.q ?? '')
+  const searchTimer = useRef<ReturnType<typeof setTimeout>>(undefined)
   const id = useId()
+
+  useEffect(() => () => clearTimeout(searchTimer.current), [])
+
+  const applySearch = (value: string) => {
+    clearTimeout(searchTimer.current)
+    const q = value.trim() || undefined
+    if (q === query.q) return
+    onChange({ ...query, q, page: 1, invalid: undefined })
+  }
+
   return (
     <form
       className="grid gap-3 border-b p-4 md:grid-cols-[minmax(180px,1fr)_minmax(170px,auto)_minmax(145px,auto)_auto]"
       onSubmit={(event) => {
         event.preventDefault()
-        onChange({
-          ...query,
-          q: search.trim() || undefined,
-          page: 1,
-          invalid: undefined,
-        })
+        applySearch(search)
       }}
     >
       <div className="min-w-0 space-y-1.5">
@@ -97,7 +103,12 @@ function TaskFilters({
             value={search}
             maxLength={120}
             placeholder="Folio o proveedor…"
-            onChange={(event) => setSearch(event.target.value)}
+            onChange={(event) => {
+              const value = event.target.value
+              setSearch(value)
+              clearTimeout(searchTimer.current)
+              searchTimer.current = setTimeout(() => applySearch(value), 300)
+            }}
             className="min-w-0"
           />
           <Button
@@ -188,6 +199,7 @@ function TaskFilters({
         variant="ghost"
         className="self-end"
         onClick={() => {
+          clearTimeout(searchTimer.current)
           setSearch('')
           onChange({ month: query.month, page: 1 })
         }}

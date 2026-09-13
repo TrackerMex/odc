@@ -13,7 +13,7 @@ export const Route = createFileRoute('/_authenticated/tasks')({
     parseExecutiveQuery(search, true),
   loaderDeps: ({ search }) => search,
   loader: ({ deps }) => getExecutiveTasks(deps.page, deps),
-  pendingMs: 0,
+  pendingMs: 1_000,
   pendingMinMs: 0,
   pendingComponent: OdcPagePending,
   errorComponent: TasksLoadError,
@@ -43,7 +43,11 @@ function TasksPage() {
       role={user.role as ExecutiveDashboardRole}
       query={query}
       onQueryChange={(search) => {
-        void router.navigate({ to: '/tasks', search: { ...search }, resetScroll: false })
+        void router.navigate({
+          to: '/tasks',
+          search: { ...search },
+          resetScroll: false,
+        })
       }}
     />
   )
