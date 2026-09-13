@@ -65,7 +65,7 @@ Dashboard: `month` gobierna exclusivamente estadísticas. Los otros parámetros 
 
 Reutilizar Base UI/shadcn ya presente (`Table`, `Select`, `Input`, `Button`, `Dialog`, estados/alertas) y los tokens navy/estado/Inter aprobados. Buscar el componente mediante MCP shadcn si está disponible antes de instalar o escribir una nueva primitiva; si no está disponible, las primitivas locales cubren estos controles. El aviso MIT y la procedencia de la feature 31 se conservan.
 
-No hay biblioteca de gráficas instalada. Para esta primera serie fija de 12 meses, usar SVG/CSS semántico con ejes/meses y valores accesibles, acompañado de tabla textual consultable; distribución por estado con barras y leyenda de cantidades. Los tooltips, si existen, son complementarios y deben funcionar con teclado; no son el único acceso a los valores. Esta representación específica evita traer una biblioteca por una serie. Una dependencia solo se reconsidera si las interacciones aprobadas demuestran que la opción nativa no cubre accesibilidad/mantenimiento y queda justificada expresamente; no es el plan base.
+La implementación inicial usó SVG/CSS semántico. El 2026-09-13 el usuario solicitó expresamente sustituirla por el componente interactivo shadcn basado en Recharts. La adaptación permite alternar entre importe pagado y número de compras, conserva escala desde cero, datos reales de los 12 meses, tooltip y tabla textual consultable. La tabla sigue siendo la fuente accesible completa; el tooltip es complementario. La distribución por estado permanece con barras y cantidades.
 
 ## Creación, confirmación y recuperación
 

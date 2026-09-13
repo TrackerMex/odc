@@ -666,3 +666,13 @@ estado: implementación aprobada; init inicial verde
 - Init exit 0 (484 backend / 655 frontend), PostgreSQL 3/3, matriz dashboard 3/3 (24 combinaciones), flujos 2/2, lint frontend de archivos cambiados corregido y typecheck sin errores nuevos de aplicación (18 históricos de tests).
 - Implementación UI `192d74e`; hidratación SVG `0652537`; legibilidad/proveedor/modal `67bff4d`; ajuste de lint en prueba `33c1f7c`. No migraciones, nuevas dependencias ni escrituras reales de creación/envío durante verificación.
 - Las siguientes entregas de la auditoría siguen documentadas en plans/002-system-review.md; no se declara despliegue ni certificación de producción.
+
+---
+
+## 2026-09-13 — Ajuste de gráfica interactiva en executive-workspace-v2
+
+- El usuario proporcionó el componente shadcn/Recharts y solicitó usarlo en el dashboard.
+- Se adaptó a los datos reales de 12 meses con selector entre importe pagado y número de compras, tooltip, escala desde cero y tabla textual accesible.
+- TDD: rojo `784c9a6` → implementación `f53561b`; guardas históricas de dependencias actualizadas en `1054c8f` por la excepción aprobada.
+- Verificación visual ADMIN en 375/768/1024/1440, claro/oscuro: 1/1 Playwright, sin overflow y con interacción correcta.
+- `./init.sh` final verde: 484 backend, 656 frontend, builds y lint backend.

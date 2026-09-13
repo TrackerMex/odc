@@ -60,3 +60,7 @@ Tras aprobación, R4–R10 sustituyen los límites de cinco prioridades, el orde
 ## Aprobación
 
 - [X] Aprobado por humano (fecha: 2026-09-13)
+
+## Enmienda posterior solicitada
+
+- 2026-09-13: el usuario proporcionó el componente interactivo shadcn/Recharts y solicitó usarlo para la gráfica. Esta instrucción autoriza la excepción explícita al valor por defecto de R14; conserva los datos, periodo, escala y alternativa textual exigidos por R7.

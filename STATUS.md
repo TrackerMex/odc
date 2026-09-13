@@ -41,18 +41,19 @@ Requiere `.env` en la raíz (plantilla en `.env.example`): `DATABASE_URL`,
   [plans/002-system-review.md](plans/002-system-review.md). Incluye UX, integridad,
   archivos, consultas y preparación productiva. #32 resuelve el workspace;
   integridad/archivos y las demás entregas del plan conservan su alcance propio.
-- **#32 `executive-workspace-v2` done**: gráficas reales de 12 meses,
+- **#32 `executive-workspace-v2` done**: gráfica interactiva shadcn/Recharts con
+  importe pagado y número de compras sobre datos reales de 12 meses,
   indicadores y distribución por estado, filtros/paginación de 10, mes de creación
   en Mis tareas, prioridades ADMIN recientes, header fijo y resumen de creación
   con folio posterior. Requisitos en
   [specs/executive-workspace-v2/requirements.md](specs/executive-workspace-v2/requirements.md),
-  aprobados antes de código. Reutiliza shell/componentes actuales, sin dependencias nuevas.
+  aprobados antes de código. Reutiliza el shell y componentes actuales.
   Header de 58/64px, tablas de 10 con URL, creación por mes México y recuperación
   de envío sobre el mismo id; se corrigieron la hidratación del tema/gráfica y
   la validación tardía del proveedor. Evidencia en
   [progress/review_executive-workspace-v2.md](progress/review_executive-workspace-v2.md).
   Revisión independiente final: **ship**, tres correcciones materiales resueltas.
-- **Verificación #32**: init final verde (484 backend / 655 frontend), 3 pruebas
+- **Verificación #32**: init final verde (484 backend / 656 frontend), 3 pruebas
   PostgreSQL aisladas y 5 Playwright (matriz 24 combinaciones y flujos).
   El typecheck adicional conserva 18 errores previos en tests, sin errores nuevos
   de aplicación; es deuda F11 del plan, fuera del gate de build actual.
