@@ -458,18 +458,8 @@ describe('executive-workspace-v2 R7,R9: real twelve-month trend, comparison and 
     render(<ExecutiveDashboard userName="Ana" dashboard={dashboard} />)
     const panel = screen.getByRole('region', { name: /pulso operativo/i })
     const chart = screen.getByRole('img', { name: /compras pagadas por mes/i })
-    const points = chart.querySelectorAll('circle')
-    expect(points).toHaveLength(12)
-    expect(points[0].textContent).toContain('agosto de 2025: $0.00')
-    expect(points[10].textContent).toContain('junio de 2026: $5,000.00')
-    expect(points[11].textContent).toContain('julio de 2026: $7,500.00')
-    expect(Number(points[11].getAttribute('cy'))).toBeLessThan(
-      Number(points[10].getAttribute('cy')),
-    )
-    expect(Number(points[10].getAttribute('cy'))).toBeLessThan(
-      Number(points[0].getAttribute('cy')),
-    )
-    expect(chart.textContent).toContain('Escala desde cero')
+    expect(chart.querySelector('.recharts-line-curve')).toBeTruthy()
+    expect(screen.getByText(/con escala desde cero/i)).toBeTruthy()
     fireEvent.click(screen.getByText('Ver datos de la gráfica'))
     const rows = within(
       screen.getByRole('table', { name: 'Importes pagados por mes' }),
@@ -514,16 +504,13 @@ describe('executive-workspace-v2 R7,R9: real twelve-month trend, comparison and 
         />,
       )
       const panel = screen.getByRole('region', { name: /pulso operativo/i })
-      const points = screen
-        .getByRole('img', { name: /compras pagadas por mes/i })
-        .querySelectorAll('circle')
-      expect(points).toHaveLength(12)
-      const baseline = points[0].getAttribute('cy')
-      for (const point of points) {
-        expect(point.textContent).toContain('$0.00')
-        expect(point.getAttribute('cy')).toBe(baseline)
-        expect(Number.isFinite(Number(point.getAttribute('cy')))).toBe(true)
-      }
+      const chart = screen.getByRole('img', {
+        name: /compras pagadas por mes/i,
+      })
+      expect(chart.innerHTML).not.toMatch(/NaN|Infinity/)
+      expect(
+        screen.getByRole('button', { name: /importe pagado/i }).textContent,
+      ).toContain('$0.00')
       expect(panel.textContent).toContain(
         change === null ? 'Sin base de comparación' : '0%',
       )

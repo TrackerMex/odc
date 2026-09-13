@@ -55,15 +55,14 @@ const dashboard = {
 }
 
 describe('executive-workspace-v2 R3,R4,R6,R7,R8,R9,R10: working analytical dashboard', () => {
-  it('executive-workspace-v2 R14: renders every chart title on the server before hydration', () => {
+  it('executive-workspace-v2 R14: renders the chart and its equivalent data on the server before hydration', () => {
     const document = new DOMParser().parseFromString(
       renderToString(<ExecutiveAnalytics dashboard={dashboard} />),
       'text/html',
     )
-    const titles = [...document.querySelectorAll('svg circle title')]
-    expect(titles).toHaveLength(12)
-    expect(titles[0].textContent).toBe('enero de 2026: $0.00')
-    expect(titles.every((title) => title.textContent.length > 0)).toBe(true)
+    expect(document.querySelector('[data-slot="chart"]')).toBeTruthy()
+    expect(document.querySelectorAll('table tbody tr')).toHaveLength(12)
+    expect(document.body.textContent).toContain('enero de 2026')
   })
   it('renders all ten rows, filtered pagination and complete independent indicators', () => {
     render(<ExecutiveDashboard userName="Ana" dashboard={dashboard} />)

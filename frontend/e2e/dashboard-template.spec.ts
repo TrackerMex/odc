@@ -72,7 +72,7 @@ for (const account of accounts) {
         await expect(panel).toBeVisible()
         await expect(priority).toBeVisible()
         const chartTextSizes = await page
-          .locator('svg[role="img"] text')
+          .locator('[data-slot="chart"] svg text')
           .evaluateAll((labels) =>
             labels.map((label) => {
               const text = label as SVGTextElement
@@ -83,6 +83,17 @@ for (const account of accounts) {
             }),
           )
         expect(Math.min(...chartTextSizes)).toBeGreaterThanOrEqual(12)
+        if (width === 1440 && theme === 'light') {
+          const amount = page.getByRole('button', { name: /Importe pagado/ })
+          const purchases = page.getByRole('button', { name: /Compras/ })
+          await expect(amount).toHaveAttribute('aria-pressed', 'true')
+          await purchases.click()
+          await expect(purchases).toHaveAttribute('aria-pressed', 'true')
+          await expect(
+            page.locator('[data-slot="chart"] .recharts-line-curve'),
+          ).toBeVisible()
+          await amount.click()
+        }
         expect((await panel.boundingBox())!.y).toBeLessThan(
           (await priority.boundingBox())!.y,
         )

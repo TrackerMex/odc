@@ -1,4 +1,18 @@
-import { Card } from '@/components/ui/card'
+import { useMemo, useState } from 'react'
+import { CartesianGrid, Line, LineChart, XAxis, YAxis } from 'recharts'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card'
+import {
+  ChartContainer,
+  ChartTooltip,
+  ChartTooltipContent,
+} from '@/components/ui/chart'
+import type { ChartConfig } from '@/components/ui/chart'
 import {
   Table,
   TableBody,
@@ -16,6 +30,19 @@ import {
 import type { ExecutiveDashboardResponse } from '@/lib/odc'
 import { OdcStatusBadge } from './odc-status-badge'
 
+const trendChartConfig = {
+  totalCents: {
+    label: 'Importe pagado',
+    color: 'var(--primary)',
+  },
+  purchaseCount: {
+    label: 'Compras',
+    color: 'var(--chart-2)',
+  },
+} satisfies ChartConfig
+
+type TrendMetric = keyof typeof trendChartConfig
+
 function comparison(value: number | null, month: string) {
   return value === null
     ? 'Sin base de comparación'
@@ -28,13 +55,20 @@ export function ExecutiveAnalytics({
   dashboard: ExecutiveDashboardResponse
 }) {
   const { pulse, monthlyTrend, statusDistribution } = dashboard
-  const maximum = Math.max(1, ...monthlyTrend.map((item) => item.totalCents))
-  const points = monthlyTrend.map((item, index) => ({
-    x: 62 + index * 57,
-    y: 194 - (item.totalCents / maximum) * 155,
-    ...item,
-  }))
-  const line = points.map((point) => `${point.x},${point.y}`).join(' ')
+  const [activeTrend, setActiveTrend] = useState<TrendMetric>('totalCents')
+  const trendTotals = useMemo(
+    () => ({
+      totalCents: monthlyTrend.reduce(
+        (total, item) => total + item.totalCents,
+        0,
+      ),
+      purchaseCount: monthlyTrend.reduce(
+        (total, item) => total + item.purchaseCount,
+        0,
+      ),
+    }),
+    [monthlyTrend],
+  )
   const largestState = Math.max(
     1,
     ...statusDistribution.map((item) => item.count),
@@ -95,121 +129,143 @@ export function ExecutiveAnalytics({
         </dl>
       </section>
       <div className="grid min-w-0 items-start gap-6 xl:grid-cols-[minmax(0,1.7fr)_minmax(0,1fr)]">
-        <Card className="min-w-0 gap-0 p-5 shadow-none">
-          <h2 id="paid-trend-title" className="text-base font-semibold">
-            Compras pagadas por mes
-          </h2>
-          <p className="mt-1 text-xs text-muted-foreground">
-            {monthlyTrend.length
-              ? `${formatMonth(monthlyTrend[0].month)} — ${formatMonth(monthlyTrend.at(-1)!.month)}`
-              : 'Sin datos'}{' '}
-            · MXN
-          </p>
+        <Card className="min-w-0 gap-0 py-0 shadow-none">
+          <CardHeader className="flex flex-col items-stretch border-b p-0 sm:flex-row">
+            <div className="flex min-w-0 flex-1 flex-col justify-center gap-1 px-5 py-4 sm:py-5">
+              <CardTitle id="paid-trend-title">
+                Compras pagadas por mes
+              </CardTitle>
+              <CardDescription className="text-xs">
+                {monthlyTrend.length
+                  ? `${formatMonth(monthlyTrend[0].month)} — ${formatMonth(monthlyTrend.at(-1)!.month)}`
+                  : 'Sin datos'}
+              </CardDescription>
+            </div>
+            <div
+              className="flex"
+              role="group"
+              aria-label="Métrica de la gráfica"
+            >
+              {(Object.keys(trendChartConfig) as TrendMetric[]).map(
+                (metric) => (
+                  <button
+                    key={metric}
+                    type="button"
+                    data-active={activeTrend === metric}
+                    aria-pressed={activeTrend === metric}
+                    className="flex min-h-11 flex-1 flex-col justify-center gap-1 border-t px-5 py-3 text-left outline-none transition-colors data-[active=true]:bg-muted/50 focus-visible:ring-3 focus-visible:ring-inset focus-visible:ring-ring motion-reduce:transition-none sm:min-w-36 sm:border-t-0 sm:border-l sm:px-6 sm:py-5"
+                    onClick={() => setActiveTrend(metric)}
+                  >
+                    <span className="text-xs text-muted-foreground">
+                      {trendChartConfig[metric].label}
+                    </span>
+                    <span className="text-lg leading-none font-semibold tabular-nums sm:text-2xl">
+                      {metric === 'totalCents'
+                        ? formatCurrency(trendTotals[metric])
+                        : trendTotals[metric].toLocaleString('es-MX')}
+                    </span>
+                  </button>
+                ),
+              )}
+            </div>
+          </CardHeader>
           <div
-            className="mt-5 overflow-x-auto rounded-sm outline-none focus-visible:ring-3 focus-visible:ring-ring"
+            className="overflow-x-auto rounded-sm outline-none focus-visible:ring-3 focus-visible:ring-inset focus-visible:ring-ring"
             tabIndex={0}
             role="region"
             aria-label="Gráfica mensual desplazable"
           >
-            <svg
-              viewBox="0 0 720 240"
+            <ChartContainer
+              config={trendChartConfig}
+              className="h-[260px] min-w-[560px] w-full px-2 py-5 sm:px-5"
               role="img"
               aria-labelledby="paid-trend-title paid-trend-description"
-              className="min-w-[560px] text-primary"
             >
-              <desc id="paid-trend-description">
-                Importes reales por fecha de pago. Escala desde cero; los
-                valores completos están disponibles en la tabla de datos.
-              </desc>
-              {[0, 0.5, 1].map((fraction) => (
-                <g key={fraction}>
-                  <line
-                    x1="62"
-                    x2="695"
-                    y1={194 - fraction * 155}
-                    y2={194 - fraction * 155}
-                    stroke="var(--border)"
-                    strokeDasharray={fraction ? '3 5' : undefined}
-                  />
-                  <text
-                    x="52"
-                    y={198 - fraction * 155}
-                    textAnchor="end"
-                    fill="var(--muted-foreground)"
-                    fontSize="16"
-                  >
-                    {new Intl.NumberFormat('es-MX', {
-                      notation: 'compact',
-                      maximumFractionDigits: 1,
-                    }).format((maximum * fraction) / 100)}
-                  </text>
-                </g>
-              ))}
-              {points.length > 1 && (
-                <polyline
-                  points={line}
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2.5"
-                  strokeLinejoin="round"
-                  strokeLinecap="round"
-                />
-              )}
-              {points.map((point) => (
-                <g key={point.month}>
-                  <circle
-                    cx={point.x}
-                    cy={point.y}
-                    r="3.5"
-                    fill="var(--card)"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                  >
-                    <title>{`${formatMonth(point.month)}: ${formatCurrency(point.totalCents)}`}</title>
-                  </circle>
-                  <text
-                    x={point.x}
-                    y="222"
-                    textAnchor="middle"
-                    fill="var(--muted-foreground)"
-                    fontSize="16"
-                  >
-                    {new Intl.DateTimeFormat('es-MX', {
+              <LineChart
+                accessibilityLayer
+                data={monthlyTrend}
+                margin={{ left: 12, right: 12 }}
+              >
+                <CartesianGrid vertical={false} />
+                <XAxis
+                  dataKey="month"
+                  tickLine={false}
+                  axisLine={false}
+                  tickMargin={8}
+                  minTickGap={28}
+                  tickFormatter={(value: string) =>
+                    new Intl.DateTimeFormat('es-MX', {
                       month: 'short',
                       timeZone: 'UTC',
-                    }).format(new Date(`${point.month}-01T00:00:00Z`))}
-                  </text>
-                </g>
-              ))}
-            </svg>
+                    }).format(new Date(`${value}-01T00:00:00Z`))
+                  }
+                />
+                <YAxis domain={[0, 'auto']} hide />
+                <ChartTooltip
+                  cursor={false}
+                  content={
+                    <ChartTooltipContent
+                      className="w-44"
+                      labelFormatter={(value) => formatMonth(String(value))}
+                      formatter={(value) => (
+                        <div className="flex w-full items-center justify-between gap-4">
+                          <span className="text-muted-foreground">
+                            {trendChartConfig[activeTrend].label}
+                          </span>
+                          <span className="font-mono font-medium tabular-nums">
+                            {activeTrend === 'totalCents'
+                              ? formatCurrency(Number(value))
+                              : Number(value).toLocaleString('es-MX')}
+                          </span>
+                        </div>
+                      )}
+                    />
+                  }
+                />
+                <Line
+                  dataKey={activeTrend}
+                  type="monotone"
+                  stroke={`var(--color-${activeTrend})`}
+                  strokeWidth={2.5}
+                  dot={false}
+                  isAnimationActive={false}
+                />
+              </LineChart>
+            </ChartContainer>
           </div>
-          <details className="mt-3 border-t pt-3 text-xs">
-            <summary className="w-fit cursor-pointer rounded-sm py-2 text-muted-foreground outline-none hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring">
-              Ver datos de la gráfica
-            </summary>
-            <Table aria-label="Importes pagados por mes">
-              <TableHeader className="static">
-                <TableRow>
-                  <TableHead>Mes</TableHead>
-                  <TableHead className="text-right">Compras</TableHead>
-                  <TableHead className="text-right">Importe MXN</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {monthlyTrend.map((item) => (
-                  <TableRow key={item.month}>
-                    <TableCell>{formatMonth(item.month)}</TableCell>
-                    <TableCell className="text-right tabular-nums">
-                      {item.purchaseCount}
-                    </TableCell>
-                    <TableCell className="text-right tabular-nums">
-                      {formatCurrency(item.totalCents)}
-                    </TableCell>
+          <p id="paid-trend-description" className="sr-only">
+            Datos reales por fecha de pago, con escala desde cero. Los valores
+            completos están disponibles en la tabla de datos.
+          </p>
+          <CardContent className="border-t px-5 py-3">
+            <details className="text-xs">
+              <summary className="w-fit cursor-pointer rounded-sm py-2 text-muted-foreground outline-none hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring">
+                Ver datos de la gráfica
+              </summary>
+              <Table aria-label="Importes pagados por mes">
+                <TableHeader className="static">
+                  <TableRow>
+                    <TableHead>Mes</TableHead>
+                    <TableHead className="text-right">Compras</TableHead>
+                    <TableHead className="text-right">Importe MXN</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </details>
+                </TableHeader>
+                <TableBody>
+                  {monthlyTrend.map((item) => (
+                    <TableRow key={item.month}>
+                      <TableCell>{formatMonth(item.month)}</TableCell>
+                      <TableCell className="text-right tabular-nums">
+                        {item.purchaseCount}
+                      </TableCell>
+                      <TableCell className="text-right tabular-nums">
+                        {formatCurrency(item.totalCents)}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </details>
+          </CardContent>
         </Card>
         <section aria-labelledby="state-distribution-title" className="min-w-0">
           <Card className="gap-0 p-5 shadow-none">
