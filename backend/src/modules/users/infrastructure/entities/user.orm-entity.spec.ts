@@ -24,6 +24,7 @@ describe('R2: ORM entity mapped onto the users table', () => {
         'passwordHash',
         'fullName',
         'role',
+        'notificationsReadAt',
         'createdAt',
       ]),
     );

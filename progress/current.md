@@ -7,5 +7,5 @@
 feature: odc-notifications
 inicio: 2026-09-13
 agentes lanzados: ninguno
-estado: spec aprobada por instrucción explícita del usuario; preparando TDD
+estado: in_progress; escribiendo pruebas R1-R6 antes de implementación
 ```
