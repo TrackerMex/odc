@@ -220,6 +220,7 @@ test('executive-workspace-v2 R1,R11,R12,R14: reviews accessibly and retries only
       await page
         .getByLabel('Comentarios', { exact: true })
         .fill('Entrega urgente para instalación de sensores GPS.')
+      if (width === 1440) await page.setViewportSize({ width, height: 600 })
       await page.evaluate(() => window.scrollTo(0, 400))
       const header = page.locator('.odc-app-shell > main > header')
       await expect(header).toHaveCSS('position', 'sticky')
@@ -229,6 +230,7 @@ test('executive-workspace-v2 R1,R11,R12,R14: reviews accessibly and retries only
       if (width === 1440) {
         const summary = (await page.getByRole('complementary').boundingBox())!
         expect(summary.y).toBeGreaterThanOrEqual(headerBounds.height + 16)
+        await page.setViewportSize({ width, height: 900 })
       }
       await send.click()
       const review = page.getByRole('dialog', {
@@ -243,6 +245,11 @@ test('executive-workspace-v2 R1,R11,R12,R14: reviews accessibly and retries only
       ).toBeVisible()
       await expect(review.getByText('$449.70', { exact: true })).toBeVisible()
       expect(writes).toEqual([])
+      await review.evaluate(async (dialog) => {
+        await Promise.all(
+          dialog.getAnimations().map((animation) => animation.finished),
+        )
+      })
       const dimensions = await review.evaluate((dialog) => ({
         x: dialog.getBoundingClientRect().x,
         right: dialog.getBoundingClientRect().right,
