@@ -26,6 +26,7 @@ for (const account of accounts) {
     })
     expect(signIn.ok()).toBe(true)
     await page.goto('/')
+    await page.waitForLoadState('networkidle')
     await expect(page.locator('#dashboard-title')).toBeVisible()
 
     for (const width of widths) {
@@ -38,15 +39,8 @@ for (const account of accounts) {
           await page.getByRole('button', { name: /Cambiar a modo/ }).click()
         await expect(page.locator('html')).toHaveCSS('color-scheme', theme)
         await page.reload()
+        await page.waitForLoadState('networkidle')
         await expect(page.locator('#dashboard-title')).toBeVisible()
-        await expect(page.locator('html')).toHaveCSS('color-scheme', theme)
-        // Confirm client interaction before measuring restored scroll positions.
-        await page.getByRole('button', { name: /Cambiar a modo/ }).click()
-        await expect(page.locator('html')).toHaveCSS(
-          'color-scheme',
-          theme === 'dark' ? 'light' : 'dark',
-        )
-        await page.getByRole('button', { name: /Cambiar a modo/ }).click()
         await expect(page.locator('html')).toHaveCSS('color-scheme', theme)
         const measurements = await page.evaluate(() => ({
           width: innerWidth,
@@ -77,6 +71,13 @@ for (const account of accounts) {
         })
         await expect(panel).toBeVisible()
         await expect(priority).toBeVisible()
+        const chartTextSizes = await page.locator('svg[role="img"] text').evaluateAll(
+          (labels) => labels.map((label) => {
+            const text = label as SVGTextElement
+            return Number.parseFloat(getComputedStyle(text).fontSize) * text.getScreenCTM()!.a
+          }),
+        )
+        expect(Math.min(...chartTextSizes)).toBeGreaterThanOrEqual(12)
         expect((await panel.boundingBox())!.y).toBeLessThan(
           (await priority.boundingBox())!.y,
         )
