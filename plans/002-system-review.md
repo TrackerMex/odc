@@ -34,6 +34,28 @@ Mes de creación y mes de pago responden preguntas distintas. Las gráficas debe
 
 ## Hallazgos priorizados
 
+### Registro en Harness — 2026-10-01
+
+Revalidado sobre `main` remoto/local `a8a407e34b5ecc012b732f04d8f276f55aeec1b4`.
+Los seis hallazgos de la auditoría adicional corresponden a F02–F08 existentes;
+no se crean nuevos IDs F. Evidencia y límites en
+[progress/explore_odc-hardening.md](../progress/explore_odc-hardening.md).
+
+| Orden solicitado | Feature Harness | Hallazgo de este plan | Prioridad |
+|---|---|---|---|
+| 1 | #34 `odc-multipart-protection` | F04 | P1 |
+| 2 | #35 `odc-temporary-file-delivery` | F02 | P1 |
+| 3 | #36 `odc-concurrent-updates` | F03 | P1 |
+| 4 | #37 `odc-input-boundaries` | F05 + F06 | P1 (F06 conserva P2 individual) |
+| 5 | #38 `odc-orphan-file-recovery` | F07 | P2 |
+| 6 | #39 `auth-login-rate-limit` | F08 | P1 antes de exposición |
+
+Criterios de prueba en `feature_list.json`. Se prepara solo la spec #34,
+[multipart](../specs/odc-multipart-protection/requirements.md); la implementación
+espera aprobación explícita según `AGENTS.md` §3–4. Las siguientes specs se
+preparan secuencialmente después de verificación y prueba humana de cada feature.
+Registro del backlog y spec en borrador no equivalen a correcciones implementadas.
+
 P1: resolver en la siguiente evolución o antes de producción según el alcance indicado. P2: corrección de operación/calidad. P3: mantenimiento. Esfuerzo S = horas; M = alrededor de un día; L = varios días, incluyendo pruebas, sin compromiso de calendario. Riesgo se refiere al cambio, no a la gravedad del defecto. Confianza alta significa flujo leído o reproducido; media requiere medición adicional.
 
 ### Integridad y producción

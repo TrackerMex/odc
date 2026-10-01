@@ -37,6 +37,21 @@ Requiere `.env` en la raíz (plantilla en `.env.example`): `DATABASE_URL`,
 
 ## Estado actual
 
+- **Auditoría 2026-10-01 registrada**: seis entregas #34–#39 para F02–F08 ya
+  existentes en plan002. Base remota/local revalidada: `a8a407e`. Orden:
+  multipart, caducidad, concurrencia, validaciones, archivos huérfanos y login.
+  Solo #34 tiene spec preparada (`spec_ready`, borrador sin aprobación);
+  ninguna corrección implementada ni
+  autoaprobada. Gate siguiente: aprobación explícita de
+  [requirements multipart](specs/odc-multipart-protection/requirements.md).
+  Rama aislada `audit/odc-hardening-20261001` en
+  `C:\Users\alex\Documents\Codex\2026-09-30\task\odc-audit`.
+  Evidencia: [revalidación](progress/explore_odc-hardening.md).
+  **Checks passed**: init inicial y cierre exit 0, builds, 489 backend,
+  661 frontend y lint backend; JSON/backlog comprobados. **Not run**:
+  nuevas pruebas de seguridad, carreras PostgreSQL, acceso Cloudinary real y
+  prueba humana; gate previo a código aún pendiente. Detalle en historial.
+
 - **#33 `odc-notifications` done**: campana persistente en el header para los
   tres roles, alimentada por el historial transaccional de las ODC. Muestra
   creación y cambios de estado con folio, actor, tiempo, contador por usuario,

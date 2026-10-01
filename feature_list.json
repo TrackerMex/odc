@@ -191,5 +191,99 @@
     "name": "odc-notifications",
     "status": "done",
     "priority": "P1"
+  },
+  {
+    "id": 34,
+    "name": "odc-multipart-protection",
+    "status": "spec_ready",
+    "priority": "P1",
+    "source_findings": ["plan002:F04"],
+    "description": "Limitar recepción multipart y validar firmas reales de comprobantes y facturas; corregir Multer directo y transitivo.",
+    "acceptance_criteria": [
+      "Recepción limitada a 10485760 bytes por archivo: límite exacto aceptado y +1 rechazado antes del caso de uso.",
+      "Límites explícitos de archivos, campos, partes, nombre/tamaño de campo y arrays; excesos rechazados sin almacenamiento.",
+      "PDF/JPEG/PNG comprobados por firma real; MIME falso, archivo ausente y formato no permitido reciben 400.",
+      "Multer >=2.3.0 en todas las rutas runtime de Nest; demostrar compatibilidad y ausencia de versión vulnerable en lockfile.",
+      "Pruebas HTTP con parser real, sesión y roles existentes; ningún upload o guardado tras rechazo; prueba humana antes de done."
+    ]
+  },
+  {
+    "id": 35,
+    "name": "odc-temporary-file-delivery",
+    "status": "pending",
+    "priority": "P1",
+    "source_findings": ["plan002:F02"],
+    "depends_on": [34],
+    "description": "Entrega temporal soportada por Cloudinary preservando autorización y referencias existentes.",
+    "acceptance_criteria": [
+      "URLs con expiración real de cinco minutos mediante mecanismo soportado para el tipo de activo, no expires_at ignorado por cloudinary.url.",
+      "Prueba con SDK real y credenciales ficticias de que tiempo/firma afectan el acceso generado; mocks solos no son evidencia suficiente.",
+      "Roles, privacidad de borradores y autorización de descargas conservados; cubrir referencias antiguas y PDF/JPEG/PNG.",
+      "Prueba de acceso antes/después de caducar con activo de test únicamente en entorno seguro autorizado; si no está disponible, registrar not run y el bloqueo sin solicitar secretos en chat.",
+      "No ampliar acceso ni cambiar activos existentes sin diseño y aprobación; prueba humana antes de done."
+    ]
+  },
+  {
+    "id": 36,
+    "name": "odc-concurrent-updates",
+    "status": "pending",
+    "priority": "P1",
+    "source_findings": ["plan002:F03"],
+    "depends_on": [35],
+    "description": "Persistir mutaciones con estado/versión esperada o bloqueo transaccional y conservar historial atómico.",
+    "acceptance_criteria": [
+      "Una sola escritura gana frente a la misma versión; la operación perdedora devuelve 409 sin sobrescribir datos.",
+      "Historial y orden se guardan atómicamente; exactamente una entrada por transición ganadora y ninguna por la perdedora.",
+      "Pruebas PostgreSQL aisladas con dos conexiones y barrera de sincronización para aprobar/rechazar, doble envío y editar/enviar.",
+      "Cubrir todas las mutaciones, no solo approve-budget; no eliminar datos de bases compartidas; prueba humana antes de done."
+    ]
+  },
+  {
+    "id": 37,
+    "name": "odc-input-boundaries",
+    "status": "pending",
+    "priority": "P1",
+    "source_findings": ["plan002:F05", "plan002:F06"],
+    "depends_on": [36],
+    "description": "Límites de cantidad/precio/producto en dominio y HTTP, fechas de calendario estrictas y UUID en parámetros.",
+    "acceptance_criteria": [
+      "Crear y PATCH validan enteros positivos, seguros y compatibles con int32, incluido el producto quantity*unitPriceCents; 50000*50000 rechazado con 400 antes de persistencia.",
+      "Definir y aprobar el límite de negocio y contrato de fecha; cubrir máximo, +1, actualización parcial y llamadas directas al dominio.",
+      "Pago, entrada a almacén y fecha opcional de factura rechazan calendarios imposibles; cubrir años bisiestos, formato y zona según contrato aprobado.",
+      "UUID malformado devuelve 400 para usuario autorizado; UUID válido inexistente devuelve 404 sin alterar 401/403 existentes.",
+      "Prueba humana antes de done; la prioridad P2 original de F06 se conserva en plan002 aunque comparte esta entrega P1."
+    ]
+  },
+  {
+    "id": 38,
+    "name": "odc-orphan-file-recovery",
+    "status": "pending",
+    "priority": "P2",
+    "source_findings": ["plan002:F07"],
+    "depends_on": [37],
+    "description": "Compensar uploads tras rollback inequívoco y conciliar resultados ambiguos o fallos de limpieza.",
+    "acceptance_criteria": [
+      "DB con rollback inequívoco limpia solo el activo recién subido y nunca otro archivo asociado.",
+      "Cleanup fallido deja trabajo de conciliación durable, observable e idempotente, sin ocultar el error original.",
+      "Timeout/commit ambiguo exige consultar asociación y resultado transaccional antes de cualquier eliminación; no borrar si no puede resolverse.",
+      "Pruebas de fallo DB, fallo cleanup, timeout antes/después de commit y conflicto concurrente usando las garantías de #36.",
+      "Aplicar a factura y comprobante; prueba humana antes de done; sin barrido destructivo de activos ajenos."
+    ]
+  },
+  {
+    "id": 39,
+    "name": "auth-login-rate-limit",
+    "status": "pending",
+    "priority": "P1",
+    "source_findings": ["plan002:F08"],
+    "depends_on": [38],
+    "description": "Limitar intentos de login por IP y cuenta conforme a proxy y topología verificados.",
+    "acceptance_criteria": [
+      "Límites por IP y cuenta normalizada con umbrales/ventana aprobados; 429 y Retry-After al exceder, recuperación tras ventana.",
+      "Proxy confiable definido por topología real; X-Forwarded-For externo no permite evadir ni imponer bloqueo a otra IP.",
+      "Contadores compartidos/atómicos si hay varias instancias; probar límites distribuidos o documentar alcance local de una instancia sin afirmar protección productiva.",
+      "Cubrir cuentas existentes/inexistentes sin revelar existencia, claves acotadas y concurrencia.",
+      "Protección requerida antes de exposición; infraestructura externa no inspeccionada; prueba humana antes de done."
+    ]
   }
 ]

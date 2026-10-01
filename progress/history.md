@@ -716,3 +716,37 @@ estado: implementación aprobada; init inicial verde
 - El panel accesible ofrece badge, lectura, carga/error/vacío, enlaces al detalle y refresco al abrir, enfocar, cada 30 segundos o tras una mutación ODC exitosa.
 - TDD: rojo `0e3cc9f` → `56e6002`. API real verificada con OPS, Administración y Dirección General; navegador oscuro verificado con 67 eventos no leídos y scroll local.
 - `./init.sh` verde: 489 backend, 661 frontend, builds y lint.
+
+---
+
+## 2026-10-01 - Auditoría de seguridad e integridad registrada en Harness
+
+- Checkout original `C:\Users\alex\Documents\sites\odc`, main limpio;
+  HEAD y main remoto coinciden en `a8a407e34b5ecc012b732f04d8f276f55aeec1b4`.
+- Worktree aislado `C:\Users\alex\Documents\Codex\2026-09-30\task\odc-audit`,
+  rama `audit/odc-hardening-20261001`. Sin push, merge, despliegue ni Notion.
+- Registradas #34–#39 con prioridades y criterios de prueba, referenciando
+  F04, F02, F03, F05/F06, F07 y F08 del plan002; #1–#33 intactas.
+- Spec completa #34 multipart: requirements/design/tasks/traceability.
+  `spec_ready` significa preparada según el proceso del spec_author;
+  frontmatter draft y aprobación humana sin marcar. Ninguna implementación.
+- Se lanzó spec_author conforme a instrucciones locales; se interrumpió para
+  responder al pedido de entrega inmediata durante la llamada, y el responsable
+  terminó los documentos de spec. No se delegó implementación ni revisión de código.
+- Gate exacto: aprobación humana de `specs/odc-multipart-protection/requirements.md`
+  antes de código (AGENTS §3–4). Luego TDD, review y prueba humana por feature.
+- **Passed**: init inicial y de cierre, exit 0; builds backend/frontend,
+  62 suites/489 pruebas backend, 39 archivos/661 pruebas frontend, lint backend.
+  La spec se cerró al terminar el init; validación documental/JSON posterior.
+- **Passed**: JSON sin IDs/nombres duplicados, #1–#33 byte-semánticamente
+  iguales al checkout base y F02–F08 referenciados cada uno una vez.
+- **Passed**: SDK real Cloudinary 2.10.0 con configuración ficticia, sin red:
+  expires_at=100/200 genera URL idéntica. pnpm why multer confirma 2.2.0 directo
+  y vía Nest, sin ejecutar payloads peligrosos.
+- **Not run**: nuevas pruebas multipart, carreras PostgreSQL, expiración de un
+  activo real, rate limit y prueba humana. Requieren sus implementaciones/specs
+  aprobadas y, donde aplique, entorno seguro de test.
+- No se copiaron secretos; init usó .env.example en worktree, sin servicios,
+  seeds ni acceso a datos productivos. Los hallazgos permanecen abiertos.
+- Evidencia y alcance: `progress/explore_odc-hardening.md`. Main original
+  conserva su estado limpio; normalización de routeTree generada por build se descarta.
