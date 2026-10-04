@@ -242,10 +242,8 @@ describe('R7: real Nest/Multer HTTP upload boundary (#34)', () => {
         expect(
           await streamUpload(route.path, route.role, route.fields, MAX_BYTES),
         ).toBe(200);
-        expect(storage.upload).toHaveBeenCalledWith(
-          expect.objectContaining({ buffer: expect.any(Buffer) }),
-        );
-        const uploaded = storage.upload.mock.calls[0][0] as { buffer: Buffer };
+        expect(storage.upload).toHaveBeenCalledTimes(1);
+        const uploaded = storage.upload.mock.calls[0][0];
         expect(uploaded.buffer.length).toBe(MAX_BYTES);
       });
 
@@ -257,6 +255,18 @@ describe('R7: real Nest/Multer HTTP upload boundary (#34)', () => {
           })
           .expect(400);
         expectNoEffects();
+      });
+
+      it('accepts omitted optional metadata', async () => {
+        const fields =
+          route.path === 'invoice' ? { warehouseEntryDate: '2026-10-04' } : {};
+        await form(fields)
+          .attach('file', PDF, {
+            filename: 'test.pdf',
+            contentType: 'application/pdf',
+          })
+          .expect(200);
+        expect(repository.update).toHaveBeenCalledTimes(1);
       });
     });
 
@@ -323,28 +333,41 @@ describe('R7: real Nest/Multer HTTP upload boundary (#34)', () => {
         },
       );
 
-      it.each(['a'.repeat(8192), 'é'.repeat(4096)])(
-        'accepts exactly 8192 UTF-8 bytes (%#)',
-        async (value) => {
-          await form({ ...route.fields, [route.textField]: value })
-            .attach('file', PDF, {
-              filename: 'test.pdf',
-              contentType: 'application/pdf',
-            })
-            .expect(200);
-        },
-      );
+      describe.each([false, true])(
+        'UTF-8 boundaries (file first: %s)',
+        (fileFirst) => {
+          it.each(['a'.repeat(8192), 'é'.repeat(4096)])(
+            'accepts exactly 8192 UTF-8 bytes (%#)',
+            async (value) => {
+              const req = form(
+                { ...route.fields, [route.textField]: value },
+                fileFirst,
+              );
+              if (!fileFirst)
+                req.attach('file', PDF, {
+                  filename: 'test.pdf',
+                  contentType: 'application/pdf',
+                });
+              await req.expect(200);
+            },
+          );
 
-      it.each(['a'.repeat(8193), 'é'.repeat(4096) + 'a'])(
-        'rejects 8193 UTF-8 bytes (%#)',
-        async (value) => {
-          await form({ ...route.fields, [route.textField]: value })
-            .attach('file', PDF, {
-              filename: 'test.pdf',
-              contentType: 'application/pdf',
-            })
-            .expect(400);
-          expectNoEffects();
+          it.each(['a'.repeat(8193), 'é'.repeat(4096) + 'a'])(
+            'rejects 8193 UTF-8 bytes (%#)',
+            async (value) => {
+              const req = form(
+                { ...route.fields, [route.textField]: value },
+                fileFirst,
+              );
+              if (!fileFirst)
+                req.attach('file', PDF, {
+                  filename: 'test.pdf',
+                  contentType: 'application/pdf',
+                });
+              await req.expect(400);
+              expectNoEffects();
+            },
+          );
         },
       );
 
@@ -443,6 +466,18 @@ describe('R7: real Nest/Multer HTTP upload boundary (#34)', () => {
           .set('Cookie', cookie(route.role))
           .set('Content-Type', 'multipart/form-data')
           .send('not multipart')
+          .expect(400);
+        expectNoEffects();
+      });
+
+      it('rejects a truncated file stream without effects or hanging', async () => {
+        await request(server)
+          .post(`/api/odcs/${ODC_ID}/${route.path}`)
+          .set('Cookie', cookie(route.role))
+          .set('Content-Type', 'multipart/form-data; boundary=truncated')
+          .send(
+            '--truncated\r\nContent-Disposition: form-data; name="file"; filename="test.pdf"\r\nContent-Type: application/pdf\r\n\r\n%PDF-1.4\n',
+          )
           .expect(400);
         expectNoEffects();
       });
