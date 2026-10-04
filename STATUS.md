@@ -1,8 +1,8 @@
 # ODC — Status
 
-**Última actualización**: 2026-09-13
-**Features completadas**: 33/33 (`feature_list.json`)
-**Pendientes del registro**: ninguno; las entregas restantes de la auditoría están en el plan 002
+**Última actualización**: 2026-10-04
+**Features completadas**: 33/39 (`feature_list.json`)
+**Pendientes del registro**: #34 implementada, esperando prueba humana local; #35–#39 pending
 **En producción**: no
 
 ---
@@ -36,6 +36,18 @@ Requiere `.env` en la raíz (plantilla en `.env.example`): `DATABASE_URL`,
 ---
 
 ## Estado actual
+
+- **#34 `odc-multipart-protection` implementada (2026-10-04), `in_progress`**:
+  spec aprobada por humano en `3e07ccc`. Multer 2.4.0 directo/transitivo,
+  parser limitado, Buffer máximo de 10 MiB, firmas PDF/JPEG/PNG y MIME
+  coincidente, metadatos permitidos/planos y límites UTF-8. HTTP 413 por
+  exceso de archivo y 400 por estructura/contenido inválidos; 401/403 antes
+  del parser. Código `f0ad2db`, tests primero `341c48c`/`5e226d9`, ampliación
+  `9bbdc7a`. Puertos efímeros en este entorno; el usuario prueba en su equipo.
+  Evidencia: [implementación](progress/impl_odc-multipart-protection.md),
+  [guía humana](progress/verify_odc-multipart-protection.md).
+  Init final exit 0: 575 backend / 661 frontend, builds y lint backend verdes.
+  La prueba humana está por registrar; #35 no se ha iniciado.
 
 - **Auditoría 2026-10-01 registrada**: seis entregas #34–#39 para F02–F08 ya
   existentes en plan002. Base remota/local revalidada: `a8a407e`. Orden:

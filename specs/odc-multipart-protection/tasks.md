@@ -53,7 +53,8 @@ No iniciar antes de aprobación de [[requirements]].
 ## Cierre
 
 - [x] Revisar lockfile y pnpm why multer directo/transitivo.
-- [ ] ./init.sh verde; review contra CHECKPOINTS C1–C6.
+- [x] Init verde (`bash init.sh` en este checkout Linux); auto-revisión técnica C1–C6.
+- [ ] Revisión humana de negocio y aprobación de cierre.
 - [ ] Prueba humana local y evidencia antes de done.
 
 

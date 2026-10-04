@@ -14,7 +14,8 @@ pnpm --dir backend install --frozen-lockfile
 pnpm --dir backend test --runInBand odc-multipart.http.spec.ts odc-upload-dependencies.spec.ts
 ```
 
-Si usas Docker, reconstruye la imagen del backend para actualizar Multer.
+Reinicia el backend después de instalar. Si usas Docker, reconstruye su imagen
+para actualizar Multer.
 Conserva los puertos de tu equipo. Las pruebas automáticas eligen un puerto
 libre en loopback y no requieren Postgres, frontend ni Cloudinary reales.
 La prueba de negocio siguiente sí usa tu stack local y su configuración habitual.
@@ -31,7 +32,7 @@ normal para cada caso. No repitas una subida válida sobre una orden ya avanzada
 | Factura con todos los metadatos | Operaciones / EVIDENCIA_PAGO_SUBIDA | Fecha almacén, número, fecha factura y observaciones conservados |
 | Factura con solo fecha almacén | Operaciones / EVIDENCIA_PAGO_SUBIDA | Campos opcionales pueden omitirse |
 | Texto guardado como `.pdf` | Rol autorizado / estado requerido | HTTP 400; orden, historial y documentos sin cambios |
-| PNG renombrado a `.jpg` | Rol autorizado / estado requerido | HTTP 400 por MIME discordante; orden sin cambios |
+| PNG enviado con MIME `image/jpeg` | Rol autorizado / estado requerido | HTTP 400 por MIME discordante; orden sin cambios |
 | Archivo vacío | Rol autorizado / estado requerido | HTTP 400; orden sin cambios |
 | Archivo de 10485760 bytes | Rol autorizado / estado requerido | Aceptado si firma, MIME y metadatos son válidos |
 | Archivo de 10485761 bytes | Rol autorizado / estado requerido | HTTP 413 al llamar directamente a API; ningún guardado |
@@ -52,7 +53,7 @@ form.append('file', new File([new Uint8Array(10485761)], 'grande.pdf', {
 }))
 const response = await fetch(`/api/odcs/${odcId}/payment-evidence`, {
   method: 'POST', body: form, credentials: 'include',
-})
+});
 ({ status: response.status, body: await response.json() })
 // Esperado: status 413. La orden e historial deben conservarse.
 ```

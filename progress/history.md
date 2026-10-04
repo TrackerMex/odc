@@ -750,3 +750,34 @@ estado: implementación aprobada; init inicial verde
   seeds ni acceso a datos productivos. Los hallazgos permanecen abiertos.
 - Evidencia y alcance: `progress/explore_odc-hardening.md`. Main original
   conserva su estado limpio; normalización de routeTree generada por build se descarta.
+
+---
+
+## 2026-10-04 — Implementación #34, esperando prueba local humana
+
+# Sesión activa
+
+```text
+feature: odc-multipart-protection (#34)
+inicio: 2026-10-04 UTC
+agentes lanzados: ninguno
+estado: implementación; spec aprobada por humano en 3e07ccc (2026-10-03)
+```
+
+- Entorno de trabajo: /home/claude/sites/odc, rama audit/odc-hardening-20261001.
+- Init inicial con bash init.sh: exit 0, 489 backend / 661 frontend, builds y lint backend verdes.
+- Alcance exclusivo #34 R1–R7. Plan: tests HTTP reales primero; actualizar Multer directo/transitivo; límites y validación compartidos por ambas rutas; regresión y revisión C1–C6.
+- El usuario hará la prueba humana en su equipo antes de done. Los tests aquí usarán puertos efímeros en loopback y providers externos aislados, sin DB ni Cloudinary reales.
+- R5: rojo 341c48c, 2 fallos por Multer 2.2.0 directo y transitivo; actualización a 2.4.0 y override acotado verdes. Configuración de arrays se verificará junto a HTTP.
+- R1–R7: suite HTTP real escrita antes de implementación: 34 fallos / 38 verdes (72 casos). R6 ya pasa como contrato conservado; no se introduce una regresión artificial en guards existentes.
+- SDK/runtime inspeccionados: Multer 2.4.0 corrige la inclusión exacta de fileSize/parts; Busboy aún trunca fieldSize al alcanzar el límite. Se usará sentinela de un byte y validación UTF-8 del límite de negocio.
+- Implementación f0ad2db: parser acotado, firmas PDF/JPEG/PNG sin dependencia nueva, MIME coincidente, campos planos/permitidos y límite UTF-8. Compartida entre las dos rutas.
+- Focalizadas: 158/158 (72 HTTP reales, 2 dependencias, 84 controller). Build backend verde. Traces R1–R7 actualizadas inmediatamente tras commit de implementación.
+- R2 usa Writable/pipeline nativos porque el byte de anticipación de Multer no debe entrar a un Buffer completo mayor de 10 MiB; tests instrumentan Buffer.concat.
+- Cierre automático en curso; prueba humana reservada al usuario, sin marcar done.
+- Ampliación exigida por R4 y almacenamiento nuevo: 170 focalizadas verdes, 84 HTTP + 2 dependencias + 84 controller; límites UTF-8 en ambos órdenes, opcionales y stream truncado sin efectos/hang.
+- ESLint focalizado verde. Typecheck backend completo compara 70 errores históricos de tests contra baseline 3e07ccc: mismos 70, sin errores nuevos en archivos modificados. Build de aplicación verde.
+- Guía de prueba humana creada en progress/verify_odc-multipart-protection.md; instalación/rebuild backend necesaria para actualizar también el Multer usado por Nest.
+- Init final exit 0: 575 backend / 661 frontend, ambos builds y lint backend; git diff --check verde.
+- Auto-revisión técnica C1–C6 en progress/impl_odc-multipart-protection.md. No se afirma revisión independiente ni prueba humana.
+- Implementación lista para prueba local del usuario; #34 sigue in_progress. Cierre: archivar sesión, dejar current con plantilla, commits limpios y publicar la rama para sincronización con su equipo.
