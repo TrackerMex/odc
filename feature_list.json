@@ -195,7 +195,7 @@
   {
     "id": 34,
     "name": "odc-multipart-protection",
-    "status": "spec_ready",
+    "status": "in_progress",
     "priority": "P1",
     "source_findings": ["plan002:F04"],
     "description": "Limitar recepción multipart y validar firmas reales de comprobantes y facturas; corregir Multer directo y transitivo.",
