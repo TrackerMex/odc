@@ -14,3 +14,10 @@ estado: implementación; spec aprobada por humano en 3e07ccc (2026-10-03)
 - R5: rojo 341c48c, 2 fallos por Multer 2.2.0 directo y transitivo; actualización a 2.4.0 y override acotado verdes. Configuración de arrays se verificará junto a HTTP.
 - R1–R7: suite HTTP real escrita antes de implementación: 34 fallos / 38 verdes (72 casos). R6 ya pasa como contrato conservado; no se introduce una regresión artificial en guards existentes.
 - SDK/runtime inspeccionados: Multer 2.4.0 corrige la inclusión exacta de fileSize/parts; Busboy aún trunca fieldSize al alcanzar el límite. Se usará sentinela de un byte y validación UTF-8 del límite de negocio.
+- Implementación f0ad2db: parser acotado, firmas PDF/JPEG/PNG sin dependencia nueva, MIME coincidente, campos planos/permitidos y límite UTF-8. Compartida entre las dos rutas.
+- Focalizadas: 158/158 (72 HTTP reales, 2 dependencias, 84 controller). Build backend verde. Traces R1–R7 actualizadas inmediatamente tras commit de implementación.
+- R2 usa Writable/pipeline nativos porque el byte de anticipación de Multer no debe entrar a un Buffer completo mayor de 10 MiB; tests instrumentan Buffer.concat.
+- Cierre automático en curso; prueba humana reservada al usuario, sin marcar done.
+- Ampliación exigida por R4 y almacenamiento nuevo: 170 focalizadas verdes, 84 HTTP + 2 dependencias + 84 controller; límites UTF-8 en ambos órdenes, opcionales y stream truncado sin efectos/hang.
+- ESLint focalizado verde. Typecheck backend completo compara 70 errores históricos de tests contra baseline 3e07ccc: mismos 70, sin errores nuevos en archivos modificados. Build de aplicación verde.
+- Guía de prueba humana creada en progress/verify_odc-multipart-protection.md; instalación/rebuild backend necesaria para actualizar también el Multer usado por Nest.

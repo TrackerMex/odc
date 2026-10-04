@@ -1,6 +1,6 @@
 ---
 feature: "odc-multipart-protection"
-status: draft
+status: implemented
 tags: [harness, spec]
 ---
 
@@ -70,3 +70,43 @@ La prueba de negocio humana usa solo datos de test y requiere entorno seguro.
 - [GHSA-wc9g-mqfw-jrwm](https://github.com/expressjs/multer/security/advisories/GHSA-wc9g-mqfw-jrwm).
 - [GHSA-535w-7cp7-47q4](https://github.com/expressjs/multer/security/advisories/GHSA-535w-7cp7-47q4):
   versión corregida y configuración fieldArrayIndexLimit.
+
+
+## Implementación verificada (2026-10-04)
+
+- Multer **2.4.0** directo y transitivo mediante override `multer: ^2.4.0`;
+  Node 20.20.2 y Nest 11.1.28. El lockfile fue generado por pnpm, sin cambios
+  manuales. Se conserva el resto del stack.
+- Esta versión de Multer añade internamente el byte/parte de anticipación
+  para Busboy: `fileSize=10485760` y `parts=2/5` aceptan exactamente el máximo.
+  No se necesita el sentinela 3/6 propuesto para partes. Pruebas HTTP reales.
+- `fieldArrayIndexLimit=0` y `fieldNestingDepth=0` son valores soportados por
+  el runtime. El segundo rechaza estructura antes de `append-field`.
+  El interceptor traduce errores Multer por código: Nest 11 depende de
+  mensajes y no reconoce `Unexpected file field` ni los nuevos códigos.
+- Busboy aún considera truncado un campo al alcanzar `fieldSize`;
+  el parser usa **8193** como sentinela y la validación de frontera conserva
+  el máximo aprobado de **8192 bytes UTF-8**, antes del DTO/caso de uso.
+- Un `Writable` y `pipeline` nativos acotan almacenamiento en memoria:
+  jamás se construye un Buffer completo mayor de 10 MiB, incluso con el
+  byte de anticipación del parser. Sin archivos temporales, dependencia
+  adicional ni abstracción de almacenamiento externa. R2 verifica
+  `Buffer.concat` con uploads por chunks de 64 KiB.
+- Las firmas `%PDF-`, `FF D8 FF` y `89 50 4E 47 0D 0A 1A 0A` se comparan
+  directamente con el buffer y con el MIME declarado. No hay fallback a MIME,
+  imports ESM ni dependencia nueva. Se cumple detección de firma; validación
+  completa/antivirus sigue fuera del alcance aprobado.
+- `OdcUploadInterceptor` comparte recepción/campos entre ambas rutas;
+  `createOdcFilePipe` comparte firma/tamaño. Las exportaciones anteriores de
+  pipe se conservan como aliases para sus tests. El dominio/casos de uso no
+  cambian. Los metadatos válidos del frontend siguen funcionando.
+- Los nombres permitidos son ASCII y menores de 100 bytes. Un nombre de 100
+  bytes que no sea uno de esos nombres debe rechazarse por desconocido;
+  uno de 101 también se rechaza. No se abre un nombre arbitrario para probar
+  artificialmente el máximo.
+- Pruebas: app Nest en **127.0.0.1:0** (puerto libre asignado por el sistema),
+  guards/JWT/Multer/pipes/controlador/casos de uso/dominio reales. Providers
+  de almacenamiento y persistencia simulados; no se levanta Postgres,
+  frontend ni backend persistente, ni se contacta Cloudinary.
+- La prueba humana queda para el equipo del usuario, según su instrucción;
+  ver [[../../progress/verify_odc-multipart-protection]].
