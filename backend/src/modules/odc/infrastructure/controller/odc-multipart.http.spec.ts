@@ -6,6 +6,10 @@ import { AddressInfo } from 'node:net';
 import { Readable } from 'node:stream';
 import request from 'supertest';
 import { configureApp } from '../../../../bootstrap';
+import type {
+  UploadFileInput,
+  UploadFileResult,
+} from '../../../files/domain/services/file-storage.service';
 import { JwtAuthGuard } from '../../../auth/infrastructure/guards/jwt-auth.guard';
 import { RolesGuard } from '../../../auth/infrastructure/guards/roles.guard';
 import { UploadInvoiceUseCase } from '../../application/use-cases/upload-invoice.usecase';
@@ -62,11 +66,13 @@ describe('R7: real Nest/Multer HTTP upload boundary (#34)', () => {
     update: jest.fn((saved: PurchaseOrder) => Promise.resolve(saved)),
   };
   const storage = {
-    upload: jest.fn().mockResolvedValue({
-      publicId: 'odc/test/34',
-      resourceType: 'image',
-      format: 'pdf',
-    }),
+    upload: jest
+      .fn<Promise<UploadFileResult>, [UploadFileInput]>()
+      .mockResolvedValue({
+        publicId: 'odc/test/34',
+        resourceType: 'image',
+        format: 'pdf',
+      }),
   };
   let evidenceExecute: jest.SpyInstance;
   let invoiceExecute: jest.SpyInstance;
