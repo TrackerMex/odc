@@ -1,7 +1,9 @@
 import { createRequire } from 'node:module';
 
 describe('R5: patched Multer in both runtime dependency paths (#34)', () => {
-  const nestRequire = createRequire(require.resolve('@nestjs/platform-express'));
+  const nestRequire = createRequire(
+    require.resolve('@nestjs/platform-express'),
+  );
 
   it.each([
     ['application', require as NodeRequire],
