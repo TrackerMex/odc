@@ -75,6 +75,13 @@ describe('R1,R2,R3,R4: real Nest input boundaries and zero side effects (#37)', 
   let jwt: JwtService;
   let order: PurchaseOrder;
   const repository = {
+    prepareFileUpload: jest.fn().mockResolvedValue({
+      id: 'ticket',
+      publicId: 'odc/test37/invoice',
+      uploadConfirmed: false,
+    }),
+    claimFileRecovery: jest.fn().mockResolvedValue(null),
+    finishFileRecovery: jest.fn(),
     findById: jest.fn(),
     create: jest.fn(),
     update: jest.fn(),

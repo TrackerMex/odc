@@ -62,6 +62,13 @@ describe('R7: real Nest/Multer HTTP upload boundary (#34)', () => {
   let order: PurchaseOrder;
   let snapshot: string;
   const repository = {
+    prepareFileUpload: jest.fn().mockResolvedValue({
+      id: 'ticket',
+      publicId: 'odc/test/34',
+      uploadConfirmed: false,
+    }),
+    claimFileRecovery: jest.fn().mockResolvedValue(null),
+    finishFileRecovery: jest.fn(),
     findById: jest.fn(),
     update: jest.fn((saved: PurchaseOrder) => Promise.resolve(saved)),
   };

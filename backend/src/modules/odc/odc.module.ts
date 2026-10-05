@@ -1,3 +1,5 @@
+import { FileUploadRecoveryWorker } from './infrastructure/file-upload-recovery.worker';
+import { OdcFileUploadOrmEntity } from './infrastructure/entities/odc-file-upload.orm-entity';
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { FilesModule } from '../files/files.module';
@@ -26,6 +28,7 @@ import { PurchaseOrderTypeOrmRepository } from './infrastructure/repositories/pu
 @Module({
   imports: [
     TypeOrmModule.forFeature([
+      OdcFileUploadOrmEntity,
       PurchaseOrderOrmEntity,
       OdcStatusHistoryOrmEntity,
     ]),
@@ -34,6 +37,7 @@ import { PurchaseOrderTypeOrmRepository } from './infrastructure/repositories/pu
   ],
   controllers: [OdcController],
   providers: [
+    FileUploadRecoveryWorker,
     CreateDraftUseCase,
     SubmitOdcUseCase,
     UpdateDraftUseCase,

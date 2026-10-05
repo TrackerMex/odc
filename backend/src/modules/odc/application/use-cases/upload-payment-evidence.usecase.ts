@@ -1,8 +1,6 @@
+import { uploadOrderFile } from '../recover-file-upload';
 import { Inject, Injectable } from '@nestjs/common';
-import {
-  serializeFileReference,
-  type FileStorageService,
-} from '../../../files/domain/services/file-storage.service';
+import { type FileStorageService } from '../../../files/domain/services/file-storage.service';
 import { OdcStatusHistoryEntry } from '../../domain/entities/odc-status-history-entry.entity';
 import {
   OdcActor,
@@ -50,13 +48,6 @@ export class UploadPaymentEvidenceUseCase {
       evidenceReference: input.evidenceReference,
     });
 
-    const uploadedFile = await this.fileStorageService.upload({
-      buffer: input.buffer,
-      mimeType: input.mimeType,
-      folder: `odc/${order.odcNumber}/evidence`,
-    });
-    order.paymentEvidenceFile = serializeFileReference(uploadedFile);
-
     const entry = new OdcStatusHistoryEntry(
       null,
       order.id,
@@ -66,6 +57,17 @@ export class UploadPaymentEvidenceUseCase {
       record.note,
       null,
     );
-    return this.purchaseOrderRepository.update(order, entry);
+    return uploadOrderFile(
+      this.purchaseOrderRepository,
+      this.fileStorageService,
+      order,
+      entry,
+      'paymentEvidenceFile',
+      {
+        buffer: input.buffer,
+        mimeType: input.mimeType,
+        folder: `odc/${order.odcNumber}/evidence`,
+      },
+    );
   }
 }

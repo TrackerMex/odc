@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto';
 import { Injectable } from '@nestjs/common';
 import {
   And,
@@ -9,6 +10,7 @@ import {
   In,
   ILike,
   LessThan,
+  LessThanOrEqual,
   Like,
   MoreThanOrEqual,
   Not,
@@ -33,6 +35,10 @@ import {
   ExecutiveTableFilter,
   OdcViewer,
   PurchaseOrderRepository,
+  FileUploadTicket,
+  UploadField,
+  FileRecoveryOptions,
+  FileRecoveryOutcome,
 } from '../../domain/repositories/purchase-order.repository';
 import { OdcStatusHistoryOrmEntity } from '../entities/odc-status-history.orm-entity';
 import { PurchaseOrderOrmEntity } from '../entities/purchase-order.orm-entity';
@@ -41,6 +47,8 @@ import {
   toDomain,
   toOrmValues,
 } from '../mappers/purchase-order.mapper';
+import { parseFileReference } from '../../../files/domain/services/file-storage.service';
+import { OdcFileUploadOrmEntity } from '../entities/odc-file-upload.orm-entity';
 import { shiftMonth } from '../../domain/executive-period';
 
 @Injectable()
@@ -88,11 +96,29 @@ export class PurchaseOrderTypeOrmRepository implements PurchaseOrderRepository {
   async update(
     order: PurchaseOrder,
     historyEntry?: OdcStatusHistoryEntry,
+    uploadTicket?: FileUploadTicket,
   ): Promise<PurchaseOrder> {
     if (order.id === null) {
       throw new Error('Cannot update a purchase order without id');
     }
     return this.dataSource.transaction(async (manager) => {
+      if (uploadTicket) {
+        const job = await manager.findOne(OdcFileUploadOrmEntity, {
+          where: { id: uploadTicket.id },
+          lock: { mode: 'pessimistic_write' },
+        });
+        if (
+          !job ||
+          job.state !== 'pending' ||
+          job.orderId !== order.id ||
+          job.expectedVersion !== order.version ||
+          job.publicId !== uploadTicket.publicId ||
+          job.field !== uploadTicket.field ||
+          !order[job.field] ||
+          parseFileReference(order[job.field]!).publicId !== job.publicId
+        )
+          throw new OdcConcurrentUpdateError();
+      }
       const result = await manager.update(
         PurchaseOrderOrmEntity,
         {
@@ -113,8 +139,122 @@ export class PurchaseOrderTypeOrmRepository implements PurchaseOrderRepository {
           historyToOrmValues(historyEntry, saved.id),
         );
       }
+      if (uploadTicket)
+        await manager.update(
+          OdcFileUploadOrmEntity,
+          { id: uploadTicket.id },
+          { state: 'associated', uploadConfirmed: true },
+        );
       return toDomain(saved);
     });
+  }
+
+  async prepareFileUpload(
+    order: PurchaseOrder,
+    field: UploadField,
+    folder: string,
+  ): Promise<FileUploadTicket> {
+    if (!order.id) throw new Error('Upload requires a persisted order');
+    const id = randomUUID();
+    return this.dataSource.manager.save(OdcFileUploadOrmEntity, {
+      id,
+      orderId: order.id,
+      expectedVersion: order.version,
+      field,
+      publicId: `${folder}/${id}`,
+      state: 'pending',
+      uploadConfirmed: false,
+      attempts: 0,
+      lastOutcome: null,
+      nextAttemptAt: new Date(Date.now() + 10 * 60_000),
+    });
+  }
+
+  async claimFileRecovery(
+    id: string,
+    options: FileRecoveryOptions = {},
+  ): Promise<FileUploadTicket | null> {
+    return this.dataSource.transaction(async (manager) => {
+      const job = await manager.findOne(OdcFileUploadOrmEntity, {
+        where: { id },
+        lock: { mode: 'pessimistic_write' },
+      });
+      if (!job || ['associated', 'done', 'protected'].includes(job.state))
+        return null;
+      const now = Date.now();
+      if (
+        job.nextAttemptAt.getTime() > now &&
+        (!options.immediate || job.state === 'cleaning')
+      )
+        return null;
+      // Lock in the same order as update(ticket); fence before any provider call.
+      await manager.findOne(PurchaseOrderOrmEntity, {
+        where: { id: job.orderId },
+        lock: { mode: 'pessimistic_write' },
+      });
+      const reference = Raw(
+        (column) =>
+          `regexp_replace(${column}, '^cloudinary:v1:[^:]+:[^:]+:', '') = :uploadPublicId`,
+        { uploadPublicId: job.publicId },
+      );
+      const associated = await manager.exists(PurchaseOrderOrmEntity, {
+        where: [{ invoiceFile: reference }, { paymentEvidenceFile: reference }],
+      });
+      if (associated) {
+        await manager.update(
+          OdcFileUploadOrmEntity,
+          { id },
+          { state: 'associated', uploadConfirmed: true },
+        );
+        return null;
+      }
+      job.uploadConfirmed ||= options.uploadConfirmed === true;
+      job.state = 'cleaning';
+      job.attempts += 1;
+      job.nextAttemptAt = new Date(now + 10 * 60_000);
+      await manager.save(OdcFileUploadOrmEntity, job);
+      return job;
+    });
+  }
+
+  async finishFileRecovery(
+    id: string,
+    outcome: FileRecoveryOutcome,
+  ): Promise<void> {
+    await this.dataSource.transaction(async (manager) => {
+      const job = await manager.findOne(OdcFileUploadOrmEntity, {
+        where: { id },
+        lock: { mode: 'pessimistic_write' },
+      });
+      if (!job || job.state !== 'cleaning') return;
+      job.lastOutcome = outcome;
+      job.state =
+        outcome === 'not_owned'
+          ? 'protected'
+          : outcome === 'deleted' ||
+              (outcome === 'missing' && job.uploadConfirmed)
+            ? 'done'
+            : 'retry';
+      // ponytail: unknown provider completion stays retryable; manual closure only after provider reconciliation.
+      job.nextAttemptAt = new Date(
+        Date.now() +
+          Math.min(3600, 60 * 2 ** Math.min(job.attempts - 1, 6)) * 1000,
+      );
+      await manager.save(OdcFileUploadOrmEntity, job);
+    });
+  }
+
+  async findFileRecoveries(): Promise<string[]> {
+    const jobs = await this.dataSource.manager.find(OdcFileUploadOrmEntity, {
+      select: { id: true },
+      where: {
+        state: In(['pending', 'retry', 'cleaning']),
+        nextAttemptAt: LessThanOrEqual(new Date()),
+      },
+      order: { nextAttemptAt: 'ASC' },
+      take: 20,
+    });
+    return jobs.map((job) => job.id);
   }
 
   async findById(id: string): Promise<PurchaseOrder | null> {

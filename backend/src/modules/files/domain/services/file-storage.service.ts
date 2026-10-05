@@ -5,6 +5,8 @@ export interface UploadFileInput {
   buffer: Buffer;
   mimeType: string;
   folder: string;
+  publicId?: string;
+  uploadToken?: string;
 }
 
 export interface UploadFileResult {
@@ -47,4 +49,9 @@ export interface FileStorageService {
   upload(input: UploadFileInput): Promise<UploadFileResult>;
   // Returns a short-lived signed URL for a previously uploaded publicId.
   getSignedUrl(input: GetSignedUrlInput): Promise<string>;
+  // Only ticket-owned authenticated/image assets; old/unowned assets are protected.
+  deleteIfOwned(input: {
+    publicId: string;
+    uploadToken: string;
+  }): Promise<'deleted' | 'missing' | 'not_owned'>;
 }

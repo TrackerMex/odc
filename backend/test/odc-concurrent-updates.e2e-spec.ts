@@ -1,3 +1,5 @@
+import { OdcFileUploadOrmEntity } from '../src/modules/odc/infrastructure/entities/odc-file-upload.orm-entity';
+import type { UploadFileInput } from '../src/modules/files/domain/services/file-storage.service';
 import 'reflect-metadata';
 import { randomUUID } from 'node:crypto';
 import { readFileSync } from 'node:fs';
@@ -100,11 +102,14 @@ async function mutate(
     case 'upload_payment_evidence':
     case 'upload_invoice': {
       const storage = {
-        upload: jest.fn().mockResolvedValue({
-          publicId: `odc/test36/${side}`,
-          resourceType: 'image',
-          format: 'pdf',
-        }),
+        upload: jest.fn((input: UploadFileInput) =>
+          Promise.resolve({
+            publicId: input.publicId!,
+            resourceType: 'image',
+            format: 'pdf',
+          }),
+        ),
+        deleteIfOwned: jest.fn().mockResolvedValue('deleted'),
         getSignedUrl: jest.fn(),
       };
       const input = {
@@ -231,6 +236,7 @@ describe('R1,R2,R4,R5,R6: atomic mutations on two isolated PostgreSQL connection
         url,
         schema,
         entities: [
+          OdcFileUploadOrmEntity,
           UserOrmEntity,
           PurchaseOrderOrmEntity,
           OdcStatusHistoryOrmEntity,
