@@ -242,7 +242,8 @@ describe('R1,R3,R4,R5: shared login throttling on real PostgreSQL and HTTP', () 
     const rows = await sources[0].manager.find(AuthLoginAttemptOrmEntity);
     expect(rows).toHaveLength(2);
     expect(rows.every((r) => /^[ia]:[a-f0-9]{64}$/.test(r.key))).toBe(true);
-    for (let i = 0; i < 3; i++) await guards[0].consume('192.0.2.1', 'no-at-sign');
+    for (let i = 0; i < 3; i++)
+      await guards[0].consume('192.0.2.1', 'no-at-sign');
     expect(
       await guards[1].consume('192.0.2.1', 'y'.repeat(10000)),
     ).toBeGreaterThan(0);

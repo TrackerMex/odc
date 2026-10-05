@@ -1,3 +1,4 @@
+import { LoginRateLimitGuard } from '../guards/login-rate-limit.guard';
 import {
   Body,
   Controller,
@@ -7,6 +8,7 @@ import {
   Req,
   Res,
   UnauthorizedException,
+  UseGuards,
 } from '@nestjs/common';
 import type { Response } from 'express';
 import { GetMeUseCase } from '../../application/use-cases/get-me.usecase';
@@ -31,6 +33,7 @@ export class AuthController {
 
   @Public()
   @Post('login')
+  @UseGuards(LoginRateLimitGuard)
   @HttpCode(200)
   async login(
     @Body() dto: LoginDto,

@@ -79,6 +79,23 @@ export function LoginForm({
         setFormError('Correo o contraseña incorrectos.')
         return
       }
+      if (error instanceof ApiError && error.status === 429) {
+        const minutes = error.retryAfterSeconds
+          ? Math.ceil(error.retryAfterSeconds / 60)
+          : null
+        setFormError(
+          minutes
+            ? `Demasiados intentos. Intenta de nuevo en ${minutes} ${minutes === 1 ? 'minuto' : 'minutos'}.`
+            : 'Demasiados intentos. Intenta de nuevo más tarde.',
+        )
+        return
+      }
+      if (error instanceof ApiError && error.status === 503) {
+        setFormError(
+          'No se puede iniciar sesión en este momento. Intenta de nuevo más tarde.',
+        )
+        return
+      }
       throw error
     } finally {
       setSubmitting(false)

@@ -5,10 +5,14 @@ interface AppMock {
   setGlobalPrefix: jest.Mock;
   useGlobalPipes: jest.Mock;
   use: jest.Mock;
+  getHttpAdapter: jest.Mock;
 }
 
 function createAppMock(): AppMock {
   return {
+    getHttpAdapter: jest.fn(() => ({
+      getInstance: () => ({ set: jest.fn() }),
+    })),
     setGlobalPrefix: jest.fn(),
     useGlobalPipes: jest.fn(),
     use: jest.fn(),

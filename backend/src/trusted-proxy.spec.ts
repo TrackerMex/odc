@@ -80,7 +80,7 @@ describe('R2,R5: explicit trusted proxy allowlist', () => {
           localAddress: '127.0.0.2',
           path: req.url,
           headers: {
-            'x-forwarded-for': `${req.headers['x-forwarded-for'] ?? ''}, ${req.socket.remoteAddress}`,
+            'x-forwarded-for': `${String(req.headers['x-forwarded-for'] ?? '')}, ${req.socket.remoteAddress}`,
           },
         },
         (response) => {

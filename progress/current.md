@@ -25,3 +25,9 @@ Rojo1501ce3: proxy4 fallos/13 verdes; PostgreSQL no cargaba sin nuevo módulo.
 Con contadores implementados pero sin guard aplicado aún, HTTP demuestra cuatro
 fallos reales (429/503 ausentes) y ocho pruebas de contador ya verdes. Contrato
 401 existente conserva mensaje inglés Invalid credentials; test corregido.
+
+#39 implementada: guard IP/cuenta compartido, reloj de DB, caducidad, cleanup,
+allowlist estricta y canonicalización de IP. PostgreSQL12/12 y proxy22/22
+(incluye bootstrap5) verdes. Formulario429/503 aprobado5de218d, rojoa5951c1
+(6fallos/22verdes)→verde28/28. Typecheck68backend/18frontend previos,0 nuevos.
+Init completo y PostgreSQL agregado en curso; no cerrar hasta sus resultados.

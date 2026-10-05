@@ -132,15 +132,29 @@ describe('odc-notifications R5: successful mutations refresh the feed', () => {
 
 describe('auth-login-rate-limit R1: retain bounded delta-seconds Retry-After', () => {
   it.each([
-    { header: '900', expected: 900 }, { header: '60', expected: 60 },
-    { header: '0' }, { header: '-1' }, { header: '1.5' },
-    { header: '99999999999' }, { header: 'Wed, 21 Oct 2015 07:28:00 GMT' },
+    { header: '900', expected: 900 },
+    { header: '60', expected: 60 },
+    { header: '0' },
+    { header: '-1' },
+    { header: '1.5' },
+    { header: '99999999999' },
+    { header: 'Wed, 21 Oct 2015 07:28:00 GMT' },
   ])('reads $header as $expected', async ({ header, expected }) => {
-    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response(JSON.stringify({ message: 'Demasiados intentos.' }), {
-      status: 429, headers: { 'Retry-After': header },
-    })))
-    const error = await apiFetch('/api/auth/login', { method: 'POST' }).catch((error: unknown) => error)
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue(
+        new Response(JSON.stringify({ message: 'Demasiados intentos.' }), {
+          status: 429,
+          headers: { 'Retry-After': header },
+        }),
+      ),
+    )
+    const error = await apiFetch('/api/auth/login', { method: 'POST' }).catch(
+      (reason: unknown) => reason,
+    )
     expect(error).toBeInstanceOf(ApiError)
-    expect((error as ApiError & { retryAfterSeconds?: number }).retryAfterSeconds).toBe(expected)
+    expect(
+      (error as ApiError & { retryAfterSeconds?: number }).retryAfterSeconds,
+    ).toBe(expected)
   })
 })
