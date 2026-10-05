@@ -10,6 +10,7 @@ import {
   HttpStatus,
   NotFoundException,
   Param,
+  ParseUUIDPipe,
   Patch,
   Post,
   Query,
@@ -53,6 +54,7 @@ import { InvalidRoleTransitionError } from '../../domain/errors/invalid-role-tra
 import { InvalidStatusTransitionError } from '../../domain/errors/invalid-status-transition.error';
 import { InvoiceNotFoundError } from '../../domain/errors/invoice-not-found.error';
 import { MissingTransitionDataError } from '../../domain/errors/missing-transition-data.error';
+import { InvalidOdcInputError } from '../../domain/errors/invalid-odc-input.error';
 import { OdcAccessDeniedError } from '../../domain/errors/odc-access-denied.error';
 import { OdcNotFoundError } from '../../domain/errors/odc-not-found.error';
 import { OdcConcurrentUpdateError } from '../../domain/errors/odc-concurrent-update.error';
@@ -103,6 +105,7 @@ function rethrowDomainError(error: unknown): never {
   }
   if (
     error instanceof MissingTransitionDataError ||
+    error instanceof InvalidOdcInputError ||
     error instanceof UnknownSupplierError
   ) {
     throw new BadRequestException(error.message);
@@ -163,7 +166,7 @@ export class OdcController {
   @HttpCode(200)
   @Roles('DIRECTOR_OPS')
   async submit(
-    @Param('id') id: string,
+    @Param('id', new ParseUUIDPipe()) id: string,
     @Req() request: RequestWithSession,
   ): Promise<OdcResponseDto> {
     try {
@@ -178,7 +181,7 @@ export class OdcController {
   @HttpCode(200)
   @Roles('ADMINISTRACION')
   async approveBudget(
-    @Param('id') id: string,
+    @Param('id', new ParseUUIDPipe()) id: string,
     @Req() request: RequestWithSession,
   ): Promise<OdcResponseDto> {
     try {
@@ -196,7 +199,7 @@ export class OdcController {
   @HttpCode(200)
   @Roles('DIRECTOR_GENERAL')
   async approvePurchase(
-    @Param('id') id: string,
+    @Param('id', new ParseUUIDPipe()) id: string,
     @Req() request: RequestWithSession,
   ): Promise<OdcResponseDto> {
     try {
@@ -218,7 +221,7 @@ export class OdcController {
   @HttpCode(200)
   @Roles('ADMINISTRACION', 'DIRECTOR_GENERAL')
   async reject(
-    @Param('id') id: string,
+    @Param('id', new ParseUUIDPipe()) id: string,
     @Body() dto: RejectOdcDto,
     @Req() request: RequestWithSession,
   ): Promise<OdcResponseDto> {
@@ -240,7 +243,7 @@ export class OdcController {
   @HttpCode(200)
   @Roles('DIRECTOR_OPS')
   async registerPayment(
-    @Param('id') id: string,
+    @Param('id', new ParseUUIDPipe()) id: string,
     @Body() dto: RegisterPaymentDto,
     @Req() request: RequestWithSession,
   ): Promise<OdcResponseDto> {
@@ -263,7 +266,7 @@ export class OdcController {
   @Roles('ADMINISTRACION')
   @UseInterceptors(OdcUploadInterceptor(['evidenceReference']))
   async uploadPaymentEvidence(
-    @Param('id') id: string,
+    @Param('id', new ParseUUIDPipe()) id: string,
     @UploadedFile(createOdcFilePipe())
     file: Express.Multer.File,
     @Body() dto: UploadPaymentEvidenceDto,
@@ -299,7 +302,7 @@ export class OdcController {
     ]),
   )
   async uploadInvoice(
-    @Param('id') id: string,
+    @Param('id', new ParseUUIDPipe()) id: string,
     @UploadedFile(createOdcFilePipe())
     file: Express.Multer.File,
     @Body() dto: UploadInvoiceDto,
@@ -327,7 +330,7 @@ export class OdcController {
   @Patch(':id')
   @Roles('DIRECTOR_OPS')
   async update(
-    @Param('id') id: string,
+    @Param('id', new ParseUUIDPipe()) id: string,
     @Body() dto: UpdateOdcDto,
     @Req() request: RequestWithSession,
   ): Promise<OdcResponseDto> {
@@ -415,7 +418,7 @@ export class OdcController {
   @Get(':id/files/:kind')
   @Redirect()
   async getOdcFile(
-    @Param('id') id: string,
+    @Param('id', new ParseUUIDPipe()) id: string,
     @Param('kind') kind: string,
     @Req() request: RequestWithSession,
   ): Promise<{ url: string; statusCode: number }> {
@@ -440,7 +443,7 @@ export class OdcController {
   // enforced by the use-case (R13).
   @Get(':id')
   async detail(
-    @Param('id') id: string,
+    @Param('id', new ParseUUIDPipe()) id: string,
     @Req() request: RequestWithSession,
   ): Promise<OdcResponseDto> {
     try {

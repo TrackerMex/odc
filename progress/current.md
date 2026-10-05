@@ -24,3 +24,12 @@ rojo en /tmp/odc37-red.log (operaciones inseguras hoy aceptadas, calendario
 normalizado por DTO sin strict y ids malformados llegan al caso de uso).
 InvalidOdcInputError es únicamente el contrato trivial para clasificar errores
 en estos tests; todavía no hay validación implementada.
+
+Rojo inicial104fallos/88verdes (192casos). Primer fix189verdes/3fallos: DTO
+IsDateString strict de validator13.15.35 rechaza0001 por pérdida de padding
+(1-01-01 reinterpretado). Diseño ajustado a ValidateBy nativo reutilizando
+isCalendarDate puro, mismo calendario que dominio, sin nueva dependencia.
+
+Verde192/192, dominio + HTTP: límites int32 y producto, edición parcial
+antes de mutar, fechas sin conversiones (0001 y9999 incluidas), UUID400 en11
+endpoints, guards401/403 y404 conservados. Siguiente:init completo.

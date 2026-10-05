@@ -13,8 +13,10 @@ Max al IsInt/IsPositive existente (PartialType hereda para PATCH). Error puro
 InvalidOdcInputError se traduce400 en el handler compartido del controller.
 
 Un helper puro isCalendarDate comprueba expresión regular yyyy-mm-dd sin año0,
-parse UTC y roundtrip a la misma fecha. DTOs combinan Matches del mismo patrón
-con IsDateString({strict:true}); no se crea decorador/framework nuevo. transition
+parse UTC y roundtrip a la misma fecha. DTOs usan ValidateBy nativo con el mismo predicado puro. No se crea decorador
+ni framework propio: IsDateString({strict:true}) rechaza años0001–0099 válidos
+porque validator13.15.35 pierde el padding al crear Date, probado en HTTP.
+La fecha opcional usa ValidateIf(undefined) para rechazar null si se proporciona. transition
 valida las tres fechas proporcionadas antes de applyTransitionData y del
 cambio de estado; requiredData trata tipos no string sin TypeError.
 
