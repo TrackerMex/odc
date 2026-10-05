@@ -24,3 +24,7 @@ en 6c11c7c. SDK real + contratos legacy: rojo 13 fallos / 5 verdes, causados
 por URL CDN sin expiry y ausencia de validación/firma temporal. Logs SDK
 /tmp/odc35-sdk-red.log, HTTP /tmp/odc35-http-red.log. Guards existentes
 se caracterizan sin fabricar regresiones para producir un rojo.
+
+HTTP rojo: 8 fallos / 14 verdes; verde SDK + HTTP: 40/40.
+Implementación usa private_download_url con expiry firmado, valida metadatos
+y traduce fallos de firma al contrato 502 existente; upload sin cambios.

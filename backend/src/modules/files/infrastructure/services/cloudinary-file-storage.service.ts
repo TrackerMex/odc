@@ -42,14 +42,23 @@ export class CloudinaryFileStorageService implements FileStorageService {
 
   async getSignedUrl(input: GetSignedUrlInput): Promise<string> {
     const reference = await this.resolveDeliveryMetadata(input);
+    if (!isDeliveryResourceType(reference.resourceType) || !reference.format) {
+      throw new FileStorageUnavailableError();
+    }
     const expiresAt = Math.floor(Date.now() / 1000) + SIGNED_URL_EXPIRY_SECONDS;
-    return cloudinary.url(reference.publicId, {
-      sign_url: true,
-      type: 'authenticated',
-      resource_type: reference.resourceType,
-      format: reference.format,
-      expires_at: expiresAt,
-    });
+    try {
+      return cloudinary.utils.private_download_url(
+        reference.publicId,
+        reference.format,
+        {
+          type: 'authenticated',
+          resource_type: reference.resourceType,
+          expires_at: expiresAt,
+        },
+      );
+    } catch {
+      throw new FileStorageUnavailableError();
+    }
   }
 
   private async resolveDeliveryMetadata(
@@ -86,6 +95,10 @@ export class CloudinaryFileStorageService implements FileStorageService {
       throw new FileStorageUnavailableError();
     }
   }
+}
+
+function isDeliveryResourceType(value: string): value is 'image' | 'video' | 'raw' {
+  return value === 'image' || value === 'video' || value === 'raw';
 }
 
 function hasDeliveryMetadata(
