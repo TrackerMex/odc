@@ -1,6 +1,6 @@
 ---
 feature: "odc-multipart-protection"
-status: implemented
+status: done
 tags: [harness, spec]
 ---
 
@@ -54,12 +54,12 @@ No iniciar antes de aprobación de [[requirements]].
 
 - [x] Revisar lockfile y pnpm why multer directo/transitivo.
 - [x] Init verde (`bash init.sh` en este checkout Linux); auto-revisión técnica C1–C6.
-- [ ] Revisión humana de negocio y aprobación de cierre.
-- [ ] Prueba humana local y evidencia antes de done.
+- [x] Aprobación de cierre delegada por el usuario el 2026-10-05; auto-revisión técnica registrada.
+- [ ] Prueba manual del usuario en su equipo: no ejecutada. Gate de cierre humano sustituido por aprobación delegada; recomendación de validación antes de producción.
 
 
 R6 conserva guards existentes: las pruebas HTTP se escribieron antes de
 implementación y ya pasaban; no se fabricó un rojo en código correcto.
 R7 es la suite y el gate de verificación, no un nuevo comportamiento de negocio.
 Detalles test-primero y evidencias en [[traceability]].
-La prueba humana final no se marca hasta recibir su resultado del usuario.
+No se atribuye al humano ningún resultado de prueba no comunicado.

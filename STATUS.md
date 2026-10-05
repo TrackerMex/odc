@@ -1,8 +1,8 @@
 # ODC — Status
 
-**Última actualización**: 2026-10-04
-**Features completadas**: 33/39 (`feature_list.json`)
-**Pendientes del registro**: #34 implementada, esperando prueba humana local; #35–#39 pending
+**Última actualización**: 2026-10-05
+**Features completadas**: 34/39 (`feature_list.json`)
+**Pendientes del registro**: #35–#39; desarrollo secuencial autorizado y aprobaciones delegadas
 **En producción**: no
 
 ---
@@ -37,7 +37,7 @@ Requiere `.env` en la raíz (plantilla en `.env.example`): `DATABASE_URL`,
 
 ## Estado actual
 
-- **#34 `odc-multipart-protection` implementada (2026-10-04), `in_progress`**:
+- **#34 `odc-multipart-protection` done (cierre técnico delegado 2026-10-05)**:
   spec aprobada por humano en `3e07ccc`. Multer 2.4.0 directo/transitivo,
   parser limitado, Buffer máximo de 10 MiB, firmas PDF/JPEG/PNG y MIME
   coincidente, metadatos permitidos/planos y límites UTF-8. HTTP 413 por
@@ -47,22 +47,14 @@ Requiere `.env` en la raíz (plantilla en `.env.example`): `DATABASE_URL`,
   Evidencia: [implementación](progress/impl_odc-multipart-protection.md),
   [guía humana](progress/verify_odc-multipart-protection.md).
   Init final exit 0: 575 backend / 661 frontend, builds y lint backend verdes.
-  La prueba humana está por registrar; #35 no se ha iniciado.
+  Prueba manual en el equipo del usuario no ejecutada por el agente.
+  Cierre técnico por aprobación delegada: [revisión](progress/review_odc-multipart-protection.md).
 
-- **Auditoría 2026-10-01 registrada**: seis entregas #34–#39 para F02–F08 ya
-  existentes en plan002. Base remota/local revalidada: `a8a407e`. Orden:
-  multipart, caducidad, concurrencia, validaciones, archivos huérfanos y login.
-  Solo #34 tiene spec preparada (`spec_ready`, borrador sin aprobación);
-  ninguna corrección implementada ni
-  autoaprobada. Gate siguiente: aprobación explícita de
-  [requirements multipart](specs/odc-multipart-protection/requirements.md).
-  Rama aislada `audit/odc-hardening-20261001` en
-  `C:\Users\alex\Documents\Codex\2026-09-30\task\odc-audit`.
-  Evidencia: [revalidación](progress/explore_odc-hardening.md).
-  **Checks passed**: init inicial y cierre exit 0, builds, 489 backend,
-  661 frontend y lint backend; JSON/backlog comprobados. **Not run**:
-  nuevas pruebas de seguridad, carreras PostgreSQL, acceso Cloudinary real y
-  prueba humana; gate previo a código aún pendiente. Detalle en historial.
+- **Auditoría 2026-10-01 registrada**: seis entregas #34–#39 para F02–F08
+  de plan002, en rama `audit/odc-hardening-20261001`. Orden: multipart,
+  caducidad, concurrencia, validaciones, archivos huérfanos y login. El usuario
+  autorizó todas las aprobaciones el 2026-10-05. Se documentan pruebas reales
+  no ejecutadas sin sustituirlas por resultados simulados.
 
 - **#33 `odc-notifications` done**: campana persistente en el header para los
   tres roles, alimentada por el historial transaccional de las ODC. Muestra

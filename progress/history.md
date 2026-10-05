@@ -781,3 +781,11 @@ estado: implementación; spec aprobada por humano en 3e07ccc (2026-10-03)
 - Init final exit 0: 575 backend / 661 frontend, ambos builds y lint backend; git diff --check verde.
 - Auto-revisión técnica C1–C6 en progress/impl_odc-multipart-protection.md. No se afirma revisión independiente ni prueba humana.
 - Implementación lista para prueba local del usuario; #34 sigue in_progress. Cierre: archivar sesión, dejar current con plantilla, commits limpios y publicar la rama para sincronización con su equipo.
+
+
+## 2026-10-05 — cierre técnico delegado de #34
+
+Aprobación general del usuario para terminar #34–#39. #34 done con init exit 0
+(575 backend / 661 frontend) y auto-revisión C1–C6; prueba humana en su equipo
+no ejecutada, guía conservada. Revisión: review_odc-multipart-protection.md.
+Siguiente feature única: #35.

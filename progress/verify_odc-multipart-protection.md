@@ -67,4 +67,6 @@ existente; no es necesario copiar tokens o contraseñas.
 - Fecha / resultados: por completar.
 - [ ] Aprobación de cierre de #34.
 
-La feature sigue `in_progress` hasta registrar esta evidencia.
+Cierre técnico aprobado por delegación expresa del usuario el 2026-10-05.
+La validación manual anterior sigue disponible para su equipo; ninguna casilla
+se marca como ejecutada sin evidencia humana.

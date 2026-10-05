@@ -195,7 +195,7 @@
   {
     "id": 34,
     "name": "odc-multipart-protection",
-    "status": "in_progress",
+    "status": "done",
     "priority": "P1",
     "source_findings": ["plan002:F04"],
     "description": "Limitar recepción multipart y validar firmas reales de comprobantes y facturas; corregir Multer directo y transitivo.",
@@ -204,7 +204,7 @@
       "Límites explícitos de archivos, campos, partes, nombre/tamaño de campo y arrays; excesos rechazados sin almacenamiento.",
       "PDF/JPEG/PNG comprobados por firma real; MIME falso, archivo ausente y formato no permitido reciben 400.",
       "Multer >=2.3.0 en todas las rutas runtime de Nest; demostrar compatibilidad y ausencia de versión vulnerable en lockfile.",
-      "Pruebas HTTP con parser real, sesión y roles existentes; ningún upload o guardado tras rechazo; prueba humana antes de done."
+      "Pruebas HTTP con parser real, sesión y roles existentes; ningún upload o guardado tras rechazo; cierre técnico aprobado por delegación explícita del usuario (2026-10-05); prueba manual en su equipo no ejecutada por el agente."
     ]
   },
   {

@@ -1,6 +1,6 @@
 ---
 feature: "odc-multipart-protection"
-status: implemented
+status: done
 tags: [harness, spec]
 ---
 
@@ -20,5 +20,7 @@ Tests en `backend/src/modules/odc/infrastructure/controller/`.
 
 La spec fue aprobada por el humano en `3e07ccc` antes de código.
 La implementación conserva ambas rutas, roles, DTOs y transiciones existentes.
-La prueba humana de negocio se realiza en el equipo del usuario; la feature
-permanece `in_progress` hasta esa evidencia. No se declara `done` ni se abre #35.
+Cierre técnico delegado el 2026-10-05 con init verde (575 backend, 661 frontend).
+La prueba manual del usuario en su equipo no se ha ejecutado aquí. El usuario
+autorizó terminar todas las features y delegó cada aprobación; no se inventa
+evidencia humana. Ver [[../../progress/review_odc-multipart-protection]].
