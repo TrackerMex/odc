@@ -1,8 +1,8 @@
 # ODC — Status
 
 **Última actualización**: 2026-10-05
-**Features completadas**: 34/39 (`feature_list.json`)
-**Pendientes del registro**: #35–#39; desarrollo secuencial autorizado y aprobaciones delegadas
+**Features completadas**: 35/39 (`feature_list.json`)
+**Pendientes del registro**: #36–#39; desarrollo secuencial autorizado y aprobaciones delegadas
 **En producción**: no
 
 ---
@@ -36,6 +36,13 @@ Requiere `.env` en la raíz (plantilla en `.env.example`): `DATABASE_URL`,
 ---
 
 ## Estado actual
+
+- **#35 `odc-temporary-file-delivery` done (cierre técnico 2026-10-05)**:
+  URLs de API con caducidad firmada de 300 s; SDK real y HTTP verificados,
+  sin cambiar activos, permisos ni referencias. Init: 611 backend / 661
+  frontend. [Revisión](progress/review_odc-temporary-file-delivery.md).
+  **Acceso Cloudinary real NOT RUN** por cuenta de test no configurada:
+  bloqueo antes de producción. [Probe y guía](progress/verify_odc-temporary-file-delivery.md).
 
 - **#34 `odc-multipart-protection` done (cierre técnico delegado 2026-10-05)**:
   spec aprobada por humano en `3e07ccc`. Multer 2.4.0 directo/transitivo,

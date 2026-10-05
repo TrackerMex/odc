@@ -210,7 +210,7 @@
   {
     "id": 35,
     "name": "odc-temporary-file-delivery",
-    "status": "in_progress",
+    "status": "done",
     "priority": "P1",
     "source_findings": ["plan002:F02"],
     "depends_on": [34],
@@ -220,7 +220,7 @@
       "Prueba con SDK real y credenciales ficticias de que tiempo/firma afectan el acceso generado; mocks solos no son evidencia suficiente.",
       "Roles, privacidad de borradores y autorización de descargas conservados; cubrir referencias antiguas y PDF/JPEG/PNG.",
       "Prueba de acceso antes/después de caducar con activo de test únicamente en entorno seguro autorizado; si no está disponible, registrar not run y el bloqueo sin solicitar secretos en chat.",
-      "No ampliar acceso ni cambiar activos existentes sin diseño y aprobación; prueba humana antes de done."
+      "No ampliar acceso ni cambiar activos existentes sin diseño y aprobación; cierre técnico con aprobación delegada (2026-10-05); prueba humana y live NOT RUN, bloqueo antes de producción registrado."
     ]
   },
   {

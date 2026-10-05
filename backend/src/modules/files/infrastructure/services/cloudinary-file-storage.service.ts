@@ -97,7 +97,9 @@ export class CloudinaryFileStorageService implements FileStorageService {
   }
 }
 
-function isDeliveryResourceType(value: string): value is 'image' | 'video' | 'raw' {
+function isDeliveryResourceType(
+  value: string,
+): value is 'image' | 'video' | 'raw' {
   return value === 'image' || value === 'video' || value === 'raw';
 }
 

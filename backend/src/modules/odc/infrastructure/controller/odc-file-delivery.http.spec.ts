@@ -110,7 +110,7 @@ describe('R1,R3,R4: authenticated HTTP downloads with real guards, use cases and
       async (role) => {
         const before = Math.floor(Date.now() / 1000);
         const res = await get().set('Cookie', cookie(role)).expect(302);
-        const url = new URL(res.headers.location as string);
+        const url = new URL(res.headers.location);
         expect(url.origin).toBe('https://api.cloudinary.com');
         expect(url.searchParams.get('type')).toBe('authenticated');
         expect(
@@ -160,9 +160,9 @@ describe('R1,R3,R4: authenticated HTTP downloads with real guards, use cases and
       order = new PurchaseOrder({ ...order, [field()]: publicId });
       repository.findById.mockResolvedValue(order);
       const res = await get().set('Cookie', cookie()).expect(302);
-      expect(
-        new URL(res.headers.location as string).searchParams.get('public_id'),
-      ).toBe(publicId);
+      expect(new URL(res.headers.location).searchParams.get('public_id')).toBe(
+        publicId,
+      );
       expect(order[field()]).toBe(publicId);
       expect(metadata).toHaveBeenCalledWith(publicId, {
         resource_type: 'image',
