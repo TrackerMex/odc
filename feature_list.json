@@ -297,7 +297,7 @@
   {
     "id": 39,
     "name": "auth-login-rate-limit",
-    "status": "pending",
+    "status": "spec_ready",
     "priority": "P1",
     "source_findings": [
       "plan002:F08"
@@ -311,7 +311,7 @@
       "Proxy confiable definido por topología real; X-Forwarded-For externo no permite evadir ni imponer bloqueo a otra IP.",
       "Contadores compartidos/atómicos si hay varias instancias; probar límites distribuidos o documentar alcance local de una instancia sin afirmar protección productiva.",
       "Cubrir cuentas existentes/inexistentes sin revelar existencia, claves acotadas y concurrencia.",
-      "Protección requerida antes de exposición; infraestructura externa no inspeccionada; prueba humana antes de done."
+      "Protección requerida antes de exposición; infraestructura externa no inspeccionada, validación de proxy real a cargo del operador; cierre técnico con delegación expresa (2026-10-05), prueba humana NOT RUN."
     ]
   }
 ]
