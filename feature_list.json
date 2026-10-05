@@ -241,7 +241,7 @@
   {
     "id": 37,
     "name": "odc-input-boundaries",
-    "status": "in_progress",
+    "status": "done",
     "priority": "P1",
     "source_findings": ["plan002:F05", "plan002:F06"],
     "depends_on": [36],
@@ -251,7 +251,7 @@
       "Definir y aprobar el límite de negocio y contrato de fecha; cubrir máximo, +1, actualización parcial y llamadas directas al dominio.",
       "Pago, entrada a almacén y fecha opcional de factura rechazan calendarios imposibles; cubrir años bisiestos, formato y zona según contrato aprobado.",
       "UUID malformado devuelve 400 para usuario autorizado; UUID válido inexistente devuelve 404 sin alterar 401/403 existentes.",
-      "Prueba humana antes de done; la prioridad P2 original de F06 se conserva en plan002 aunque comparte esta entrega P1."
+      "Cierre técnico con aprobación delegada (2026-10-05), prueba humana no ejecutada; la prioridad P2 original de F06 se conserva en plan002 aunque comparte esta entrega P1."
     ]
   },
   {

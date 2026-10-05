@@ -1,8 +1,8 @@
 # ODC — Status
 
 **Última actualización**: 2026-10-05
-**Features completadas**: 36/39 (`feature_list.json`)
-**Pendientes del registro**: #37–#39; desarrollo secuencial autorizado y aprobaciones delegadas
+**Features completadas**: 37/39 (`feature_list.json`)
+**Pendientes del registro**: #38–#39; desarrollo secuencial autorizado y aprobaciones delegadas
 **En producción**: no
 
 ---
@@ -36,6 +36,13 @@ Requiere `.env` en la raíz (plantilla en `.env.example`): `DATABASE_URL`,
 ---
 
 ## Estado actual
+
+- **#37 `odc-input-boundaries` done (2026-10-05)**: enteros positivos int32
+  y producto validado antes de guardar, PATCH parcial atómico, calendario
+  YYYY-MM-DD estricto y UUID400 en todas las rutas sin alterar401/403/404.
+  192casos de dominio/HTTP; init836backend/661frontend.
+  [Guía](progress/verify_odc-input-boundaries.md) y
+  [auto-revisión](progress/review_odc-input-boundaries.md). Prueba humana NOT RUN.
 
 - **#36 `odc-concurrent-updates` done (2026-10-05)**: CAS por versión y
   estado para todas las mutaciones, historial atómico y409; versión interna,

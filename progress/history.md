@@ -809,3 +809,12 @@ Typecheck70erroresprevios,ceroañadidos. Rollout SQL y guía en
 verify_odc-concurrent-updates.md; ninguna base compartida ni producción tocada.
 Prueba humana no ejecutada. Usuario indicó continuar y subir Cloudinary al
 terminar; esa prueba live permaneceNOT RUN. Próxima featureúnica:#37.
+
+
+## 2026-10-05 — #37 cierre técnico delegado
+
+Spec f57c65e aprobada por delegación. Tests rojo0013ba7→verde6a64b0c,192
+casos dominio/HTTP, int32/producto, calendario estricto y UUID400. Init exit0:
+836backend/661frontend+builds/lint; typecheck70previos,cero nuevos.
+Guía verify_odc-input-boundaries.md; prueba humana no ejecutada. Cloudinary
+real diferido por indicación del usuario. Próxima featureúnica:#38.
