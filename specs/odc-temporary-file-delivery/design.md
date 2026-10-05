@@ -18,7 +18,7 @@ rutas llaman al mismo adaptador después de GetOdcUseCase. Los metadatos
 históricos se consultan como image/authenticated, igual que antes (auto
 clasifica los PDF/JPEG/PNG existentes como image). No hay fallback público.
 Validar resource type antes de entregarlo al SDK; fallo de configuración o
-firma se traduce al error de servicio 503 existente sin detalles internos.
+firma se traduce al error de servicio 502 existente sin detalles internos.
 
 Prueba SDK real independiente de mocks, fechas controladas y firma comprobada
 con node:crypto. Suite HTTP pequeña del controller real con repositorio

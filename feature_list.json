@@ -210,7 +210,7 @@
   {
     "id": 35,
     "name": "odc-temporary-file-delivery",
-    "status": "spec_ready",
+    "status": "in_progress",
     "priority": "P1",
     "source_findings": ["plan002:F02"],
     "depends_on": [34],

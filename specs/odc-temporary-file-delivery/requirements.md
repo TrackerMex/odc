@@ -23,8 +23,8 @@ archivos públicos ni a activos `private`.
   tipo y formato almacenados, incluidos image/raw; WHEN se usa una referencia
   antigua THE SYSTEM SHALL resolver metadatos authenticated antes de firmar,
   sin reupload. IF Cloudinary confirma 404 THEN devolver error de archivo
-  inexistente; IF falla o entrega metadatos inválidos THEN error 503 existente.
-- **R4**: WHEN llega una petición sin sesión, con rol prohibido, a una ODC
+  inexistente; IF falla o entrega metadatos inválidos THEN error 502 existente.
+- **R4**: WHEN llega una petición sin sesión, con sesión inválida, a una ODC
   inexistente, sin documento o a un borrador ajeno THE SYSTEM SHALL conservar
   401/403/404 y no emitir URLs. Cubrir ambas descargas con Nest, guards y casos
   de uso reales; las tres funciones actuales pueden descargar órdenes visibles.
