@@ -14,6 +14,8 @@ ventana fija desde primer intento, cuenta trim/lowercase; éxitos y errores cuen
   IP/cuenta antes del caso de uso. IF se excede THEN responder429 en español con
   Retry-After entero >=1, sin autenticar ni emitir cookie. Después de ventana,
   permitir nuevos intentos. IP ya bloqueada no consume cuentas adicionales.
+  El formulario muestra429/503 en español, conserva captura/sesión y no navega;
+  usa Retry-After válido para indicar espera sin temporizador nuevo.
 - **R2**: WHILE no haya proxy confiable configurado THE SYSTEM SHALL usar el peer
   del socket e ignorar X-Forwarded-For. WHEN se configura TRUSTED_PROXY_CIDRS
   THE SYSTEM SHALL aceptar solo IPs/CIDRs explícitos acotados, no true/hop count/
@@ -42,3 +44,6 @@ ventana fija desde primer intento, cuenta trim/lowercase; éxitos y errores cuen
 «puedes terminar todas las features pendientes, tienes mi permiso para cada
 aprobacion». Incluye umbrales y cierre técnico; no autoriza afirmar verificación
 manual ni infraestructura externa inexistente. No desplegar en esta sesión.
+
+Ampliación aprobada por la misma delegación antes del cambio de UI: manejar las
+nuevas respuestas429/503 en el formulario existente, sin rediseño ni alcance F20 completo.

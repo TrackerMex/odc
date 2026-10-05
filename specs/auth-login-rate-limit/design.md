@@ -8,7 +8,7 @@ status: approved
 Guard solo sobre login; PostgreSQL ya instalado. Tabla auth_login_attempts:
 key varchar66 PK, attempts int, expiresAt timestamptz indexado. Cada intento en
 transacción hace UPSERT de IP y, si admite, de cuenta, siempre en ese orden.
-ON CONFLICT serializa claves; clock_timestamp de DB calcula/reset de ventana,
+ON CONFLICT serializa claves; statement_timestamp de DB (estable dentro del UPSERT) calcula/reset de ventana,
 contadores saturados límite+1. Retry-After desde DB. No reinicio por éxito.
 
 SHA256 con prefijo i:/a:, email trim/lowercase <=254, malformado marcador fijo.
@@ -27,3 +27,8 @@ tratamiento de cadena. Producción externa queda pendiente de operador.
 
 Referencias primarias: https://expressjs.com/en/guide/behind-proxies/ y
 https://www.postgresql.org/docs/16/sql-insert.html
+
+Formulario: reutilizar el alert existente para429/503. ApiError incorpora tiempo
+opcional de Retry-After delta-seconds válido de429, formulario expresa minutos
+redondeados hacia arriba. Sin contador/timer, nueva UI ni dependencia; captura
+se conserva y reintento vuelve a consultar backend. F20 restante fuera de alcance.
