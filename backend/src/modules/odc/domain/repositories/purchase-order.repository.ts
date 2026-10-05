@@ -107,8 +107,9 @@ export interface PurchaseOrderRepository {
     order: PurchaseOrder,
     historyEntry: OdcStatusHistoryEntry,
   ): Promise<PurchaseOrder>;
-  // Persists the order and, when the change is a transition, its history
-  // row in the same transaction (R5).
+  // Persists only when id/version/previous status still match (#36). An
+  // OdcConcurrentUpdateError rejects stale writes; increments version once.
+  // A transition's history row shares that transaction (R5).
   update(
     order: PurchaseOrder,
     historyEntry?: OdcStatusHistoryEntry,

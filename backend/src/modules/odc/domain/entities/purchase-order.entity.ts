@@ -190,6 +190,7 @@ function assertRequiredData(rule: TransitionRule, data: TransitionData): void {
 
 export interface PurchaseOrderProps {
   id: string | null;
+  version?: number;
   odcNumber: string | null;
   status: OdcStatus;
   description: string;
@@ -219,6 +220,7 @@ export interface PurchaseOrderProps {
 
 export class PurchaseOrder {
   public readonly id: string | null;
+  public readonly version: number;
   public odcNumber: string | null;
   public status: OdcStatus;
   public description: string;
@@ -247,6 +249,7 @@ export class PurchaseOrder {
 
   constructor(props: PurchaseOrderProps) {
     this.id = props.id;
+    this.version = props.version ?? 0;
     this.odcNumber = props.odcNumber;
     this.status = props.status;
     this.description = props.description;

@@ -55,6 +55,7 @@ import { InvoiceNotFoundError } from '../../domain/errors/invoice-not-found.erro
 import { MissingTransitionDataError } from '../../domain/errors/missing-transition-data.error';
 import { OdcAccessDeniedError } from '../../domain/errors/odc-access-denied.error';
 import { OdcNotFoundError } from '../../domain/errors/odc-not-found.error';
+import { OdcConcurrentUpdateError } from '../../domain/errors/odc-concurrent-update.error';
 import { PaymentEvidenceNotFoundError } from '../../domain/errors/payment-evidence-not-found.error';
 import { UnknownSupplierError } from '../../domain/errors/unknown-supplier.error';
 import {
@@ -94,7 +95,10 @@ function rethrowDomainError(error: unknown): never {
   ) {
     throw new ForbiddenException(error.message);
   }
-  if (error instanceof InvalidStatusTransitionError) {
+  if (
+    error instanceof InvalidStatusTransitionError ||
+    error instanceof OdcConcurrentUpdateError
+  ) {
     throw new ConflictException(error.message);
   }
   if (

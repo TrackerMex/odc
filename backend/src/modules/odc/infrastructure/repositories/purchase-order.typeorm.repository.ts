@@ -15,6 +15,7 @@ import {
   Raw,
 } from 'typeorm';
 import { OdcStatusHistoryEntry } from '../../domain/entities/odc-status-history-entry.entity';
+import { OdcConcurrentUpdateError } from '../../domain/errors/odc-concurrent-update.error';
 import {
   nextOdcNumber,
   ODC_STATUSES,
@@ -92,10 +93,19 @@ export class PurchaseOrderTypeOrmRepository implements PurchaseOrderRepository {
       throw new Error('Cannot update a purchase order without id');
     }
     return this.dataSource.transaction(async (manager) => {
-      const saved = await manager.save(
-        PurchaseOrderOrmEntity,
-        toOrmValues(order),
-      );
+      const result = await manager
+        .createQueryBuilder()
+        .update(PurchaseOrderOrmEntity)
+        .set({ ...toOrmValues(order), version: order.version + 1 })
+        .where({
+          id: order.id,
+          version: order.version,
+          status: historyEntry?.fromStatus ?? order.status,
+        })
+        .returning('*')
+        .execute();
+      if (result.affected !== 1) throw new OdcConcurrentUpdateError();
+      const [saved] = result.raw as PurchaseOrderOrmEntity[];
       if (historyEntry !== undefined) {
         await manager.save(
           OdcStatusHistoryOrmEntity,

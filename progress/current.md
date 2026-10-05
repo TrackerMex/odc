@@ -26,3 +26,8 @@ HTTP 8 fallan/24 verdes (409 hoy500;401/403/404 conservados). Error de dominio
 definido solo como contrato trivial para probar su traducción antes del fix.
 Repositorio anterior se adapta a UPDATE/RETURNING manteniendo historial atómico.
 Logs /tmp/odc36-{pg,http,repo}-red.log. Contenedor propio destruido al terminar.
+
+Primer CAS y SQL: verde40 unit/HTTP y16 PostgreSQL. Auto-revisión detectó
+RETURNING raw devuelve DATE como Date; prueba nueva compara payload ylectura
+y reproduce 2 fallos/14 verdes. Se simplificará al update nativo + lectura ORM
+en la misma transacción (fila bloqueada hasta commit), preservando fechas.

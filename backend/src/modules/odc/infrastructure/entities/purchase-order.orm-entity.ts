@@ -15,6 +15,9 @@ export class PurchaseOrderOrmEntity {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
+  @Column({ type: 'int', default: 0 })
+  version: number;
+
   @Column({ unique: true })
   odcNumber: string;
 
