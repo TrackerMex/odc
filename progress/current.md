@@ -11,7 +11,7 @@ Objetivo: completar #34–#39, una a la vez. Aprobaciones delegadas por el usuar
 «puedes terminar todas las features pendientes, tienes mi permiso para cada
 aprobacion». Desarrollo aquí; pruebas del usuario en su equipo no inventadas.
 
-#34 y #35 cerradas técnicamente. Init #35 exit0: 611 backend / 661 frontend.
+#34 y #35 cerradas técnicamente. Init #35 exit0: 610 backend / 661 frontend.
 Cloudinary live R5 NOT RUN por cuenta de test ausente; bloqueo productivo
 conservado, probe entregado. Pendiente aviso del usuario sobre configuración.
 

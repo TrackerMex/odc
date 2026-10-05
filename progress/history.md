@@ -794,7 +794,7 @@ Siguiente feature única: #35.
 ## 2026-10-05 — #35 entrega técnica
 
 Spec aprobada por delegación en f7425e5/6c11c7c. SDK real rojo3499c74→
-verde52ac0f7; probe rojo ca7c853→verde41d94b7. Init exit0:611 backend/661
+verde52ac0f7; probe rojo ca7c853→verde41d94b7. Init exit0:610 backend/661
 frontend, builds/lint. Acceso live NOT RUN, bloqueo productivo registrado en
 verify_odc-temporary-file-delivery.md. Cierre técnico delegado; no se atribuye
 al usuario prueba manual ni se afirma Cloudinary real comprobado.

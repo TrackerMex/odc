@@ -39,7 +39,7 @@ Requiere `.env` en la raíz (plantilla en `.env.example`): `DATABASE_URL`,
 
 - **#35 `odc-temporary-file-delivery` done (cierre técnico 2026-10-05)**:
   URLs de API con caducidad firmada de 300 s; SDK real y HTTP verificados,
-  sin cambiar activos, permisos ni referencias. Init: 611 backend / 661
+  sin cambiar activos, permisos ni referencias. Init: 610 backend / 661
   frontend. [Revisión](progress/review_odc-temporary-file-delivery.md).
   **Acceso Cloudinary real NOT RUN** por cuenta de test no configurada:
   bloqueo antes de producción. [Probe y guía](progress/verify_odc-temporary-file-delivery.md).

@@ -19,7 +19,7 @@ const ODC_ID = 'b4e2d8b3-0000-4000-8000-000000000035';
 const USER_ID = 'a3d1c9a2-0000-4000-8000-000000000001';
 const ROLES = ['DIRECTOR_OPS', 'ADMINISTRACION', 'DIRECTOR_GENERAL'];
 
-describe('R1,R3,R4: authenticated HTTP downloads with real guards, use cases and SDK (#35)', () => {
+describe('R1,R3,R4,R6: authenticated HTTP downloads with real guards, use cases and SDK (#35)', () => {
   let app: INestApplication;
   let server: Server;
   let jwt: JwtService;

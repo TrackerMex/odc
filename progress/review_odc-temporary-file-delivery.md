@@ -11,7 +11,7 @@ expires_at, timestamp, public_id, format y type, 300 segundos exactos, reloj y
 alteración de expiry/type. HTTP con guards, casos de uso y SDK real: 22 casos.
 Configuración del probe: 2 checks. Sin acceso externo durante estas pruebas.
 
-Init de cierre exit 0: 611 tests backend en 67 suites, 661 frontend; builds y
+Init de cierre exit 0: 610 tests backend en 67 suites, 661 frontend; builds y
 lint backend verdes. Log /tmp/odc35-init.log. Los mocks históricos se cambian
 al contrato válido, sin eliminar checks de metadatos, uploads o errores.
 
