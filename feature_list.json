@@ -226,7 +226,7 @@
   {
     "id": 36,
     "name": "odc-concurrent-updates",
-    "status": "pending",
+    "status": "spec_ready",
     "priority": "P1",
     "source_findings": ["plan002:F03"],
     "depends_on": [35],
