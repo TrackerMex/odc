@@ -18,3 +18,9 @@ computeTotalCents en crear/editar (validar antes de mutar), IsDateString strict
 más formatoexacto en DTO y validación pura compartida en dominio. ParseUUIDPipe
 en todos los parámetrosid; guards antes de pipes401/403, UUID inválido400,
 UUID válido sin orden404. No tocar otras features ni fijar puertos ocupados.
+
+Spec aprobada f57c65e antes de código. Tests directos y HTTP escritos primero;
+rojo en /tmp/odc37-red.log (operaciones inseguras hoy aceptadas, calendario
+normalizado por DTO sin strict y ids malformados llegan al caso de uso).
+InvalidOdcInputError es únicamente el contrato trivial para clasificar errores
+en estos tests; todavía no hay validación implementada.

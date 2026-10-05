@@ -241,7 +241,7 @@
   {
     "id": 37,
     "name": "odc-input-boundaries",
-    "status": "spec_ready",
+    "status": "in_progress",
     "priority": "P1",
     "source_findings": ["plan002:F05", "plan002:F06"],
     "depends_on": [36],
