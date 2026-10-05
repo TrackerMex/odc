@@ -277,7 +277,7 @@
   {
     "id": 38,
     "name": "odc-orphan-file-recovery",
-    "status": "spec_ready",
+    "status": "in_progress",
     "priority": "P2",
     "source_findings": [
       "plan002:F07"

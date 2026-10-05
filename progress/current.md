@@ -20,3 +20,5 @@ resultado ambiguo consulta asociación y bloquea futuras escrituras del ticket
 antes de borrar; no eliminar si no se puede resolver. Mantener error original,
 trabajo fallido visible/idempotente y recuperación de ambas subidas. Se usará
 PostgreSQL aislado; nunca barridos de activos antiguos ni DBs compartidas.
+
+Spec aprobada por delegación en3ce6838. Tests rojos de reserva previa, compensación de ambas subidas y propiedad Cloudinary escritos; implementación aún no modificada.
