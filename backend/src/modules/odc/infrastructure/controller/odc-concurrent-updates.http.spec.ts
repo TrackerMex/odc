@@ -106,7 +106,8 @@ describe('R3: every mutation returns 409 for a stale persisted version (#36)', (
     }
     it('maps the repository conflict to 409 with a reload instruction', async () => {
       const response = await send().expect(409);
-      expect(response.body.message).toContain('Recarga');
+      const body = response.body as { message: string };
+      expect(body.message).toContain('Recarga');
       expect(execute).toHaveBeenCalledTimes(1);
     });
     it('preserves 401 and skips the use case for an absent session', async () => {

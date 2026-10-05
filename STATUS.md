@@ -1,8 +1,8 @@
 # ODC — Status
 
 **Última actualización**: 2026-10-05
-**Features completadas**: 35/39 (`feature_list.json`)
-**Pendientes del registro**: #36–#39; desarrollo secuencial autorizado y aprobaciones delegadas
+**Features completadas**: 36/39 (`feature_list.json`)
+**Pendientes del registro**: #37–#39; desarrollo secuencial autorizado y aprobaciones delegadas
 **En producción**: no
 
 ---
@@ -36,6 +36,13 @@ Requiere `.env` en la raíz (plantilla en `.env.example`): `DATABASE_URL`,
 ---
 
 ## Estado actual
+
+- **#36 `odc-concurrent-updates` done (2026-10-05)**: CAS por versión y
+  estado para todas las mutaciones, historial atómico y409; versión interna,
+  fechas/DTO conservados. 16 PostgreSQL con dos conexiones+barrera y32 HTTP.
+  Init644backend/661frontend. SQL aditivo sin ejecutar en bases compartidas;
+  [guía de rollout/pruebas](progress/verify_odc-concurrent-updates.md).
+  [Auto-revisión](progress/review_odc-concurrent-updates.md). Prueba humana NOT RUN.
 
 - **#35 `odc-temporary-file-delivery` done (cierre técnico 2026-10-05)**:
   URLs de API con caducidad firmada de 300 s; SDK real y HTTP verificados,

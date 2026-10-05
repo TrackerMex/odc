@@ -11,6 +11,7 @@ import { SubmitOdcUseCase } from '../src/modules/odc/application/use-cases/submi
 import { UpdateDraftUseCase } from '../src/modules/odc/application/use-cases/update-draft.usecase';
 import { UploadInvoiceUseCase } from '../src/modules/odc/application/use-cases/upload-invoice.usecase';
 import { UploadPaymentEvidenceUseCase } from '../src/modules/odc/application/use-cases/upload-payment-evidence.usecase';
+import { OdcConcurrentUpdateError } from '../src/modules/odc/domain/errors/odc-concurrent-update.error';
 import { OdcStatusHistoryEntry } from '../src/modules/odc/domain/entities/odc-status-history-entry.entity';
 import {
   OdcActor,
@@ -89,6 +90,7 @@ async function mutate(
       return new UpdateDraftUseCase(repository, {
         findByName: jest.fn(),
         findAll: jest.fn(),
+        create: jest.fn(),
       }).execute(odcId, { description: `edited-${side}` }, actor);
     case 'register_payment':
       return new RegisterPaymentUseCase(repository).execute(odcId, actor, {
@@ -98,13 +100,11 @@ async function mutate(
     case 'upload_payment_evidence':
     case 'upload_invoice': {
       const storage = {
-        upload: jest
-          .fn()
-          .mockResolvedValue({
-            publicId: `odc/test36/${side}`,
-            resourceType: 'image',
-            format: 'pdf',
-          }),
+        upload: jest.fn().mockResolvedValue({
+          publicId: `odc/test36/${side}`,
+          resourceType: 'image',
+          format: 'pdf',
+        }),
         getSignedUrl: jest.fn(),
       };
       const input = {
@@ -215,7 +215,7 @@ const races: {
 ];
 
 describe('R1,R2,R4,R5,R6: atomic mutations on two isolated PostgreSQL connections (#36)', () => {
-  let sources: DataSource[] = [];
+  const sources: DataSource[] = [];
   let repositories: PurchaseOrderTypeOrmRepository[];
   let order: PurchaseOrder;
   let schemaCreated = false;
@@ -257,11 +257,8 @@ describe('R1,R2,R4,R5,R6: atomic mutations on two isolated PostgreSQL connection
       });
     }
     const [left, right] = await Promise.all(
-      sources.map(
-        (source) =>
-          source.query('SELECT pg_backend_pid() AS pid') as Promise<
-            { pid: number }[]
-          >,
+      sources.map((source) =>
+        source.query<{ pid: number }[]>('SELECT pg_backend_pid() AS pid'),
       ),
     );
     expect(left[0].pid).not.toBe(right[0].pid);
@@ -322,11 +319,8 @@ describe('R1,R2,R4,R5,R6: atomic mutations on two isolated PostgreSQL connection
     const failures = results.filter((result) => result.status === 'rejected');
     expect(successes).toHaveLength(1);
     expect(failures).toHaveLength(1);
-    expect((failures[0] as PromiseRejectedResult).reason.constructor.name).toBe(
-      'OdcConcurrentUpdateError',
-    );
-    const winner = (successes[0] as PromiseFulfilledResult<PurchaseOrder>)
-      .value;
+    expect(failures[0].reason).toBeInstanceOf(OdcConcurrentUpdateError);
+    const winner = successes[0].value;
     const stored = await repositories[0].findById(order.id!);
     expect(stored).toMatchObject({
       version: 1,

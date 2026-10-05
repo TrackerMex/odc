@@ -226,7 +226,7 @@
   {
     "id": 36,
     "name": "odc-concurrent-updates",
-    "status": "in_progress",
+    "status": "done",
     "priority": "P1",
     "source_findings": ["plan002:F03"],
     "depends_on": [35],
@@ -235,7 +235,7 @@
       "Una sola escritura gana frente a la misma versión; la operación perdedora devuelve 409 sin sobrescribir datos.",
       "Historial y orden se guardan atómicamente; exactamente una entrada por transición ganadora y ninguna por la perdedora.",
       "Pruebas PostgreSQL aisladas con dos conexiones y barrera de sincronización para aprobar/rechazar, doble envío y editar/enviar.",
-      "Cubrir todas las mutaciones, no solo approve-budget; no eliminar datos de bases compartidas; prueba humana antes de done."
+      "Cubrir todas las mutaciones, no solo approve-budget; no eliminar datos de bases compartidas; cierre técnico con aprobación delegada y PostgreSQL real (2026-10-05); prueba humana no ejecutada."
     ]
   },
   {

@@ -798,3 +798,14 @@ verde52ac0f7; probe rojo ca7c853→verde41d94b7. Init exit0:610 backend/661
 frontend, builds/lint. Acceso live NOT RUN, bloqueo productivo registrado en
 verify_odc-temporary-file-delivery.md. Cierre técnico delegado; no se atribuye
 al usuario prueba manual ni se afirma Cloudinary real comprobado.
+
+
+## 2026-10-05 — #36 cierre técnico delegado
+
+CAS nativo para las8mutaciones, historial atómico, error409. Test rojo08441ef→
+fixf6a1f9c; refinamiento de fechas/DTOrojo528281d→verdef07ee5c. PostgreSQL
+aisladoreal16checks,49testsdirigidos; initexit0:644backend/661frontend+builds/lint.
+Typecheck70erroresprevios,ceroañadidos. Rollout SQL y guía en
+verify_odc-concurrent-updates.md; ninguna base compartida ni producción tocada.
+Prueba humana no ejecutada. Usuario indicó continuar y subir Cloudinary al
+terminar; esa prueba live permaneceNOT RUN. Próxima featureúnica:#37.

@@ -258,7 +258,7 @@ describe('R7: real Nest/Multer HTTP upload boundary (#34)', () => {
       });
 
       it('accepts omitted optional metadata', async () => {
-        const fields =
+        const fields: Record<string, string> =
           route.path === 'invoice' ? { warehouseEntryDate: '2026-10-04' } : {};
         await form(fields)
           .attach('file', PDF, {
@@ -380,7 +380,7 @@ describe('R7: real Nest/Multer HTTP upload boundary (#34)', () => {
         `${route.textField}[1]`,
         `${route.textField}[nested]`,
       ])('rejects unknown/long/structured field %s', async (name) => {
-        const fields =
+        const fields: Record<string, string> =
           route.path === 'invoice'
             ? { warehouseEntryDate: '2026-10-04', [name]: 'x' }
             : { [name]: 'x' };
