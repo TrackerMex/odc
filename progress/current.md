@@ -18,3 +18,5 @@ actual usa Express sin trust proxy; Vite reenvía /api y no añade xfwd. Default
 conservador: socket peer, ignorar XFF externo. Infraestructura de producción
 externa no inspeccionada; trust proxy solo con allowlist explícita y proxy que
 sanee/agregue dirección real del cliente. No confiar en headers arbitrarios.
+
+Spec11e4f20 aprobada por delegación; límites60/IP/60s y5/cuenta/900s. Tests primero: HTTP/proxy y PostgreSQL entre2 instancias, sin cambios de implementación aún.
