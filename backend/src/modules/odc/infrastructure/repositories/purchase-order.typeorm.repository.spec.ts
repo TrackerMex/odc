@@ -46,13 +46,33 @@ function buildOrder(
 
 interface ManagerMock {
   save: jest.Mock;
+  createQueryBuilder: jest.Mock;
+  builder: { set: jest.Mock; where: jest.Mock; execute: jest.Mock };
   find: jest.Mock;
   findOne: jest.Mock;
   findAndCount: jest.Mock;
 }
 
 function createManagerMock(): ManagerMock {
+  const builder = {
+    update: jest.fn(),
+    set: jest.fn(),
+    where: jest.fn(),
+    returning: jest.fn(),
+    execute: jest.fn(),
+  };
+  for (const method of [builder.update, builder.where, builder.returning])
+    method.mockReturnValue(builder);
+  builder.set.mockImplementation((values: object) => {
+    builder.execute.mockResolvedValue({
+      affected: 1,
+      raw: [{ id: ODC_ID, ...values }],
+    });
+    return builder;
+  });
   return {
+    createQueryBuilder: jest.fn().mockReturnValue(builder),
+    builder,
     save: jest.fn(),
     find: jest.fn(),
     findOne: jest.fn(),
@@ -86,7 +106,7 @@ function createRepository(manager: ManagerMock): {
   return { repository, dataSource };
 }
 
-describe('R5: ODC update and history insert share a single transaction', () => {
+describe('R1,R2 (#36); R5 (#3): ODC conditional update and history insert share a single transaction', () => {
   it('persists the ODC row and its history row through the same transactional manager', async () => {
     const manager = createManagerMock();
     manager.save.mockImplementation((_entity: unknown, row: object) =>
@@ -107,17 +127,25 @@ describe('R5: ODC update and history insert share a single transaction', () => {
     await repository.update(order, entry);
 
     expect(dataSource.transaction).toHaveBeenCalledTimes(1);
-    expect(manager.save).toHaveBeenCalledTimes(2);
-    const [orderTarget, orderRow] = manager.save.mock.calls[0] as [
+    expect(manager.save).toHaveBeenCalledTimes(1);
+    expect(manager.createQueryBuilder).toHaveBeenCalledTimes(1);
+    const [orderRow] = manager.builder.set.mock.calls[0] as [
+      Record<string, unknown>,
+    ];
+    const [historyTarget, historyRow] = manager.save.mock.calls[0] as [
       unknown,
       Record<string, unknown>,
     ];
-    const [historyTarget, historyRow] = manager.save.mock.calls[1] as [
-      unknown,
-      Record<string, unknown>,
-    ];
-    expect(orderTarget).toBe(PurchaseOrderOrmEntity);
-    expect(orderRow).toMatchObject({ id: ODC_ID, status: 'PENDIENTE_ADMIN' });
+    expect(orderRow).toMatchObject({
+      id: ODC_ID,
+      status: 'PENDIENTE_ADMIN',
+      version: 1,
+    });
+    expect(manager.builder.where).toHaveBeenCalledWith({
+      id: ODC_ID,
+      version: 0,
+      status: 'BORRADOR',
+    });
     expect(historyTarget).toBe(OdcStatusHistoryOrmEntity);
     expect(historyRow).toMatchObject({
       odcId: ODC_ID,
@@ -137,9 +165,13 @@ describe('R5: ODC update and history insert share a single transaction', () => {
 
     await repository.update(buildOrder());
 
-    expect(manager.save).toHaveBeenCalledTimes(1);
-    const [savedTarget] = manager.save.mock.calls[0] as [unknown];
-    expect(savedTarget).toBe(PurchaseOrderOrmEntity);
+    expect(manager.save).not.toHaveBeenCalled();
+    expect(manager.builder.execute).toHaveBeenCalledTimes(1);
+    expect(manager.builder.where).toHaveBeenCalledWith({
+      id: ODC_ID,
+      version: 0,
+      status: 'BORRADOR',
+    });
   });
 
   it('returns the updated ODC mapped back to the domain', async () => {
@@ -155,6 +187,31 @@ describe('R5: ODC update and history insert share a single transaction', () => {
     expect(updated).toBeInstanceOf(PurchaseOrder);
     expect(updated.id).toBe(ODC_ID);
     expect(updated.status).toBe('PENDIENTE_ADMIN');
+    expect(updated).toMatchObject({ version: 1 });
+  });
+});
+
+describe('R1,R2: stale writes skip history (#36)', () => {
+  it('rejects when UPDATE affects no row, without inserting history', async () => {
+    const manager = createManagerMock();
+    manager.builder.set.mockImplementation(() => {
+      manager.builder.execute.mockResolvedValue({ affected: 0, raw: [] });
+      return manager.builder;
+    });
+    const { repository } = createRepository(manager);
+    const entry = new OdcStatusHistoryEntry(
+      null,
+      ODC_ID,
+      'BORRADOR',
+      'PENDIENTE_ADMIN',
+      OPS_ID,
+      null,
+      null,
+    );
+    await expect(
+      repository.update(buildOrder({ status: 'PENDIENTE_ADMIN' }), entry),
+    ).rejects.toMatchObject({ name: 'OdcConcurrentUpdateError' });
+    expect(manager.save).not.toHaveBeenCalled();
   });
 });
 

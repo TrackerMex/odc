@@ -19,3 +19,10 @@ conservado, probe entregado. Pendiente aviso del usuario sobre configuración.
 hace save incondicional. Se propone CAS por versión, historial en la misma
 transacción y error409 compartido. Se usará PostgreSQL independiente con
 puerto libre loopback y schema único; ningún dato de otros proyectos se toca.
+
+Spec aprobada antes de código: aacb4bc. Pruebas rojas capturadas:
+PostgreSQL 16/16 fallan (dos ganadores reales, versión ausente y SQL no creado);
+HTTP 8 fallan/24 verdes (409 hoy500;401/403/404 conservados). Error de dominio
+definido solo como contrato trivial para probar su traducción antes del fix.
+Repositorio anterior se adapta a UPDATE/RETURNING manteniendo historial atómico.
+Logs /tmp/odc36-{pg,http,repo}-red.log. Contenedor propio destruido al terminar.
