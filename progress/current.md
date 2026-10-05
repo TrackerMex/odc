@@ -28,3 +28,9 @@ se caracterizan sin fabricar regresiones para producir un rojo.
 HTTP rojo: 8 fallos / 14 verdes; verde SDK + HTTP: 40/40.
 Implementación usa private_download_url con expiry firmado, valida metadatos
 y traduce fallos de firma al contrato 502 existente; upload sin cambios.
+
+R5 guard de probe: rojo 2/2 en ca7c853, verde 2/2. Script live guardado,
+NOT RUN exit 2 sin cuenta/opt-in; ninguna llamada real. Guía del usuario
+verify_odc-temporary-file-delivery.md. Bloqueo productivo explícito: acceso
+Cloudinary real antes/después aún no verificado. Se continúa cierre técnico
+según criterio condicional de #35, sin falsear esa evidencia.
