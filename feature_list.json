@@ -297,7 +297,7 @@
   {
     "id": 39,
     "name": "auth-login-rate-limit",
-    "status": "in_progress",
+    "status": "done",
     "priority": "P1",
     "source_findings": [
       "plan002:F08"

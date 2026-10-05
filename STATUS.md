@@ -1,8 +1,10 @@
 # ODC — Status
 
 **Última actualización**: 2026-10-05
-**Features completadas**: 37/39 (`feature_list.json`)
-**Pendientes del registro**: #38–#39; desarrollo secuencial autorizado y aprobaciones delegadas
+**Features completadas**: 39/39 (`feature_list.json`)
+**Pendientes del registro**: ninguno; cierre técnico con aprobaciones delegadas
+**Verificaciones externas pendientes**: prueba manual del usuario, Cloudinary real y proxy productivo
+**Entrega y comandos de prueba**: [guía #34–#39](progress/verify_odc-hardening.md)
 **En producción**: no
 
 ---
@@ -36,6 +38,23 @@ Requiere `.env` en la raíz (plantilla en `.env.example`): `DATABASE_URL`,
 ---
 
 ## Estado actual
+
+- **#39 `auth-login-rate-limit` done (2026-10-05)**: 60 intentos/IP por minuto
+  y5/cuenta por15min, PostgreSQL compartido y atómico entre instancias,
+  429/Retry-After, DB503 y formulario con captura/feedback conservados. Proxy
+  defaultfalse, allowlist explícita; prueba con proxy Node local y XFF externo.
+  Init final880backend/672frontend,43 PostgreSQL; typecheck68backend/18frontend
+  previos, cero nuevos. [Guía](progress/verify_auth-login-rate-limit.md) y
+  [auto-revisión](progress/review_auth-login-rate-limit.md). Proxy de producción
+  y prueba humana NOT RUN; SQL039 no aplicado en tu DB.
+
+- **#38 `odc-orphan-file-recovery` done (2026-10-05)**: reserva durable antes
+  de subir, asociación/version/historial atómicos; conciliación antes de borrar
+  y fence para escritura tardía. Solo activo nuevo con token propio por assetId
+  inmutable, cleanup idempotente/retry durable y worker. 15 pruebas PostgreSQL,
+  además de16 de #36;27 directas. [Guía](progress/verify_odc-orphan-file-recovery.md)
+  y [auto-revisión](progress/review_odc-orphan-file-recovery.md). Cloudinary real
+  y prueba humana NOT RUN; SQL038 no aplicado en tu DB.
 
 - **#37 `odc-input-boundaries` done (2026-10-05)**: enteros positivos int32
   y producto validado antes de guardar, PATCH parcial atómico, calendario
@@ -174,7 +193,7 @@ Requiere `.env` en la raíz (plantilla en `.env.example`): `DATABASE_URL`,
   especificar— y `<title>` global `ODC — Órdenes de compra` en `__root.tsx`.
   5 líneas en 3 archivos. Verificado en Chromium real, no solo en jsdom.
 - **#31 `frontend-dashboard-template` done** (2026-09-13): Modern + Orders Table adaptados al shell y dashboard, con datos reales, navegación por rol, panel unido, tabla prioritaria y contexto operativo. Temas, teclado, estados largos y movimiento reducido verificados en 24 combinaciones. Aviso MIT y procedencia en `frontend/THIRD_PARTY_NOTICES.md`.
-- **Las 31 features están cerradas.** Otros candidatos ya anotados y sin dueño: las deudas de la #28
+- **Tras #31 se cerró el registro existente entonces.** Otros candidatos ya anotados y sin dueño: las deudas de la #28
   (área táctil bajo 44×44px fuera del shell/dashboard ajustados en #31, `grid-cols-3` del resumen mensual a siete cifras),
   el copy en inglés de las primitivas `ui/` (`pagination.tsx`, `sheet.tsx`,
   `sidebar.tsx`, hallazgo de la #29), re-saturar las 8 badges de dark
@@ -187,6 +206,17 @@ Requiere `.env` en la raíz (plantilla en `.env.example`): `DATABASE_URL`,
 ---
 
 ## Última sesión
+
+**2026-10-05** — #34–#39 cerradas técnicamente, 39/39 registradas.
+
+- Una feature a la vez, specs antes de código y aprobaciones delegadas por el usuario.
+- Init final exit0: 880 backend / 672 frontend, builds y lint verdes;43 PostgreSQL aisladas.
+- Entrega en `audit/odc-hardening-20261001`, sin merge ni despliegue; puertos efímeros y DB dedicada.
+- Prueba manual y Cloudinary real NOT RUN, diferidas por el usuario al terminar.
+- Antes de producción: SQL036/038/039, validar Cloudinary y proxy real según la guía.
+- Otros hallazgos de plan002 mantienen alcance propio; no es certificación productiva.
+
+Sesiones anteriores:
 
 **2026-09-13** — Cierre de `frontend-dashboard-template` (#31).
 

@@ -1,12 +1,12 @@
 ---
 feature: auth-login-rate-limit
-status: in_progress
+status: done
 ---
 
 # Tareas
 
 - [x] Spec aprobada por delegación antes de código.
-- [ ] Test rojo de límites HTTP y PostgreSQL, proxy y claves, commit separado.
-- [ ] Guard, UPSERT compartido, limpieza, SQL y allowlist nativa.
-- [ ] Dos instancias PostgreSQL, HTTP, vencimiento/fallo y regresión.
-- [ ] Init, auto-revisión, traceability, guía y cierre técnico.
+- [x] Test rojo de límites HTTP y PostgreSQL, proxy y claves, commit separado.
+- [x] Guard, UPSERT compartido, limpieza, SQL y allowlist nativa.
+- [x] Dos instancias PostgreSQL, HTTP, vencimiento/fallo y regresión.
+- [x] Init, auto-revisión, traceability, guía y cierre técnico.

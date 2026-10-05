@@ -50,11 +50,17 @@ no se crean nuevos IDs F. Evidencia y límites en
 | 5 | #38 `odc-orphan-file-recovery` | F07 | P2 |
 | 6 | #39 `auth-login-rate-limit` | F08 | P1 antes de exposición |
 
-Criterios de prueba en `feature_list.json`. Se prepara solo la spec #34,
-[multipart](../specs/odc-multipart-protection/requirements.md); la implementación
-espera aprobación explícita según `AGENTS.md` §3–4. Las siguientes specs se
-preparan secuencialmente después de verificación y prueba humana de cada feature.
-Registro del backlog y spec en borrador no equivalen a correcciones implementadas.
+**Actualización 2026-10-05**: #34–#39 implementadas y cerradas técnicamente en
+`audit/odc-hardening-20261001`; aprobación de specs/cierre delegada explícitamente
+por el usuario. Requisitos, pruebas y trazabilidad en cada spec. [Guía de entrega](../progress/verify_odc-hardening.md): init880backend/672frontend verde y43 pruebas
+PostgreSQL aisladas. La tabla de hallazgos conserva la evidencia de la base
+revisada, no describe el código posterior como si siguiera sin corregirse.
+
+**Verificación externa pendiente**: Cloudinary live y prueba manual NOT RUN,
+diferidas por el usuario hasta terminar; proxy real de producción no inspeccionado.
+SQL036/038/039 preparados, no aplicados a bases compartidas. Por ello el cierre
+técnico no equivale a certificación ni autorización de despliegue. Los demás
+hallazgos F y evoluciones fuera del registro #34–#39 mantienen su alcance.
 
 P1: resolver en la siguiente evolución o antes de producción según el alcance indicado. P2: corrección de operación/calidad. P3: mantenimiento. Esfuerzo S = horas; M = alrededor de un día; L = varios días, incluyendo pruebas, sin compromiso de calendario. Riesgo se refiere al cambio, no a la gravedad del defecto. Confianza alta significa flujo leído o reproducido; media requiere medición adicional.
 
