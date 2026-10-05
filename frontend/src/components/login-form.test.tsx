@@ -197,3 +197,30 @@ describe('R6,R12: login blur validation, focus and pending state', () => {
     ).toBe(true)
   })
 })
+
+describe('auth-login-rate-limit R1,R3: login throttling and outage feedback', () => {
+  beforeEach(() => {
+    vi.mocked(login).mockReset()
+    navigateMock.mockReset()
+    useSessionStore.setState({ user: null })
+  })
+  it.each([
+    { status: 429, seconds: 900, message: 'Demasiados intentos. Intenta de nuevo en 15 minutos.' },
+    { status: 429, seconds: 60, message: 'Demasiados intentos. Intenta de nuevo en 1 minuto.' },
+    { status: 429, seconds: undefined, message: 'Demasiados intentos. Intenta de nuevo más tarde.' },
+    { status: 503, seconds: undefined, message: 'No se puede iniciar sesión en este momento. Intenta de nuevo más tarde.' },
+  ])('shows $status, preserves values and allows another attempt', async ({ status, seconds, message }) => {
+    const error = new ApiError(status, 'backend response')
+    Object.assign(error, { retryAfterSeconds: seconds })
+    vi.mocked(login).mockRejectedValueOnce(error).mockResolvedValueOnce({ user: loggedInUser })
+    render(<LoginForm />)
+    fillAndSubmit('user@example.com', 'test-password')
+    expect((await screen.findByRole('alert')).textContent).toContain(message)
+    expect((screen.getByLabelText('Correo electrónico') as HTMLInputElement).value).toBe('user@example.com')
+    expect((screen.getByLabelText('Contraseña') as HTMLInputElement).value).toBe('test-password')
+    expect(useSessionStore.getState().user).toBeNull()
+    expect(navigateMock).not.toHaveBeenCalled()
+    fireEvent.submit(screen.getByTestId('login-form'))
+    await vi.waitFor(() => expect(navigateMock).toHaveBeenCalledWith({ to: '/', replace: true }))
+  })
+})
