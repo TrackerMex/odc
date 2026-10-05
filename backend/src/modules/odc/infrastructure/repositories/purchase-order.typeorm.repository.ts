@@ -93,19 +93,20 @@ export class PurchaseOrderTypeOrmRepository implements PurchaseOrderRepository {
       throw new Error('Cannot update a purchase order without id');
     }
     return this.dataSource.transaction(async (manager) => {
-      const result = await manager
-        .createQueryBuilder()
-        .update(PurchaseOrderOrmEntity)
-        .set({ ...toOrmValues(order), version: order.version + 1 })
-        .where({
+      const result = await manager.update(
+        PurchaseOrderOrmEntity,
+        {
           id: order.id,
           version: order.version,
           status: historyEntry?.fromStatus ?? order.status,
-        })
-        .returning('*')
-        .execute();
+        },
+        { ...toOrmValues(order), version: order.version + 1 },
+      );
       if (result.affected !== 1) throw new OdcConcurrentUpdateError();
-      const [saved] = result.raw as PurchaseOrderOrmEntity[];
+      // ORM hydration preserves date strings; UPDATE holds this row until commit.
+      const saved = await manager.findOneOrFail(PurchaseOrderOrmEntity, {
+        where: { id: order.id! },
+      });
       if (historyEntry !== undefined) {
         await manager.save(
           OdcStatusHistoryOrmEntity,

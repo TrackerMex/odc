@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 cd "$(dirname "$0")/.."
-odc_test_name="odc-hardening-test-$(cat /proc/sys/kernel/random/uuid)"
+odc_test_name="odc-hardening-test-$(node -e 'process.stdout.write(require("node:crypto").randomUUID())')"
 odc_test_container="$(docker run --rm -d --name "$odc_test_name" \
   -e POSTGRES_USER=odc_test -e POSTGRES_PASSWORD=odc_test -e POSTGRES_DB=odc_test \
   -p 127.0.0.1::5432 postgres:16-alpine)"

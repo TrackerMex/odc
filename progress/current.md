@@ -31,3 +31,8 @@ Primer CAS y SQL: verde40 unit/HTTP y16 PostgreSQL. Auto-revisión detectó
 RETURNING raw devuelve DATE como Date; prueba nueva compara payload ylectura
 y reproduce 2 fallos/14 verdes. Se simplificará al update nativo + lectura ORM
 en la misma transacción (fila bloqueada hasta commit), preservando fechas.
+
+Refinamiento final: manager.update CAS + findOneOrFail dentro de la misma
+transacción, versión interna omitida de HTTP. Verde49 unit/HTTP/mapper +16
+PostgreSQL incluyendo fechas. SQL idempotente probado; puertos loopback libres.
+Siguiente: init completo y guía de aplicación del SQL sin mezclar versiones.

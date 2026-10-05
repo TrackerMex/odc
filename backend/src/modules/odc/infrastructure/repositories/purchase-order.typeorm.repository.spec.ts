@@ -46,33 +46,25 @@ function buildOrder(
 
 interface ManagerMock {
   save: jest.Mock;
-  createQueryBuilder: jest.Mock;
-  builder: { set: jest.Mock; where: jest.Mock; execute: jest.Mock };
+  update: jest.Mock;
+  findOneOrFail: jest.Mock;
   find: jest.Mock;
   findOne: jest.Mock;
   findAndCount: jest.Mock;
 }
 
 function createManagerMock(): ManagerMock {
-  const builder = {
-    update: jest.fn(),
-    set: jest.fn(),
-    where: jest.fn(),
-    returning: jest.fn(),
-    execute: jest.fn(),
-  };
-  for (const method of [builder.update, builder.where, builder.returning])
-    method.mockReturnValue(builder);
-  builder.set.mockImplementation((values: object) => {
-    builder.execute.mockResolvedValue({
-      affected: 1,
-      raw: [{ id: ODC_ID, ...values }],
-    });
-    return builder;
-  });
+  const findOneOrFail = jest.fn();
   return {
-    createQueryBuilder: jest.fn().mockReturnValue(builder),
-    builder,
+    findOneOrFail,
+    update: jest
+      .fn()
+      .mockImplementation(
+        (_target: unknown, _where: object, values: object) => {
+          findOneOrFail.mockResolvedValue({ id: ODC_ID, ...values });
+          return Promise.resolve({ affected: 1 });
+        },
+      ),
     save: jest.fn(),
     find: jest.fn(),
     findOne: jest.fn(),
@@ -128,24 +120,32 @@ describe('R1,R2 (#36); R5 (#3): ODC conditional update and history insert share 
 
     expect(dataSource.transaction).toHaveBeenCalledTimes(1);
     expect(manager.save).toHaveBeenCalledTimes(1);
-    expect(manager.createQueryBuilder).toHaveBeenCalledTimes(1);
-    const [orderRow] = manager.builder.set.mock.calls[0] as [
+    expect(manager.update).toHaveBeenCalledTimes(1);
+    const [orderTarget, expected, orderRow] = manager.update.mock.calls[0] as [
+      unknown,
+      Record<string, unknown>,
       Record<string, unknown>,
     ];
     const [historyTarget, historyRow] = manager.save.mock.calls[0] as [
       unknown,
       Record<string, unknown>,
     ];
+    expect(orderTarget).toBe(PurchaseOrderOrmEntity);
+    expect(expected).toMatchObject({
+      id: ODC_ID,
+      version: 0,
+      status: 'BORRADOR',
+    });
     expect(orderRow).toMatchObject({
       id: ODC_ID,
       status: 'PENDIENTE_ADMIN',
       version: 1,
     });
-    expect(manager.builder.where).toHaveBeenCalledWith({
-      id: ODC_ID,
-      version: 0,
-      status: 'BORRADOR',
-    });
+    expect(manager.update).toHaveBeenCalledWith(
+      PurchaseOrderOrmEntity,
+      { id: ODC_ID, version: 0, status: 'BORRADOR' },
+      expect.any(Object),
+    );
     expect(historyTarget).toBe(OdcStatusHistoryOrmEntity);
     expect(historyRow).toMatchObject({
       odcId: ODC_ID,
@@ -166,12 +166,12 @@ describe('R1,R2 (#36); R5 (#3): ODC conditional update and history insert share 
     await repository.update(buildOrder());
 
     expect(manager.save).not.toHaveBeenCalled();
-    expect(manager.builder.execute).toHaveBeenCalledTimes(1);
-    expect(manager.builder.where).toHaveBeenCalledWith({
-      id: ODC_ID,
-      version: 0,
-      status: 'BORRADOR',
-    });
+    expect(manager.findOneOrFail).toHaveBeenCalledTimes(1);
+    expect(manager.update).toHaveBeenCalledWith(
+      PurchaseOrderOrmEntity,
+      { id: ODC_ID, version: 0, status: 'BORRADOR' },
+      expect.any(Object),
+    );
   });
 
   it('returns the updated ODC mapped back to the domain', async () => {
@@ -194,10 +194,7 @@ describe('R1,R2 (#36); R5 (#3): ODC conditional update and history insert share 
 describe('R1,R2: stale writes skip history (#36)', () => {
   it('rejects when UPDATE affects no row, without inserting history', async () => {
     const manager = createManagerMock();
-    manager.builder.set.mockImplementation(() => {
-      manager.builder.execute.mockResolvedValue({ affected: 0, raw: [] });
-      return manager.builder;
-    });
+    manager.update.mockResolvedValue({ affected: 0 });
     const { repository } = createRepository(manager);
     const entry = new OdcStatusHistoryEntry(
       null,
