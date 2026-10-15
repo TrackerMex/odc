@@ -29,8 +29,14 @@ export class CloudinaryFileStorageService implements FileStorageService {
   async upload(input: UploadFileInput): Promise<UploadFileResult> {
     const dataUri = `data:${input.mimeType};base64,${input.buffer.toString('base64')}`;
     const result = await cloudinary.uploader.upload(dataUri, {
-      folder: input.folder,
-      resource_type: 'auto',
+      ...(input.publicId && input.uploadToken
+        ? {
+            public_id: input.publicId,
+            overwrite: false,
+            context: { odc_upload_job: input.uploadToken },
+            resource_type: 'image',
+          }
+        : { folder: input.folder, resource_type: 'auto' }),
       type: 'authenticated',
     });
     return {
@@ -40,16 +46,70 @@ export class CloudinaryFileStorageService implements FileStorageService {
     };
   }
 
+  async deleteIfOwned(input: {
+    publicId: string;
+    uploadToken: string;
+  }): Promise<'deleted' | 'missing' | 'not_owned'> {
+    let resource: unknown;
+    try {
+      resource = await cloudinary.api.resource(input.publicId, {
+        type: 'authenticated',
+        resource_type: 'image',
+      });
+    } catch (error) {
+      if (isCloudinaryNotFound(error)) return 'missing';
+      throw new FileStorageUnavailableError();
+    }
+    if (!resource || typeof resource !== 'object') return 'not_owned';
+    const metadata = resource as {
+      public_id?: unknown;
+      resource_type?: unknown;
+      type?: unknown;
+      asset_id?: unknown;
+      context?: { custom?: { odc_upload_job?: unknown } };
+    };
+    if (
+      metadata.public_id !== input.publicId ||
+      metadata.resource_type !== 'image' ||
+      metadata.type !== 'authenticated' ||
+      typeof metadata.asset_id !== 'string' ||
+      !metadata.asset_id ||
+      metadata.context?.custom?.odc_upload_job !== input.uploadToken
+    )
+      return 'not_owned';
+    try {
+      // Immutable id prevents a replacement between lookup and deletion being removed.
+      await cloudinary.api.delete_resources_by_asset_ids([metadata.asset_id]);
+      const result = (await cloudinary.api.resources_by_asset_ids([
+        metadata.asset_id,
+      ])) as { resources?: unknown };
+      if (!Array.isArray(result.resources) || result.resources.length !== 0)
+        throw new FileStorageUnavailableError();
+      return 'deleted';
+    } catch {
+      throw new FileStorageUnavailableError();
+    }
+  }
+
   async getSignedUrl(input: GetSignedUrlInput): Promise<string> {
     const reference = await this.resolveDeliveryMetadata(input);
+    if (!isDeliveryResourceType(reference.resourceType) || !reference.format) {
+      throw new FileStorageUnavailableError();
+    }
     const expiresAt = Math.floor(Date.now() / 1000) + SIGNED_URL_EXPIRY_SECONDS;
-    return cloudinary.url(reference.publicId, {
-      sign_url: true,
-      type: 'authenticated',
-      resource_type: reference.resourceType,
-      format: reference.format,
-      expires_at: expiresAt,
-    });
+    try {
+      return cloudinary.utils.private_download_url(
+        reference.publicId,
+        reference.format,
+        {
+          type: 'authenticated',
+          resource_type: reference.resourceType,
+          expires_at: expiresAt,
+        },
+      );
+    } catch {
+      throw new FileStorageUnavailableError();
+    }
   }
 
   private async resolveDeliveryMetadata(
@@ -86,6 +146,12 @@ export class CloudinaryFileStorageService implements FileStorageService {
       throw new FileStorageUnavailableError();
     }
   }
+}
+
+function isDeliveryResourceType(
+  value: string,
+): value is 'image' | 'video' | 'raw' {
+  return value === 'image' || value === 'video' || value === 'raw';
 }
 
 function hasDeliveryMetadata(

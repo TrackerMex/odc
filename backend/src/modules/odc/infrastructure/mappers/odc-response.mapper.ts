@@ -61,6 +61,7 @@ export type ExecutiveDashboardResponseDto = ExecutiveDashboardResponse;
 
 export function toOdcResponse(order: PurchaseOrder): OdcResponseDto {
   const { paymentEvidenceFile, invoiceFile, ...rest } = order;
+  Reflect.deleteProperty(rest, 'version');
   return {
     ...rest,
     hasPaymentEvidence: paymentEvidenceFile !== null,

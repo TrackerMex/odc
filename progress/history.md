@@ -716,3 +716,192 @@ estado: implementación aprobada; init inicial verde
 - El panel accesible ofrece badge, lectura, carga/error/vacío, enlaces al detalle y refresco al abrir, enfocar, cada 30 segundos o tras una mutación ODC exitosa.
 - TDD: rojo `0e3cc9f` → `56e6002`. API real verificada con OPS, Administración y Dirección General; navegador oscuro verificado con 67 eventos no leídos y scroll local.
 - `./init.sh` verde: 489 backend, 661 frontend, builds y lint.
+
+---
+
+## 2026-10-01 - Auditoría de seguridad e integridad registrada en Harness
+
+- Checkout original `C:\Users\alex\Documents\sites\odc`, main limpio;
+  HEAD y main remoto coinciden en `a8a407e34b5ecc012b732f04d8f276f55aeec1b4`.
+- Worktree aislado `C:\Users\alex\Documents\Codex\2026-09-30\task\odc-audit`,
+  rama `audit/odc-hardening-20261001`. Sin push, merge, despliegue ni Notion.
+- Registradas #34–#39 con prioridades y criterios de prueba, referenciando
+  F04, F02, F03, F05/F06, F07 y F08 del plan002; #1–#33 intactas.
+- Spec completa #34 multipart: requirements/design/tasks/traceability.
+  `spec_ready` significa preparada según el proceso del spec_author;
+  frontmatter draft y aprobación humana sin marcar. Ninguna implementación.
+- Se lanzó spec_author conforme a instrucciones locales; se interrumpió para
+  responder al pedido de entrega inmediata durante la llamada, y el responsable
+  terminó los documentos de spec. No se delegó implementación ni revisión de código.
+- Gate exacto: aprobación humana de `specs/odc-multipart-protection/requirements.md`
+  antes de código (AGENTS §3–4). Luego TDD, review y prueba humana por feature.
+- **Passed**: init inicial y de cierre, exit 0; builds backend/frontend,
+  62 suites/489 pruebas backend, 39 archivos/661 pruebas frontend, lint backend.
+  La spec se cerró al terminar el init; validación documental/JSON posterior.
+- **Passed**: JSON sin IDs/nombres duplicados, #1–#33 byte-semánticamente
+  iguales al checkout base y F02–F08 referenciados cada uno una vez.
+- **Passed**: SDK real Cloudinary 2.10.0 con configuración ficticia, sin red:
+  expires_at=100/200 genera URL idéntica. pnpm why multer confirma 2.2.0 directo
+  y vía Nest, sin ejecutar payloads peligrosos.
+- **Not run**: nuevas pruebas multipart, carreras PostgreSQL, expiración de un
+  activo real, rate limit y prueba humana. Requieren sus implementaciones/specs
+  aprobadas y, donde aplique, entorno seguro de test.
+- No se copiaron secretos; init usó .env.example en worktree, sin servicios,
+  seeds ni acceso a datos productivos. Los hallazgos permanecen abiertos.
+- Evidencia y alcance: `progress/explore_odc-hardening.md`. Main original
+  conserva su estado limpio; normalización de routeTree generada por build se descarta.
+
+---
+
+## 2026-10-04 — Implementación #34, esperando prueba local humana
+
+# Sesión activa
+
+```text
+feature: odc-multipart-protection (#34)
+inicio: 2026-10-04 UTC
+agentes lanzados: ninguno
+estado: implementación; spec aprobada por humano en 3e07ccc (2026-10-03)
+```
+
+- Entorno de trabajo: /home/claude/sites/odc, rama audit/odc-hardening-20261001.
+- Init inicial con bash init.sh: exit 0, 489 backend / 661 frontend, builds y lint backend verdes.
+- Alcance exclusivo #34 R1–R7. Plan: tests HTTP reales primero; actualizar Multer directo/transitivo; límites y validación compartidos por ambas rutas; regresión y revisión C1–C6.
+- El usuario hará la prueba humana en su equipo antes de done. Los tests aquí usarán puertos efímeros en loopback y providers externos aislados, sin DB ni Cloudinary reales.
+- R5: rojo 341c48c, 2 fallos por Multer 2.2.0 directo y transitivo; actualización a 2.4.0 y override acotado verdes. Configuración de arrays se verificará junto a HTTP.
+- R1–R7: suite HTTP real escrita antes de implementación: 34 fallos / 38 verdes (72 casos). R6 ya pasa como contrato conservado; no se introduce una regresión artificial en guards existentes.
+- SDK/runtime inspeccionados: Multer 2.4.0 corrige la inclusión exacta de fileSize/parts; Busboy aún trunca fieldSize al alcanzar el límite. Se usará sentinela de un byte y validación UTF-8 del límite de negocio.
+- Implementación f0ad2db: parser acotado, firmas PDF/JPEG/PNG sin dependencia nueva, MIME coincidente, campos planos/permitidos y límite UTF-8. Compartida entre las dos rutas.
+- Focalizadas: 158/158 (72 HTTP reales, 2 dependencias, 84 controller). Build backend verde. Traces R1–R7 actualizadas inmediatamente tras commit de implementación.
+- R2 usa Writable/pipeline nativos porque el byte de anticipación de Multer no debe entrar a un Buffer completo mayor de 10 MiB; tests instrumentan Buffer.concat.
+- Cierre automático en curso; prueba humana reservada al usuario, sin marcar done.
+- Ampliación exigida por R4 y almacenamiento nuevo: 170 focalizadas verdes, 84 HTTP + 2 dependencias + 84 controller; límites UTF-8 en ambos órdenes, opcionales y stream truncado sin efectos/hang.
+- ESLint focalizado verde. Typecheck backend completo compara 70 errores históricos de tests contra baseline 3e07ccc: mismos 70, sin errores nuevos en archivos modificados. Build de aplicación verde.
+- Guía de prueba humana creada en progress/verify_odc-multipart-protection.md; instalación/rebuild backend necesaria para actualizar también el Multer usado por Nest.
+- Init final exit 0: 575 backend / 661 frontend, ambos builds y lint backend; git diff --check verde.
+- Auto-revisión técnica C1–C6 en progress/impl_odc-multipart-protection.md. No se afirma revisión independiente ni prueba humana.
+- Implementación lista para prueba local del usuario; #34 sigue in_progress. Cierre: archivar sesión, dejar current con plantilla, commits limpios y publicar la rama para sincronización con su equipo.
+
+
+## 2026-10-05 — cierre técnico delegado de #34
+
+Aprobación general del usuario para terminar #34–#39. #34 done con init exit 0
+(575 backend / 661 frontend) y auto-revisión C1–C6; prueba humana en su equipo
+no ejecutada, guía conservada. Revisión: review_odc-multipart-protection.md.
+Siguiente feature única: #35.
+
+
+## 2026-10-05 — #35 entrega técnica
+
+Spec aprobada por delegación en f7425e5/6c11c7c. SDK real rojo3499c74→
+verde52ac0f7; probe rojo ca7c853→verde41d94b7. Init exit0:610 backend/661
+frontend, builds/lint. Acceso live NOT RUN, bloqueo productivo registrado en
+verify_odc-temporary-file-delivery.md. Cierre técnico delegado; no se atribuye
+al usuario prueba manual ni se afirma Cloudinary real comprobado.
+
+
+## 2026-10-05 — #36 cierre técnico delegado
+
+CAS nativo para las8mutaciones, historial atómico, error409. Test rojo08441ef→
+fixf6a1f9c; refinamiento de fechas/DTOrojo528281d→verdef07ee5c. PostgreSQL
+aisladoreal16checks,49testsdirigidos; initexit0:644backend/661frontend+builds/lint.
+Typecheck70erroresprevios,ceroañadidos. Rollout SQL y guía en
+verify_odc-concurrent-updates.md; ninguna base compartida ni producción tocada.
+Prueba humana no ejecutada. Usuario indicó continuar y subir Cloudinary al
+terminar; esa prueba live permaneceNOT RUN. Próxima featureúnica:#37.
+
+
+## 2026-10-05 — #37 cierre técnico delegado
+
+Spec f57c65e aprobada por delegación. Tests rojo0013ba7→verde6a64b0c,192
+casos dominio/HTTP, int32/producto, calendario estricto y UUID400. Init exit0:
+836backend/661frontend+builds/lint; typecheck70previos,cero nuevos.
+Guía verify_odc-input-boundaries.md; prueba humana no ejecutada. Cloudinary
+real diferido por indicación del usuario. Próxima featureúnica:#38.
+
+
+## 2026-10-05 — #38 odc-orphan-file-recovery
+
+# Sesión activa
+
+```
+feature: odc-orphan-file-recovery (#38)
+inicio: 2026-10-05 UTC
+agentes lanzados: ninguno
+estado: preparando diseño de recuperación durable
+```
+
+Objetivo activo: completar #34–#39 en secuencia, aprobaciones delegadas por el
+usuario. #34–#37 cerradas técnicamente. Último init836backend/661frontendverde,
+PostgreSQL16carrerasverificadas, typecheck70erroresprevios sin nuevos.
+Pruebas manuales del usuario no ejecutadas. Cloudinary live #35 NOT RUN;
+usuario indicó continuar y configurar credenciales al terminar (2026-10-05).
+
+#38: preparar trabajo durable ANTES de subir; reservar publicId único y token
+privado de propiedad para impedir eliminar activos existentes. Asociación,
+versión e historial deben cerrarse en la misma transacción. Conciliación de
+resultado ambiguo consulta asociación y bloquea futuras escrituras del ticket
+antes de borrar; no eliminar si no se puede resolver. Mantener error original,
+trabajo fallido visible/idempotente y recuperación de ambas subidas. Se usará
+PostgreSQL aislado; nunca barridos de activos antiguos ni DBs compartidas.
+
+Spec aprobada por delegación en3ce6838. Tests rojos de reserva previa, compensación de ambas subidas y propiedad Cloudinary escritos; implementación aún no modificada.
+
+Rojos17203d7:23 fallos/4 verdes en pruebas directas; PostgreSQL rojo por módulo
+nuevo ausente. Implementación usa una función compartida para ambas subidas y
+trabajo durable. 27/27 directas, 863 backend y 30 PostgreSQL (#36 + #38) verdes.
+Worker agregado a verificación de jobs debidos/activos protegidos antes de cierre.
+Cloudinary metadata context y operaciones por assetId verificados contra docs
+primarias y SDK2.10.0. Live aún NOT RUN por instrucción del usuario.
+
+Cierre: 8e6851d, init863backend/661frontendexit0; PostgreSQL31/31 (#36+#38),68 errores tsc previos y0 nuevos. Cloudinary live NOT RUN.
+
+
+## 2026-10-05 — #39 y cierre #34–#39
+
+# Sesión activa
+
+```
+feature: auth-login-rate-limit (#39)
+inicio: 2026-10-05 UTC
+agentes lanzados: ninguno
+estado: preparando spec de límites compartidos y proxy confiable
+```
+
+Objetivo activo: completar #34–#39 en secuencia, aprobaciones delegadas por el
+usuario. #34–#38 cerradas técnicamente. Último init863backend/661frontendverde,
+PostgreSQL31/31 (#36+#38), typecheck68errores previos, cero nuevos.
+Pruebas manuales NOT RUN. Cloudinary live #35/#38 NOT RUN; el usuario configurará
+credenciales al terminar, indicó continuar. No se modificaron DBs compartidas.
+
+#39: reutilizar PostgreSQL para límites atómicos entre instancias. Backend
+actual usa Express sin trust proxy; Vite reenvía /api y no añade xfwd. Default
+conservador: socket peer, ignorar XFF externo. Infraestructura de producción
+externa no inspeccionada; trust proxy solo con allowlist explícita y proxy que
+sanee/agregue dirección real del cliente. No confiar en headers arbitrarios.
+
+Spec11e4f20 aprobada por delegación; límites60/IP/60s y5/cuenta/900s. Tests primero: HTTP/proxy y PostgreSQL entre2 instancias, sin cambios de implementación aún.
+
+Rojo1501ce3: proxy4 fallos/13 verdes; PostgreSQL no cargaba sin nuevo módulo.
+Con contadores implementados pero sin guard aplicado aún, HTTP demuestra cuatro
+fallos reales (429/503 ausentes) y ocho pruebas de contador ya verdes. Contrato
+401 existente conserva mensaje inglés Invalid credentials; test corregido.
+
+#39 implementada: guard IP/cuenta compartido, reloj de DB, caducidad, cleanup,
+allowlist estricta y canonicalización de IP. PostgreSQL12/12 y proxy22/22
+(incluye bootstrap5) verdes. Formulario429/503 aprobado5de218d, rojoa5951c1
+(6fallos/22verdes)→verde28/28. Typecheck68backend/18frontend previos,0 nuevos.
+Init completo y PostgreSQL agregado en curso; no cerrar hasta sus resultados.
+
+Implementación verde9419938; init880backend/672frontend y43PostgreSQL verdes.
+Lint frontend tocado verde. Repetición final de init tras ajustes de lint/fixtures
+antes del cierre técnico; no se marca done todavía.
+
+Cierre técnico: implementación9419938, init final exit0 (880 backend /672 frontend),
+builds y lint verdes,43/43 PostgreSQL aisladas. Typecheck68backend/18frontend
+previos, cero nuevos; lint frontend tocado verde. Specs/cierre aprobados por
+usuario mediante delegación antes de code, ninguna prueba humana inventada.
+39/39 features registradas done. Cloudinary real y prueba manual NOT RUN por
+instrucción del usuario; proxy productivo no inspeccionado. Guía combinada,
+SQL036/038/039 y verificación del proveedor entregados. Sin merge/despliegue,
+ninguna DB compartida tocada. Otros hallazgos plan002 no registrados siguen fuera.

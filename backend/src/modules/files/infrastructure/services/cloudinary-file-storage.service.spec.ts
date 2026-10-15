@@ -9,7 +9,7 @@ jest.mock('cloudinary', () => ({
     config: jest.fn(),
     uploader: { upload: jest.fn() },
     api: { resource: jest.fn() },
-    url: jest.fn(),
+    utils: { private_download_url: jest.fn() },
   },
 }));
 
@@ -17,7 +17,7 @@ const mockedCloudinary = cloudinary as unknown as {
   config: jest.Mock;
   uploader: { upload: jest.Mock };
   api: { resource: jest.Mock };
-  url: jest.Mock;
+  utils: { private_download_url: jest.Mock };
 };
 
 function createConfigService(): ConfigService {
@@ -81,11 +81,11 @@ describe('R1: CloudinaryFileStorageService.upload returns private delivery metad
   });
 });
 
-describe('R2: CloudinaryFileStorageService signs with the real delivery type and format', () => {
+describe('R1,R3 (#35); R2 (#21): CloudinaryFileStorageService signs with the real delivery type and format', () => {
   beforeEach(() => jest.clearAllMocks());
 
   it('uses image/authenticated with the uploaded format and never auto', async () => {
-    mockedCloudinary.url.mockReturnValue(
+    mockedCloudinary.utils.private_download_url.mockReturnValue(
       'https://res.cloudinary.com/odc-cloud/image/authenticated/s--signature--/v1/odc/file.png',
     );
     const service = new CloudinaryFileStorageService(createConfigService());
@@ -98,26 +98,23 @@ describe('R2: CloudinaryFileStorageService signs with the real delivery type and
     });
 
     expect(mockedCloudinary.api.resource).not.toHaveBeenCalled();
-    expect(mockedCloudinary.url).toHaveBeenCalledWith(
+    expect(mockedCloudinary.utils.private_download_url).toHaveBeenCalledWith(
       'odc/ODC-2026-00001/evidence/abc123',
+      'png',
       expect.objectContaining({
-        sign_url: true,
         type: 'authenticated',
         resource_type: 'image',
-        format: 'png',
       }),
     );
-    const [, options] = mockedCloudinary.url.mock.calls[0] as [
-      string,
-      Record<string, unknown>,
-    ];
+    const [, , options] = mockedCloudinary.utils.private_download_url.mock
+      .calls[0] as [string, string, Record<string, unknown>];
     expect(options.resource_type).not.toBe('auto');
     expect(options.expires_at as number).toBeGreaterThan(before);
     expect(options.expires_at as number).toBeLessThanOrEqual(before + 5 * 60);
   });
 });
 
-describe('R3: CloudinaryFileStorageService resolves historical references', () => {
+describe('R3 (#35): CloudinaryFileStorageService resolves historical references', () => {
   beforeEach(() => jest.clearAllMocks());
 
   it('looks up missing metadata before signing without re-uploading', async () => {
@@ -126,7 +123,9 @@ describe('R3: CloudinaryFileStorageService resolves historical references', () =
       resource_type: 'image',
       format: 'pdf',
     });
-    mockedCloudinary.url.mockReturnValue('https://signed.example/invoice.pdf');
+    mockedCloudinary.utils.private_download_url.mockReturnValue(
+      'https://signed.example/invoice.pdf',
+    );
     const service = new CloudinaryFileStorageService(createConfigService());
 
     await expect(
@@ -140,9 +139,13 @@ describe('R3: CloudinaryFileStorageService resolves historical references', () =
       'odc/ODC-2026-00001/invoice/legacy123',
       { resource_type: 'image', type: 'authenticated' },
     );
-    expect(mockedCloudinary.url).toHaveBeenCalledWith(
+    expect(mockedCloudinary.utils.private_download_url).toHaveBeenCalledWith(
       'odc/ODC-2026-00001/invoice/legacy123',
-      expect.objectContaining({ resource_type: 'image', format: 'pdf' }),
+      'pdf',
+      expect.objectContaining({
+        resource_type: 'image',
+        type: 'authenticated',
+      }),
     );
   });
 
@@ -165,11 +168,11 @@ describe('R3: CloudinaryFileStorageService resolves historical references', () =
   });
 });
 
-describe('R7: CloudinaryFileStorageService.getSignedUrl requests a short-lived signed URL', () => {
+describe('R1 (#35); R7 (#7): CloudinaryFileStorageService.getSignedUrl requests a short-lived signed URL', () => {
   beforeEach(() => jest.clearAllMocks());
 
-  it('invokes cloudinary.url with sign_url, type authenticated and an expires_at in the near future', async () => {
-    mockedCloudinary.url.mockReturnValue(
+  it('invokes private_download_url with type authenticated and an expires_at in the near future', async () => {
+    mockedCloudinary.utils.private_download_url.mockReturnValue(
       'https://res.cloudinary.com/odc-cloud/raw/authenticated/s--signature--/abc123',
     );
     const service = new CloudinaryFileStorageService(createConfigService());
@@ -181,13 +184,17 @@ describe('R7: CloudinaryFileStorageService.getSignedUrl requests a short-lived s
       format: 'png',
     });
 
-    expect(mockedCloudinary.url).toHaveBeenCalledTimes(1);
-    const [publicId, options] = mockedCloudinary.url.mock.calls[0] as [
+    expect(mockedCloudinary.utils.private_download_url).toHaveBeenCalledTimes(
+      1,
+    );
+    const [publicId, format, options] = mockedCloudinary.utils
+      .private_download_url.mock.calls[0] as [
+      string,
       string,
       Record<string, unknown>,
     ];
     expect(publicId).toBe('odc/ODC-2026-00001/evidence/abc123');
-    expect(options.sign_url).toBe(true);
+    expect(format).toBe('png');
     expect(options.type).toBe('authenticated');
     expect(options.expires_at as number).toBeGreaterThan(before);
     expect(options.expires_at as number).toBeLessThanOrEqual(before + 5 * 60);

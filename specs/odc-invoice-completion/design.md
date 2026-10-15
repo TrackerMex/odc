@@ -205,3 +205,15 @@ completos y aprobados, o ya genéricos respecto a esta transición.
   ya establecido en T8.
 - **Restricción por creador en T9**: descartada — la tabla T1–T10 del plan
   maestro no anota "(solo el creador)" para T9, a diferencia de T2/T10.
+
+
+## Enmienda por #34 — 2026-10-04
+
+La spec [[../odc-multipart-protection/requirements|odc-multipart-protection]],
+aprobada por humano el 2026-10-03 (`3e07ccc`), sustituye la validación basada
+solo en MIME declarado por firmas reales y MIME coincidente. Ambas rutas
+comparten validación de infraestructura y límites durante recepción.
+Se conserva el máximo inclusive de 10 MiB y los metadatos válidos actuales.
+Exceso durante recepción HTTP devuelve 413; el pipe unitario conserva 400.
+Los fixtures JPEG/PNG del controller ahora contienen sus firmas reales,
+sin debilitar sus aserciones ni alterar la aprobación histórica.

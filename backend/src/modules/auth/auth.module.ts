@@ -1,3 +1,6 @@
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { AuthLoginAttemptOrmEntity } from './infrastructure/entities/auth-login-attempt.orm-entity';
+import { LoginRateLimitGuard } from './infrastructure/guards/login-rate-limit.guard';
 import { Module } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtModule } from '@nestjs/jwt';
@@ -9,6 +12,7 @@ import { jwtModuleOptionsFactory } from './jwt.config';
 
 @Module({
   imports: [
+    TypeOrmModule.forFeature([AuthLoginAttemptOrmEntity]),
     UsersModule,
     JwtModule.registerAsync({
       inject: [ConfigService],
@@ -16,7 +20,7 @@ import { jwtModuleOptionsFactory } from './jwt.config';
     }),
   ],
   controllers: [AuthController],
-  providers: [LoginUseCase, GetMeUseCase],
+  providers: [LoginUseCase, GetMeUseCase, LoginRateLimitGuard],
   // JwtModule is exported so the APP_GUARD registered in AppModule can
   // resolve JwtService from the root injector (R8).
   exports: [JwtModule],

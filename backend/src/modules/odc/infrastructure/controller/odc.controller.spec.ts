@@ -1105,10 +1105,26 @@ describe('R1: payment-evidence file validation (MIME/size) before Cloudinary (od
 
     await expect(pipe.transform(buildMulterFile())).resolves.toBeDefined();
     await expect(
-      pipe.transform(buildMulterFile({ mimetype: 'image/jpeg' })),
+      pipe.transform(
+        buildMulterFile({
+          mimetype: 'image/jpeg',
+          buffer: Buffer.from(
+            'ffd8ffe000104a46494600010100000100010000ffd9',
+            'hex',
+          ),
+        }),
+      ),
     ).resolves.toBeDefined();
     await expect(
-      pipe.transform(buildMulterFile({ mimetype: 'image/png' })),
+      pipe.transform(
+        buildMulterFile({
+          mimetype: 'image/png',
+          buffer: Buffer.from(
+            'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aNgkAAAAASUVORK5CYII=',
+            'base64',
+          ),
+        }),
+      ),
     ).resolves.toBeDefined();
     await expect(
       pipe.transform(buildMulterFile({ size: 10 * 1024 * 1024 })),
@@ -1148,10 +1164,26 @@ describe('R1: invoice file validation (MIME/size) before Cloudinary (odc-invoice
       pipe.transform(buildMulterFile({ originalname: 'invoice.pdf' })),
     ).resolves.toBeDefined();
     await expect(
-      pipe.transform(buildMulterFile({ mimetype: 'image/jpeg' })),
+      pipe.transform(
+        buildMulterFile({
+          mimetype: 'image/jpeg',
+          buffer: Buffer.from(
+            'ffd8ffe000104a46494600010100000100010000ffd9',
+            'hex',
+          ),
+        }),
+      ),
     ).resolves.toBeDefined();
     await expect(
-      pipe.transform(buildMulterFile({ mimetype: 'image/png' })),
+      pipe.transform(
+        buildMulterFile({
+          mimetype: 'image/png',
+          buffer: Buffer.from(
+            'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aNgkAAAAASUVORK5CYII=',
+            'base64',
+          ),
+        }),
+      ),
     ).resolves.toBeDefined();
     await expect(
       pipe.transform(buildMulterFile({ size: 10 * 1024 * 1024 })),

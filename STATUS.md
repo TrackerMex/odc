@@ -1,8 +1,10 @@
 # ODC — Status
 
-**Última actualización**: 2026-09-13
-**Features completadas**: 33/33 (`feature_list.json`)
-**Pendientes del registro**: ninguno; las entregas restantes de la auditoría están en el plan 002
+**Última actualización**: 2026-10-05
+**Features completadas**: 39/39 (`feature_list.json`)
+**Pendientes del registro**: ninguno; cierre técnico con aprobaciones delegadas
+**Verificaciones externas pendientes**: prueba manual del usuario, Cloudinary real y proxy productivo
+**Entrega y comandos de prueba**: [guía #34–#39](progress/verify_odc-hardening.md)
 **En producción**: no
 
 ---
@@ -36,6 +38,63 @@ Requiere `.env` en la raíz (plantilla en `.env.example`): `DATABASE_URL`,
 ---
 
 ## Estado actual
+
+- **#39 `auth-login-rate-limit` done (2026-10-05)**: 60 intentos/IP por minuto
+  y5/cuenta por15min, PostgreSQL compartido y atómico entre instancias,
+  429/Retry-After, DB503 y formulario con captura/feedback conservados. Proxy
+  defaultfalse, allowlist explícita; prueba con proxy Node local y XFF externo.
+  Init final880backend/672frontend,43 PostgreSQL; typecheck68backend/18frontend
+  previos, cero nuevos. [Guía](progress/verify_auth-login-rate-limit.md) y
+  [auto-revisión](progress/review_auth-login-rate-limit.md). Proxy de producción
+  y prueba humana NOT RUN; SQL039 no aplicado en tu DB.
+
+- **#38 `odc-orphan-file-recovery` done (2026-10-05)**: reserva durable antes
+  de subir, asociación/version/historial atómicos; conciliación antes de borrar
+  y fence para escritura tardía. Solo activo nuevo con token propio por assetId
+  inmutable, cleanup idempotente/retry durable y worker. 15 pruebas PostgreSQL,
+  además de16 de #36;27 directas. [Guía](progress/verify_odc-orphan-file-recovery.md)
+  y [auto-revisión](progress/review_odc-orphan-file-recovery.md). Cloudinary real
+  y prueba humana NOT RUN; SQL038 no aplicado en tu DB.
+
+- **#37 `odc-input-boundaries` done (2026-10-05)**: enteros positivos int32
+  y producto validado antes de guardar, PATCH parcial atómico, calendario
+  YYYY-MM-DD estricto y UUID400 en todas las rutas sin alterar401/403/404.
+  192casos de dominio/HTTP; init836backend/661frontend.
+  [Guía](progress/verify_odc-input-boundaries.md) y
+  [auto-revisión](progress/review_odc-input-boundaries.md). Prueba humana NOT RUN.
+
+- **#36 `odc-concurrent-updates` done (2026-10-05)**: CAS por versión y
+  estado para todas las mutaciones, historial atómico y409; versión interna,
+  fechas/DTO conservados. 16 PostgreSQL con dos conexiones+barrera y32 HTTP.
+  Init644backend/661frontend. SQL aditivo sin ejecutar en bases compartidas;
+  [guía de rollout/pruebas](progress/verify_odc-concurrent-updates.md).
+  [Auto-revisión](progress/review_odc-concurrent-updates.md). Prueba humana NOT RUN.
+
+- **#35 `odc-temporary-file-delivery` done (cierre técnico 2026-10-05)**:
+  URLs de API con caducidad firmada de 300 s; SDK real y HTTP verificados,
+  sin cambiar activos, permisos ni referencias. Init: 610 backend / 661
+  frontend. [Revisión](progress/review_odc-temporary-file-delivery.md).
+  **Acceso Cloudinary real NOT RUN** por cuenta de test no configurada:
+  bloqueo antes de producción. [Probe y guía](progress/verify_odc-temporary-file-delivery.md).
+
+- **#34 `odc-multipart-protection` done (cierre técnico delegado 2026-10-05)**:
+  spec aprobada por humano en `3e07ccc`. Multer 2.4.0 directo/transitivo,
+  parser limitado, Buffer máximo de 10 MiB, firmas PDF/JPEG/PNG y MIME
+  coincidente, metadatos permitidos/planos y límites UTF-8. HTTP 413 por
+  exceso de archivo y 400 por estructura/contenido inválidos; 401/403 antes
+  del parser. Código `f0ad2db`, tests primero `341c48c`/`5e226d9`, ampliación
+  `9bbdc7a`. Puertos efímeros en este entorno; el usuario prueba en su equipo.
+  Evidencia: [implementación](progress/impl_odc-multipart-protection.md),
+  [guía humana](progress/verify_odc-multipart-protection.md).
+  Init final exit 0: 575 backend / 661 frontend, builds y lint backend verdes.
+  Prueba manual en el equipo del usuario no ejecutada por el agente.
+  Cierre técnico por aprobación delegada: [revisión](progress/review_odc-multipart-protection.md).
+
+- **Auditoría 2026-10-01 registrada**: seis entregas #34–#39 para F02–F08
+  de plan002, en rama `audit/odc-hardening-20261001`. Orden: multipart,
+  caducidad, concurrencia, validaciones, archivos huérfanos y login. El usuario
+  autorizó todas las aprobaciones el 2026-10-05. Se documentan pruebas reales
+  no ejecutadas sin sustituirlas por resultados simulados.
 
 - **#33 `odc-notifications` done**: campana persistente en el header para los
   tres roles, alimentada por el historial transaccional de las ODC. Muestra
@@ -134,7 +193,7 @@ Requiere `.env` en la raíz (plantilla en `.env.example`): `DATABASE_URL`,
   especificar— y `<title>` global `ODC — Órdenes de compra` en `__root.tsx`.
   5 líneas en 3 archivos. Verificado en Chromium real, no solo en jsdom.
 - **#31 `frontend-dashboard-template` done** (2026-09-13): Modern + Orders Table adaptados al shell y dashboard, con datos reales, navegación por rol, panel unido, tabla prioritaria y contexto operativo. Temas, teclado, estados largos y movimiento reducido verificados en 24 combinaciones. Aviso MIT y procedencia en `frontend/THIRD_PARTY_NOTICES.md`.
-- **Las 31 features están cerradas.** Otros candidatos ya anotados y sin dueño: las deudas de la #28
+- **Tras #31 se cerró el registro existente entonces.** Otros candidatos ya anotados y sin dueño: las deudas de la #28
   (área táctil bajo 44×44px fuera del shell/dashboard ajustados en #31, `grid-cols-3` del resumen mensual a siete cifras),
   el copy en inglés de las primitivas `ui/` (`pagination.tsx`, `sheet.tsx`,
   `sidebar.tsx`, hallazgo de la #29), re-saturar las 8 badges de dark
@@ -147,6 +206,17 @@ Requiere `.env` en la raíz (plantilla en `.env.example`): `DATABASE_URL`,
 ---
 
 ## Última sesión
+
+**2026-10-05** — #34–#39 cerradas técnicamente, 39/39 registradas.
+
+- Una feature a la vez, specs antes de código y aprobaciones delegadas por el usuario.
+- Init final exit0: 880 backend / 672 frontend, builds y lint verdes;43 PostgreSQL aisladas.
+- Entrega en `audit/odc-hardening-20261001`, sin merge ni despliegue; puertos efímeros y DB dedicada.
+- Prueba manual y Cloudinary real NOT RUN, diferidas por el usuario al terminar.
+- Antes de producción: SQL036/038/039, validar Cloudinary y proxy real según la guía.
+- Otros hallazgos de plan002 mantienen alcance propio; no es certificación productiva.
+
+Sesiones anteriores:
 
 **2026-09-13** — Cierre de `frontend-dashboard-template` (#31).
 

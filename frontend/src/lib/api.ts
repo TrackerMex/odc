@@ -24,6 +24,7 @@ export class ApiError extends Error {
   constructor(
     public readonly status: number,
     message: string,
+    public readonly retryAfterSeconds?: number,
   ) {
     super(message)
     this.name = 'ApiError'
@@ -100,7 +101,15 @@ export async function apiFetch<T>(
     if (response.status === 401 && path !== '/api/auth/login' && !isServer()) {
       expireClientSession()
     }
-    throw new ApiError(response.status, message)
+    const retryHeader =
+      response.status === 429 ? response.headers.get('Retry-After') : null
+    const retryAfterSeconds =
+      response.status === 429 &&
+      /^\d{1,6}$/.test(retryHeader ?? '') &&
+      Number(retryHeader) > 0
+        ? Number(retryHeader)
+        : undefined
+    throw new ApiError(response.status, message, retryAfterSeconds)
   }
 
   if (path === '/api/auth/login' && !isServer()) {

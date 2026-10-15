@@ -9,6 +9,7 @@ export function toDomain(
 ): PurchaseOrder {
   return new PurchaseOrder({
     id: row.id,
+    version: row.version,
     odcNumber: row.odcNumber,
     status: row.status,
     description: row.description,
@@ -44,6 +45,7 @@ export function toOrmValues(
     ...(order.id !== null ? { id: order.id } : {}),
     ...(order.odcNumber !== null ? { odcNumber: order.odcNumber } : {}),
     status: order.status,
+    version: order.version,
     description: order.description,
     quantity: order.quantity,
     unit: order.unit,

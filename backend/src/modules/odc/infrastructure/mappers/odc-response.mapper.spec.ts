@@ -127,3 +127,13 @@ describe('R4: toOdcPageResponse maps every item through toOdcResponse', () => {
     );
   });
 });
+
+describe('R5: the internal concurrency version preserves the HTTP DTO (#36)', () => {
+  it('keeps the version in the domain but omits it from the response', () => {
+    const order = buildOrder({ version: 7 });
+    const response = toOdcResponse(order);
+    expect(order.version).toBe(7);
+    expect(response).not.toHaveProperty('version');
+    expect(response.paymentDate).toBe('2026-07-20');
+  });
+});

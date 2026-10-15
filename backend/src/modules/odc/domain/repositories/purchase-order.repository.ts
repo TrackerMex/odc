@@ -100,6 +100,22 @@ export interface ExecutiveTableFilter {
   page?: number;
 }
 
+export type UploadField = 'invoiceFile' | 'paymentEvidenceFile';
+export interface FileUploadTicket {
+  id: string;
+  orderId: string;
+  expectedVersion: number;
+  publicId: string;
+  field: UploadField;
+  uploadConfirmed: boolean;
+}
+export interface FileRecoveryOptions {
+  immediate?: boolean;
+  uploadConfirmed?: boolean;
+}
+export type FileRecoveryOutcome =
+  'deleted' | 'missing' | 'not_owned' | 'failed';
+
 export interface PurchaseOrderRepository {
   // Assigns the ODC-YYYY-NNNNN number and persists the order plus its
   // opening history row in a single transaction (R5, R6).
@@ -107,12 +123,25 @@ export interface PurchaseOrderRepository {
     order: PurchaseOrder,
     historyEntry: OdcStatusHistoryEntry,
   ): Promise<PurchaseOrder>;
-  // Persists the order and, when the change is a transition, its history
-  // row in the same transaction (R5).
+  // Persists only when id/version/previous status still match (#36). An
+  // OdcConcurrentUpdateError rejects stale writes; increments version once.
+  // A transition's history row shares that transaction (R5).
   update(
     order: PurchaseOrder,
     historyEntry?: OdcStatusHistoryEntry,
+    uploadTicket?: FileUploadTicket,
   ): Promise<PurchaseOrder>;
+  prepareFileUpload(
+    order: PurchaseOrder,
+    field: UploadField,
+    folder: string,
+  ): Promise<FileUploadTicket>;
+  claimFileRecovery(
+    id: string,
+    options?: FileRecoveryOptions,
+  ): Promise<FileUploadTicket | null>;
+  finishFileRecovery(id: string, outcome: FileRecoveryOutcome): Promise<void>;
+  findFileRecoveries(): Promise<string[]>;
   // Includes the status history ordered chronologically (R13).
   findById(id: string): Promise<PurchaseOrder | null>;
   findAll(

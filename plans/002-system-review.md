@@ -34,6 +34,34 @@ Mes de creación y mes de pago responden preguntas distintas. Las gráficas debe
 
 ## Hallazgos priorizados
 
+### Registro en Harness — 2026-10-01
+
+Revalidado sobre `main` remoto/local `a8a407e34b5ecc012b732f04d8f276f55aeec1b4`.
+Los seis hallazgos de la auditoría adicional corresponden a F02–F08 existentes;
+no se crean nuevos IDs F. Evidencia y límites en
+[progress/explore_odc-hardening.md](../progress/explore_odc-hardening.md).
+
+| Orden solicitado | Feature Harness | Hallazgo de este plan | Prioridad |
+|---|---|---|---|
+| 1 | #34 `odc-multipart-protection` | F04 | P1 |
+| 2 | #35 `odc-temporary-file-delivery` | F02 | P1 |
+| 3 | #36 `odc-concurrent-updates` | F03 | P1 |
+| 4 | #37 `odc-input-boundaries` | F05 + F06 | P1 (F06 conserva P2 individual) |
+| 5 | #38 `odc-orphan-file-recovery` | F07 | P2 |
+| 6 | #39 `auth-login-rate-limit` | F08 | P1 antes de exposición |
+
+**Actualización 2026-10-05**: #34–#39 implementadas y cerradas técnicamente en
+`audit/odc-hardening-20261001`; aprobación de specs/cierre delegada explícitamente
+por el usuario. Requisitos, pruebas y trazabilidad en cada spec. [Guía de entrega](../progress/verify_odc-hardening.md): init880backend/672frontend verde y43 pruebas
+PostgreSQL aisladas. La tabla de hallazgos conserva la evidencia de la base
+revisada, no describe el código posterior como si siguiera sin corregirse.
+
+**Verificación externa pendiente**: Cloudinary live y prueba manual NOT RUN,
+diferidas por el usuario hasta terminar; proxy real de producción no inspeccionado.
+SQL036/038/039 preparados, no aplicados a bases compartidas. Por ello el cierre
+técnico no equivale a certificación ni autorización de despliegue. Los demás
+hallazgos F y evoluciones fuera del registro #34–#39 mantienen su alcance.
+
 P1: resolver en la siguiente evolución o antes de producción según el alcance indicado. P2: corrección de operación/calidad. P3: mantenimiento. Esfuerzo S = horas; M = alrededor de un día; L = varios días, incluyendo pruebas, sin compromiso de calendario. Riesgo se refiere al cambio, no a la gravedad del defecto. Confianza alta significa flujo leído o reproducido; media requiere medición adicional.
 
 ### Integridad y producción

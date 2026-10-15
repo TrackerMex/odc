@@ -4,15 +4,13 @@ import {
   Body,
   ConflictException,
   Controller,
-  FileTypeValidator,
   ForbiddenException,
   Get,
   HttpCode,
   HttpStatus,
-  MaxFileSizeValidator,
   NotFoundException,
   Param,
-  ParseFilePipe,
+  ParseUUIDPipe,
   Patch,
   Post,
   Query,
@@ -21,8 +19,6 @@ import {
   UploadedFile,
   UseInterceptors,
 } from '@nestjs/common';
-import { FileInterceptor } from '@nestjs/platform-express';
-import { memoryStorage } from 'multer';
 import { FileStorageUnavailableError } from '../../../files/domain/errors/file-storage-unavailable.error';
 import { StoredFileNotFoundError } from '../../../files/domain/errors/stored-file-not-found.error';
 import { Roles } from '../../../auth/infrastructure/decorators/roles.decorator';
@@ -58,8 +54,10 @@ import { InvalidRoleTransitionError } from '../../domain/errors/invalid-role-tra
 import { InvalidStatusTransitionError } from '../../domain/errors/invalid-status-transition.error';
 import { InvoiceNotFoundError } from '../../domain/errors/invoice-not-found.error';
 import { MissingTransitionDataError } from '../../domain/errors/missing-transition-data.error';
+import { InvalidOdcInputError } from '../../domain/errors/invalid-odc-input.error';
 import { OdcAccessDeniedError } from '../../domain/errors/odc-access-denied.error';
 import { OdcNotFoundError } from '../../domain/errors/odc-not-found.error';
+import { OdcConcurrentUpdateError } from '../../domain/errors/odc-concurrent-update.error';
 import { PaymentEvidenceNotFoundError } from '../../domain/errors/payment-evidence-not-found.error';
 import { UnknownSupplierError } from '../../domain/errors/unknown-supplier.error';
 import {
@@ -72,6 +70,16 @@ import {
   toMonthlyPurchaseSummaryResponse,
   toExecutiveDashboardResponse,
 } from '../mappers/odc-response.mapper';
+
+import {
+  createOdcFilePipe,
+  OdcUploadInterceptor,
+} from './odc-upload.validation';
+
+export {
+  createOdcFilePipe as createPaymentEvidenceFilePipe,
+  createOdcFilePipe as createInvoiceFilePipe,
+} from './odc-upload.validation';
 
 interface RequestWithSession {
   user: SessionTokenPayload;
@@ -89,11 +97,15 @@ function rethrowDomainError(error: unknown): never {
   ) {
     throw new ForbiddenException(error.message);
   }
-  if (error instanceof InvalidStatusTransitionError) {
+  if (
+    error instanceof InvalidStatusTransitionError ||
+    error instanceof OdcConcurrentUpdateError
+  ) {
     throw new ConflictException(error.message);
   }
   if (
     error instanceof MissingTransitionDataError ||
+    error instanceof InvalidOdcInputError ||
     error instanceof UnknownSupplierError
   ) {
     throw new BadRequestException(error.message);
@@ -110,56 +122,6 @@ function rethrowDomainError(error: unknown): never {
     throw new BadGatewayException(error.message);
   }
   throw error;
-}
-
-const MAX_PAYMENT_EVIDENCE_FILE_SIZE_BYTES = 10 * 1024 * 1024; // 10 MB (R1)
-const ALLOWED_PAYMENT_EVIDENCE_MIME_TYPES =
-  /^(application\/pdf|image\/jpeg|image\/png)$/;
-
-// Exported so the controller spec can exercise the exact pipe configuration
-// used by the payment-evidence route (R1): MIME allowlist + size cap, both
-// checked in-memory before Cloudinary is ever invoked. skipMagicNumbersValidation
-// keeps this a plain mimetype-string check, avoiding a dependency on the
-// `file-type` ESM package for magic-number sniffing.
-export function createPaymentEvidenceFilePipe(): ParseFilePipe {
-  return new ParseFilePipe({
-    validators: [
-      new FileTypeValidator({
-        fileType: ALLOWED_PAYMENT_EVIDENCE_MIME_TYPES,
-        skipMagicNumbersValidation: true,
-      }),
-      // Nest's MaxFileSizeValidator rejects when size >= maxSize, so +1
-      // keeps a file of exactly 10485760 bytes ("<= 10MB") valid.
-      new MaxFileSizeValidator({
-        maxSize: MAX_PAYMENT_EVIDENCE_FILE_SIZE_BYTES + 1,
-      }),
-    ],
-    fileIsRequired: true,
-    errorHttpStatusCode: HttpStatus.BAD_REQUEST,
-  });
-}
-
-// Same MIME allowlist and size cap as the payment-evidence route, replicated
-// as its own named pipe function rather than a shared parametrized factory
-// (R1, see design.md's "Alternativas descartadas").
-const MAX_INVOICE_FILE_SIZE_BYTES = 10 * 1024 * 1024; // 10 MB (R1)
-const ALLOWED_INVOICE_MIME_TYPES =
-  /^(application\/pdf|image\/jpeg|image\/png)$/;
-
-export function createInvoiceFilePipe(): ParseFilePipe {
-  return new ParseFilePipe({
-    validators: [
-      new FileTypeValidator({
-        fileType: ALLOWED_INVOICE_MIME_TYPES,
-        skipMagicNumbersValidation: true,
-      }),
-      new MaxFileSizeValidator({
-        maxSize: MAX_INVOICE_FILE_SIZE_BYTES + 1,
-      }),
-    ],
-    fileIsRequired: true,
-    errorHttpStatusCode: HttpStatus.BAD_REQUEST,
-  });
 }
 
 @Controller('odcs')
@@ -204,7 +166,7 @@ export class OdcController {
   @HttpCode(200)
   @Roles('DIRECTOR_OPS')
   async submit(
-    @Param('id') id: string,
+    @Param('id', new ParseUUIDPipe()) id: string,
     @Req() request: RequestWithSession,
   ): Promise<OdcResponseDto> {
     try {
@@ -219,7 +181,7 @@ export class OdcController {
   @HttpCode(200)
   @Roles('ADMINISTRACION')
   async approveBudget(
-    @Param('id') id: string,
+    @Param('id', new ParseUUIDPipe()) id: string,
     @Req() request: RequestWithSession,
   ): Promise<OdcResponseDto> {
     try {
@@ -237,7 +199,7 @@ export class OdcController {
   @HttpCode(200)
   @Roles('DIRECTOR_GENERAL')
   async approvePurchase(
-    @Param('id') id: string,
+    @Param('id', new ParseUUIDPipe()) id: string,
     @Req() request: RequestWithSession,
   ): Promise<OdcResponseDto> {
     try {
@@ -259,7 +221,7 @@ export class OdcController {
   @HttpCode(200)
   @Roles('ADMINISTRACION', 'DIRECTOR_GENERAL')
   async reject(
-    @Param('id') id: string,
+    @Param('id', new ParseUUIDPipe()) id: string,
     @Body() dto: RejectOdcDto,
     @Req() request: RequestWithSession,
   ): Promise<OdcResponseDto> {
@@ -281,7 +243,7 @@ export class OdcController {
   @HttpCode(200)
   @Roles('DIRECTOR_OPS')
   async registerPayment(
-    @Param('id') id: string,
+    @Param('id', new ParseUUIDPipe()) id: string,
     @Body() dto: RegisterPaymentDto,
     @Req() request: RequestWithSession,
   ): Promise<OdcResponseDto> {
@@ -298,14 +260,14 @@ export class OdcController {
   }
 
   // T8: PAGO_REGISTRADO -> EVIDENCIA_PAGO_SUBIDA. multipart/form-data: file
-  // validated in-memory (MIME/size) before Cloudinary is ever reached (R1).
+  // bounded during reception; signature and metadata checked before the use-case (#34).
   @Post(':id/payment-evidence')
   @HttpCode(200)
   @Roles('ADMINISTRACION')
-  @UseInterceptors(FileInterceptor('file', { storage: memoryStorage() }))
+  @UseInterceptors(OdcUploadInterceptor(['evidenceReference']))
   async uploadPaymentEvidence(
-    @Param('id') id: string,
-    @UploadedFile(createPaymentEvidenceFilePipe())
+    @Param('id', new ParseUUIDPipe()) id: string,
+    @UploadedFile(createOdcFilePipe())
     file: Express.Multer.File,
     @Body() dto: UploadPaymentEvidenceDto,
     @Req() request: RequestWithSession,
@@ -327,14 +289,21 @@ export class OdcController {
   }
 
   // T9: EVIDENCIA_PAGO_SUBIDA -> COMPLETADA. multipart/form-data: file
-  // validated in-memory (MIME/size) before Cloudinary is ever reached (R1).
+  // bounded during reception; signature and metadata checked before the use-case (#34).
   @Post(':id/invoice')
   @HttpCode(200)
   @Roles('DIRECTOR_OPS')
-  @UseInterceptors(FileInterceptor('file', { storage: memoryStorage() }))
+  @UseInterceptors(
+    OdcUploadInterceptor([
+      'warehouseEntryDate',
+      'invoiceNumber',
+      'invoiceDate',
+      'observations',
+    ]),
+  )
   async uploadInvoice(
-    @Param('id') id: string,
-    @UploadedFile(createInvoiceFilePipe())
+    @Param('id', new ParseUUIDPipe()) id: string,
+    @UploadedFile(createOdcFilePipe())
     file: Express.Multer.File,
     @Body() dto: UploadInvoiceDto,
     @Req() request: RequestWithSession,
@@ -361,7 +330,7 @@ export class OdcController {
   @Patch(':id')
   @Roles('DIRECTOR_OPS')
   async update(
-    @Param('id') id: string,
+    @Param('id', new ParseUUIDPipe()) id: string,
     @Body() dto: UpdateOdcDto,
     @Req() request: RequestWithSession,
   ): Promise<OdcResponseDto> {
@@ -449,7 +418,7 @@ export class OdcController {
   @Get(':id/files/:kind')
   @Redirect()
   async getOdcFile(
-    @Param('id') id: string,
+    @Param('id', new ParseUUIDPipe()) id: string,
     @Param('kind') kind: string,
     @Req() request: RequestWithSession,
   ): Promise<{ url: string; statusCode: number }> {
@@ -474,7 +443,7 @@ export class OdcController {
   // enforced by the use-case (R13).
   @Get(':id')
   async detail(
-    @Param('id') id: string,
+    @Param('id', new ParseUUIDPipe()) id: string,
     @Req() request: RequestWithSession,
   ): Promise<OdcResponseDto> {
     try {

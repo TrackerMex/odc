@@ -52,10 +52,15 @@ function buildOrder(
 interface FileStorageServiceMock {
   upload: jest.Mock;
   getSignedUrl: jest.Mock;
+  deleteIfOwned: jest.Mock;
 }
 
 function createFileStorageServiceMock(): FileStorageServiceMock {
-  return { upload: jest.fn(), getSignedUrl: jest.fn() };
+  return {
+    upload: jest.fn(),
+    getSignedUrl: jest.fn(),
+    deleteIfOwned: jest.fn(),
+  };
 }
 
 function createUseCase(

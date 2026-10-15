@@ -52,10 +52,31 @@ interface RepositoryMock {
   update: jest.Mock;
   findById: jest.Mock;
   findAll: jest.Mock;
+  prepareFileUpload: jest.Mock;
+  claimFileRecovery: jest.Mock;
+  finishFileRecovery: jest.Mock;
+  findFileRecoveries: jest.Mock;
+  findMonthlyPurchases: jest.Mock;
+  getExecutiveDashboard: jest.Mock;
+  getExecutiveTasks: jest.Mock;
 }
 
 function createRepositoryMock(): RepositoryMock {
   return {
+    prepareFileUpload: jest.fn().mockResolvedValue({
+      id: 'ticket',
+      publicId: 'odc/ODC-2026-00001/evidence/abc123',
+      field: 'paymentEvidenceFile',
+      orderId: ODC_ID,
+      expectedVersion: 0,
+      uploadConfirmed: false,
+    }),
+    claimFileRecovery: jest.fn().mockResolvedValue(null),
+    finishFileRecovery: jest.fn(),
+    findFileRecoveries: jest.fn(),
+    findMonthlyPurchases: jest.fn(),
+    getExecutiveDashboard: jest.fn(),
+    getExecutiveTasks: jest.fn(),
     create: jest.fn(),
     update: jest.fn(),
     findById: jest.fn(),
@@ -66,12 +87,14 @@ function createRepositoryMock(): RepositoryMock {
 interface FileStorageServiceMock {
   upload: jest.Mock;
   getSignedUrl: jest.Mock;
+  deleteIfOwned: jest.Mock;
 }
 
 function createFileStorageServiceMock(): FileStorageServiceMock {
   return {
     upload: jest.fn(),
     getSignedUrl: jest.fn(),
+    deleteIfOwned: jest.fn(),
   };
 }
 
@@ -109,6 +132,8 @@ describe('R2: upload-payment-evidence transitions PAGO_REGISTRADO to EVIDENCIA_P
       buffer: FILE_BUFFER,
       mimeType: MIME_TYPE,
       folder: 'odc/ODC-2026-00001/evidence',
+      publicId: 'odc/ODC-2026-00001/evidence/abc123',
+      uploadToken: 'ticket',
     });
     expect(repository.update).toHaveBeenCalledTimes(1);
     const [order, entry] = repository.update.mock.calls[0] as [
@@ -136,7 +161,11 @@ describe('R2: upload-payment-evidence transitions PAGO_REGISTRADO to EVIDENCIA_P
       Promise.resolve(order),
     );
     const fileStorageService = createFileStorageServiceMock();
-    fileStorageService.upload.mockResolvedValue({ publicId: 'evidence-1' });
+    fileStorageService.upload.mockResolvedValue({
+      publicId: 'odc/ODC-2026-00001/evidence/abc123',
+      resourceType: 'image',
+      format: 'pdf',
+    });
     const useCase = createUseCase(repository, fileStorageService);
 
     const updated = await useCase.execute(ODC_ID, adminActor, {
@@ -154,7 +183,11 @@ describe('R2: upload-payment-evidence transitions PAGO_REGISTRADO to EVIDENCIA_P
       Promise.resolve(order),
     );
     const fileStorageService = createFileStorageServiceMock();
-    fileStorageService.upload.mockResolvedValue({ publicId: 'evidence-1' });
+    fileStorageService.upload.mockResolvedValue({
+      publicId: 'odc/ODC-2026-00001/evidence/abc123',
+      resourceType: 'image',
+      format: 'pdf',
+    });
     const useCase = createUseCase(repository, fileStorageService);
 
     const updated = await useCase.execute(ODC_ID, adminActor, {

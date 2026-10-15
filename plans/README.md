@@ -21,6 +21,13 @@ humana por spec. Registrar el avance fino en `feature_list.json` y
 
 ## Dependency notes
 
+- Auditoría 2026-10-01: F02–F08 de 002 se registran en Harness como #34–#39,
+  conservando los IDs F. Orden: multipart → entrega temporal → concurrencia →
+  validaciones → recuperación de archivos huérfanos → rate limit login.
+  #34 espera aprobación humana de su spec; #35–#39 permanecen pending.
+  Ver [revalidación](../progress/explore_odc-hardening.md) y
+  [spec multipart](../specs/odc-multipart-protection/requirements.md).
+
 - Dentro de 001: Fase 0 precede a todo; F1→F2→F3 son estrictamente secuenciales
   (config → auth → dominio ODC); F4–F8 dependen de F3; F9 depende de F2;
   F10–F13 dependen de F9 y de su feature backend correspondiente

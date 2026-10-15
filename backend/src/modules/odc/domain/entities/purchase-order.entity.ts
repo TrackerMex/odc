@@ -3,6 +3,8 @@ import type { OdcStatusHistoryEntry } from './odc-status-history-entry.entity';
 import { InvalidRoleTransitionError } from '../errors/invalid-role-transition.error';
 import { InvalidStatusTransitionError } from '../errors/invalid-status-transition.error';
 import { MissingTransitionDataError } from '../errors/missing-transition-data.error';
+import { InvalidOdcInputError } from '../errors/invalid-odc-input.error';
+import { isCalendarDate, MAX_ODC_INTEGER } from '../input-boundaries';
 
 export const ODC_STATUSES = [
   'BORRADOR',
@@ -181,7 +183,7 @@ export function nextOdcNumber(
 function assertRequiredData(rule: TransitionRule, data: TransitionData): void {
   const missing = rule.requiredData.filter((field) => {
     const value = data[field];
-    return value === undefined || value.trim() === '';
+    return typeof value !== 'string' || value.trim() === '';
   });
   if (missing.length > 0) {
     throw new MissingTransitionDataError(rule.action, missing);
@@ -190,6 +192,7 @@ function assertRequiredData(rule: TransitionRule, data: TransitionData): void {
 
 export interface PurchaseOrderProps {
   id: string | null;
+  version?: number;
   odcNumber: string | null;
   status: OdcStatus;
   description: string;
@@ -219,6 +222,7 @@ export interface PurchaseOrderProps {
 
 export class PurchaseOrder {
   public readonly id: string | null;
+  public readonly version: number;
   public odcNumber: string | null;
   public status: OdcStatus;
   public description: string;
@@ -247,6 +251,7 @@ export class PurchaseOrder {
 
   constructor(props: PurchaseOrderProps) {
     this.id = props.id;
+    this.version = props.version ?? 0;
     this.odcNumber = props.odcNumber;
     this.status = props.status;
     this.description = props.description;
@@ -275,7 +280,18 @@ export class PurchaseOrder {
   }
 
   static computeTotalCents(quantity: number, unitPriceCents: number): number {
-    return quantity * unitPriceCents;
+    const total = quantity * unitPriceCents;
+    if (
+      [quantity, unitPriceCents, total].some(
+        (value) =>
+          !Number.isSafeInteger(value) || value < 1 || value > MAX_ODC_INTEGER,
+      )
+    ) {
+      throw new InvalidOdcInputError(
+        `Cantidad, precio y total deben ser enteros positivos hasta ${MAX_ODC_INTEGER}.`,
+      );
+    }
+    return total;
   }
 
   static createDraft(
@@ -336,6 +352,17 @@ export class PurchaseOrder {
     if (rule.role !== role) {
       throw new InvalidRoleTransitionError(action, role);
     }
+    for (const field of [
+      'paymentDate',
+      'warehouseEntryDate',
+      'invoiceDate',
+    ] as const) {
+      if (data[field] !== undefined && !isCalendarDate(data[field])) {
+        throw new InvalidOdcInputError(
+          `${field} debe ser una fecha real YYYY-MM-DD, sin hora ni zona.`,
+        );
+      }
+    }
     assertRequiredData(rule, data);
 
     this.applyTransitionData(data);
@@ -377,6 +404,12 @@ export class PurchaseOrder {
     if (this.status !== 'BORRADOR' && this.status !== 'RECHAZADA') {
       throw new InvalidStatusTransitionError('edit', this.status);
     }
+    const totalCents = PurchaseOrder.computeTotalCents(
+      fields.quantity !== undefined ? fields.quantity : this.quantity,
+      fields.unitPriceCents !== undefined
+        ? fields.unitPriceCents
+        : this.unitPriceCents,
+    );
     if (fields.description !== undefined) this.description = fields.description;
     if (fields.quantity !== undefined) this.quantity = fields.quantity;
     if (fields.unit !== undefined) this.unit = fields.unit;
@@ -384,9 +417,6 @@ export class PurchaseOrder {
       this.unitPriceCents = fields.unitPriceCents;
     if (fields.supplier !== undefined) this.supplier = fields.supplier;
     if (fields.comments !== undefined) this.comments = fields.comments;
-    this.totalCents = PurchaseOrder.computeTotalCents(
-      this.quantity,
-      this.unitPriceCents,
-    );
+    this.totalCents = totalCents;
   }
 }

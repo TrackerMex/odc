@@ -1,10 +1,12 @@
 import {
   IsInt,
+  Max,
   IsNotEmpty,
   IsOptional,
   IsPositive,
   IsString,
 } from 'class-validator';
+import { MAX_ODC_INTEGER } from '../../domain/input-boundaries';
 
 // T1 fields only. totalCents is deliberately not declared: the domain
 // computes it and the global whitelist ValidationPipe strips it (R2).
@@ -15,6 +17,7 @@ export class CreateOdcDto {
 
   @IsInt()
   @IsPositive()
+  @Max(MAX_ODC_INTEGER)
   quantity: number;
 
   @IsString()
@@ -23,6 +26,7 @@ export class CreateOdcDto {
 
   @IsInt()
   @IsPositive()
+  @Max(MAX_ODC_INTEGER)
   unitPriceCents: number;
 
   @IsString()
