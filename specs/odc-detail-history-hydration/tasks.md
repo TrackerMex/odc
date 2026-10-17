@@ -1,6 +1,6 @@
 ---
 feature: "odc-detail-history-hydration"
-status: draft
+status: done
 tags: [harness, spec]
 ---
 
@@ -48,4 +48,4 @@ tags: [harness, spec]
 
 - [x] (1) Escribir regresiones con `renderToString` UTC y `hydrateRoot` bajo zona distinta, mismo estado serializado y `onRecoverableError` vacío para detalle, formulario persistido y nuevo. Verificar fechas visibles y editar campos, activar validación y ejecutar una acción del formulario después de hidratar.
 - [x] (2) Corregir exclusivamente las fuentes restantes de contenido inicial no determinista dentro del flujo; restaurar zonas, relojes y raíces en los tests.
-- [ ] (3) Refactor con tests verdes sin `suppressHydrationWarning` ni desactivar SSR. Ejecutar `./init.sh`, completar trazabilidad y someter a reviewer antes de marcar done.
+- [x] (3) Refactor con tests verdes sin `suppressHydrationWarning` ni desactivar SSR. Ejecutar `./init.sh`, completar trazabilidad y someter a reviewer antes de marcar done.

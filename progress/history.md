@@ -905,3 +905,15 @@ usuario mediante delegación antes de code, ninguna prueba humana inventada.
 instrucción del usuario; proxy productivo no inspeccionado. Guía combinada,
 SQL036/038/039 y verificación del proveedor entregados. Sin merge/despliegue,
 ninguna DB compartida tocada. Otros hallazgos plan002 no registrados siguen fuera.
+
+## 2026-10-17 — #40 historial e hidratación del detalle de ODC
+
+- Solicitud: corregir el historial que desaparecía tras subir comprobantes/facturas y el error de hidratación por zonas horarias. Una sola feature: odc-detail-history-hydration.
+- Spec aprobada explícitamente por el usuario antes de código (caf5249). Se completó init inicial verde tras corregir la selección de pnpm y usar workers threads en Windows; una suspensión del equipo afectó una pasada anterior.
+- Historial: create/update retornaban toDomain(saved) sin historyRows. Ahora cargan los eventos persistidos dentro de la misma transacción, tras guardar evento y ticket, conservando versión/estado, locks, atomicidad y compensación.
+- Fechas: formatDate fija es-MX/America/Mexico_City. El calendario conserva su anclaje UTC. El formulario nuevo muestra Pendiente hasta recibir la creación real, sin reloj durante render.
+- TDD: backend 3384374 → def6983 (refinamiento de tipos b374475); instantes/SSR 6b80cdc → 2784804; formulario nuevo 0460cba → 60bb73b. Contratos ya correctos preservados con ea4f4c2 y fd84581, sin fabricar fallos.
+- Verificación final: builds backend/frontend, 73 suites/885 pruebas backend, 41 archivos/691 pruebas frontend y lint backend verdes. Init propio del reviewer y de cierre del líder terminaron exit0. PostgreSQL aislado 38/38, repetido independientemente; sus contenedores fueron eliminados.
+- Revisión independiente APROBADA: progress/review_odc-detail-history-hydration.md. Reportes de implementación y guía de comprobación conservados. Trazabilidad R1–R7 completa; feature #40 done, 40/40 registradas done.
+- El typecheck adicional de frontend conserva 18 errores previos, sin nuevos. La hidratación usa React real en jsdom y simula únicamente el default de zona de Intl. Prueba manual del stack completo y Cloudinary live no ejecutadas en esta entrega; no se tocaron datos de negocio ni se desplegó.
+- Se preservaron las modificaciones previas del usuario en routeTree/current/history y las configuraciones locales de pnpm. El commit de historial incorpora únicamente este resumen, sin absorber la evidencia previa no confirmada del usuario.

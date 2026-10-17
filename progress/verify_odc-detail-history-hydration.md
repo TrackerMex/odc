@@ -25,3 +25,6 @@ bash backend/scripts/verify-postgres-hardening.sh odc-concurrent-updates.e2e-spe
 En este Windows, el pnpm del runtime es v11 e ignora los overrides del package.json. Se utiliza el pnpm10.34.6 ya instalado, sin cambiar dependencias/lockfiles. Se ejecutan exactamente las suites del arnés: Jest `--runInBand` y Vitest `--pool=threads --maxWorkers=2`, manteniendo aislamiento. La ejecución con forks sufrió timeouts de arranque de workers; una suspensión del equipo afectó otra pasada. La evidencia válida es la pasada completa que termina exit0.
 
 La regresión backend cubre respuesta efectiva de ambos endpoints con repositorio y PostgreSQL reales y almacenamiento de archivos de prueba simulado. Los tests frontend comprueban SSR/hydrateRoot con zonas distintas, texto visible, interacción y reemplazo del detalle tras ambas subidas. Una respuesta prefabricada en frontend se usa solo para comprobar la aplicación de ese contrato; no sustituye la regresión de persistencia/HTTP.
+## Resultado de cierre
+
+Init final y revisión independiente aprobados: 885 pruebas backend, 691 frontend y 38 PostgreSQL aisladas verdes. Los límites de verificación manual y typecheck adicional se detallan en el reporte consolidado.

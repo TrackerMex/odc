@@ -1,6 +1,6 @@
 ---
 feature: "odc-detail-history-hydration"
-status: draft
+status: done
 tags: [harness, spec]
 ---
 
@@ -17,3 +17,5 @@ tags: [harness, spec]
 | R7 | odc-hydration.test.tsx::R4,R7 detail/existing form; R5,R7 calendar; R6,R7 new form, real hydrateRoot + interaction | rojo 6b80cdc → fix 2784804; ea4f4c2; rojo 0460cba → fix 60bb73b; sin onRecoverableError |
 
 El implementer actualiza esta tabla tras cada commit que satisface un requisito; el reviewer comprueba que no quede ninguna fila pendiente antes de cerrar, conforme a [[../../docs/specs|specs]] y [[../../CHECKPOINTS|CHECKPOINTS]] C5. Los tests deben nombrar los R-ids. Convención: `fix(odc): <descripción> (R1,R2)`.
+
+Cierre: revisión independiente aprobada e init final exit0; 885 backend, 691 frontend y 38 PostgreSQL aisladas verdes.

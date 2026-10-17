@@ -3,7 +3,7 @@ Fecha: 2026-10-17 (America/Mexico_City)
 
 ## Resultado y alcance
 
-Feature #40, una sola tarea aprobada explícitamente en conversación antes de código. Se corrigieron los dos fallos observados el 8 de octubre: respuesta de mutación sin historial y fechas dependientes de la zona/reloj de render. Revisión independiente y cierre de estado pendientes al emitir este reporte.
+Feature #40, una sola tarea aprobada explícitamente en conversación antes de código. Se corrigieron los dos fallos observados el 8 de octubre: respuesta de mutación sin historial y fechas dependientes de la zona/reloj de render. Revisión independiente aprobada y cierre técnico completado con init verde.
 
 Tres archivos de producción: `PurchaseOrderTypeOrmRepository.create/update` leen las filas reales de historial dentro de la misma transacción; `formatDate` fija `America/Mexico_City`; `OdcForm` muestra `Pendiente` hasta recibir la fecha real de creación. El calendario de pago/factura/almacén conserva UTC. No cambian esquema, DTOs, permisos, dominio, contratos de almacenamiento ni diseño visual.
 
@@ -36,3 +36,6 @@ La trazabilidad completa está en `specs/odc-detail-history-hydration/traceabili
 ## Notas para revisión y cierre
 
 El reviewer debe repetir init y validar CHECKPOINTS C2-C6 antes de done. Los tests de hidratación usan jsdom y simulan únicamente la zona implícita de Intl porque los threads no actualizan el default ICU al cambiar TZ; el constructor y React SSR/hydrateRoot son reales. No se ha ejecutado una prueba manual en un navegador contra el stack completo ni despliegue. No se modificó información de negocio existente. Cambios previos de routeTree/current/history y configuraciones locales pnpm se conservan fuera de los commits de implementación.
+## Cierre
+
+Revisión independiente APROBADA en progress/review_odc-detail-history-hydration.md. Init final del líder exit0: ambos builds, 885 backend, 691 frontend y lint. PostgreSQL aislado 38/38 confirmado por implementer y reviewer. Feature40 done, trazabilidad y tareas completas; sesión archivada y plantilla de current restaurada. No se modificó código después de los checks finales.
