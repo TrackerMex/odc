@@ -82,7 +82,11 @@ export class PurchaseOrderTypeOrmRepository implements PurchaseOrderRepository {
             OdcStatusHistoryOrmEntity,
             historyToOrmValues(historyEntry, saved.id),
           );
-          return toDomain(saved);
+          const historyRows = await manager.find(OdcStatusHistoryOrmEntity, {
+            where: { odcId: saved.id },
+            order: { createdAt: 'ASC' },
+          });
+          return toDomain(saved, historyRows);
         });
       } catch (error) {
         if (attempt === CREATE_MAX_ATTEMPTS || !isUniqueViolation(error)) {
@@ -145,7 +149,11 @@ export class PurchaseOrderTypeOrmRepository implements PurchaseOrderRepository {
           { id: uploadTicket.id },
           { state: 'associated', uploadConfirmed: true },
         );
-      return toDomain(saved);
+      const historyRows = await manager.find(OdcStatusHistoryOrmEntity, {
+        where: { odcId: saved.id },
+        order: { createdAt: 'ASC' },
+      });
+      return toDomain(saved, historyRows);
     });
   }
 
