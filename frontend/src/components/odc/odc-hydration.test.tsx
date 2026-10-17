@@ -229,3 +229,69 @@ describe('odc-detail-history-hydration R5,R7: calendar dates visible after hydra
     }
   })
 })
+
+describe('odc-detail-history-hydration R6,R7: new form without a render-clock date', () => {
+  it('hydrates across midnight, stays pending while editing and uses creation returned by persistence', async () => {
+    const saved = { ...persistedOdc(), createdAt: '2026-01-01T06:45:00.000Z' }
+    const persist = vi.fn().mockResolvedValue(saved)
+    const submit = vi.fn()
+    const onSuccess = vi.fn()
+    const { container, serverText, onRecoverableError } =
+      await hydrateAcrossEnvironments(
+        <OdcForm
+          user={user}
+          suppliers={[{ id: 's1', name: 'Suntech' }]}
+          persist={persist}
+          submit={submit}
+          onSuccess={onSuccess}
+        />,
+        'Asia/Tokyo',
+      )
+
+    expect(onRecoverableError).not.toHaveBeenCalled()
+    expect(container.textContent).toBe(serverText)
+    const dateValue = () =>
+      screen.getByText('Fecha').nextElementSibling?.textContent
+    expect(dateValue()).toBe('Pendiente')
+    expect(serverText).toContain('Pendiente')
+    fireEvent.change(screen.getByLabelText(/descripción/i), {
+      target: { value: saved.description },
+    })
+    expect(dateValue()).toBe('Pendiente')
+    fireEvent.click(
+      screen.getByRole('button', { name: /guardar como borrador/i }),
+    )
+    expect(screen.getAllByRole('alert').length).toBeGreaterThan(0)
+    expect(persist).not.toHaveBeenCalled()
+    fireEvent.change(screen.getByLabelText(/cantidad/i), {
+      target: { value: '2' },
+    })
+    fireEvent.change(screen.getByLabelText(/unidad/i), {
+      target: { value: 'pieza' },
+    })
+    fireEvent.change(screen.getByLabelText(/precio unitario/i), {
+      target: { value: '100.00' },
+    })
+    fireEvent.click(screen.getByRole('combobox', { name: /proveedor/i }))
+    fireEvent.click(await screen.findByRole('option', { name: 'Suntech' }))
+    expect(dateValue()).toBe('Pendiente')
+    fireEvent.click(
+      screen.getByRole('button', { name: /guardar como borrador/i }),
+    )
+    const review = await screen.findByRole('dialog')
+    expect(persist).not.toHaveBeenCalled()
+    expect(dateValue()).toBe('Pendiente')
+    fireEvent.click(
+      within(review).getByRole('button', { name: /confirmar borrador/i }),
+    )
+    await vi.waitFor(() =>
+      expect(dateValue()).toBe(mexicoInstant(saved.createdAt)),
+    )
+    expect(persist).toHaveBeenCalledOnce()
+    expect(persist.mock.calls[0][0]).not.toHaveProperty('createdAt')
+    expect(submit).not.toHaveBeenCalled()
+    fireEvent.click(screen.getByRole('button', { name: /ver detalle/i }))
+    expect(onSuccess).toHaveBeenCalledWith(saved)
+    expect(onRecoverableError).not.toHaveBeenCalled()
+  })
+})
