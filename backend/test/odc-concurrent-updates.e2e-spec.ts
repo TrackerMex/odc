@@ -514,18 +514,16 @@ describe('R1,R2,R4,R5,R6: atomic mutations on two isolated PostgreSQL connection
         run: (manager: EntityManager) => Promise<unknown>,
       ) =>
         sources[0].transaction(async (manager) => {
-          const originalFind = manager.find.bind(manager);
-          jest.spyOn(manager, 'find').mockImplementation(((
-            target: unknown,
-            options: unknown,
-          ) => {
-            if (target === OdcStatusHistoryOrmEntity)
-              return Promise.reject(error);
-            return originalFind(
-              target as typeof PurchaseOrderOrmEntity,
-              options as object,
-            );
-          }) as EntityManager['find']);
+          const originalFind = manager.find.bind(
+            manager,
+          ) as EntityManager['find'];
+          jest
+            .spyOn(manager, 'find')
+            .mockImplementation((target: unknown, options: unknown) => {
+              if (target === OdcStatusHistoryOrmEntity)
+                return Promise.reject(error);
+              return originalFind(target, options);
+            });
           return run(manager);
         })) as DataSource['transaction'];
       return new PurchaseOrderTypeOrmRepository(source);
@@ -536,9 +534,9 @@ describe('R1,R2,R4,R5,R6: atomic mutations on two isolated PostgreSQL connection
       expect(order.history).toHaveLength(1);
       expect(order.history).toEqual(persisted.history);
       expect(order.history[0]).toMatchObject({
-        id: expect.any(String),
+        id: expect.any(String) as unknown,
         userId: OPS.userId,
-        createdAt: expect.any(Date),
+        createdAt: expect.any(Date) as unknown,
       });
       order.edit({ description: 'Edited without a transition' });
       const edited = await repositories[0].update(order);
@@ -588,25 +586,30 @@ describe('R1,R2,R4,R5,R6: atomic mutations on two isolated PostgreSQL connection
               contentType: 'application/pdf',
             })
             .expect(200);
+          const body = response.body as {
+            history: (Omit<OdcStatusHistoryEntry, 'createdAt'> & {
+              createdAt: string | null;
+            })[];
+          };
           expect(detailReads).toHaveBeenCalledTimes(1); // The use case loads once before uploading; no repairing GET.
           expect(response.body).toMatchObject({
             status: upload.finalStatus,
             [upload.flag]: true,
           });
-          expect(response.body.history).toHaveLength(prior.length + 1);
-          expect(response.body.history.slice(0, prior.length)).toEqual(
+          expect(body.history).toHaveLength(prior.length + 1);
+          expect(body.history.slice(0, prior.length)).toEqual(
             JSON.parse(JSON.stringify(prior)),
           );
           const persisted = (await repositories[1].findById(order.id!))!;
-          expect(response.body.history).toEqual(
+          expect(body.history).toEqual(
             JSON.parse(JSON.stringify(persisted.history)),
           );
-          expect(response.body.history.at(-1)).toMatchObject({
-            id: expect.any(String),
+          expect(body.history.at(-1)).toMatchObject({
+            id: expect.any(String) as unknown,
             fromStatus: upload.status,
             toStatus: upload.finalStatus,
             userId: upload.actor.userId,
-            createdAt: expect.any(String),
+            createdAt: expect.any(String) as unknown,
           });
           expect(persisted[upload.field]).toContain('cloudinary:v1:');
           expect(storage.deleteIfOwned).not.toHaveBeenCalled();
