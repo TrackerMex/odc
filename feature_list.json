@@ -317,7 +317,7 @@
   {
     "id": 40,
     "name": "odc-detail-history-hydration",
-    "status": "spec_ready",
+    "status": "in_progress",
     "priority": "P1",
     "description": "Corregir la pérdida visual del historial tras subir comprobantes/facturas y la hidratación de fechas entre servidor y navegador con zonas horarias distintas.",
     "acceptance_criteria": [
