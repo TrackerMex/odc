@@ -499,11 +499,7 @@ export function OdcForm({
               <div className="flex items-start justify-between gap-4">
                 <dt className="text-muted-foreground">Fecha</dt>
                 <dd className="text-right font-medium">
-                  {persistedOdc?.createdAt
-                    ? formatDate(persistedOdc.createdAt)
-                    : new Intl.DateTimeFormat('es-MX', {
-                        dateStyle: 'medium',
-                      }).format(new Date())}
+                  {formatDate(persistedOdc?.createdAt ?? null)}
                 </dd>
               </div>
               <div className="flex items-start justify-between gap-4">
