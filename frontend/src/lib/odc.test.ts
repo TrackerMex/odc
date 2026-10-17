@@ -4,6 +4,7 @@ import {
   computeTotalCents,
   formatCurrency,
   formatDate,
+  formatDateOnly,
   formatUnitPriceInput,
   odcFileUrl,
   odcFormSchema,
@@ -112,6 +113,32 @@ describe('odc-detail-history-hydration R4: explicit Mexico instant formatting', 
       expect(formatDate(instant)).toBe(expected)
       expect(formatDate(instant)).toMatch(/31 dic 2025/)
       expect(formatDate(null)).toBe('Pendiente')
+    },
+  )
+})
+
+describe('odc-detail-history-hydration R5: calendar dates retain their received day', () => {
+  afterEach(() => vi.restoreAllMocks())
+
+  it.each(['UTC', 'Asia/Tokyo', 'America/Mexico_City'])(
+    'preserves leap day and month/year boundaries with default zone %s',
+    (defaultTimeZone) => {
+      vi.spyOn(Intl, 'DateTimeFormat').mockImplementation(
+        function (locales, options) {
+          return new NativeDateTimeFormat(locales, {
+            ...options,
+            timeZone: options?.timeZone ?? defaultTimeZone,
+          })
+        },
+      )
+      for (const [date, text] of [
+        ['2024-02-29', '29 feb 2024'],
+        ['2026-12-31', '31 dic 2026'],
+        ['2027-01-01', '1 ene 2027'],
+      ]) {
+        expect(formatDateOnly(date)).toBe(text)
+      }
+      expect(formatDateOnly(null)).toBe('Pendiente')
     },
   )
 })

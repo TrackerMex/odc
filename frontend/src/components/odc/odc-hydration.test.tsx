@@ -178,3 +178,54 @@ describe('odc-detail-history-hydration R4,R7: SSR and hydration of persisted ins
     })
   })
 })
+
+describe('odc-detail-history-hydration R5,R7: calendar dates visible after hydration', () => {
+  it.each(['America/Mexico_City', 'Asia/Tokyo'])(
+    'preserves payment, invoice and warehouse calendar days from UTC into %s',
+    async (clientTimeZone) => {
+      const odc = {
+        ...persistedOdc(),
+        paymentDate: '2024-02-29',
+        paymentMethod: 'Transferencia',
+        invoiceNumber: 'FAC-1',
+        invoiceDate: '2026-12-31',
+        warehouseEntryDate: '2027-01-01',
+      }
+      const { container, serverText, onRecoverableError } =
+        await hydrateAcrossEnvironments(<OdcDetail odc={odc} />, clientTimeZone)
+      expect(onRecoverableError).not.toHaveBeenCalled()
+      expect(container.textContent).toBe(serverText)
+      for (const [label, text] of [
+        ['Fecha de pago', '29 feb 2024'],
+        ['Fecha de factura', '31 dic 2026'],
+        ['Fecha de entrada a almacén', '1 ene 2027'],
+      ]) {
+        expect(
+          within(screen.getByText(label).parentElement!).getByText(text),
+        ).toBeTruthy()
+      }
+    },
+  )
+
+  it('keeps null calendar dates pending without a hydration recovery', async () => {
+    const odc = {
+      ...persistedOdc(),
+      paymentMethod: 'Transferencia',
+      invoiceNumber: 'FAC-1',
+    }
+    const { onRecoverableError } = await hydrateAcrossEnvironments(
+      <OdcDetail odc={odc} />,
+      'Asia/Tokyo',
+    )
+    expect(onRecoverableError).not.toHaveBeenCalled()
+    for (const label of [
+      'Fecha de pago',
+      'Fecha de factura',
+      'Fecha de entrada a almacén',
+    ]) {
+      expect(
+        within(screen.getByText(label).parentElement!).getByText('Pendiente'),
+      ).toBeTruthy()
+    }
+  })
+})
