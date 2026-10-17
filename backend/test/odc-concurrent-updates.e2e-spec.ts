@@ -4,7 +4,17 @@ import 'reflect-metadata';
 import { randomUUID } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { DataSource } from 'typeorm';
+import { DataSource, EntityManager } from 'typeorm';
+import { INestApplication, Type } from '@nestjs/common';
+import { JwtModule, JwtService } from '@nestjs/jwt';
+import { Test } from '@nestjs/testing';
+import { Server } from 'node:http';
+import request from 'supertest';
+import { configureApp } from '../src/bootstrap';
+import { JwtAuthGuard } from '../src/modules/auth/infrastructure/guards/jwt-auth.guard';
+import { RolesGuard } from '../src/modules/auth/infrastructure/guards/roles.guard';
+import { OdcController } from '../src/modules/odc/infrastructure/controller/odc.controller';
+import { toOdcResponse } from '../src/modules/odc/infrastructure/mappers/odc-response.mapper';
 import { ApproveBudgetUseCase } from '../src/modules/odc/application/use-cases/approve-budget.usecase';
 import { ApprovePurchaseUseCase } from '../src/modules/odc/application/use-cases/approve-purchase.usecase';
 import { RegisterPaymentUseCase } from '../src/modules/odc/application/use-cases/register-payment.usecase';
@@ -416,5 +426,321 @@ describe('R1,R2,R4,R5,R6: atomic mutations on two isolated PostgreSQL connection
       status: 'BORRADOR',
     });
     expect(loaded!.history).toHaveLength(1);
+  });
+
+  describe('R1,R2,R3: persisted mutation responses and rollback (#40)', () => {
+    let app: INestApplication;
+    let server: Server;
+    let jwt: JwtService;
+    const storage = {
+      upload: jest.fn((input: UploadFileInput) =>
+        Promise.resolve({
+          publicId: input.publicId!,
+          resourceType: 'image',
+          format: 'pdf',
+        }),
+      ),
+      deleteIfOwned: jest.fn().mockResolvedValue('deleted'),
+      getSignedUrl: jest.fn(),
+    };
+    const uploads = [
+      {
+        path: 'payment-evidence',
+        status: 'PAGO_REGISTRADO',
+        finalStatus: 'EVIDENCIA_PAGO_SUBIDA',
+        actor: ADMIN,
+        field: 'paymentEvidenceFile',
+        flag: 'hasPaymentEvidence',
+        fields: { evidenceReference: 'PAY-40' },
+      },
+      {
+        path: 'invoice',
+        status: 'EVIDENCIA_PAGO_SUBIDA',
+        finalStatus: 'COMPLETADA',
+        actor: OPS,
+        field: 'invoiceFile',
+        flag: 'hasInvoice',
+        fields: {
+          warehouseEntryDate: '2026-10-05',
+          invoiceNumber: 'INV-40',
+          invoiceDate: '2026-10-04',
+        },
+      },
+    ] as const;
+
+    beforeAll(async () => {
+      const dependencies = Reflect.getMetadata(
+        'design:paramtypes',
+        OdcController,
+      ) as Type<unknown>[];
+      const module = await Test.createTestingModule({
+        imports: [
+          JwtModule.register({ secret: 'history-response-tests-only' }),
+        ],
+        controllers: [OdcController],
+        providers: [
+          ...dependencies
+            .filter(
+              (type) =>
+                type !== UploadInvoiceUseCase &&
+                type !== UploadPaymentEvidenceUseCase,
+            )
+            .map((type) => ({
+              provide: type,
+              useValue: { execute: jest.fn() },
+            })),
+          UploadInvoiceUseCase,
+          UploadPaymentEvidenceUseCase,
+          JwtAuthGuard,
+          RolesGuard,
+          { provide: 'PurchaseOrderRepository', useValue: repositories[0] },
+          { provide: 'FileStorageService', useValue: storage },
+        ],
+      }).compile();
+      app = configureApp(module.createNestApplication());
+      app.useGlobalGuards(module.get(JwtAuthGuard), module.get(RolesGuard));
+      await app.listen(0, '127.0.0.1');
+      server = app.getHttpServer() as Server;
+      jwt = module.get(JwtService);
+    });
+    afterAll(async () => {
+      await app?.close();
+    });
+    beforeEach(() => jest.clearAllMocks());
+
+    function failingHistoryRepository(error: Error) {
+      const source = Object.create(sources[0]) as DataSource;
+      source.transaction = (async (
+        run: (manager: EntityManager) => Promise<unknown>,
+      ) =>
+        sources[0].transaction(async (manager) => {
+          const originalFind = manager.find.bind(manager);
+          jest.spyOn(manager, 'find').mockImplementation(((
+            target: unknown,
+            options: unknown,
+          ) => {
+            if (target === OdcStatusHistoryOrmEntity)
+              return Promise.reject(error);
+            return originalFind(
+              target as typeof PurchaseOrderOrmEntity,
+              options as object,
+            );
+          }) as EntityManager['find']);
+          return run(manager);
+        })) as DataSource['transaction'];
+      return new PurchaseOrderTypeOrmRepository(source);
+    }
+
+    it('R1: create and an ordinary edit return the complete stored history with no extra event', async () => {
+      const persisted = (await repositories[1].findById(order.id!))!;
+      expect(order.history).toHaveLength(1);
+      expect(order.history).toEqual(persisted.history);
+      expect(order.history[0]).toMatchObject({
+        id: expect.any(String),
+        userId: OPS.userId,
+        createdAt: expect.any(Date),
+      });
+      order.edit({ description: 'Edited without a transition' });
+      const edited = await repositories[0].update(order);
+      expect(edited.history).toEqual(persisted.history);
+      expect((await repositories[1].findById(order.id!))!.history).toEqual(
+        edited.history,
+      );
+    });
+
+    it.each(uploads)(
+      'R2: POST $path returns old events plus the newly persisted transition without another detail read',
+      async (upload) => {
+        await sources[0].manager.update(
+          PurchaseOrderOrmEntity,
+          { id: order.id! },
+          { status: upload.status },
+        );
+        await sources[0].manager.update(
+          OdcStatusHistoryOrmEntity,
+          { odcId: order.id! },
+          {
+            createdAt: new Date('2000-01-01T00:00:00Z'),
+            note: 'Opening retained',
+          },
+        );
+        await sources[0].manager.save(OdcStatusHistoryOrmEntity, {
+          odcId: order.id!,
+          fromStatus: 'BORRADOR',
+          toStatus: upload.status,
+          userId: OPS.userId,
+          note: 'Earlier event retained',
+          createdAt: new Date('2001-01-01T00:00:00Z'),
+        });
+        const prior = (await repositories[1].findById(order.id!))!.history;
+        const detailReads = jest.spyOn(repositories[0], 'findById');
+        try {
+          const response = await request(server)
+            .post('/api/odcs/' + order.id! + '/' + upload.path)
+            .set(
+              'Cookie',
+              'odc_session=' +
+                jwt.sign({ sub: upload.actor.userId, role: upload.actor.role }),
+            )
+            .field(upload.fields)
+            .attach('file', Buffer.from('%PDF-1.4\n%%EOF\n'), {
+              filename: 'receipt.pdf',
+              contentType: 'application/pdf',
+            })
+            .expect(200);
+          expect(detailReads).toHaveBeenCalledTimes(1); // The use case loads once before uploading; no repairing GET.
+          expect(response.body).toMatchObject({
+            status: upload.finalStatus,
+            [upload.flag]: true,
+          });
+          expect(response.body.history).toHaveLength(prior.length + 1);
+          expect(response.body.history.slice(0, prior.length)).toEqual(
+            JSON.parse(JSON.stringify(prior)),
+          );
+          const persisted = (await repositories[1].findById(order.id!))!;
+          expect(response.body.history).toEqual(
+            JSON.parse(JSON.stringify(persisted.history)),
+          );
+          expect(response.body.history.at(-1)).toMatchObject({
+            id: expect.any(String),
+            fromStatus: upload.status,
+            toStatus: upload.finalStatus,
+            userId: upload.actor.userId,
+            createdAt: expect.any(String),
+          });
+          expect(persisted[upload.field]).toContain('cloudinary:v1:');
+          expect(storage.deleteIfOwned).not.toHaveBeenCalled();
+        } finally {
+          detailReads.mockRestore();
+        }
+      },
+    );
+
+    it('R3: failed response-history read rolls back a newly created order and its opening event', async () => {
+      const counts = await Promise.all([
+        sources[1].manager.count(PurchaseOrderOrmEntity),
+        sources[1].manager.count(OdcStatusHistoryOrmEntity),
+      ]);
+      const error = new Error('response history unavailable');
+      const draft = PurchaseOrder.createDraft(
+        {
+          description: 'rolled back',
+          quantity: 1,
+          unit: 'pza',
+          unitPriceCents: 100,
+          supplier: 'Test',
+        },
+        OPS,
+      );
+      await expect(
+        failingHistoryRepository(error).create(
+          draft.order,
+          new OdcStatusHistoryEntry(
+            null,
+            null,
+            null,
+            'BORRADOR',
+            OPS.userId,
+            null,
+            null,
+          ),
+        ),
+      ).rejects.toBe(error);
+      expect(
+        await Promise.all([
+          sources[1].manager.count(PurchaseOrderOrmEntity),
+          sources[1].manager.count(OdcStatusHistoryOrmEntity),
+        ]),
+      ).toEqual(counts);
+    });
+
+    it('R3: failed response-history read rolls back the order, transition and upload association', async () => {
+      await sources[0].manager.update(
+        PurchaseOrderOrmEntity,
+        { id: order.id! },
+        { status: 'PAGO_REGISTRADO' },
+      );
+      const loaded = (await repositories[0].findById(order.id!))!;
+      const ticket = await repositories[0].prepareFileUpload(
+        loaded,
+        'paymentEvidenceFile',
+        'odc/test/evidence',
+      );
+      const record = loaded.transition('upload_payment_evidence', ADMIN.role, {
+        paymentEvidenceFile: 'cloudinary:v1:image:pdf:' + ticket.publicId,
+      });
+      const error = new Error('response history unavailable');
+      await expect(
+        failingHistoryRepository(error).update(
+          loaded,
+          new OdcStatusHistoryEntry(
+            null,
+            order.id,
+            record.fromStatus,
+            record.toStatus,
+            ADMIN.userId,
+            null,
+            null,
+          ),
+          ticket,
+        ),
+      ).rejects.toBe(error);
+      const persisted = (await repositories[1].findById(order.id!))!;
+      expect(persisted).toMatchObject({
+        status: 'PAGO_REGISTRADO',
+        version: 0,
+        paymentEvidenceFile: null,
+      });
+      expect(persisted.history).toHaveLength(1);
+      expect(
+        await sources[1].manager.findOneByOrFail(OdcFileUploadOrmEntity, {
+          id: ticket.id,
+        }),
+      ).toMatchObject({ state: 'pending', uploadConfirmed: false });
+    });
+
+    it.each(uploads)(
+      'R2,R3: failed $path response read preserves history and compensates only the unassociated file',
+      async (upload) => {
+        await sources[0].manager.update(
+          PurchaseOrderOrmEntity,
+          { id: order.id! },
+          { status: upload.status },
+        );
+        const prior = (await repositories[1].findById(order.id!))!;
+        const previousResponse = toOdcResponse(prior);
+        const error = new Error('response history unavailable');
+        const repository = failingHistoryRepository(error);
+        const input = {
+          buffer: Buffer.from('%PDF-'),
+          mimeType: 'application/pdf',
+          warehouseEntryDate: '2026-10-05',
+        };
+        const pending =
+          upload.path === 'invoice'
+            ? new UploadInvoiceUseCase(repository, storage).execute(
+                order.id!,
+                upload.actor,
+                input,
+              )
+            : new UploadPaymentEvidenceUseCase(repository, storage).execute(
+                order.id!,
+                upload.actor,
+                input,
+              );
+        await expect(pending).rejects.toBe(error);
+        const persisted = (await repositories[1].findById(order.id!))!;
+        expect(toOdcResponse(persisted)).toEqual(previousResponse);
+        expect(storage.deleteIfOwned).toHaveBeenCalledTimes(1);
+        const ticket = await sources[1].manager.findOneByOrFail(
+          OdcFileUploadOrmEntity,
+          { orderId: order.id! },
+        );
+        expect(storage.deleteIfOwned).toHaveBeenCalledWith(
+          expect.objectContaining({ publicId: ticket.publicId }),
+        );
+        expect(ticket).toMatchObject({ state: 'done', uploadConfirmed: true });
+      },
+    );
   });
 });
