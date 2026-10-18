@@ -1,5 +1,6 @@
 {
   "name": "frontend",
+  "packageManager": "pnpm@10.34.6",
   "private": true,
   "type": "module",
   "imports": {

@@ -2,15 +2,20 @@ FROM node:24-alpine
 
 WORKDIR /app
 
-RUN corepack enable && corepack prepare pnpm@10 --activate
+RUN corepack enable && corepack prepare pnpm@10.34.6 --activate
 
 COPY package.json pnpm-lock.yaml ./
-RUN pnpm install
+RUN corepack pnpm@10.34.6 install --frozen-lockfile
 
 COPY . .
+
+# Docker populates new dependency volumes from this prepared image.
+# Keep this bounded snapshot format aligned with scripts/dependencies.cjs.
+RUN node -e 'const fs=require("node:fs"); const dir="node_modules/.odc-dependencies"; fs.mkdirSync(dir,{recursive:true}); for(const file of ["package.json","pnpm-lock.yaml",".npmrc","pnpm-workspace.yaml"]) { if(fs.existsSync(file)) fs.copyFileSync(file,dir+"/"+file); } const metadata={format:1,platform:process.platform,arch:process.arch,nodeMajor:process.versions.node.split(".")[0],nodeAbi:process.versions.modules,pnpm:"10.34.6"}; fs.writeFileSync(dir+"/metadata.json.tmp",JSON.stringify(metadata)); fs.renameSync(dir+"/metadata.json.tmp",dir+"/metadata.json");'
 
 ARG PORT=3001
 ENV PORT=${PORT}
 EXPOSE ${PORT}
 
-CMD ["pnpm", "start:dev"]
+# /scripts is supplied read-only by docker-compose.yml.
+CMD ["node", "/scripts/dependencies.cjs", "start", "/app", "--context", "docker"]

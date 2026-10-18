@@ -2,3 +2,10 @@ node_modules
 dist
 .git
 *.log
+
+# Local stores and dependency preparation metadata
+.pnpm-store
+.odc-dependencies
+# Local pnpm policy and potential registry credentials are never baked in.
+pnpm-workspace.yaml
+.npmrc
