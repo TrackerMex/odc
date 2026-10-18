@@ -40,8 +40,8 @@ tags: [harness, spec, tooling]
 
 ## R6 — Verificación completa sin reinstalación
 
-- [ ] (1) Test rojo/wiring: `INSTALL_CMD` ejecuta guard y nunca instala; siguen presentes build backend/frontend, suites completas y lint.
-- [ ] (2) Ajustar `init.config.sh`, Corepack exacto y límites de workers sin filtrar pruebas.
+- [x] (1) Test rojo/wiring: `INSTALL_CMD` ejecuta guard y nunca instala; siguen presentes build backend/frontend, suites completas y lint.
+- [x] (2) Ajustar `init.config.sh`, Corepack exacto y límites de workers sin filtrar pruebas.
 - [ ] (3) Tras preparación explícita, ejecutar `init.sh` y registrar resultado; resolver regresiones dentro de esta feature.
 
 ## R7 — Exclusiones y guía
