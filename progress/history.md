@@ -906,6 +906,113 @@ instrucción del usuario; proxy productivo no inspeccionado. Guía combinada,
 SQL036/038/039 y verificación del proveedor entregados. Sin merge/despliegue,
 ninguna DB compartida tocada. Otros hallazgos plan002 no registrados siguen fuera.
 
+## 2026-10-08 — Diagnóstico Cloudinary live desde Docker activo
+
+Usuario solicita validar Cloudinary con las credenciales del .env y autoriza
+pruebas desde el contenedor activo. Rama actual audit/odc-hardening-20261001,
+odc-backend-1 montando C:/sites/odc/backend, SDK Cloudinary2.10.0.
+
+- CLOUDINARY_CLOUD_NAME/API_KEY/API_SECRET presentes dentro del contenedor, sin
+  espacios externos; no se imprimen valores, errores con secretos ni URLs firmadas.
+- Cloudinary Admin API ping devuelve status:ok: autenticación real correcta.
+- Probe mediante CloudinaryFileStorageService: PNG propio nuevo, authenticated,
+  recurso image, formato png, metadata/context de propiedad correcto.
+- Descarga firmada PNG HTTP200,90bytes,TTL300s. Limpieza con token incorrecto
+  devuelve not_owned; token correcto elimina por assetId; repetición missing.
+  El único archivo de este probe fue eliminado; exit0.
+- Probe existente ejecutado mediante docker exec -e ODC_CLOUDINARY_TEST=1
+  odc-backend-1 node scripts/verify-temporary-file-delivery.cjs.
+  PASS para PDF/JPG/PNG: acceso inicial, rechazo de expiry manipulado, espera
+  real300s, rechazo de URL original caducada y acceso con nueva URL autorizada.
+  PASS R5 real; ejecución310.87s. Cleanup del script completado sin errores.
+- Backend activo /api/health HTTP200,status:ok.
+
+No se modifican .env, credenciales, permisos/políticas de cuenta, órdenes ni DB.
+No se reinicia ni detiene Docker. Únicamente se crean/eliminan archivos propios
+en rutas odc-test con UUID/overwrite:false. No se ejecutan barridos.
+Opt-in del probe solo se establece para ese proceso, no para el backend.
+
+El NOT RUN anterior pertenecía al entorno aislado sin las credenciales del
+usuario; no era evidencia de credenciales inválidas. En este contenedor las
+operaciones probadas autentican y tienen permisos funcionales.
+Esto verifica proveedor y adaptador, no constituye prueba manual completa de
+roles/UI con órdenes existentes, ni de todos los fallos DB/conciliación live #38.
+No hay cambio de implementación, build/tests/init adicionales ni despliegue:
+la evidencia de esta investigación son las llamadas reales al proveedor.
+
+
+## 2026-10-08 — Flujo de negocio con Cloudinary real y Docker sincronizado
+
+Usuario solicita repetir el flujo pendiente tras validar credenciales. Rama
+audit/odc-hardening-20261001. Contenedores ODC estaban detenidos y se arrancan
+sin recrearlos; no se tocan contenedores de otros proyectos.
+
+Preparación: tres usuarios nuevos exclusivamente de prueba con nonce044f959d
+(Ops/Admin/DG), contraseña aleatoria no publicada, mediante UserTypeOrmRepository
+y bcrypt. No se cambian usuarios ni órdenes previos. Se conservan estas cuentas
+y las órdenes de prueba para inspección; no se simulan compras/pagos reales.
+
+Primera ejecución UI: creación/envío, aprobación presupuesto, aprobación compra,
+registro pago, comprobantes y facturas con PDF/JPG/PNG. Órdenes00002–00004 llegan
+a COMPLETADA con referencia de comprobante omitida y facturas mínimas/parciales.
+Comprobante con referencia y factura con cuatro metadatos válidos devolvían400
+Too many parts; ningún ticket extra ni transición se persistía por ese rechazo.
+
+Causa de entorno encontrada: node_modules del volumen Docker tenía Multer2.2.0
+directo y transitivo de Nest, mientras package.json/lockfile exigen2.4.0.
+Se ejecuta docker exec odc-backend-1 pnpm install --frozen-lockfile
+--config.confirmModulesPurge=false. Primera llamada supera180s; repetición
+confirma Already up to date/exit0. Se reinicia SOLO odc-backend-1. Verificación
+runtime: Multer directo2.4.0 y Nest2.4.0; /api/health200.
+No se editan package.json, lockfile, .env ni código de aplicación.
+
+Regresión live con instalación correcta: nuevas órdenes00005–00007 preparadas
+por API con los roles propios, comprobantes con referencia y facturas con TODOS
+los metadatos enviados desde UI, respectivamente PDF/JPG/PNG. Las seis subidas
+devuelven200 y conservan referencia, número/fecha factura, fecha almacén y
+observaciones. Las tres nuevas órdenes quedan COMPLETADA. Too many parts ya no
+ocurre con2.4.0: no se atribuye como fallo vigente al código de la rama.
+
+Órdenes conservadas como PRUEBA/no compra real:
+- ODC-2026-00002 PDF: 2cba2dee-0072-4689-8c65-24b5a894eb04.
+- ODC-2026-00003 JPG: cefede7b-8800-49c7-80b7-5cfc7536814b.
+- ODC-2026-00004 PNG: 3d36b8d1-a09a-43c9-84f0-280e09435ff7.
+- ODC-2026-00005 PDF completo: 106c9d85-7d9b-45cf-9f8b-f5b1185cf258.
+- ODC-2026-00006 JPG completo: 2f6cfe53-4dd9-46ff-ac40-c7a160cb2eb2.
+- ODC-2026-00007 PNG completo: 3a7175a6-25b8-43a1-9e53-05e281a3f940.
+
+Evidencia real: seis órdenes/version6/siete eventos cada una en secuencia completa;
+doce tickets associated, uploadConfirmed:true, attempts0, sin retry/protected
+entre estos tickets. Doce documentos descargados en los tres roles (36 descargas
+HTTP200); SHA256 coincide con originales PDF440bytes/JPG759bytes/PNG90bytes.
+Backend redirige302 a Cloudinary, TTL300s; sin sesión401 y rol incorrecto para
+subida403. Visor PDF real en navegador funciona. La caducidad física300s ya se
+verificó en el diagnóstico live anterior; no se repite esa espera aquí.
+
+Notificaciones Docker/UTC: eventos completados visibles en los tres roles;
+feed limitado20. Marcar leídas Ops desde UI:25→0, Admin22/DG22 permanecen; reload
+mantiene lectura. El fallo previo de backend Windows/local frente a DBUTC no
+está corregido por código y no se extrapola el éxito Docker a ese entorno.
+
+Defectos aún observados:
+- Historial se vacía en pantalla inmediatamente tras subidas; GET/API/DB conservan
+  seis/siete eventos y reload restaura el historial. Sigue ocurriendo con2.4.0.
+- React Hydration failed en fechas: SSR UTC21:40/22:38 y navegador local15:40/16:38.
+  Durante carga puede perderse la interacción inicial; una factura se envió
+  como form HTML antes de hidratar, navegó a ? y borró captura sin persistir.
+  Para completar la prueba se espera a que el form tenga handler React antes
+  de interactuar; no se suprime el error ni se cambia zona para ocultarlo.
+
+No se inyectan fallos DB ni limpieza destructiva sobre esta DB compartida.
+Solo asociación durable exitosa de #38 comprobada live; compensación/commit
+ambiguo/concurrencia mantienen la evidencia PostgreSQL aislada previa, no se
+afirma nueva verificación live de esos fallos.
+
+Navegadores de prueba cerrados. Docker queda activo para inspección del usuario.
+No hay scripts temporales añadidos, merge, cambios de implementación ni nuevo
+build/tests/init: investigación con escenario real y sincronización del runtime.
+
+
 ## 2026-10-17 — #40 historial e hidratación del detalle de ODC
 
 - Solicitud: corregir el historial que desaparecía tras subir comprobantes/facturas y el error de hidratación por zonas horarias. Una sola feature: odc-detail-history-hydration.
@@ -933,3 +1040,14 @@ ninguna DB compartida tocada. Otros hallazgos plan002 no registrados siguen fuer
 - Se preservaron bytes de configuraciones YAML locales y lockfiles, tiendas existentes y datos PostgreSQL. Las modificaciones previas del usuario en routeTree/current/history y YAML sin seguimiento no se absorben en commits. Este historial se agrega selectivamente sin incluir las 107 líneas previas ajenas sin confirmar.
 - Observación adicional: procesos auxiliares Node de Hostinger consumen memoria fuera del proyecto; solo diagnóstico de lectura, sin cerrarlos ni cambiar configuración externa.
 - Evidencia: progress/impl_dev-startup-dependency-reuse.md, informes tooling/Docker y progress/review_dev-startup-dependency-reuse.md. Estado final de registro: 41/41 done.
+
+
+---
+
+## 2026-10-18 — Documentación pendiente y limpieza local de la rama
+
+- Solicitud del usuario: guardar la documentación pendiente y conservar la configuración local de pnpm fuera de Git. Rama codex/odc-history-hydration-startup.
+- Se guardan las 107 líneas históricas de verificación Cloudinary/Docker del 8 de octubre sin alterar su evidencia. progress/current.md conserva la plantilla base sin sesión activa.
+- backend/pnpm-workspace.yaml y frontend/pnpm-workspace.yaml permanecen físicamente y con SHA256 idénticos; se excluyen únicamente mediante .git/info/exclude, sin versionar sus políticas ni cambiar .gitignore compartido.
+- routeTree.gen.ts coincide con el blob versionado; se refrescó su entrada del índice sin introducir cambios de contenido ni ocultar el seguimiento del archivo.
+- Verificación ./init.sh exit0: ambos builds, 34 pruebas tooling, 73 suites/885 pruebas backend, 41 archivos/691 pruebas frontend (1,610 total) y lint. Sin instalaciones de dependencias ni cambios de implementación.
