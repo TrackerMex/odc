@@ -325,5 +325,18 @@
       "Las fechas de eventos se muestran de forma determinista en America/Mexico_City durante SSR e hidratación; las fechas de calendario conservan su día.",
       "Pruebas de regresión primero para ambas subidas, preservación transaccional y SSR/hidratación con zonas distintas; init verde antes de cierre."
     ]
+  },
+  {
+    "id": 41,
+    "name": "dev-startup-dependency-reuse",
+    "status": "in_progress",
+    "priority": "P1",
+    "description": "Arranque diario ligero con pnpm fijado, instalación explícita, dependencias reutilizadas y cachés excluidas de Git/Docker.",
+    "acceptance_criteria": [
+      "pnpm10.34.6 exacto y coherente para host, backend, frontend e imágenes de desarrollo, sin cambiar dependencias del negocio.",
+      "Arranques y reinicios reutilizan node_modules sin pnpm install, builds ni tests automáticos; faltantes/desactualizados muestran instrucción explícita de sincronización.",
+      "Instalación/sincronización explícita y congelada; Docker conserva volúmenes y funciona con instalaciones nuevas y volúmenes existentes tras sincronización.",
+      "init conserva builds, pruebas completas y lint pero deja de instalar; cachés y metadatos locales se excluyen de Git y contexto Docker, sin borrar datos o archivos existentes."
+    ]
   }
 ]
