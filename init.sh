@@ -68,12 +68,12 @@ fi
 
 # ── 3. DEPENDENCIAS ─────────────────────────
 echo ""
-echo "→ Instalando dependencias..."
+echo "→ Verificando preparación de dependencias..."
 if [ -n "$INSTALL_CMD" ]; then
   eval "$INSTALL_CMD"
-  ok "Dependencias instaladas"
+  ok "Dependencias preparadas y vigentes"
 else
-  warn "INSTALL_CMD vacío en init.config.sh — se salta instalación"
+  warn "INSTALL_CMD vacío en init.config.sh — se salta comprobación de dependencias"
 fi
 
 # ── 4. HARNESS — coherencia del arnés ───────
