@@ -173,3 +173,9 @@ test('R4: a fresh setup removes stale optional snapshots using only known files'
   assert.equal(fs.existsSync(path.join(marker, '.npmrc')), false);
   assert.equal(fs.readFileSync(path.join(marker, 'user-file'), 'utf8'), 'preserve');
 });
+
+test('R3: accept pnpm modules metadata in JSON and YAML formats', (t) => {
+  const dir = fixture(t); prepared(dir);
+  fs.writeFileSync(path.join(dir, 'node_modules/.modules.yaml'), JSON.stringify({ packageManager: 'pnpm@10.34.6' }));
+  assert.equal(helper().check(dir), true);
+});
