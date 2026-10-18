@@ -179,3 +179,35 @@ test('R3: accept pnpm modules metadata in JSON and YAML formats', (t) => {
   fs.writeFileSync(path.join(dir, 'node_modules/.modules.yaml'), JSON.stringify({ packageManager: 'pnpm@10.34.6' }));
   assert.equal(helper().check(dir), true);
 });
+
+function verificationCommands(failGuard = false) {
+  const { spawnSync } = require('node:child_process');
+  const bash = process.platform === 'win32' ? path.join(process.env.ProgramFiles, 'Git/bin/bash.exe') : 'bash';
+  const script = `
+    source <(tr -d '\\r' < ./init.config.sh)
+    node() { printf 'node:%s\\n' "$*"; ${failGuard ? 'return 7;' : 'return 0;'} }
+    corepack() { printf 'corepack:%s\\n' "$*"; return 0; }
+    eval "$INSTALL_CMD" && eval "$BUILD_CMD" && eval "$TEST_CMD" && eval "$LINT_CMD"
+  `;
+  return spawnSync(bash, ['-c', script], { cwd: path.resolve(__dirname, '..'), encoding: 'utf8' });
+}
+
+test('R6: executable init configuration only guards dependencies and preserves full verification', () => {
+  const result = verificationCommands();
+  assert.equal(result.status, 0, result.stderr);
+  const commands = result.stdout.trim().split(/\r?\n/);
+  assert.deepEqual(commands.slice(0, 2), ['node:scripts/dependencies.cjs check backend', 'node:scripts/dependencies.cjs check frontend']);
+  assert.ok(commands.includes('corepack:pnpm@10.34.6 build'));
+  assert.equal(commands.filter((line) => line === 'corepack:pnpm@10.34.6 build').length, 2);
+  assert.ok(commands.includes('corepack:pnpm@10.34.6 test --runInBand'));
+  assert.ok(commands.includes('corepack:pnpm@10.34.6 test --passWithNoTests --pool=threads --maxWorkers=2'));
+  assert.ok(commands.includes('corepack:pnpm@10.34.6 lint'));
+  assert.ok(commands.some((line) => line.startsWith('node:--test scripts/')));
+  assert.ok(commands.every((line) => !/\binstall\b/.test(line)));
+});
+
+test('R6: unprepared dependencies stop init before frontend guard and expensive checks', () => {
+  const result = verificationCommands(true);
+  assert.equal(result.status, 7);
+  assert.deepEqual(result.stdout.trim().split(/\r?\n/), ['node:scripts/dependencies.cjs check backend']);
+});
