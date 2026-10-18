@@ -10,27 +10,27 @@ tags: [harness, spec, tooling]
 
 ## R1 — pnpm exacto y consistente
 
-- [ ] (1) Test rojo: declarar/invocar una versión distinta o flotante debe fallar; el runner recibe Corepack con pnpm 10.34.6 aunque el global difiera.
-- [ ] (2) Añadir `packageManager` y pin de imágenes/comandos, preservando dependencias y políticas existentes.
-- [ ] (3) Centralizar constantes necesarias y comprobar coherencia sin introducir monorepo.
+- [x] (1) Test rojo: declarar/invocar una versión distinta o flotante debe fallar; el runner recibe Corepack con pnpm 10.34.6 aunque el global difiera.
+- [x] (2) Añadir `packageManager` y pin de imágenes/comandos, preservando dependencias y políticas existentes.
+- [x] (3) Centralizar constantes necesarias y comprobar coherencia sin introducir monorepo.
 
 ## R2 — Arranque de solo lectura sin instalación
 
-- [ ] (1) Test rojo: iniciar/checkear un paquete preparado no puede llamar install, build o test ni escribir snapshots; comprobar ausencia de recorrido recursivo.
-- [ ] (2) Implementar guard y entrada diaria host/Docker con descarga del gestor deshabilitada durante start.
-- [ ] (3) Reutilizar guard y comandos evitando lógica duplicada; repetir caso caliente sin nuevas escrituras.
+- [x] (1) Test rojo: iniciar/checkear un paquete preparado no puede llamar install, build o test ni escribir snapshots; comprobar ausencia de recorrido recursivo.
+- [x] (2) Implementar guard y entrada diaria host/Docker con descarga del gestor deshabilitada durante start.
+- [x] (3) Reutilizar guard y comandos evitando lógica duplicada; repetir caso caliente sin nuevas escrituras.
 
 ## R3 — Dependencias faltantes o desactualizadas
 
-- [ ] (1) Test rojo: faltar marca/dependencias; cambiar manifiesto, lock, presencia/contenido de configuraciones opcionales, plataforma/arquitectura/Node/pnpm; ningún caso inicia servidor.
-- [ ] (2) Comparar snapshot y entradas conocidas; emitir error con paquete y comando explícito apropiado para host/Docker.
-- [ ] (3) Unificar diagnóstico y comprobar que todos los rechazos siguen sin instalar ni recorrer el árbol.
+- [x] (1) Test rojo: faltar marca/dependencias; cambiar manifiesto, lock, presencia/contenido de configuraciones opcionales, plataforma/arquitectura/Node/pnpm; ningún caso inicia servidor.
+- [x] (2) Comparar snapshot y entradas conocidas; emitir error con paquete y comando explícito apropiado para host/Docker.
+- [x] (3) Unificar diagnóstico y comprobar que todos los rechazos siguen sin instalar ni recorrer el árbol.
 
 ## R4 — Preparación explícita y marca fiable
 
-- [ ] (1) Test rojo: setup invoca install congelado exacto una vez; falla install o cambia entrada durante install y no queda marcador válido.
-- [ ] (2) Instalar explícitamente, invalidar evidencia anterior y publicar snapshot solo al éxito estable; siguiente check no instala.
-- [ ] (3) Simplificar publicación/errores sin borrar datos, cachés ni volúmenes; cubrir recuperación tras un fallo previo.
+- [x] (1) Test rojo: setup invoca install congelado exacto una vez; falla install o cambia entrada durante install y no queda marcador válido.
+- [x] (2) Instalar explícitamente, invalidar evidencia anterior y publicar snapshot solo al éxito estable; siguiente check no instala.
+- [x] (3) Simplificar publicación/errores sin borrar datos, cachés ni volúmenes; cubrir recuperación tras un fallo previo.
 
 ## R5 — Imágenes, volúmenes nuevos y migración
 

@@ -8,10 +8,10 @@ tags: [harness, spec, tooling]
 
 | Requisito | Test (archivo::nombre) | Commit (hash + mensaje) |
 |---|---|---|
-| R1 | pendiente | pendiente |
-| R2 | pendiente | pendiente |
-| R3 | pendiente | pendiente |
-| R4 | pendiente | pendiente |
+| R1 | `scripts/dependencies.test.cjs::R1: preparation pins Corepack pnpm even when global pnpm differs`; rechazo de gestor declarado distinto | rojo `385601a`; verde `e015495` (helper; wiring Docker se registra aparte) |
+| R2 | `scripts/dependencies.test.cjs::R2: repeated warm checks and starts are readonly, bounded and never install`; arranque frontend Docker | rojo `385601a`; verde `e015495` |
+| R3 | `scripts/dependencies.test.cjs::R3`: cambios de entradas/presencia opcional, entorno incompatible, archivos conocidos ausentes y metadata YAML/JSON | rojo `385601a`, `fbd69ee`; verde `e015495` |
+| R4 | `scripts/dependencies.test.cjs::R4`: setup congelado, snapshots fiables, fallo/throw/mutación invalida evidencia y conserva dependencias | rojo `385601a`; verde `e015495` |
 | R5 | pendiente | pendiente |
 | R6 | pendiente | pendiente |
 | R7 | pendiente | pendiente |
