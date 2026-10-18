@@ -34,9 +34,9 @@ tags: [harness, spec, tooling]
 
 ## R5 — Imágenes, volúmenes nuevos y migración
 
-- [ ] (1) Test rojo/wiring: Dockerfiles preparan snapshot con inputs reales; Compose inicia sin install y permite setup puntual sin iniciar aplicación/DB.
-- [ ] (2) Instalar congelado en build, preparar snapshots y montar helper readonly; implementar comandos de start y sync explícitos compatibles con los contextos existentes.
-- [ ] (3) Ensayar con proyecto/volúmenes aislados: fresh, warm, restart, stale/marca ausente, sync y warm final; no tocar volúmenes compartidos. Documentar configuración local divergente.
+- [x] (1) Test rojo/wiring: Dockerfiles preparan snapshot con inputs reales; Compose inicia sin install y permite setup puntual sin iniciar aplicación/DB.
+- [x] (2) Instalar congelado en build, preparar snapshots y montar helper readonly; implementar comandos de start y sync explícitos compatibles con los contextos existentes.
+- [x] (3) Ensayar con proyecto/volúmenes aislados: fresh, warm, restart, stale/marca ausente, sync y warm final; no tocar volúmenes compartidos. Documentar configuración local divergente.
 
 ## R6 — Verificación completa sin reinstalación
 
@@ -46,6 +46,6 @@ tags: [harness, spec, tooling]
 
 ## R7 — Exclusiones y guía
 
-- [ ] (1) Comprobar que reglas previas no excluyen todas las tiendas/configuraciones locales requeridas; registrar hashes de configuraciones del usuario sin mostrarlas ni agregarlas.
-- [ ] (2) Ajustar ignores y escribir guía con comandos reales de preparación, arranque, actualización/sync y verificación; no limpiar cachés existentes.
-- [ ] (3) Verificar exclusiones de Git/contextos Docker y preservación de archivos locales; revisar guía ejecutando los comandos aplicables.
+- [x] (1) Comprobar que reglas previas no excluyen todas las tiendas/configuraciones locales requeridas; registrar hashes de configuraciones del usuario sin mostrarlas ni agregarlas.
+- [x] (2) Ajustar ignores y escribir guía con comandos reales de preparación, arranque, actualización/sync y verificación; no limpiar cachés existentes.
+- [x] (3) Verificar exclusiones de Git/contextos Docker y preservación de archivos locales; revisar guía ejecutando los comandos aplicables.
