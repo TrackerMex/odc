@@ -42,3 +42,7 @@ Fail 0
 - El líder ya verificó setup real host backend/frontend: Already up to date, check correcto y mtimes conservados. Hashes de lockfiles y YAML del usuario se conservaron.
 - Docker implementer ejecuta integración aislada de imágenes/volúmenes. El líder/reviewer integra evidencias R5/R7 y marca R6(3) tras init final.
 - No se modificaron ni agregaron los pnpm-workspace.yaml locales del usuario, ni lockfiles ni paquetes de negocio.
+
+## Verificación final coordinada
+El líder ejecutó ./init.sh con la nueva configuración, sin wrappers ni instalaciones: exit0; ambos builds, 34 pruebas tooling, 885 backend, 691 frontend y lint aprobados. La revisión independiente repetirá init antes del cierre.
+
