@@ -18,3 +18,6 @@ Contrastar R1-R7 con tests, historial rojo/verde separado y traceability. Repeti
 
 ## Límites operativos
 Las instalaciones anteriores necesitan setup una vez para obtener la marca. Configuración opcional local excluida de la imagen exige sync explícito del volumen montado. docs/development.md contiene comandos de host y Docker. No se han borrado las tiendas, las configuraciones locales ni los datos PostgreSQL del usuario.
+
+## Revisión independiente
+Reviewer startup_reviewer repitió ./init.sh normal sin instalaciones: exit0, ambos builds, 34/34 tooling, 73 suites/885 backend, 41 archivos/691 frontend (72.52s), lint verde. Sin defectos de código; informe definitivo en progress/review_dev-startup-dependency-reuse.md.

@@ -917,3 +917,19 @@ ninguna DB compartida tocada. Otros hallazgos plan002 no registrados siguen fuer
 - Revisión independiente APROBADA: progress/review_odc-detail-history-hydration.md. Reportes de implementación y guía de comprobación conservados. Trazabilidad R1–R7 completa; feature #40 done, 40/40 registradas done.
 - El typecheck adicional de frontend conserva 18 errores previos, sin nuevos. La hidratación usa React real en jsdom y simula únicamente el default de zona de Intl. Prueba manual del stack completo y Cloudinary live no ejecutadas en esta entrega; no se tocaron datos de negocio ni se desplegó.
 - Se preservaron las modificaciones previas del usuario en routeTree/current/history y las configuraciones locales de pnpm. El commit de historial incorpora únicamente este resumen, sin absorber la evidencia previa no confirmada del usuario.
+
+
+---
+
+## 2026-10-17 — dev-startup-dependency-reuse (#41) — done
+
+- Spec aprobada explícitamente por el usuario antes de implementar (ac58a0a). Una sola feature; requisitos R1-R7 completos y revisión independiente APROBADA.
+- pnpm10.34.6 exacto en ambos manifiestos, imágenes y comandos Corepack. El arranque diario comprueba entradas/metadatos conocidos sin instalación, descargas ni recorrido de node_modules; las entradas obsoletas muestran setup explícito.
+- Preparación congelada separada, marcas locales publicadas solo tras éxito estable; instala únicamente por petición explícita. Init conserva builds, todas las pruebas y lint sin reinstalar, con concurrencia limitada.
+- Docker preserva volúmenes, instala durante build y reutiliza snapshots/paquetes al arrancar. Ensayos aislados: fresh/warm/restart, marca ausente, sync offline y bind real con YAML local divergente; Vite inició y reinició sin red/install. Se retiraron exclusivamente recursos de prueba propios.
+- TDD: 2bc1258→10ba366 (Docker), 385601a/fbd69ee→e015495 (helper), 0657a35→6ec5694 (init). Traceability completa y 34 pruebas de tooling.
+- Baseline verde; init final del líder y repetición independiente del reviewer exit0: ambos builds, 73 suites/885 pruebas backend, 41 archivos/691 frontend, 34 tooling (1,610 total) y lint. Comprobación caliente host preserva mtimes; medición de dos checks 18.79ms, sin garantía de tiempo total del servidor.
+- Host preparado una vez, Already up to date. Guía docs/development.md cubre preparación/arranque/sync/verificación; Docker con volúmenes antiguos o configuración local distinta requiere preparación explícita inicial.
+- Se preservaron bytes de configuraciones YAML locales y lockfiles, tiendas existentes y datos PostgreSQL. Las modificaciones previas del usuario en routeTree/current/history y YAML sin seguimiento no se absorben en commits. Este historial se agrega selectivamente sin incluir las 107 líneas previas ajenas sin confirmar.
+- Observación adicional: procesos auxiliares Node de Hostinger consumen memoria fuera del proyecto; solo diagnóstico de lectura, sin cerrarlos ni cambiar configuración externa.
+- Evidencia: progress/impl_dev-startup-dependency-reuse.md, informes tooling/Docker y progress/review_dev-startup-dependency-reuse.md. Estado final de registro: 41/41 done.

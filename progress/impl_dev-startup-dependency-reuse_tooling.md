@@ -9,7 +9,7 @@ Fecha: 2026-10-17
 ## Archivos modificados
 - `init.config.sh`: guard de solo lectura en lugar de install; Corepack pnpm10.34.6 para builds, suites completas y lint; Jest runInBand y Vitest threads2; añade pruebas Node del tooling.
 - `init.sh`: mensajes precisos de comprobación de preparación, conserva el flujo completo de validación.
-- Spec tasks/traceability: evidencia de R1-R4 y R6, sin marcar integración final aún.
+- Spec tasks/traceability: evidencia de R1-R4 y R6; integración final registrada por el líder.
 
 ## Requisitos cubiertos
 - R1: `scripts/dependencies.test.cjs::R1: preparation pins Corepack pnpm even when global pnpm differs`, y rechazo del packageManager distinto. Rojo `385601a`, verde `e015495`.
@@ -26,7 +26,7 @@ Fecha: 2026-10-17
 - Windows Corepack se distribuye como cmd y el runner utiliza shell con argumentos constantes; Node24 puede mostrar DEP0190. Ningún valor del usuario se interpola en los argumentos: packageDir se pasa como cwd. El comportamiento fue ejercitado en el setup real del líder.
 
 ## Output de build
-La baseline previa a los cambios terminó verde: builds backend/frontend, 885 tests backend y 691 frontend, lint. El líder ejecuta el init final completo con la nueva configuración; este reporte no lo sustituye ni afirma resultado pendiente.
+La baseline previa a los cambios terminó verde. El líder registró en progress/current.md el init final completo con la configuración final: exit0, builds backend/frontend, 34 tests tooling + 885 backend + 691 frontend (1,610 total) y lint. No se ejecutó un init paralelo desde este agente.
 
 ## Output de tests
 ```text
@@ -40,9 +40,8 @@ Fail 0
 ## Notas para el reviewer
 - Repetir guard caliente sin writes/installs y confirmar pnpm exacto en comandos reales.
 - El líder ya verificó setup real host backend/frontend: Already up to date, check correcto y mtimes conservados. Hashes de lockfiles y YAML del usuario se conservaron.
-- Docker implementer ejecuta integración aislada de imágenes/volúmenes. El líder/reviewer integra evidencias R5/R7 y marca R6(3) tras init final.
+- Docker implementer ejecuta integración aislada de imágenes/volúmenes. El líder integra evidencias R5/R7 y R6(3) quedó marcado tras init final verde; reviewer independiente confirma el cierre.
 - No se modificaron ni agregaron los pnpm-workspace.yaml locales del usuario, ni lockfiles ni paquetes de negocio.
 
 ## Verificación final coordinada
-El líder ejecutó ./init.sh con la nueva configuración, sin wrappers ni instalaciones: exit0; ambos builds, 34 pruebas tooling, 885 backend, 691 frontend y lint aprobados. La revisión independiente repetirá init antes del cierre.
-
+El líder ejecutó ./init.sh con la nueva configuración, sin wrappers ni instalaciones: exit0; ambos builds, 34 pruebas tooling, 885 backend, 691 frontend y lint aprobados. La revisión independiente repitió init y terminó exit0 con los mismos 1,610 tests, ambos builds y lint verdes.

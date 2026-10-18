@@ -329,7 +329,7 @@
   {
     "id": 41,
     "name": "dev-startup-dependency-reuse",
-    "status": "in_progress",
+    "status": "done",
     "priority": "P1",
     "description": "Arranque diario ligero con pnpm fijado, instalación explícita, dependencias reutilizadas y cachés excluidas de Git/Docker.",
     "acceptance_criteria": [
