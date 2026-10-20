@@ -493,6 +493,40 @@ describe('R8,R9,R10,R11: rejected ODC editing, resend and failures', () => {
 })
 
 describe('R5,R7: ODC multi-line item form', () => {
+  it('R5: reviews every line item and the updated total before creating an ODC', async () => {
+    render(
+      <OdcForm
+        user={user}
+        suppliers={suppliers}
+        persist={vi.fn()}
+        submit={vi.fn()}
+        onSuccess={vi.fn()}
+      />,
+    )
+    await fillNewOrder()
+    fireEvent.click(screen.getByRole('button', { name: /agregar partida/i }))
+    fireEvent.change(screen.getByLabelText(/descripción partida 2/i), {
+      target: { value: 'Instalación y pruebas' },
+    })
+    fireEvent.change(screen.getByLabelText(/cantidad partida 2/i), {
+      target: { value: '1' },
+    })
+    fireEvent.change(screen.getByLabelText(/unidad partida 2/i), {
+      target: { value: 'servicio' },
+    })
+    fireEvent.change(screen.getByLabelText(/precio unitario partida 2/i), {
+      target: { value: '50.00' },
+    })
+    fireEvent.click(
+      screen.getByRole('button', { name: /enviar a administración/i }),
+    )
+
+    const review = await screen.findByRole('dialog')
+    expect(within(review).getByText('Sensores GPS')).toBeTruthy()
+    expect(within(review).getByText('Instalación y pruebas')).toBeTruthy()
+    expect(review.textContent).toMatch(/499[.,]70/)
+  })
+
   it('R7: adds and removes line items, keeps one line, and sends the ordered collection', async () => {
     const initialOdc = {
       ...draftOdc(),
