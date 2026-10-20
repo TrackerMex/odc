@@ -1051,3 +1051,15 @@ build/tests/init: investigación con escenario real y sincronización del runtim
 - backend/pnpm-workspace.yaml y frontend/pnpm-workspace.yaml permanecen físicamente y con SHA256 idénticos; se excluyen únicamente mediante .git/info/exclude, sin versionar sus políticas ni cambiar .gitignore compartido.
 - routeTree.gen.ts coincide con el blob versionado; se refrescó su entrada del índice sin introducir cambios de contenido ni ocultar el seguimiento del archivo.
 - Verificación ./init.sh exit0: ambos builds, 34 pruebas tooling, 73 suites/885 pruebas backend, 41 archivos/691 pruebas frontend (1,610 total) y lint. Sin instalaciones de dependencias ni cambios de implementación.
+
+
+---
+
+## 2026-10-20 — odc-multi-line-items (#42) — done
+
+- El usuario aprobó `specs/odc-multi-line-items/requirements.md` antes de implementar. Se trabajó en la rama activa `codex/odc-history-hydration-startup`, sin publicar commits.
+- ODC ahora conserva partidas ordenadas, calcula el total agregado, admite el formato legacy de una partida y ofrece agregar/quitar partidas en creación, borradores y rechazadas. Listas y detalle muestran las partidas; una migración versionada hace backfill preservando cabeceras, importes, estados e historial.
+- TDD R1–R7 trazado; los mensajes de implementación usan el scope `odc-multi-line-items` y R-ids. La primera revisión encontró una expectativa obsoleta del dashboard y un mensaje fuera de convención; ambos quedaron corregidos antes de la segunda revisión.
+- Verificación final del líder: `init.sh` exit 0 después de cerrar la feature; builds backend/frontend, 34 pruebas tooling, 84 suites/935 pruebas backend, 41 archivos/697 pruebas frontend y lint. Revisión independiente C2–C6 APROBADA en `progress/review_odc-multi-line-items.md`.
+- Playwright visual no se ejecutó: el puerto 5432 está ocupado por `pet-tracker-postgres`; el intento previo limpió únicamente los contenedores ODC que había creado. La limitación queda en los reportes de implementación.
+- IVA, documentos de cotización y el concentrado de jueves enviado a Administración y después a Dirección General permanecen como siguientes features, sujetas a sus specs y aprobación humana.

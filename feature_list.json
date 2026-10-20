@@ -338,5 +338,19 @@
       "Instalación/sincronización explícita y congelada; Docker conserva volúmenes y funciona con instalaciones nuevas y volúmenes existentes tras sincronización.",
       "init conserva builds, pruebas completas y lint pero deja de instalar; cachés y metadatos locales se excluyen de Git y contexto Docker, sin borrar datos o archivos existentes."
     ]
+  },
+  {
+    "id": 42,
+    "name": "odc-multi-line-items",
+    "status": "done",
+    "priority": "P1",
+    "description": "Permitir que una ODC contenga varias partidas y conservar una migración compatible de las ODC existentes.",
+    "acceptance_criteria": [
+      "Crear y editar ODCs acepta una o más partidas con descripción, cantidad, unidad y precio unitario; proveedor y comentarios permanecen a nivel de ODC.",
+      "El dominio calcula el total como la suma de cantidad × precio unitario de cada partida, en centavos, y rechaza datos inválidos o desbordamientos antes de persistir.",
+      "El formulario permite agregar y quitar partidas en BORRADOR y RECHAZADA; el guardado y envío conservan los permisos y transiciones actuales.",
+      "Una migración convierte cada ODC existente en una partida equivalente sin cambiar montos, estados ni historial; la API devuelve items y mantiene compatibilidad con el contrato de una sola partida.",
+      "Pruebas de backend y frontend cubren creación, edición, formularios, validación, migración/backfill y regresiones; init.sh termina verde antes del cierre."
+    ]
   }
 ]
