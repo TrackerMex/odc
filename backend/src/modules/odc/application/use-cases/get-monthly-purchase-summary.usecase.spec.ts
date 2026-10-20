@@ -79,7 +79,7 @@ describe('R1,R2,R6: monthly paid purchase summary', () => {
     });
   });
 
-  it('preserves the line count in each returned purchase row', async () => {
+  it('R5: preserves the line count in each returned purchase row', async () => {
     const repository = {
       findMonthlyPurchases: jest
         .fn()
