@@ -264,7 +264,7 @@ export class PurchaseOrder {
     this.version = props.version ?? 0;
     this.odcNumber = props.odcNumber;
     this.status = props.status;
-    this.items = PurchaseOrder.copyAndValidateItems(
+    let items = PurchaseOrder.copyAndValidateItems(
       props.items ?? [
         {
           description: props.description,
@@ -274,12 +274,28 @@ export class PurchaseOrder {
         },
       ],
     );
-    const computedTotalCents = PurchaseOrder.computeItemsTotalCents(this.items);
+    let computedTotalCents = PurchaseOrder.computeItemsTotalCents(items);
     if (props.items !== undefined && props.totalCents !== computedTotalCents) {
-      throw new InvalidOdcInputError(
-        'El total de la ODC debe coincidir con la suma de sus partidas.',
-      );
+      const scalarProjection = [
+        {
+          description: props.description,
+          quantity: props.quantity,
+          unit: props.unit,
+          unitPriceCents: props.unitPriceCents,
+        },
+        ...items.slice(1),
+      ];
+      const scalarTotalCents =
+        PurchaseOrder.computeItemsTotalCents(scalarProjection);
+      if (props.totalCents !== scalarTotalCents) {
+        throw new InvalidOdcInputError(
+          'El total de la ODC debe coincidir con la suma de sus partidas.',
+        );
+      }
+      items = PurchaseOrder.copyAndValidateItems(scalarProjection);
+      computedTotalCents = scalarTotalCents;
     }
+    this.items = items;
     this.description = this.items[0].description;
     this.quantity = this.items[0].quantity;
     this.unit = this.items[0].unit;
