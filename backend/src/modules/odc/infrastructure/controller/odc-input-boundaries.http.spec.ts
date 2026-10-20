@@ -166,6 +166,50 @@ describe('R1,R2,R3,R4: real Nest input boundaries and zero side effects (#37)', 
     expect(repository.update).not.toHaveBeenCalled();
     expect(storage.upload).not.toHaveBeenCalled();
   }
+  describe('R2: POST accepts one line-item format and rejects mixed formats', () => {
+    const lines = [
+      {
+        description: 'Cemento',
+        quantity: 2,
+        unit: 'bulto',
+        unitPriceCents: 1250,
+      },
+      { description: 'Arena', quantity: 3, unit: 'm3', unitPriceCents: 2000 },
+    ];
+
+    it('accepts items[] and returns the calculated total and legacy projection', async () => {
+      const response = await request(server)
+        .post('/api/odcs')
+        .set('Cookie', cookie())
+        .send({ items: lines, supplier: 'Test', comments: 'Entregar temprano' })
+        .expect(201);
+
+      expect(repository.create).toHaveBeenCalledTimes(1);
+      expect(response.body).toMatchObject({
+        items: lines,
+        totalCents: 8500,
+        description: 'Cemento',
+        quantity: 2,
+        unit: 'bulto',
+        unitPriceCents: 1250,
+        supplier: 'Test',
+        status: 'BORRADOR',
+      });
+    });
+
+    it('rejects items combined with legacy line fields before persistence', async () => {
+      await request(server)
+        .post('/api/odcs')
+        .set('Cookie', cookie())
+        .send({
+          items: lines,
+          ...INPUT,
+        })
+        .expect(400);
+
+      expect(repository.create).not.toHaveBeenCalled();
+    });
+  });
   describe.each(['create', 'patch'])('R1: %s', (operation) => {
     function send(input: object) {
       return operation === 'create'
