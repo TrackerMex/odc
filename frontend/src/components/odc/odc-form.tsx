@@ -9,17 +9,20 @@ import type { SessionUser } from '@/lib/session'
 import { ApiError } from '@/lib/api'
 import {
   buildOdcPayload,
-  computeTotalCents,
+  computeItemsTotalCents,
   formatCurrency,
   formatDate,
   formatUnitPriceInput,
-  odcFormSchema,
+  odcItems,
+  odcMultiFormSchema,
+  odcPayloadItems,
+  odcLineFormSchema,
   statusLabel,
 } from '@/lib/odc'
 import type {
   Odc,
-  OdcFormField,
-  OdcFormValues,
+  OdcLineFormField,
+  OdcMultiFormValues,
   OdcPayload,
   Supplier,
 } from '@/lib/odc'
@@ -63,24 +66,34 @@ import {
   CollapsibleTrigger,
 } from '@/components/ui/collapsible'
 
-type FieldErrors = Partial<Record<OdcFormField, string>>
+type FieldErrors = {
+  items: Array<Partial<Record<OdcLineFormField, string>>>
+  supplier?: string
+  comments?: string
+}
 
-const emptyValues: OdcFormValues = {
+const emptyItem = {
   description: '',
   quantity: '',
   unit: '',
   unitPrice: '',
+}
+
+const emptyValues: OdcMultiFormValues = {
+  items: [emptyItem],
   supplier: '',
   comments: '',
 }
 
-function valuesFromOdc(odc?: Odc): OdcFormValues {
+function valuesFromOdc(odc?: Odc): OdcMultiFormValues {
   if (!odc) return emptyValues
   return {
-    description: odc.description,
-    quantity: String(odc.quantity),
-    unit: odc.unit,
-    unitPrice: formatUnitPriceInput(odc.unitPriceCents),
+    items: odcItems(odc).map((item) => ({
+      description: item.description,
+      quantity: String(item.quantity),
+      unit: item.unit,
+      unitPrice: formatUnitPriceInput(item.unitPriceCents),
+    })),
     supplier: odc.supplier,
     comments: odc.comments ?? '',
   }
@@ -113,7 +126,7 @@ export function OdcForm({
   submit: (id: string) => Promise<Odc>
   onSuccess: (odc: Odc) => void
 }) {
-  const [values, setValues] = useState<OdcFormValues>(() =>
+  const [values, setValues] = useState<OdcMultiFormValues>(() =>
     valuesFromOdc(initialOdc),
   )
   const [persistedOdc, setPersistedOdc] = useState(initialOdc)
@@ -126,7 +139,7 @@ export function OdcForm({
   const [uncertainCreation, setUncertainCreation] = useState(false)
   const operationPending = useRef(false)
   const reviewTriggerRef = useRef<HTMLElement | null>(null)
-  const [fieldErrors, setFieldErrors] = useState<FieldErrors>({})
+  const [fieldErrors, setFieldErrors] = useState<FieldErrors>({ items: [] })
   const [operationError, setOperationError] = useState<string | null>(null)
   const [pendingAction, setPendingAction] = useState<'save' | 'send' | null>(
     null,
@@ -134,15 +147,15 @@ export function OdcForm({
   const [commentsOpen, setCommentsOpen] = useState(
     Boolean(initialOdc?.comments),
   )
-  const descriptionRef = useRef<HTMLTextAreaElement>(null)
-  const quantityRef = useRef<HTMLInputElement>(null)
-  const unitRef = useRef<HTMLInputElement>(null)
-  const unitPriceRef = useRef<HTMLInputElement>(null)
+  const itemRefs = useRef<
+    Array<Partial<Record<OdcLineFormField, HTMLElement | null>>>
+  >([])
   const supplierRef = useRef<HTMLButtonElement>(null)
 
-  const totalCents = computeTotalCents(values.quantity, values.unitPrice)
-  const unitPriceCents = Number.isFinite(Number(values.unitPrice))
-    ? Math.round(Number(values.unitPrice) * 100)
+  const totalCents = computeItemsTotalCents(values.items)
+  const firstItem = values.items[0] ?? emptyItem
+  const unitPriceCents = Number.isFinite(Number(firstItem.unitPrice))
+    ? Math.round(Number(firstItem.unitPrice) * 100)
     : 0
   const fieldsDisabled =
     pendingAction !== null ||
@@ -151,50 +164,125 @@ export function OdcForm({
     uncertainCreation
   const disabled = fieldsDisabled || suppliers.length === 0
 
-  function updateField(field: OdcFormField, value: string) {
+  function updateItemField(
+    index: number,
+    field: OdcLineFormField,
+    value: string,
+  ) {
+    setValues((current) => ({
+      ...current,
+      items: current.items.map((item, itemIndex) =>
+        itemIndex === index ? { ...item, [field]: value } : item,
+      ),
+    }))
+    setFieldErrors((current) => ({
+      ...current,
+      items: current.items.map((row, itemIndex) =>
+        itemIndex === index ? { ...row, [field]: undefined } : row,
+      ),
+    }))
+    setOperationError(null)
+  }
+
+  function updateSharedField(field: 'supplier' | 'comments', value: string) {
     setValues((current) => ({ ...current, [field]: value }))
     setFieldErrors((current) => ({ ...current, [field]: undefined }))
     setOperationError(null)
   }
 
-  function validateField(field: OdcFormField) {
-    const result = odcFormSchema.safeParse(values)
+  function validateItemField(index: number, field: OdcLineFormField) {
+    const result = odcLineFormSchema.safeParse(values.items[index])
     const message = result.success
       ? undefined
       : result.error.flatten().fieldErrors[field]?.[0]
+    setFieldErrors((current) => ({
+      ...current,
+      items: Array.from(
+        { length: Math.max(current.items.length, index + 1) },
+        (_, itemIndex) =>
+          itemIndex === index
+            ? { ...current.items[index], [field]: message }
+            : (current.items[itemIndex] ?? {}),
+      ),
+    }))
+    return message
+  }
+
+  function validateSharedField(field: 'supplier' | 'comments') {
+    const result = odcMultiFormSchema.shape[field].safeParse(values[field])
+    const message = result.success ? undefined : result.error.issues[0]?.message
     setFieldErrors((current) => ({ ...current, [field]: message }))
     return message
   }
 
+  function addItem() {
+    setValues((current) => ({
+      ...current,
+      items: [...current.items, { ...emptyItem }],
+    }))
+    setFieldErrors((current) => ({ ...current, items: [...current.items, {}] }))
+    setOperationError(null)
+  }
+
+  function removeItem(index: number) {
+    setValues((current) => ({
+      ...current,
+      items:
+        current.items.length > 1
+          ? current.items.filter((_, itemIndex) => itemIndex !== index)
+          : current.items,
+    }))
+    setFieldErrors((current) => ({
+      ...current,
+      items:
+        current.items.length > 1
+          ? current.items.filter((_, itemIndex) => itemIndex !== index)
+          : current.items,
+    }))
+    setOperationError(null)
+  }
+
   function validatedPayload(): OdcPayload | null {
-    const result = odcFormSchema.safeParse(values)
+    const result = odcMultiFormSchema.safeParse(values)
     if (!result.success) {
-      const flattened = result.error.flatten().fieldErrors
-      setFieldErrors({
-        description: flattened.description?.[0],
-        quantity: flattened.quantity?.[0],
-        unit: flattened.unit?.[0],
-        unitPrice: flattened.unitPrice?.[0],
-        supplier: flattened.supplier?.[0],
-        comments: flattened.comments?.[0],
-      })
-      const refs = {
-        description: descriptionRef,
-        quantity: quantityRef,
-        unit: unitRef,
-        unitPrice: unitPriceRef,
-        supplier: supplierRef,
+      const nextErrors: FieldErrors = { items: [] }
+      for (const issue of result.error.issues) {
+        const [root, index, field] = issue.path
+        if (
+          root === 'items' &&
+          typeof index === 'number' &&
+          typeof field === 'string' &&
+          ['description', 'quantity', 'unit', 'unitPrice'].includes(field)
+        ) {
+          nextErrors.items[index] = {
+            ...nextErrors.items[index],
+            [field]: issue.message,
+          }
+        } else if (root === 'supplier' || root === 'comments') {
+          nextErrors[root] = issue.message
+        } else if (root === 'items') {
+          nextErrors.items[0] = {
+            ...nextErrors.items[0],
+            description: issue.message,
+          }
+        }
       }
-      const firstInvalid = (
-        ['description', 'quantity', 'unit', 'unitPrice', 'supplier'] as const
-      ).find((field) => flattened[field]?.[0])
-      if (firstInvalid) {
-        refs[firstInvalid].current?.focus()
+      setFieldErrors(nextErrors)
+      for (let index = 0; index < nextErrors.items.length; index += 1) {
+        const rowErrors = nextErrors.items[index]
+        const firstInvalid = (
+          ['description', 'quantity', 'unit', 'unitPrice'] as const
+        ).find((field) => rowErrors[field])
+        if (firstInvalid) {
+          itemRefs.current[index]?.[firstInvalid]?.focus()
+          return null
+        }
       }
+      if (nextErrors.supplier) supplierRef.current?.focus()
       return null
     }
-    setFieldErrors({})
-    return buildOdcPayload(result.data)
+    setFieldErrors({ items: [] })
+    return buildOdcPayload(result.data, Boolean(initialOdc?.items?.length))
   }
 
   function runAction(action: 'save' | 'send') {
@@ -270,7 +358,12 @@ export function OdcForm({
     }
   }
 
-  function errorFor(field: OdcFormField) {
+  function itemErrorFor(index: number, field: OdcLineFormField) {
+    const message = fieldErrors.items[index]?.[field]
+    return message ? [{ message }] : []
+  }
+
+  function sharedErrorFor(field: 'supplier' | 'comments') {
     const message = fieldErrors[field]
     return message ? [{ message }] : []
   }
@@ -296,97 +389,227 @@ export function OdcForm({
         </CardHeader>
         <CardContent>
           <FieldGroup>
-            <Field data-invalid={!!fieldErrors.description}>
-              <FieldLabel htmlFor="description">Descripción *</FieldLabel>
-              <Textarea
-                ref={descriptionRef}
-                id="description"
-                value={values.description}
-                onChange={(event) =>
-                  updateField('description', event.target.value)
-                }
-                placeholder="Describe el bien o servicio"
-                disabled={fieldsDisabled}
-                onBlur={() => validateField('description')}
-                aria-invalid={!!fieldErrors.description}
-                aria-describedby={
-                  fieldErrors.description ? 'description-error' : undefined
-                }
-              />
-              <FieldError
-                id="description-error"
-                errors={errorFor('description')}
-              />
-            </Field>
+            <div className="space-y-4">
+              {values.items.map((item, index) => {
+                const itemNumber = index + 1
+                const fieldId = (field: OdcLineFormField) =>
+                  index === 0
+                    ? {
+                        description: 'description',
+                        quantity: 'quantity',
+                        unit: 'unit',
+                        unitPrice: 'unit-price',
+                      }[field]
+                    : `odc-item-${itemNumber}-${field}`
+                const errorId = (field: OdcLineFormField) =>
+                  `${fieldId(field)}-error`
 
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              <Field data-invalid={!!fieldErrors.quantity}>
-                <FieldLabel htmlFor="quantity">Cantidad *</FieldLabel>
-                <Input
-                  ref={quantityRef}
-                  id="quantity"
-                  inputMode="numeric"
-                  value={values.quantity}
-                  onChange={(event) =>
-                    updateField('quantity', event.target.value)
-                  }
-                  placeholder="1"
-                  disabled={fieldsDisabled}
-                  onBlur={() => validateField('quantity')}
-                  aria-invalid={!!fieldErrors.quantity}
-                  aria-describedby={
-                    fieldErrors.quantity ? 'quantity-error' : undefined
-                  }
-                />
-                <FieldError id="quantity-error" errors={errorFor('quantity')} />
-              </Field>
-              <Field data-invalid={!!fieldErrors.unit}>
-                <FieldLabel htmlFor="unit">Unidad *</FieldLabel>
-                <Input
-                  ref={unitRef}
-                  id="unit"
-                  value={values.unit}
-                  onChange={(event) => updateField('unit', event.target.value)}
-                  placeholder="pieza, servicio, lote…"
-                  disabled={fieldsDisabled}
-                  onBlur={() => validateField('unit')}
-                  aria-invalid={!!fieldErrors.unit}
-                  aria-describedby={fieldErrors.unit ? 'unit-error' : undefined}
-                />
-                <FieldError id="unit-error" errors={errorFor('unit')} />
-              </Field>
-              <Field data-invalid={!!fieldErrors.unitPrice}>
-                <FieldLabel htmlFor="unit-price">
-                  Precio unitario (MXN) *
-                </FieldLabel>
-                <Input
-                  ref={unitPriceRef}
-                  id="unit-price"
-                  inputMode="decimal"
-                  value={values.unitPrice}
-                  onChange={(event) =>
-                    updateField('unitPrice', event.target.value)
-                  }
-                  placeholder="0.00"
-                  disabled={fieldsDisabled}
-                  onBlur={() => validateField('unitPrice')}
-                  aria-invalid={!!fieldErrors.unitPrice}
-                  aria-describedby={
-                    fieldErrors.unitPrice ? 'unit-price-error' : undefined
-                  }
-                />
-                <FieldError
-                  id="unit-price-error"
-                  errors={errorFor('unitPrice')}
-                />
-              </Field>
+                return (
+                  <section
+                    key={itemNumber}
+                    aria-labelledby={`odc-item-${itemNumber}-title`}
+                    data-testid={`odc-item-row-${itemNumber}`}
+                    className="min-w-0 rounded-card border border-border/70 p-4"
+                  >
+                    <div className="mb-4 flex items-center justify-between gap-3">
+                      <h2
+                        id={`odc-item-${itemNumber}-title`}
+                        className="text-sm font-semibold"
+                      >
+                        Partida {itemNumber}
+                      </h2>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        className="min-h-9"
+                        aria-label={`Quitar partida ${itemNumber}`}
+                        disabled={fieldsDisabled || values.items.length === 1}
+                        onClick={() => removeItem(index)}
+                      >
+                        Quitar partida
+                      </Button>
+                    </div>
+                    <Field
+                      data-invalid={!!fieldErrors.items[index]?.description}
+                    >
+                      <FieldLabel htmlFor={fieldId('description')}>
+                        {itemNumber === 1
+                          ? 'Descripción *'
+                          : `Descripción partida ${itemNumber} *`}
+                      </FieldLabel>
+                      <Textarea
+                        ref={(element) => {
+                          itemRefs.current[index] = {
+                            ...itemRefs.current[index],
+                            description: element,
+                          }
+                        }}
+                        id={fieldId('description')}
+                        value={item.description}
+                        onChange={(event) =>
+                          updateItemField(
+                            index,
+                            'description',
+                            event.target.value,
+                          )
+                        }
+                        placeholder="Describe el bien o servicio"
+                        disabled={fieldsDisabled}
+                        onBlur={() => validateItemField(index, 'description')}
+                        aria-invalid={!!fieldErrors.items[index]?.description}
+                        aria-describedby={
+                          fieldErrors.items[index]?.description
+                            ? errorId('description')
+                            : undefined
+                        }
+                      />
+                      <FieldError
+                        id={errorId('description')}
+                        errors={itemErrorFor(index, 'description')}
+                      />
+                    </Field>
+
+                    <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                      <Field
+                        data-invalid={!!fieldErrors.items[index]?.quantity}
+                      >
+                        <FieldLabel htmlFor={fieldId('quantity')}>
+                          {itemNumber === 1
+                            ? 'Cantidad *'
+                            : `Cantidad partida ${itemNumber} *`}
+                        </FieldLabel>
+                        <Input
+                          ref={(element) => {
+                            itemRefs.current[index] = {
+                              ...itemRefs.current[index],
+                              quantity: element,
+                            }
+                          }}
+                          id={fieldId('quantity')}
+                          inputMode="numeric"
+                          value={item.quantity}
+                          onChange={(event) =>
+                            updateItemField(
+                              index,
+                              'quantity',
+                              event.target.value,
+                            )
+                          }
+                          placeholder="1"
+                          disabled={fieldsDisabled}
+                          onBlur={() => validateItemField(index, 'quantity')}
+                          aria-invalid={!!fieldErrors.items[index]?.quantity}
+                          aria-describedby={
+                            fieldErrors.items[index]?.quantity
+                              ? errorId('quantity')
+                              : undefined
+                          }
+                        />
+                        <FieldError
+                          id={errorId('quantity')}
+                          errors={itemErrorFor(index, 'quantity')}
+                        />
+                      </Field>
+                      <Field data-invalid={!!fieldErrors.items[index]?.unit}>
+                        <FieldLabel htmlFor={fieldId('unit')}>
+                          {itemNumber === 1
+                            ? 'Unidad *'
+                            : `Unidad partida ${itemNumber} *`}
+                        </FieldLabel>
+                        <Input
+                          ref={(element) => {
+                            itemRefs.current[index] = {
+                              ...itemRefs.current[index],
+                              unit: element,
+                            }
+                          }}
+                          id={fieldId('unit')}
+                          value={item.unit}
+                          onChange={(event) =>
+                            updateItemField(index, 'unit', event.target.value)
+                          }
+                          placeholder="pieza, servicio, lote…"
+                          disabled={fieldsDisabled}
+                          onBlur={() => validateItemField(index, 'unit')}
+                          aria-invalid={!!fieldErrors.items[index]?.unit}
+                          aria-describedby={
+                            fieldErrors.items[index]?.unit
+                              ? errorId('unit')
+                              : undefined
+                          }
+                        />
+                        <FieldError
+                          id={errorId('unit')}
+                          errors={itemErrorFor(index, 'unit')}
+                        />
+                      </Field>
+                      <Field
+                        data-invalid={!!fieldErrors.items[index]?.unitPrice}
+                      >
+                        <FieldLabel htmlFor={fieldId('unitPrice')}>
+                          {itemNumber === 1
+                            ? 'Precio unitario (MXN) *'
+                            : `Precio unitario partida ${itemNumber} (MXN) *`}
+                        </FieldLabel>
+                        <Input
+                          ref={(element) => {
+                            itemRefs.current[index] = {
+                              ...itemRefs.current[index],
+                              unitPrice: element,
+                            }
+                          }}
+                          id={fieldId('unitPrice')}
+                          inputMode="decimal"
+                          value={item.unitPrice}
+                          onChange={(event) =>
+                            updateItemField(
+                              index,
+                              'unitPrice',
+                              event.target.value,
+                            )
+                          }
+                          placeholder="0.00"
+                          disabled={fieldsDisabled}
+                          onBlur={() => validateItemField(index, 'unitPrice')}
+                          aria-invalid={!!fieldErrors.items[index]?.unitPrice}
+                          aria-describedby={
+                            fieldErrors.items[index]?.unitPrice
+                              ? errorId('unitPrice')
+                              : undefined
+                          }
+                        />
+                        <FieldError
+                          id={errorId('unitPrice')}
+                          errors={itemErrorFor(index, 'unitPrice')}
+                        />
+                      </Field>
+                    </div>
+                  </section>
+                )
+              })}
+            </div>
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <p className="text-sm text-muted-foreground">
+                {values.items.length}{' '}
+                {values.items.length === 1 ? 'partida' : 'partidas'}
+              </p>
+              <Button
+                type="button"
+                variant="outline"
+                disabled={fieldsDisabled}
+                onClick={addItem}
+              >
+                Agregar partida
+              </Button>
             </div>
 
             <Field data-invalid={!!fieldErrors.supplier}>
               <FieldLabel htmlFor="supplier">Proveedor *</FieldLabel>
               <Select
                 value={values.supplier || null}
-                onValueChange={(value) => updateField('supplier', value ?? '')}
+                onValueChange={(value) =>
+                  updateSharedField('supplier', value ?? '')
+                }
                 disabled={disabled}
               >
                 <SelectTrigger
@@ -397,7 +620,7 @@ export function OdcForm({
                   aria-describedby={
                     fieldErrors.supplier ? 'supplier-error' : undefined
                   }
-                  onBlur={() => validateField('supplier')}
+                  onBlur={() => validateSharedField('supplier')}
                   className="w-full"
                 >
                   <SelectValue placeholder="Selecciona un proveedor" />
@@ -420,7 +643,10 @@ export function OdcForm({
                   No hay proveedores disponibles.
                 </FieldDescription>
               ) : null}
-              <FieldError id="supplier-error" errors={errorFor('supplier')} />
+              <FieldError
+                id="supplier-error"
+                errors={sharedErrorFor('supplier')}
+              />
             </Field>
 
             <Collapsible open={commentsOpen} onOpenChange={setCommentsOpen}>
@@ -437,7 +663,7 @@ export function OdcForm({
                     id="comments"
                     value={values.comments}
                     onChange={(event) =>
-                      updateField('comments', event.target.value)
+                      updateSharedField('comments', event.target.value)
                     }
                     placeholder="Información adicional para la compra"
                     disabled={fieldsDisabled}
@@ -445,7 +671,7 @@ export function OdcForm({
                   />
                   <FieldError
                     id="comments-error"
-                    errors={errorFor('comments')}
+                    errors={sharedErrorFor('comments')}
                   />
                 </Field>
               </CollapsibleContent>
@@ -512,7 +738,15 @@ export function OdcForm({
                 data-testid="odc-total-breakdown"
                 className="text-sm text-muted-foreground tabular-nums"
               >
-                {values.quantity || '0'} × {formatCurrency(unitPriceCents)}
+                <span className="block font-medium text-foreground">
+                  {firstItem.description || 'Primera partida'}
+                </span>
+                <span>
+                  {firstItem.quantity || '0'} × {formatCurrency(unitPriceCents)}
+                  {values.items.length > 1
+                    ? ` · ${values.items.length} partidas`
+                    : ''}
+                </span>
               </p>
               <p className="mt-3 text-xs font-medium tracking-[0.06em] text-muted-foreground uppercase">
                 Total estimado
@@ -604,24 +838,28 @@ export function OdcForm({
                 <dd>{review.payload.supplier}</dd>
               </div>
               <div>
-                <dt>Descripción / concepto</dt>
-                <dd className="whitespace-pre-wrap">
-                  {review.payload.description}
+                <dt>Partidas ({odcPayloadItems(review.payload).length})</dt>
+                <dd>
+                  <ol
+                    aria-label="Partidas de la ODC"
+                    className="mt-2 space-y-3"
+                  >
+                    {odcPayloadItems(review.payload).map((item, index) => (
+                      <li
+                        key={`${item.description}-${index}`}
+                        className="rounded-card border border-border/70 p-3"
+                      >
+                        <p className="whitespace-pre-wrap font-medium text-foreground">
+                          {item.description}
+                        </p>
+                        <p className="mt-1 text-sm">
+                          {item.quantity} <span>{item.unit}</span> ·{' '}
+                          {formatCurrency(item.unitPriceCents)} por unidad
+                        </p>
+                      </li>
+                    ))}
+                  </ol>
                 </dd>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <dt>Cantidad</dt>
-                  <dd>{review.payload.quantity}</dd>
-                </div>
-                <div>
-                  <dt>Unidad</dt>
-                  <dd>{review.payload.unit}</dd>
-                </div>
-              </div>
-              <div>
-                <dt>Precio unitario (MXN)</dt>
-                <dd>{formatCurrency(review.payload.unitPriceCents)}</dd>
               </div>
               {review.payload.comments ? (
                 <div>
@@ -635,7 +873,11 @@ export function OdcForm({
                 <dt>Total estimado (MXN)</dt>
                 <dd className="text-2xl font-semibold tabular-nums">
                   {formatCurrency(
-                    review.payload.quantity * review.payload.unitPriceCents,
+                    odcPayloadItems(review.payload).reduce(
+                      (total, item) =>
+                        total + item.quantity * item.unitPriceCents,
+                      0,
+                    ),
                   )}
                 </dd>
               </div>

@@ -39,10 +39,19 @@ export interface NotificationFeed {
   unreadCount: number
 }
 
+export interface OdcLineItem {
+  description: string
+  quantity: number
+  unit: string
+  unitPriceCents: number
+}
+
 export interface Odc {
   id: string | null
   odcNumber: string | null
   status: OdcStatus
+  /** Present on current API responses; optional for older cached payloads. */
+  items?: OdcLineItem[]
   description: string
   quantity: number
   unit: string
@@ -90,6 +99,7 @@ export interface MonthlyPurchase {
   hasInvoice: boolean
   comments: string | null
   observations: string | null
+  itemCount?: number
 }
 
 export interface MonthlyPurchaseStage {
@@ -129,6 +139,7 @@ export interface ExecutiveTask {
   createdAt: string
   ageDays: number
   nextAction: ExecutiveTaskNextAction
+  itemCount?: number
 }
 
 export interface ExecutiveOrder {
@@ -140,6 +151,7 @@ export interface ExecutiveOrder {
   totalCents: number
   createdAt: string
   ageDays: number
+  itemCount?: number
 }
 
 export interface ExecutiveDashboardResponse {
@@ -186,13 +198,34 @@ export interface Supplier {
   name: string
 }
 
-export interface OdcPayload {
-  description: string
-  quantity: number
-  unit: string
-  unitPriceCents: number
+export interface OdcPayloadFields {
   supplier: string
   comments?: string
+}
+
+export type OdcPayload = OdcPayloadFields &
+  (
+    | {
+        items: OdcLineItem[]
+        description?: never
+        quantity?: never
+        unit?: never
+        unitPriceCents?: never
+      }
+    | {
+        items?: never
+        description: string
+        quantity: number
+        unit: string
+        unitPriceCents: number
+      }
+  )
+
+export interface OdcLineFormValues {
+  description: string
+  quantity: string
+  unit: string
+  unitPrice: string
 }
 
 const positiveIntegerString = z
@@ -217,6 +250,22 @@ export const odcFormSchema = z.object({
 export type OdcFormValues = z.infer<typeof odcFormSchema>
 export type OdcFormField = keyof OdcFormValues
 
+export const odcLineFormSchema = z.object({
+  description: z.string().trim().min(1, 'La descripción es obligatoria.'),
+  quantity: positiveIntegerString,
+  unit: z.string().trim().min(1, 'La unidad es obligatoria.'),
+  unitPrice: positiveMoneyString,
+})
+
+export const odcMultiFormSchema = z.object({
+  items: z.array(odcLineFormSchema).min(1, 'Agrega al menos una partida.'),
+  supplier: z.string().trim().min(1, 'Selecciona un proveedor.'),
+  comments: z.string(),
+})
+
+export type OdcMultiFormValues = z.infer<typeof odcMultiFormSchema>
+export type OdcLineFormField = keyof OdcLineFormValues
+
 function parseUnitPriceCents(value: string): number | null {
   if (!/^\d+(?:\.\d{1,2})?$/.test(value)) return null
   const [whole, fraction = ''] = value.split('.')
@@ -238,21 +287,81 @@ export function computeTotalCents(
   return Number.isSafeInteger(total) ? total : 0
 }
 
-export function buildOdcPayload(values: OdcFormValues): OdcPayload {
-  const unitPriceCents = parseUnitPriceCents(values.unitPrice)
-  if (!unitPriceCents) {
-    throw new Error('Invalid unit price')
+export function computeItemsTotalCents(
+  items: readonly OdcLineFormValues[],
+): number {
+  let total = 0
+  for (const item of items) {
+    const lineTotal = computeTotalCents(item.quantity, item.unitPrice)
+    if (!lineTotal) continue
+    total += lineTotal
+    if (!Number.isSafeInteger(total)) return 0
+  }
+  return total
+}
+
+export function buildOdcPayload(
+  values: OdcFormValues | OdcMultiFormValues,
+  useItemsContract = false,
+): OdcPayload {
+  const items = 'items' in values ? values.items : [values]
+  const supplier = values.supplier
+  const comments = values.comments.trim()
+  const lineItems = items.map((item) => {
+    const unitPriceCents = parseUnitPriceCents(item.unitPrice)
+    if (!unitPriceCents) {
+      throw new Error('Invalid unit price')
+    }
+    return {
+      description: item.description.trim(),
+      quantity: Number(item.quantity),
+      unit: item.unit.trim(),
+      unitPriceCents,
+    }
+  })
+
+  if (useItemsContract || lineItems.length > 1) {
+    return {
+      items: lineItems,
+      supplier,
+      ...(comments ? { comments } : {}),
+    }
   }
 
-  const comments = values.comments.trim()
+  if (lineItems.length === 0) {
+    throw new Error('At least one ODC item is required')
+  }
+  const [first] = lineItems
   return {
-    description: values.description.trim(),
-    quantity: Number(values.quantity),
-    unit: values.unit.trim(),
-    unitPriceCents,
-    supplier: values.supplier,
+    ...first,
+    supplier,
     ...(comments ? { comments } : {}),
   }
+}
+
+export function odcItems(odc: Odc): OdcLineItem[] {
+  return odc.items?.length
+    ? odc.items
+    : [
+        {
+          description: odc.description,
+          quantity: odc.quantity,
+          unit: odc.unit,
+          unitPriceCents: odc.unitPriceCents,
+        },
+      ]
+}
+
+export function odcPayloadItems(payload: OdcPayload): OdcLineItem[] {
+  if (payload.items) return payload.items
+  return [
+    {
+      description: payload.description,
+      quantity: payload.quantity,
+      unit: payload.unit,
+      unitPriceCents: payload.unitPriceCents,
+    },
+  ]
 }
 
 const currencyFormatter = new Intl.NumberFormat('es-MX', {
@@ -264,6 +373,12 @@ const currencyFormatter = new Intl.NumberFormat('es-MX', {
 
 export function formatCurrency(cents: number): string {
   return currencyFormatter.format(cents / 100)
+}
+
+export function formatItemCount(count: number | null | undefined): string {
+  const itemCount =
+    Number.isSafeInteger(count) && Number(count) > 0 ? count! : 1
+  return `${itemCount} ${itemCount === 1 ? 'partida' : 'partidas'}`
 }
 
 export function formatUnitPriceInput(cents: number): string {

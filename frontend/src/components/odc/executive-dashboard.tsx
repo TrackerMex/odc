@@ -15,7 +15,12 @@ import { Button, buttonVariants } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Skeleton } from '@/components/ui/skeleton'
-import { formatCurrency, formatMonth, statusLabel } from '@/lib/odc'
+import {
+  formatCurrency,
+  formatItemCount,
+  formatMonth,
+  statusLabel,
+} from '@/lib/odc'
 import type {
   ExecutiveDashboardResponse,
   ExecutiveDashboardRole,
@@ -223,6 +228,10 @@ function AgeingAlerts({
                   <span className="block font-medium">{order.odcNumber}</span>
                   <span className="mt-1 block text-muted-foreground">
                     {order.supplier}
+                  </span>
+                  <span className="mt-1 block text-muted-foreground">
+                    <span>{order.description}</span> ·{' '}
+                    <span>{formatItemCount(order.itemCount)}</span>
                   </span>
                   <span className="mt-1 block text-muted-foreground">
                     {statusLabel(order.status)}

@@ -10,6 +10,7 @@ import {
   formatCurrency,
   formatDate,
   formatDateOnly,
+  odcItems,
   statusLabel,
 } from '@/lib/odc'
 import type { Odc } from '@/lib/odc'
@@ -66,6 +67,9 @@ export function OdcDetail({
   odc: Odc
   actions?: React.ReactNode
 }) {
+  const items = odcItems(odc)
+  const hasMultipleItems = items.length > 1
+
   return (
     <div className="grid min-w-0 gap-5 xl:grid-cols-[minmax(0,1fr)_22rem]">
       <div data-detail-main className="min-w-0 space-y-5">
@@ -100,18 +104,57 @@ export function OdcDetail({
           </CardHeader>
           <CardContent>
             <dl className="grid grid-cols-1 gap-x-6 sm:grid-cols-2">
-              <DefinitionRow label="Descripción" value={odc.description} />
+              {hasMultipleItems ? (
+                <section
+                  aria-label="Partidas de la ODC"
+                  className="col-span-full border-b border-border py-3"
+                >
+                  <h2 className="text-xs font-semibold tracking-[0.06em] text-muted-foreground uppercase">
+                    Partidas ({items.length})
+                  </h2>
+                  <ol data-testid="odc-line-items" className="mt-3 space-y-3">
+                    {items.map((item, index) => (
+                      <li
+                        key={`${item.description}-${index}`}
+                        className="grid min-w-0 gap-2 rounded-card border border-border/70 p-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-start"
+                      >
+                        <div className="min-w-0">
+                          <p className="whitespace-pre-wrap font-medium">
+                            {item.description}
+                          </p>
+                          <p className="mt-1 text-sm text-muted-foreground tabular-nums">
+                            {item.quantity} {item.unit} ·{' '}
+                            {formatCurrency(item.unitPriceCents)} por unidad
+                          </p>
+                        </div>
+                        <p className="text-right text-sm font-medium tabular-nums">
+                          {formatCurrency(item.quantity * item.unitPriceCents)}
+                        </p>
+                      </li>
+                    ))}
+                  </ol>
+                  <p className="mt-3 text-right text-sm font-semibold tabular-nums">
+                    Subtotal de partidas · {formatCurrency(odc.totalCents)}
+                  </p>
+                </section>
+              ) : (
+                <DefinitionRow label="Descripción" value={odc.description} />
+              )}
               <DefinitionRow label="Proveedor" value={odc.supplier} />
-              <DefinitionRow
-                label="Cantidad"
-                value={`${odc.quantity} ${odc.unit}`}
-                numeric
-              />
-              <DefinitionRow
-                label="Precio unitario"
-                value={formatCurrency(odc.unitPriceCents)}
-                numeric
-              />
+              {!hasMultipleItems ? (
+                <>
+                  <DefinitionRow
+                    label="Cantidad"
+                    value={`${odc.quantity} ${odc.unit}`}
+                    numeric
+                  />
+                  <DefinitionRow
+                    label="Precio unitario"
+                    value={formatCurrency(odc.unitPriceCents)}
+                    numeric
+                  />
+                </>
+              ) : null}
               <DefinitionRow
                 label="Última actualización"
                 value={formatDate(odc.updatedAt)}
