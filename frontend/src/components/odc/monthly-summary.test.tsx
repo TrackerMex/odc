@@ -105,6 +105,7 @@ describe('R3,R5,R6,R7,R8,R9: monthly operations summary', () => {
       ...summary,
       purchases: [{ ...summary.purchases[0], itemCount: 3 }],
     }
+    getMonthlyPurchaseSummary.mockResolvedValue(multiLineSummary)
     const { container } = render(
       <MonthlySummary initialSummary={multiLineSummary} />,
     )
