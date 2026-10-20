@@ -265,6 +265,48 @@ describe('R1,R2,R3,R4: real Nest input boundaries and zero side effects (#37)', 
       expect(repository.update).not.toHaveBeenCalled();
     });
   });
+  describe('R4: item bounds fail before any database write', () => {
+    it('rejects product and aggregate overflow on item payloads', async () => {
+      await request(server)
+        .post('/api/odcs')
+        .set('Cookie', cookie())
+        .send({
+          supplier: 'Test',
+          items: [
+            {
+              description: 'Cemento',
+              quantity: 50_000,
+              unit: 'bulto',
+              unitPriceCents: 50_000,
+            },
+          ],
+        })
+        .expect(400);
+      await request(server)
+        .post('/api/odcs')
+        .set('Cookie', cookie())
+        .send({
+          supplier: 'Test',
+          items: [
+            {
+              description: 'Cemento',
+              quantity: MAX,
+              unit: 'bulto',
+              unitPriceCents: 1,
+            },
+            {
+              description: 'Arena',
+              quantity: 1,
+              unit: 'm3',
+              unitPriceCents: 1,
+            },
+          ],
+        })
+        .expect(400);
+
+      expect(repository.create).not.toHaveBeenCalled();
+    });
+  });
   describe.each(['create', 'patch'])('R1: %s', (operation) => {
     function send(input: object) {
       return operation === 'create'
