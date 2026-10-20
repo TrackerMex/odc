@@ -29,9 +29,9 @@ function multiLineOrder(status: 'BORRADOR' | 'RECHAZADA' = 'BORRADOR') {
 function useCaseFor(order: PurchaseOrder) {
   const repository = {
     findById: jest.fn().mockResolvedValue(order),
-    update: jest.fn().mockImplementation((saved: PurchaseOrder) =>
-      Promise.resolve(saved),
-    ),
+    update: jest
+      .fn()
+      .mockImplementation((saved: PurchaseOrder) => Promise.resolve(saved)),
   };
   const suppliers = { findByName: jest.fn().mockResolvedValue(null) };
   return {

@@ -1,7 +1,4 @@
-import {
-  PurchaseOrder,
-  PurchaseOrderProps,
-} from './purchase-order.entity';
+import { PurchaseOrder, PurchaseOrderProps } from './purchase-order.entity';
 
 const actor = { userId: 'ops-user', role: 'DIRECTOR_OPS' as const };
 const first = {
@@ -18,7 +15,7 @@ const second = {
 };
 
 function lineItems(order: PurchaseOrder) {
-  return (order as unknown as { items: typeof first[] }).items;
+  return (order as unknown as { items: (typeof first)[] }).items;
 }
 
 describe('R1: purchase orders calculate their total from ordered line items', () => {
@@ -28,7 +25,7 @@ describe('R1: purchase orders calculate their total from ordered line items', ()
         items: [first, second],
         supplier: 'Proveedor',
         comments: 'Entregar por la mañana',
-      } as unknown as Parameters<typeof PurchaseOrder.createDraft>[0],
+      },
       actor,
     );
 
@@ -63,7 +60,7 @@ describe('R1: purchase orders calculate their total from ordered line items', ()
 
     order.edit({
       items: [second, first],
-    } as unknown as Parameters<typeof order.edit>[0]);
+    });
 
     expect(lineItems(order)).toEqual([second, first]);
     expect(order.totalCents).toBe(8500);

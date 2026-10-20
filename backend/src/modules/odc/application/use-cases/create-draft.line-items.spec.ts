@@ -1,3 +1,5 @@
+import { OdcStatusHistoryEntry } from '../../domain/entities/odc-status-history-entry.entity';
+import { PurchaseOrder } from '../../domain/entities/purchase-order.entity';
 import { CreateOdcDto } from '../dto/create-odc.dto';
 import { CreateDraftUseCase } from './create-draft.usecase';
 
@@ -10,12 +12,20 @@ const items = [
 describe('R2: create use-case persists normalized line items as a draft', () => {
   it('persists all lines, their aggregate total, and the existing opening history', async () => {
     const repository = {
-      create: jest.fn().mockImplementation((order) => Promise.resolve(order)),
+      create: jest.fn<
+        Promise<PurchaseOrder>,
+        [PurchaseOrder, OdcStatusHistoryEntry]
+      >((order) => Promise.resolve(order)),
     };
     const suppliers = {
-      findByName: jest.fn().mockResolvedValue({ id: 'supplier-1', name: 'Proveedor' }),
+      findByName: jest
+        .fn()
+        .mockResolvedValue({ id: 'supplier-1', name: 'Proveedor' }),
     };
-    const useCase = new CreateDraftUseCase(repository as never, suppliers as never);
+    const useCase = new CreateDraftUseCase(
+      repository as never,
+      suppliers as never,
+    );
     const input = Object.assign(new CreateOdcDto(), {
       items,
       supplier: 'Proveedor',

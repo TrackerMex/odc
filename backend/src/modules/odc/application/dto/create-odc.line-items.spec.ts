@@ -14,7 +14,11 @@ async function errorsFor(payload: Record<string, unknown>) {
 describe('R2: create DTO accepts either line items or the legacy scalar contract', () => {
   it('accepts a complete items collection with supplier and comments', async () => {
     await expect(
-      errorsFor({ items, supplier: 'Proveedor', comments: 'Entregar temprano' }),
+      errorsFor({
+        items,
+        supplier: 'Proveedor',
+        comments: 'Entregar temprano',
+      }),
     ).resolves.toEqual([]);
   });
 

@@ -133,22 +133,22 @@ describe('R6: versioned line-item migration preserves old ODC data', () => {
         ],
       );
     }
-    const headersBefore = await runner.query(
+    const headersBefore = await queryRows<Record<string, unknown>>(
       'SELECT * FROM purchase_orders ORDER BY id',
     );
-    const historyBefore = await runner.query(
+    const historyBefore = await queryRows<Record<string, unknown>>(
       'SELECT * FROM odc_status_history ORDER BY id',
     );
 
     await applyMigration();
 
-    const lines = await runner.query(
+    const lines = await queryRows<Record<string, unknown>>(
       'SELECT "orderId", position, description, quantity, unit, "unitPriceCents" FROM purchase_order_items ORDER BY "orderId", position',
     );
-    const headersAfter = await runner.query(
+    const headersAfter = await queryRows<Record<string, unknown>>(
       'SELECT * FROM purchase_orders ORDER BY id',
     );
-    const historyAfter = await runner.query(
+    const historyAfter = await queryRows<Record<string, unknown>>(
       'SELECT * FROM odc_status_history ORDER BY id',
     );
 
@@ -175,10 +175,10 @@ describe('R6: versioned line-item migration preserves old ODC data', () => {
       totalCents: 2499,
     };
     await insertOrders([successfulOrders[1], inconsistentOrder]);
-    const headersBefore = await runner.query(
+    const headersBefore = await queryRows<Record<string, unknown>>(
       'SELECT * FROM purchase_orders ORDER BY id',
     );
-    const historyBefore = await runner.query(
+    const historyBefore = await queryRows<Record<string, unknown>>(
       'SELECT * FROM odc_status_history ORDER BY id',
     );
 
@@ -190,18 +190,18 @@ describe('R6: versioned line-item migration preserves old ODC data', () => {
     }
     await runner.query('ROLLBACK').catch(() => undefined);
 
-    const tableState = await runner.query(
+    const tableState = await queryRows<{ table_name: string | null }>(
       "SELECT to_regclass('purchase_order_items') AS table_name",
     );
-    const headersAfter = await runner.query(
+    const headersAfter = await queryRows<Record<string, unknown>>(
       'SELECT * FROM purchase_orders ORDER BY id',
     );
-    const historyAfter = await runner.query(
+    const historyAfter = await queryRows<Record<string, unknown>>(
       'SELECT * FROM odc_status_history ORDER BY id',
     );
 
     expect(migrationError?.message).toContain(inconsistentOrder.id);
-    expect(tableState[0].table_name).toBeNull();
+    expect(tableState[0]?.table_name).toBeNull();
     expect(headersAfter).toEqual(headersBefore);
     expect(historyAfter).toEqual(historyBefore);
   });
@@ -234,5 +234,10 @@ describe('R6: versioned line-item migration preserves old ODC data', () => {
       'utf8',
     );
     await runner.query(sql);
+  }
+
+  async function queryRows<Row>(query: string): Promise<Row[]> {
+    const result: unknown = await runner.query(query);
+    return result as Row[];
   }
 });

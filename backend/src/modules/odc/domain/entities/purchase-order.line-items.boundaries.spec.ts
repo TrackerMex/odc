@@ -42,9 +42,7 @@ describe('R4: domain validates each item and the aggregate total', () => {
     expect(() =>
       PurchaseOrder.createDraft(
         {
-          items: [
-            { ...first, quantity: 50_000, unitPriceCents: 50_000 },
-          ],
+          items: [{ ...first, quantity: 50_000, unitPriceCents: 50_000 }],
           supplier: 'Proveedor',
         },
         actor,
@@ -74,8 +72,9 @@ describe('R4: domain validates each item and the aggregate total', () => {
     );
     const before = JSON.stringify(order);
 
-    expect(() => order.edit({ items: [{ ...first, unitPriceCents: MAX + 1 }] }))
-      .toThrow(InvalidOdcInputError);
+    expect(() =>
+      order.edit({ items: [{ ...first, unitPriceCents: MAX + 1 }] }),
+    ).toThrow(InvalidOdcInputError);
     expect(JSON.stringify(order)).toBe(before);
   });
 });

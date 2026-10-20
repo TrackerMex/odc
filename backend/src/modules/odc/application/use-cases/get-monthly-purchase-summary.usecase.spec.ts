@@ -85,9 +85,9 @@ describe('R1,R2,R6: monthly paid purchase summary', () => {
         .fn()
         .mockResolvedValue([purchase({ itemCount: 3 })]),
     } as unknown as PurchaseOrderRepository;
-    const result = await new GetMonthlyPurchaseSummaryUseCase(repository).execute(
-      '2026-07',
-    );
+    const result = await new GetMonthlyPurchaseSummaryUseCase(
+      repository,
+    ).execute('2026-07');
 
     expect(result.purchases[0].itemCount).toBe(3);
   });

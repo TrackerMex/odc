@@ -12,9 +12,7 @@ const LEGACY_LINE_FIELDS = [
 ] as const;
 
 @ValidatorConstraint({ name: 'exclusiveLineItemFormat', async: false })
-export class ExclusiveLineItemFormatConstraint
-  implements ValidatorConstraintInterface
-{
+export class ExclusiveLineItemFormatConstraint implements ValidatorConstraintInterface {
   validate(items: unknown, args: ValidationArguments): boolean {
     if (items === undefined) return true;
     const payload = args.object as Record<string, unknown>;

@@ -43,7 +43,7 @@ function orderRow(): PurchaseOrderOrmEntity {
     observations: null,
     createdAt: new Date('2026-10-01T00:00:00.000Z'),
     updatedAt: new Date('2026-10-01T00:00:00.000Z'),
-  } as PurchaseOrderOrmEntity;
+  };
 }
 
 function itemRows(): PurchaseOrderLineItemOrmEntity[] {
@@ -55,11 +55,7 @@ function itemRows(): PurchaseOrderLineItemOrmEntity[] {
 
 describe('R5: mappers hydrate and serialize ordered items with the legacy projection', () => {
   it('maps line rows into the domain in position order and calculates the total', () => {
-    const mapRows = toDomain as unknown as (
-      row: PurchaseOrderOrmEntity,
-      history: [],
-      items: PurchaseOrderLineItemOrmEntity[],
-    ) => PurchaseOrder;
+    const mapRows = toDomain;
 
     const order = mapRows(orderRow(), [], itemRows());
 
@@ -77,7 +73,7 @@ describe('R5: mappers hydrate and serialize ordered items with the legacy projec
       { userId: 'ops-user', role: 'DIRECTOR_OPS' },
     ).order;
     const response = toOdcResponse(order) as unknown as {
-      items: typeof first[];
+      items: (typeof first)[];
       description: string;
       totalCents: number;
       paymentEvidenceFile?: string;
@@ -87,10 +83,13 @@ describe('R5: mappers hydrate and serialize ordered items with the legacy projec
       total: 1,
       page: 1,
       pageSize: 20,
-    }) as unknown as { items: { items: typeof first[] }[] };
+    }) as unknown as { items: { items: (typeof first)[] }[] };
 
     expect(response.items).toEqual([first, second]);
-    expect(response).toMatchObject({ description: 'Cemento', totalCents: 8500 });
+    expect(response).toMatchObject({
+      description: 'Cemento',
+      totalCents: 8500,
+    });
     expect(page.items[0].items).toEqual([first, second]);
     expect(response).not.toHaveProperty('paymentEvidenceFile');
   });

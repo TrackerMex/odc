@@ -338,14 +338,15 @@ export class PurchaseOrder {
 
   static computeItemsTotalCents(items: OdcLineItem[]): number {
     if (!Array.isArray(items) || items.length === 0) {
-      throw new InvalidOdcInputError('La ODC debe incluir al menos una partida.');
+      throw new InvalidOdcInputError(
+        'La ODC debe incluir al menos una partida.',
+      );
     }
     return items.reduce((sum, item) => {
       PurchaseOrder.validateLineItem(item);
-      const total = sum + PurchaseOrder.computeTotalCents(
-        item.quantity,
-        item.unitPriceCents,
-      );
+      const total =
+        sum +
+        PurchaseOrder.computeTotalCents(item.quantity, item.unitPriceCents);
       if (!Number.isSafeInteger(total) || total > MAX_ODC_INTEGER) {
         throw new InvalidOdcInputError(
           `La suma de partidas debe ser un entero positivo hasta ${MAX_ODC_INTEGER}.`,

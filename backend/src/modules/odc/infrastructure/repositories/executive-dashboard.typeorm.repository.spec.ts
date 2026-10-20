@@ -74,7 +74,11 @@ describe('R2,R5,R6,R7,R11: executive dashboard TypeORM snapshot', () => {
 
     expect(manager.findAndCount).toHaveBeenCalledTimes(1);
     expect(manager.find).toHaveBeenCalledTimes(3);
-    const findTargets = manager.find.mock.calls.map(([target]) => target);
+    const findCalls = manager.find.mock.calls as unknown as [
+      unknown,
+      unknown,
+    ][];
+    const findTargets = findCalls.map(([target]) => target);
     expect(
       findTargets.filter((target) => target === PurchaseOrderOrmEntity),
     ).toHaveLength(1);
@@ -106,13 +110,20 @@ describe('R2,R5,R6,R7,R11: executive dashboard TypeORM snapshot', () => {
         order: { createdAt: 'ASC', id: 'ASC' },
       }),
     );
-    expect(manager.find).toHaveBeenCalledWith(
-      PurchaseOrderLineItemOrmEntity,
-      expect.objectContaining({
-        where: expect.objectContaining({ orderId: expect.anything() }),
-        order: { orderId: 'ASC', position: 'ASC' },
-      }),
+    const lineItemFindCalls = findCalls.filter(
+      ([target]) => target === PurchaseOrderLineItemOrmEntity,
     );
+    for (const [, options] of lineItemFindCalls) {
+      const queryOptions = options as {
+        where?: { orderId?: unknown };
+        order?: { orderId?: string; position?: string };
+      };
+      expect(queryOptions.where?.orderId).toBeDefined();
+      expect(queryOptions.order).toEqual({
+        orderId: 'ASC',
+        position: 'ASC',
+      });
+    }
     expect(result).toMatchObject({
       priority: { total: 7, items: [{ id: 'odc-1', itemCount: 2 }] },
       pulse: {

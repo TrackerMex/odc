@@ -52,13 +52,15 @@ function rawQuery(rows: unknown[]) {
 describe('R5: compact purchase views report the stored line count', () => {
   it('returns itemCount in each monthly purchase', async () => {
     const manager = {
-      find: jest.fn().mockImplementation((target: unknown) =>
-        Promise.resolve(
-          target === PurchaseOrderOrmEntity
-            ? [order('1'), order('2')]
-            : [line('1', 0), line('1', 1), line('2', 0)],
+      find: jest
+        .fn()
+        .mockImplementation((target: unknown) =>
+          Promise.resolve(
+            target === PurchaseOrderOrmEntity
+              ? [order('1'), order('2')]
+              : [line('1', 0), line('1', 1), line('2', 0)],
+          ),
         ),
-      ),
     };
     const repository = new PurchaseOrderTypeOrmRepository({
       manager,
@@ -71,7 +73,9 @@ describe('R5: compact purchase views report the stored line count', () => {
 
   it('returns itemCount for the executive task queue', async () => {
     const manager = {
-      findAndCount: jest.fn().mockResolvedValue([[order('1', 'PENDIENTE_ADMIN')], 1]),
+      findAndCount: jest
+        .fn()
+        .mockResolvedValue([[order('1', 'PENDIENTE_ADMIN')], 1]),
       find: jest.fn().mockResolvedValue([line('1', 0), line('1', 1)]),
     };
     const repository = new PurchaseOrderTypeOrmRepository({
@@ -96,13 +100,15 @@ describe('R5: compact purchase views report the stored line count', () => {
     const manager = {
       count: jest.fn().mockResolvedValue(1),
       findAndCount: jest.fn().mockResolvedValue([[priority], 1]),
-      find: jest.fn().mockImplementation((target: unknown) =>
-        Promise.resolve(
-          target === PurchaseOrderOrmEntity
-            ? [oldest]
-            : [line('1', 0), line('1', 1), line('2', 0), line('2', 1)],
+      find: jest
+        .fn()
+        .mockImplementation((target: unknown) =>
+          Promise.resolve(
+            target === PurchaseOrderOrmEntity
+              ? [oldest]
+              : [line('1', 0), line('1', 1), line('2', 0), line('2', 1)],
+          ),
         ),
-      ),
       createQueryBuilder: jest
         .fn()
         .mockReturnValueOnce(metrics)

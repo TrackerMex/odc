@@ -8,7 +8,9 @@ describe('R5: normalized purchase-order line-item entity', () => {
       (entry) => entry.target === PurchaseOrderLineItemOrmEntity,
     );
     const columns = getMetadataArgsStorage()
-      .columns.filter((entry) => entry.target === PurchaseOrderLineItemOrmEntity)
+      .columns.filter(
+        (entry) => entry.target === PurchaseOrderLineItemOrmEntity,
+      )
       .map((entry) => entry.propertyName);
 
     expect(table?.name).toBe('purchase_order_items');

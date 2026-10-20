@@ -30,15 +30,17 @@ function repositoryWithManager(initialLines: Record<string, unknown>[] = []) {
   const persistedLines = [...initialLines];
   let parent: Record<string, unknown> = {};
   const manager = {
-    find: jest.fn().mockImplementation((target: unknown) =>
-      Promise.resolve(
-        target === PurchaseOrderLineItemOrmEntity ? persistedLines : [],
+    find: jest
+      .fn()
+      .mockImplementation((target: unknown) =>
+        Promise.resolve(
+          target === PurchaseOrderLineItemOrmEntity ? persistedLines : [],
+        ),
       ),
-    ),
     findOne: jest.fn(),
-    findOneOrFail: jest.fn().mockImplementation(() =>
-      Promise.resolve({ id: ODC_ID, ...parent }),
-    ),
+    findOneOrFail: jest
+      .fn()
+      .mockImplementation(() => Promise.resolve({ id: ODC_ID, ...parent })),
     findAndCount: jest.fn(),
     save: jest.fn().mockImplementation((target: unknown, value: object) => {
       if (target === PurchaseOrderOrmEntity) {
@@ -47,19 +49,29 @@ function repositoryWithManager(initialLines: Record<string, unknown>[] = []) {
       }
       return Promise.resolve({ id: 'history-1', ...value });
     }),
-    insert: jest.fn().mockImplementation((target: unknown, values: object[]) => {
-      if (target === PurchaseOrderLineItemOrmEntity)
-        persistedLines.push(...values);
-      return Promise.resolve({ identifiers: [] });
-    }),
+    insert: jest
+      .fn()
+      .mockImplementation((target: unknown, values: object[]) => {
+        if (target === PurchaseOrderLineItemOrmEntity)
+          persistedLines.push(...values);
+        return Promise.resolve({ identifiers: [] });
+      }),
     delete: jest.fn().mockImplementation(() => {
       persistedLines.splice(0, persistedLines.length);
       return Promise.resolve({ affected: initialLines.length });
     }),
-    update: jest.fn().mockImplementation((_target, _where, values) => {
-      parent = { ...values };
-      return Promise.resolve({ affected: 1 });
-    }),
+    update: jest
+      .fn()
+      .mockImplementation(
+        (
+          _target: unknown,
+          _where: unknown,
+          values: Record<string, unknown>,
+        ) => {
+          parent = { ...values };
+          return Promise.resolve({ affected: 1 });
+        },
+      ),
   };
   const dataSource = {
     manager,
