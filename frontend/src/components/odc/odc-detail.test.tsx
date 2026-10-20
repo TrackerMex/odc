@@ -95,7 +95,9 @@ describe('R7,R8: ODC detail and chronological history', () => {
     }
     render(<OdcDetail odc={multiLineOdc} />)
 
-    const lineItems = screen.getByRole('region', { name: /partidas de la odc/i })
+    const lineItems = screen.getByRole('region', {
+      name: /partidas de la odc/i,
+    })
     const rows = within(lineItems).getAllByRole('listitem')
     expect(rows).toHaveLength(2)
     expect(rows[0].textContent).toContain('Sensores GPS')
@@ -319,7 +321,9 @@ describe('R1: definition rows and a single emphasized total', () => {
     expect(screen.getByText('Descripción').tagName).toBe('DT')
     expect(screen.getByText(odc.description).tagName).toBe('DD')
 
-    const total = screen.getByText('Total').closest('[data-detail-row]')
+    const total = screen
+      .getByText('Total')
+      .closest('[data-detail-row]') as HTMLElement | null
     expect(total?.className).toMatch(/col-span-full/)
     expect(total?.className).toMatch(/border-t-2/)
     expect(within(total!).getByText(/449[.,]70/).className).toMatch(

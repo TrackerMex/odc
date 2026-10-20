@@ -426,7 +426,7 @@ describe('frontend-dashboard-template R2: financial panel, priority and operatin
     ).toBeTruthy()
   })
 
-  it('reuses the R6 ageing orders data verbatim as the alerts section, without a new data source', () => {
+  it('R5: shows the line count in R6 ageing alerts', () => {
     render(<ExecutiveDashboard userName="Ana Pérez" dashboard={dashboard} />)
 
     expect(

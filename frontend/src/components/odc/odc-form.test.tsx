@@ -345,9 +345,11 @@ describe('workspace v2 R11,R12: reviewed creation and safe send recovery', () =>
     expect(onSuccess).not.toHaveBeenCalled()
     expect(screen.queryByRole('button', { name: /ver detalle/i })).toBeNull()
     expect(
-      screen.getByRole('button', {
-        name: /guardar como borrador/i,
-      }).disabled,
+      (
+        screen.getByRole('button', {
+          name: /guardar como borrador/i,
+        }) as HTMLButtonElement
+      ).disabled,
     ).toBe(true)
   })
 
@@ -575,9 +577,9 @@ describe('R5,R7: ODC multi-line item form', () => {
     fireEvent.click(screen.getByRole('button', { name: /quitar partida 2/i }))
     expect(screen.queryByDisplayValue('Instalación')).toBeNull()
     expect(
-      screen.getByRole('button', { name: /quitar partida 1/i }).hasAttribute(
-        'disabled',
-      ),
+      screen
+        .getByRole('button', { name: /quitar partida 1/i })
+        .hasAttribute('disabled'),
     ).toBe(true)
 
     fireEvent.click(screen.getByRole('button', { name: /agregar partida/i }))
