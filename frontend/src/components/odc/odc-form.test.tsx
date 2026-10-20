@@ -613,11 +613,9 @@ describe('R5,R7: ODC multi-line item form', () => {
           unitPriceCents: 2_500,
         },
       ],
-      description: 'Sensores GPS',
-      quantity: 3,
-      unit: 'pieza',
-      unitPriceCents: 14_990,
+      supplier: 'Suntech',
     })
+    expect(persist.mock.calls[0][0]).not.toHaveProperty('description')
     expect(onSuccess).toHaveBeenCalledWith(updated)
   })
 
