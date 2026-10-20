@@ -107,4 +107,20 @@ describe('R1: purchase orders calculate their total from ordered line items', ()
     expect(order.totalCents).toBe(11000);
     expect(order.quantity).toBe(4);
   });
+
+  it('reconciles legacy scalar projections when cloning an order with spread', () => {
+    const { order } = PurchaseOrder.createDraft(
+      { items: [first, second], supplier: 'Proveedor' },
+      actor,
+    );
+
+    const clone = new PurchaseOrder({
+      ...order,
+      quantity: 4,
+      totalCents: 11000,
+    });
+
+    expect(lineItems(clone)).toEqual([{ ...first, quantity: 4 }, second]);
+    expect(clone.totalCents).toBe(11000);
+  });
 });
