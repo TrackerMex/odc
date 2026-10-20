@@ -41,6 +41,7 @@ export class UpdateDraftUseCase {
     // The domain applies the T1 fields, enforces the editable statuses and
     // recomputes totalCents (R2, R11).
     order.edit({
+      items: input.items,
       description: input.description,
       quantity: input.quantity,
       unit: input.unit,
