@@ -28,7 +28,7 @@ describe('R5: normalized purchase-order line-item entity', () => {
   it('uses a unique order-position pair and cascades deletion with its ODC', () => {
     const index = getMetadataArgsStorage().indices.find(
       (entry) =>
-        entry.target === PurchaseOrderLineItemOrmEntity && entry.options.unique,
+        entry.target === PurchaseOrderLineItemOrmEntity && entry.unique,
     );
     const relation = getMetadataArgsStorage().relations.find(
       (entry) =>
