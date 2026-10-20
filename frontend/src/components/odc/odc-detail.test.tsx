@@ -73,6 +73,35 @@ describe('R7,R8: ODC detail and chronological history', () => {
     expect(entries[0].textContent).toMatch(/borrador/i)
     expect(entries[1].textContent).toMatch(/rechazada/i)
   })
+
+  it('R5: shows every line item in persisted order', () => {
+    const multiLineOdc = {
+      ...odc,
+      items: [
+        {
+          description: 'Sensores GPS',
+          quantity: 3,
+          unit: 'pieza',
+          unitPriceCents: 14_990,
+        },
+        {
+          description: 'Instalación y pruebas',
+          quantity: 1,
+          unit: 'servicio',
+          unitPriceCents: 5_000,
+        },
+      ],
+      totalCents: 49_970,
+    }
+    render(<OdcDetail odc={multiLineOdc} />)
+
+    const lineItems = screen.getByRole('region', { name: /partidas de la odc/i })
+    const rows = within(lineItems).getAllByRole('listitem')
+    expect(rows).toHaveLength(2)
+    expect(rows[0].textContent).toContain('Sensores GPS')
+    expect(rows[1].textContent).toContain('Instalación y pruebas')
+    expect(within(lineItems).getByText(/499[.,]70/)).toBeTruthy()
+  })
 })
 
 describe('R7: payment information in the shared detail', () => {

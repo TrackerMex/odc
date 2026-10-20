@@ -492,6 +492,153 @@ describe('R8,R9,R10,R11: rejected ODC editing, resend and failures', () => {
   })
 })
 
+describe('R5,R7: ODC multi-line item form', () => {
+  it('R7: adds and removes line items, keeps one line, and sends the ordered collection', async () => {
+    const initialOdc = {
+      ...draftOdc(),
+      items: [
+        {
+          description: 'Sensores GPS',
+          quantity: 3,
+          unit: 'pieza',
+          unitPriceCents: 14_990,
+        },
+        {
+          description: 'Instalación',
+          quantity: 1,
+          unit: 'servicio',
+          unitPriceCents: 5_000,
+        },
+      ],
+    }
+    const updated = {
+      ...initialOdc,
+      items: [
+        initialOdc.items[0],
+        {
+          description: 'Licencias',
+          quantity: 2,
+          unit: 'licencia',
+          unitPriceCents: 2_500,
+        },
+      ],
+    }
+    const persist = vi.fn().mockResolvedValue(updated)
+    const onSuccess = vi.fn()
+    render(
+      <OdcForm
+        user={user}
+        suppliers={suppliers}
+        initialOdc={initialOdc}
+        persist={persist}
+        submit={vi.fn()}
+        onSuccess={onSuccess}
+      />,
+    )
+
+    expect(screen.getByDisplayValue('Sensores GPS')).toBeTruthy()
+    expect(screen.getByDisplayValue('Instalación')).toBeTruthy()
+    fireEvent.click(screen.getByRole('button', { name: /quitar partida 2/i }))
+    expect(screen.queryByDisplayValue('Instalación')).toBeNull()
+    expect(
+      screen.getByRole('button', { name: /quitar partida 1/i }).hasAttribute(
+        'disabled',
+      ),
+    ).toBe(true)
+
+    fireEvent.click(screen.getByRole('button', { name: /agregar partida/i }))
+    fireEvent.change(screen.getByLabelText(/descripción partida 2/i), {
+      target: { value: 'Licencias' },
+    })
+    fireEvent.change(screen.getByLabelText(/cantidad partida 2/i), {
+      target: { value: '2' },
+    })
+    fireEvent.change(screen.getByLabelText(/unidad partida 2/i), {
+      target: { value: 'licencia' },
+    })
+    fireEvent.change(screen.getByLabelText(/precio unitario partida 2/i), {
+      target: { value: '25.00' },
+    })
+    fireEvent.click(
+      screen.getByRole('button', { name: /guardar como borrador/i }),
+    )
+
+    await vi.waitFor(() => expect(persist).toHaveBeenCalled())
+    expect(persist.mock.calls[0][0]).toMatchObject({
+      items: [
+        {
+          description: 'Sensores GPS',
+          quantity: 3,
+          unit: 'pieza',
+          unitPriceCents: 14_990,
+        },
+        {
+          description: 'Licencias',
+          quantity: 2,
+          unit: 'licencia',
+          unitPriceCents: 2_500,
+        },
+      ],
+      description: 'Sensores GPS',
+      quantity: 3,
+      unit: 'pieza',
+      unitPriceCents: 14_990,
+    })
+    expect(onSuccess).toHaveBeenCalledWith(updated)
+  })
+
+  it('R7: preserves every line after a save failure so the user can correct and retry', async () => {
+    const persist = vi
+      .fn()
+      .mockRejectedValueOnce(new ApiError(409, 'Conflict'))
+      .mockResolvedValue(draftOdc())
+    const initialOdc = {
+      ...draftOdc(),
+      items: [
+        {
+          description: 'Sensores GPS',
+          quantity: 3,
+          unit: 'pieza',
+          unitPriceCents: 14_990,
+        },
+        {
+          description: 'Cableado',
+          quantity: 2,
+          unit: 'rollo',
+          unitPriceCents: 1_250,
+        },
+      ],
+    }
+    render(
+      <OdcForm
+        user={user}
+        suppliers={suppliers}
+        initialOdc={initialOdc}
+        persist={persist}
+        submit={vi.fn()}
+        onSuccess={vi.fn()}
+      />,
+    )
+
+    fireEvent.change(screen.getByLabelText(/descripción partida 2/i), {
+      target: { value: 'Cableado corregido' },
+    })
+    fireEvent.click(
+      screen.getByRole('button', { name: /guardar como borrador/i }),
+    )
+    expect(await screen.findByRole('alert')).toBeTruthy()
+    expect(screen.getByDisplayValue('Sensores GPS')).toBeTruthy()
+    expect(screen.getByDisplayValue('Cableado corregido')).toBeTruthy()
+    fireEvent.click(
+      screen.getByRole('button', { name: /guardar como borrador/i }),
+    )
+    await vi.waitFor(() => expect(persist).toHaveBeenCalledTimes(2))
+    expect(persist.mock.calls[1][0].items[1].description).toBe(
+      'Cableado corregido',
+    )
+  })
+})
+
 describe('R2,R3,R4: saved BORRADOR editing and status transition', () => {
   it('saves draft changes without submitting', async () => {
     const initialOdc = draftOdc()
