@@ -46,6 +46,8 @@ function buildOrder(
 
 interface ManagerMock {
   save: jest.Mock;
+  insert: jest.Mock;
+  delete: jest.Mock;
   update: jest.Mock;
   findOneOrFail: jest.Mock;
   find: jest.Mock;
@@ -66,6 +68,8 @@ function createManagerMock(): ManagerMock {
         },
       ),
     save: jest.fn(),
+    insert: jest.fn().mockResolvedValue({ identifiers: [] }),
+    delete: jest.fn().mockResolvedValue({ affected: 0 }),
     find: jest.fn().mockResolvedValue([]),
     findOne: jest.fn(),
     findAndCount: jest.fn(),

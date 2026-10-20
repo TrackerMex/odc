@@ -93,6 +93,7 @@ describe('executive-workspace-v2 R5,R7,R8,R9: complete dashboard aggregates', ()
       description: 'Material',
       supplier: 'ACME',
       totalCents: 100,
+      itemCount: 1,
     };
     const data = {
       priority: {

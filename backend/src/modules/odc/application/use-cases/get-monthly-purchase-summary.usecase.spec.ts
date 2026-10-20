@@ -15,6 +15,7 @@ function purchase(overrides: Partial<MonthlyPurchase> = {}): MonthlyPurchase {
     quantity: 2,
     unit: 'pieza',
     totalCents: 12_500,
+    itemCount: 1,
     paymentDate: '2026-07-10',
     warehouseEntryDate: '2026-07-13',
     hasInvoice: true,
@@ -76,5 +77,18 @@ describe('R1,R2,R6: monthly paid purchase summary', () => {
       averageWarehouseDays: null,
       purchases: [],
     });
+  });
+
+  it('preserves the line count in each returned purchase row', async () => {
+    const repository = {
+      findMonthlyPurchases: jest
+        .fn()
+        .mockResolvedValue([purchase({ itemCount: 3 })]),
+    } as unknown as PurchaseOrderRepository;
+    const result = await new GetMonthlyPurchaseSummaryUseCase(repository).execute(
+      '2026-07',
+    );
+
+    expect(result.purchases[0].itemCount).toBe(3);
   });
 });
