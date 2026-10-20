@@ -210,6 +210,61 @@ describe('R1,R2,R3,R4: real Nest input boundaries and zero side effects (#37)', 
       expect(repository.create).not.toHaveBeenCalled();
     });
   });
+  describe('R3: PATCH replaces the collection or applies scalar changes to its first line', () => {
+    const lines = [
+      {
+        description: 'Cemento',
+        quantity: 2,
+        unit: 'bulto',
+        unitPriceCents: 1250,
+      },
+      { description: 'Arena', quantity: 3, unit: 'm3', unitPriceCents: 2000 },
+    ];
+
+    beforeEach(() => {
+      const { order: draft } = PurchaseOrder.createDraft(
+        { items: lines, supplier: 'Test' },
+        { userId: OWNER, role: 'DIRECTOR_OPS' },
+      );
+      order = new PurchaseOrder({
+        ...draft,
+        id: ID,
+        odcNumber: 'ODC-2026-00037',
+      });
+      repository.findById.mockResolvedValue(order);
+    });
+
+    it('returns all replacement items and the updated total', async () => {
+      const replacement = [...lines].reverse();
+      const response = await request(server)
+        .patch(`/api/odcs/${ID}`)
+        .set('Cookie', cookie())
+        .send({ items: replacement })
+        .expect(200);
+
+      expect(response.body).toMatchObject({
+        items: replacement,
+        totalCents: 8500,
+        description: 'Arena',
+        status: 'BORRADOR',
+      });
+    });
+
+    it('rejects empty and mixed item payloads before persistence', async () => {
+      await request(server)
+        .patch(`/api/odcs/${ID}`)
+        .set('Cookie', cookie())
+        .send({ items: [] })
+        .expect(400);
+      await request(server)
+        .patch(`/api/odcs/${ID}`)
+        .set('Cookie', cookie())
+        .send({ items: lines, quantity: 4 })
+        .expect(400);
+
+      expect(repository.update).not.toHaveBeenCalled();
+    });
+  });
   describe.each(['create', 'patch'])('R1: %s', (operation) => {
     function send(input: object) {
       return operation === 'create'
