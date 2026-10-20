@@ -41,6 +41,7 @@ import {
   FileRecoveryOutcome,
 } from '../../domain/repositories/purchase-order.repository';
 import { OdcStatusHistoryOrmEntity } from '../entities/odc-status-history.orm-entity';
+import { PurchaseOrderLineItemOrmEntity } from '../entities/purchase-order-line-item.orm-entity';
 import { PurchaseOrderOrmEntity } from '../entities/purchase-order.orm-entity';
 import {
   historyToOrmValues,
@@ -78,15 +79,23 @@ export class PurchaseOrderTypeOrmRepository implements PurchaseOrderRepository {
             PurchaseOrderOrmEntity,
             toOrmValues(order),
           );
+          await manager.insert(
+            PurchaseOrderLineItemOrmEntity,
+            toLineItemOrmValues(saved.id, order.items),
+          );
           await manager.save(
             OdcStatusHistoryOrmEntity,
             historyToOrmValues(historyEntry, saved.id),
           );
+          const itemRows = await manager.find(PurchaseOrderLineItemOrmEntity, {
+            where: { orderId: saved.id },
+            order: { position: 'ASC' },
+          });
           const historyRows = await manager.find(OdcStatusHistoryOrmEntity, {
             where: { odcId: saved.id },
             order: { createdAt: 'ASC' },
           });
-          return toDomain(saved, historyRows);
+          return toDomain(saved, historyRows, itemRows);
         });
       } catch (error) {
         if (attempt === CREATE_MAX_ATTEMPTS || !isUniqueViolation(error)) {
@@ -133,6 +142,13 @@ export class PurchaseOrderTypeOrmRepository implements PurchaseOrderRepository {
         { ...toOrmValues(order), version: order.version + 1 },
       );
       if (result.affected !== 1) throw new OdcConcurrentUpdateError();
+      await manager.delete(PurchaseOrderLineItemOrmEntity, {
+        orderId: order.id,
+      });
+      await manager.insert(
+        PurchaseOrderLineItemOrmEntity,
+        toLineItemOrmValues(order.id!, order.items),
+      );
       // ORM hydration preserves date strings; UPDATE holds this row until commit.
       const saved = await manager.findOneOrFail(PurchaseOrderOrmEntity, {
         where: { id: order.id! },
@@ -149,11 +165,15 @@ export class PurchaseOrderTypeOrmRepository implements PurchaseOrderRepository {
           { id: uploadTicket.id },
           { state: 'associated', uploadConfirmed: true },
         );
+      const itemRows = await manager.find(PurchaseOrderLineItemOrmEntity, {
+        where: { orderId: saved.id },
+        order: { position: 'ASC' },
+      });
       const historyRows = await manager.find(OdcStatusHistoryOrmEntity, {
         where: { odcId: saved.id },
         order: { createdAt: 'ASC' },
       });
-      return toDomain(saved, historyRows);
+      return toDomain(saved, historyRows, itemRows);
     });
   }
 
@@ -276,7 +296,11 @@ export class PurchaseOrderTypeOrmRepository implements PurchaseOrderRepository {
       OdcStatusHistoryOrmEntity,
       { where: { odcId: id }, order: { createdAt: 'ASC' } },
     );
-    return toDomain(row, historyRows);
+    const itemRows = await this.dataSource.manager.find(
+      PurchaseOrderLineItemOrmEntity,
+      { where: { orderId: id }, order: { position: 'ASC' } },
+    );
+    return toDomain(row, historyRows, itemRows);
   }
 
   async findAll(
@@ -293,8 +317,17 @@ export class PurchaseOrderTypeOrmRepository implements PurchaseOrderRepository {
         take: pageSize,
       },
     );
+    const lineRows = rows.length
+      ? await this.dataSource.manager.find(PurchaseOrderLineItemOrmEntity, {
+          where: { orderId: In(rows.map((row) => row.id)) },
+          order: { orderId: 'ASC', position: 'ASC' },
+        })
+      : [];
+    const lineItemsByOrderId = groupLineItems(lineRows);
     return {
-      items: rows.map((row) => toDomain(row)),
+      items: rows.map((row) =>
+        toDomain(row, [], lineItemsByOrderId.get(row.id) ?? []),
+      ),
       total,
       page,
       pageSize,
@@ -316,6 +349,9 @@ export class PurchaseOrderTypeOrmRepository implements PurchaseOrderRepository {
       relations: { createdBy: true },
       order: { paymentDate: 'ASC', odcNumber: 'ASC' },
     });
+    const lineItemsByOrderId = await this.getLineItemsByOrderId(
+      rows.map((row) => row.id),
+    );
     return rows.map((row) => ({
       id: row.id,
       odcNumber: row.odcNumber,
@@ -331,6 +367,7 @@ export class PurchaseOrderTypeOrmRepository implements PurchaseOrderRepository {
       hasInvoice: row.invoiceFile !== null,
       comments: row.comments ?? null,
       observations: row.observations ?? null,
+      itemCount: lineItemsByOrderId.get(row.id)?.length ?? 1,
     }));
   }
 
@@ -380,6 +417,9 @@ export class PurchaseOrderTypeOrmRepository implements PurchaseOrderRepository {
       actionablePromise,
       this.createdOrderDistribution(viewer, month),
     ]);
+    const oldestLineItems = await this.getLineItemsByOrderId(
+      oldestActiveRows.map((row) => row.id),
+    );
 
     return {
       priority,
@@ -400,7 +440,12 @@ export class PurchaseOrderTypeOrmRepository implements PurchaseOrderRepository {
         current: metrics.get(month) ?? EMPTY_MONTHLY_METRICS,
         previous: metrics.get(previousMonth) ?? EMPTY_MONTHLY_METRICS,
       },
-      oldestActiveOrders: oldestActiveRows.map(toExecutiveDashboardOrder),
+      oldestActiveOrders: oldestActiveRows.map((row) =>
+        toExecutiveDashboardOrder(
+          row,
+          oldestLineItems.get(row.id)?.length ?? 1,
+        ),
+      ),
       topSuppliers: suppliers,
     };
   }
@@ -426,12 +471,34 @@ export class PurchaseOrderTypeOrmRepository implements PurchaseOrderRepository {
         take: pageSize,
       },
     );
+    const lineItemsByOrderId = await this.getLineItemsByOrderId(
+      rows.map((row) => row.id),
+    );
     return {
-      items: rows.map(toExecutiveDashboardOrder),
+      items: rows.map((row) =>
+        toExecutiveDashboardOrder(
+          row,
+          lineItemsByOrderId.get(row.id)?.length ?? 1,
+        ),
+      ),
       total,
       page,
       pageSize,
     };
+  }
+
+  private async getLineItemsByOrderId(
+    orderIds: string[],
+  ): Promise<Map<string, PurchaseOrderLineItemOrmEntity[]>> {
+    if (orderIds.length === 0) return new Map();
+    const rows = await this.dataSource.manager.find(
+      PurchaseOrderLineItemOrmEntity,
+      {
+        where: { orderId: In(orderIds) },
+        order: { orderId: 'ASC', position: 'ASC' },
+      },
+    );
+    return groupLineItems(rows);
   }
 
   private async createdOrderDistribution(
@@ -560,6 +627,7 @@ function executiveOrderSelection(): FindOptionsSelect<PurchaseOrderOrmEntity> {
 
 function toExecutiveDashboardOrder(
   row: PurchaseOrderOrmEntity,
+  itemCount: number,
 ): ExecutiveDashboardOrder {
   return {
     id: row.id,
@@ -569,7 +637,37 @@ function toExecutiveDashboardOrder(
     supplier: row.supplier,
     totalCents: row.totalCents,
     createdAt: row.createdAt,
+    itemCount,
   };
+}
+
+function toLineItemOrmValues(
+  orderId: string,
+  items: PurchaseOrder['items'],
+): Partial<PurchaseOrderLineItemOrmEntity>[] {
+  return items.map((item, position) => ({
+    orderId,
+    position,
+    description: item.description,
+    quantity: item.quantity,
+    unit: item.unit,
+    unitPriceCents: item.unitPriceCents,
+  }));
+}
+
+function groupLineItems(
+  rows: PurchaseOrderLineItemOrmEntity[],
+): Map<string, PurchaseOrderLineItemOrmEntity[]> {
+  const grouped = new Map<string, PurchaseOrderLineItemOrmEntity[]>();
+  for (const row of rows) {
+    const group = grouped.get(row.orderId) ?? [];
+    group.push(row);
+    grouped.set(row.orderId, group);
+  }
+  for (const group of grouped.values()) {
+    group.sort((left, right) => left.position - right.position);
+  }
+  return grouped;
 }
 
 function monthStart(month: string): string {

@@ -23,6 +23,7 @@ import { UploadPaymentEvidenceUseCase } from './application/use-cases/upload-pay
 import { OdcController } from './infrastructure/controller/odc.controller';
 import { OdcStatusHistoryOrmEntity } from './infrastructure/entities/odc-status-history.orm-entity';
 import { PurchaseOrderOrmEntity } from './infrastructure/entities/purchase-order.orm-entity';
+import { PurchaseOrderLineItemOrmEntity } from './infrastructure/entities/purchase-order-line-item.orm-entity';
 import { PurchaseOrderTypeOrmRepository } from './infrastructure/repositories/purchase-order.typeorm.repository';
 
 @Module({
@@ -30,6 +31,7 @@ import { PurchaseOrderTypeOrmRepository } from './infrastructure/repositories/pu
     TypeOrmModule.forFeature([
       OdcFileUploadOrmEntity,
       PurchaseOrderOrmEntity,
+      PurchaseOrderLineItemOrmEntity,
       OdcStatusHistoryOrmEntity,
     ]),
     FilesModule,
