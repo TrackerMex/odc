@@ -54,3 +54,36 @@ describe('R2: taxable orders recalculate on edit and retain amounts on transitio
     expect(order).toMatchObject({ status: 'RECHAZADA', subtotalCents: 25000, vatRateBps: 1600, vatCents: 4000, totalCents: 29000 });
   });
 });
+
+describe('R3: historic orders preserve amounts until an old draft is saved', () => {
+  function historical(status: 'BORRADOR' | 'RECHAZADA' = 'BORRADOR') {
+    return new PurchaseOrder({
+      ...createOrder([10000]),
+      id: 'old-odc',
+      status,
+      subtotalCents: 10000,
+      vatRateBps: 0,
+      vatCents: 0,
+      totalCents: 10000,
+    });
+  }
+
+  it('applies VAT when an old draft is edited even if only comments change', () => {
+    const order = historical();
+    order.edit({ comments: 'Actualizado' });
+    expect(order).toMatchObject({ subtotalCents: 10000, vatRateBps: 1600, vatCents: 1600, totalCents: 11600 });
+  });
+
+  it('preserves historic rejected orders when edited and submitted', () => {
+    const order = historical('RECHAZADA');
+    order.edit({ unitPriceCents: 20000 });
+    order.transition('submit', 'DIRECTOR_OPS');
+    expect(order).toMatchObject({ subtotalCents: 20000, vatRateBps: 0, vatCents: 0, totalCents: 20000 });
+  });
+
+  it('does not apply VAT to an old draft merely submitted without an edit', () => {
+    const order = historical();
+    order.transition('submit', 'DIRECTOR_OPS');
+    expect(order).toMatchObject({ vatRateBps: 0, vatCents: 0, totalCents: 10000 });
+  });
+});
