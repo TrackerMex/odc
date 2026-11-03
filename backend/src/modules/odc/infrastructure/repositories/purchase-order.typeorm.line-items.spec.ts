@@ -51,11 +51,13 @@ function repositoryWithManager(initialLines: Record<string, unknown>[] = []) {
     }),
     insert: jest
       .fn()
-      .mockImplementation((target: unknown, values: object[]) => {
-        if (target === PurchaseOrderLineItemOrmEntity)
-          persistedLines.push(...values);
-        return Promise.resolve({ identifiers: [] });
-      }),
+      .mockImplementation(
+        (target: unknown, values: Record<string, unknown>[]) => {
+          if (target === PurchaseOrderLineItemOrmEntity)
+            persistedLines.push(...values);
+          return Promise.resolve({ identifiers: [] });
+        },
+      ),
     delete: jest.fn().mockImplementation(() => {
       persistedLines.splice(0, persistedLines.length);
       return Promise.resolve({ affected: initialLines.length });

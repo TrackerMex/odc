@@ -54,13 +54,46 @@ const user: SessionUser = {
 
 describe('R5: VAT preview for a historical draft', () => {
   it('shows the projected IVA and warns it applies when saved', () => {
-    const historical = { ...draftOdc(), subtotalCents: 44970, vatRateBps: 0, vatCents: 0 }
+    const historical = {
+      ...draftOdc(),
+      subtotalCents: 44970,
+      vatRateBps: 0,
+      vatCents: 0,
+    }
     render(
-      <OdcForm user={user} suppliers={suppliers} initialOdc={historical} persist={vi.fn()} submit={vi.fn()} onSuccess={vi.fn()} />,
+      <OdcForm
+        user={user}
+        suppliers={suppliers}
+        initialOdc={historical}
+        persist={vi.fn()}
+        submit={vi.fn()}
+        onSuccess={vi.fn()}
+      />,
     )
     expect(screen.getByText(/IVA 16 %/i)).toBeTruthy()
     expect(screen.getByText(/se aplicará al guardar/i)).toBeTruthy()
     expect(screen.getByTestId('odc-total').textContent).toMatch(/521[.,]65/)
+  })
+
+  it('keeps a rejected historical order without VAT while editing', () => {
+    const historical = {
+      ...rejectedOdc(),
+      subtotalCents: 44970,
+      vatRateBps: 0,
+      vatCents: 0,
+    }
+    render(
+      <OdcForm
+        user={user}
+        suppliers={suppliers}
+        initialOdc={historical}
+        persist={vi.fn()}
+        submit={vi.fn()}
+        onSuccess={vi.fn()}
+      />,
+    )
+    expect(screen.getByText(/sin IVA registrado/i)).toBeTruthy()
+    expect(screen.getByTestId('odc-total').textContent).toMatch(/449[.,]70/)
   })
 })
 
@@ -539,6 +572,8 @@ describe('R5,R7: ODC multi-line item form', () => {
     expect(within(review).getByText('Sensores GPS')).toBeTruthy()
     expect(within(review).getByText('Instalación y pruebas')).toBeTruthy()
     expect(review.textContent).toMatch(/499[.,]70/)
+    expect(review.textContent).toMatch(/79[.,]95/)
+    expect(review.textContent).toMatch(/579[.,]65/)
   })
 
   it('R7: adds and removes line items, keeps one line, and sends the ordered collection', async () => {

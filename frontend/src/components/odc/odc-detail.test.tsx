@@ -60,11 +60,27 @@ const odc: Odc = {
 
 describe('R5: VAT breakdown in ODC detail', () => {
   it('shows persisted subtotal, VAT and total on a taxable order', () => {
-    const taxable = { ...odc, subtotalCents: 44970, vatRateBps: 1600, vatCents: 7195, totalCents: 52165 }
+    const taxable = {
+      ...odc,
+      subtotalCents: 44970,
+      vatRateBps: 1600,
+      vatCents: 7195,
+      totalCents: 52165,
+    }
     render(<OdcDetail odc={taxable} />)
     expect(screen.getByText(/IVA 16 %/i)).toBeTruthy()
     expect(screen.getByText(/71[.,]95/)).toBeTruthy()
     expect(screen.getByText(/521[.,]65/)).toBeTruthy()
+  })
+
+  it('labels a historical order without claiming a tax exemption', () => {
+    render(
+      <OdcDetail
+        odc={{ ...odc, subtotalCents: 44970, vatRateBps: 0, vatCents: 0 }}
+      />,
+    )
+    expect(screen.getByText(/sin IVA registrado/i)).toBeTruthy()
+    expect(screen.queryByText(/exent/i)).toBeNull()
   })
 })
 
