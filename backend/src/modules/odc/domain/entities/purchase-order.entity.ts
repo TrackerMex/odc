@@ -584,9 +584,13 @@ export class PurchaseOrder {
           },
           ...this.items.slice(1),
         ]);
+    const nextVatRateBps =
+      this.status === 'BORRADOR' && this.vatRateBps === 0
+        ? 1600
+        : this.vatRateBps;
     const amounts = PurchaseOrder.computeFiscalAmounts(
       PurchaseOrder.computeItemsTotalCents(items),
-      this.vatRateBps,
+      nextVatRateBps,
     );
     this.items = items;
     this.description = items[0].description;
@@ -596,6 +600,7 @@ export class PurchaseOrder {
     if (fields.supplier !== undefined) this.supplier = fields.supplier;
     if (fields.comments !== undefined) this.comments = fields.comments;
     this.subtotalCents = amounts.subtotalCents;
+    this.vatRateBps = nextVatRateBps;
     this.vatCents = amounts.vatCents;
     this.totalCents = amounts.totalCents;
   }
