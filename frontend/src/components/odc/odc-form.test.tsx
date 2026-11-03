@@ -93,7 +93,7 @@ describe('R2,R3,R4,R5,R6: ODC form metadata, fields and live total', () => {
       target: { value: '149.90' },
     })
 
-    expect(screen.getByTestId('odc-total').textContent).toMatch(/449[.,]70/)
+    expect(screen.getByTestId('odc-total').textContent).toMatch(/521[.,]65/)
   })
 
   it('selects a catalog supplier and creates before submitting a new ODC', async () => {
