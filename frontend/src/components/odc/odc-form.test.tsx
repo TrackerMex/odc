@@ -97,6 +97,23 @@ describe('R5: VAT preview for a historical draft', () => {
   })
 })
 
+describe('R3: historical draft save and send recovery', () => {
+  it('shows the saved fiscal state when sending fails after a successful save', async () => {
+    const historical = { ...draftOdc(), subtotalCents: 44970, vatRateBps: 0, vatCents: 0 }
+    const saved = { ...historical, vatRateBps: 1600, vatCents: 7195, totalCents: 52165 }
+    const persist = vi.fn().mockResolvedValue(saved)
+    const submit = vi.fn().mockRejectedValue(new ApiError(409, 'Conflict'))
+    render(<OdcForm user={user} suppliers={suppliers} initialOdc={historical} persist={persist} submit={submit} onSuccess={vi.fn()} />)
+    expect(screen.getByText(/se aplicará al guardar/i)).toBeTruthy()
+    fireEvent.click(screen.getByRole('button', { name: /enviar a administración/i }))
+    await screen.findByRole('button', { name: /reintentar envío/i })
+    expect(screen.queryByText(/se aplicará al guardar/i)).toBeNull()
+    expect(screen.getByTestId('odc-total').textContent).toMatch(/521[.,]65/)
+    expect(persist).toHaveBeenCalledTimes(1)
+    expect(submit).toHaveBeenCalledWith('o1')
+  })
+})
+
 describe('R2,R3,R4,R5,R6: ODC form metadata, fields and live total', () => {
   it('shows the server-assigned number hint, accessible labels and live MXN total', () => {
     render(
