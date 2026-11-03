@@ -280,6 +280,19 @@ export class PurchaseOrder {
         },
       ],
     );
+    const fiscalFields = [
+      props.subtotalCents,
+      props.vatRateBps,
+      props.vatCents,
+    ];
+    if (
+      fiscalFields.some((value) => value !== undefined) &&
+      fiscalFields.some((value) => !Number.isSafeInteger(value))
+    ) {
+      throw new InvalidOdcInputError(
+        'El desglose fiscal de la ODC está incompleto.',
+      );
+    }
     const vatRateBps = props.vatRateBps ?? 0;
     let amounts = PurchaseOrder.computeFiscalAmounts(
       PurchaseOrder.computeItemsTotalCents(items),
