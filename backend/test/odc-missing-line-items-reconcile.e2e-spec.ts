@@ -13,7 +13,8 @@ describe('R6: reconcile missing historical lines before VAT migration', () => {
   let schema: string;
 
   beforeAll(async () => {
-    if (!databaseUrl) throw new Error('An isolated ODC_TEST_DATABASE_URL is required.');
+    if (!databaseUrl)
+      throw new Error('An isolated ODC_TEST_DATABASE_URL is required.');
     source = new DataSource({ type: 'postgres', url: databaseUrl });
     await source.initialize();
     runner = source.createQueryRunner();
@@ -53,27 +54,56 @@ describe('R6: reconcile missing historical lines before VAT migration', () => {
     return result as Row[];
   }
   async function reconcile() {
-    await runner.query(readFileSync(resolve(__dirname, '../scripts/sql/040a-reconcile-missing-items.sql'), 'utf8'));
+    await runner.query(
+      readFileSync(
+        resolve(__dirname, '../scripts/sql/040a-reconcile-missing-items.sql'),
+        'utf8',
+      ),
+    );
   }
 
   it('R6: inserts only missing lines, preserves existing records and can be repeated', async () => {
     const headers = await rows('SELECT * FROM purchase_orders ORDER BY id');
     const history = await rows('SELECT * FROM odc_status_history');
-    const existing = await rows(`SELECT * FROM purchase_order_items WHERE "orderId" = '${existingId}'`);
+    const existing = await rows(
+      `SELECT * FROM purchase_order_items WHERE "orderId" = '${existingId}'`,
+    );
     await reconcile();
     await reconcile();
-    expect(await rows('SELECT * FROM purchase_orders ORDER BY id')).toEqual(headers);
+    expect(await rows('SELECT * FROM purchase_orders ORDER BY id')).toEqual(
+      headers,
+    );
     expect(await rows('SELECT * FROM odc_status_history')).toEqual(history);
-    expect(await rows(`SELECT * FROM purchase_order_items WHERE "orderId" = '${existingId}'`)).toEqual(existing);
-    expect(await rows(`SELECT description, quantity, unit, "unitPriceCents", position FROM purchase_order_items WHERE "orderId" = '${missingId}'`)).toEqual([
-      { description: 'Cemento', quantity: 2, unit: 'bulto', unitPriceCents: 1250, position: 0 },
+    expect(
+      await rows(
+        `SELECT * FROM purchase_order_items WHERE "orderId" = '${existingId}'`,
+      ),
+    ).toEqual(existing);
+    expect(
+      await rows(
+        `SELECT description, quantity, unit, "unitPriceCents", position FROM purchase_order_items WHERE "orderId" = '${missingId}'`,
+      ),
+    ).toEqual([
+      {
+        description: 'Cemento',
+        quantity: 2,
+        unit: 'bulto',
+        unitPriceCents: 1250,
+        position: 0,
+      },
     ]);
   });
 
   it('R6: aborts with the offending id and inserts nothing when a header is inconsistent', async () => {
-    await runner.query(`UPDATE purchase_orders SET "totalCents" = 2499 WHERE id = '${missingId}'`);
+    await runner.query(
+      `UPDATE purchase_orders SET "totalCents" = 2499 WHERE id = '${missingId}'`,
+    );
     await expect(reconcile()).rejects.toThrow(missingId);
     await runner.query('ROLLBACK');
-    expect(await rows(`SELECT * FROM purchase_order_items WHERE "orderId" = '${missingId}'`)).toEqual([]);
+    expect(
+      await rows(
+        `SELECT * FROM purchase_order_items WHERE "orderId" = '${missingId}'`,
+      ),
+    ).toEqual([]);
   });
 });
