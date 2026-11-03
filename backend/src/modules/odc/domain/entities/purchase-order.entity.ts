@@ -285,6 +285,9 @@ export class PurchaseOrder {
       PurchaseOrder.computeItemsTotalCents(items),
       vatRateBps,
     );
+    if (props.vatRateBps !== undefined && props.totalCents !== amounts.totalCents) {
+      throw new InvalidOdcInputError('El total de la ODC no coincide con su desglose fiscal.');
+    }
     if (props.items !== undefined && props.totalCents !== amounts.totalCents) {
       const scalarProjection = [
         {
