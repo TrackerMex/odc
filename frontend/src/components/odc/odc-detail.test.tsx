@@ -58,6 +58,16 @@ const odc: Odc = {
   ],
 }
 
+describe('R5: VAT breakdown in ODC detail', () => {
+  it('shows persisted subtotal, VAT and total on a taxable order', () => {
+    const taxable = { ...odc, subtotalCents: 44970, vatRateBps: 1600, vatCents: 7195, totalCents: 52165 }
+    render(<OdcDetail odc={taxable} />)
+    expect(screen.getByText(/IVA 16 %/i)).toBeTruthy()
+    expect(screen.getByText(/71[.,]95/)).toBeTruthy()
+    expect(screen.getByText(/521[.,]65/)).toBeTruthy()
+  })
+})
+
 describe('R7,R8: ODC detail and chronological history', () => {
   it('shows the business fields, rejection reason and ordered timeline', () => {
     render(<OdcDetail odc={odc} />)

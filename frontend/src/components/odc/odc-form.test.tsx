@@ -52,6 +52,18 @@ const user: SessionUser = {
   role: 'DIRECTOR_OPS',
 }
 
+describe('R5: VAT preview for a historical draft', () => {
+  it('shows the projected IVA and warns it applies when saved', () => {
+    const historical = { ...draftOdc(), subtotalCents: 44970, vatRateBps: 0, vatCents: 0 }
+    render(
+      <OdcForm user={user} suppliers={suppliers} initialOdc={historical} persist={vi.fn()} submit={vi.fn()} onSuccess={vi.fn()} />,
+    )
+    expect(screen.getByText(/IVA 16 %/i)).toBeTruthy()
+    expect(screen.getByText(/se aplicará al guardar/i)).toBeTruthy()
+    expect(screen.getByTestId('odc-total').textContent).toMatch(/521[.,]65/)
+  })
+})
+
 describe('R2,R3,R4,R5,R6: ODC form metadata, fields and live total', () => {
   it('shows the server-assigned number hint, accessible labels and live MXN total', () => {
     render(
