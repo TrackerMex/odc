@@ -6,6 +6,7 @@ import {
 } from '../../domain/entities/purchase-order.entity';
 import { OdcStatusHistoryOrmEntity } from '../entities/odc-status-history.orm-entity';
 import { PurchaseOrderOrmEntity } from '../entities/purchase-order.orm-entity';
+import { PurchaseOrderLineItemOrmEntity } from '../entities/purchase-order-line-item.orm-entity';
 import { PurchaseOrderTypeOrmRepository } from './purchase-order.typeorm.repository';
 
 const OPS_ID = 'a3d1c9a2-0000-4000-8000-000000000001';
@@ -44,6 +45,17 @@ function buildOrder(
   });
 }
 
+const itemRows = [
+  {
+    orderId: ODC_ID,
+    position: 0,
+    description: 'Cemento gris 50kg',
+    quantity: 10,
+    unit: 'bulto',
+    unitPriceCents: 18550,
+  },
+];
+
 interface ManagerMock {
   save: jest.Mock;
   insert: jest.Mock;
@@ -70,7 +82,13 @@ function createManagerMock(): ManagerMock {
     save: jest.fn(),
     insert: jest.fn().mockResolvedValue({ identifiers: [] }),
     delete: jest.fn().mockResolvedValue({ affected: 0 }),
-    find: jest.fn().mockResolvedValue([]),
+    find: jest
+      .fn()
+      .mockImplementation((target: unknown) =>
+        Promise.resolve(
+          target === PurchaseOrderLineItemOrmEntity ? itemRows : [],
+        ),
+      ),
     findOne: jest.fn(),
     findAndCount: jest.fn(),
   };
@@ -243,7 +261,9 @@ describe('R6: create assigns the next yearly number and retries on UNIQUE collis
       Promise.resolve(
         target === PurchaseOrderOrmEntity
           ? [{ odcNumber: `ODC-${year}-00041` }]
-          : [],
+          : target === PurchaseOrderLineItemOrmEntity
+            ? itemRows
+            : [],
       ),
     );
     manager.save.mockImplementation((_entity: unknown, row: object) =>
@@ -276,7 +296,11 @@ describe('R6: create assigns the next yearly number and retries on UNIQUE collis
 
   it('starts at 00001 when the year has no ODCs yet', async () => {
     const manager = createManagerMock();
-    manager.find.mockResolvedValue([]);
+    manager.find.mockImplementation((target: unknown) =>
+      Promise.resolve(
+        target === PurchaseOrderLineItemOrmEntity ? itemRows : [],
+      ),
+    );
     manager.save.mockImplementation((_entity: unknown, row: object) =>
       Promise.resolve({ id: ODC_ID, ...row }),
     );
@@ -294,7 +318,12 @@ describe('R6: create assigns the next yearly number and retries on UNIQUE collis
     const manager = createManagerMock();
     manager.find
       .mockResolvedValueOnce([{ odcNumber: `ODC-${year}-00041` }])
-      .mockResolvedValueOnce([{ odcNumber: `ODC-${year}-00042` }]);
+      .mockResolvedValueOnce([{ odcNumber: `ODC-${year}-00042` }])
+      .mockImplementation((target: unknown) =>
+        Promise.resolve(
+          target === PurchaseOrderLineItemOrmEntity ? itemRows : [],
+        ),
+      );
     manager.save
       .mockRejectedValueOnce(uniqueViolation())
       .mockImplementation((_entity: unknown, row: object) =>
@@ -313,7 +342,11 @@ describe('R6: create assigns the next yearly number and retries on UNIQUE collis
 
   it('propagates non-UNIQUE errors without retrying', async () => {
     const manager = createManagerMock();
-    manager.find.mockResolvedValue([]);
+    manager.find.mockImplementation((target: unknown) =>
+      Promise.resolve(
+        target === PurchaseOrderLineItemOrmEntity ? itemRows : [],
+      ),
+    );
     manager.save.mockRejectedValue(new Error('connection lost'));
     const { repository, dataSource } = createRepository(manager);
 
@@ -353,7 +386,13 @@ describe('R1,R3: persisted mutation history is read inside its transaction (#40)
       Promise.resolve({ id: ODC_ID, ...row }),
     );
     manager.find.mockImplementation((target: unknown) =>
-      Promise.resolve(target === OdcStatusHistoryOrmEntity ? rows : []),
+      Promise.resolve(
+        target === OdcStatusHistoryOrmEntity
+          ? rows
+          : target === PurchaseOrderLineItemOrmEntity
+            ? itemRows
+            : [],
+      ),
     );
     return manager;
   }
