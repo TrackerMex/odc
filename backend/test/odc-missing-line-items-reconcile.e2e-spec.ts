@@ -143,10 +143,35 @@ describe('R6: reconcile missing historical lines before VAT migration', () => {
     ['blank unit', "unit = '   '"],
     ['negative position', 'position = -1'],
     ['different first-line projection', "description = 'Otra'"],
-  ])('R6: aborts reconciliation for %s in an existing line', async (_label, update) => {
-    await runner.query(`UPDATE purchase_order_items SET ${update} WHERE "orderId" = '${existingId}'`);
+  ])(
+    'R6: aborts reconciliation for %s in an existing line',
+    async (_label, update) => {
+      await runner.query(
+        `UPDATE purchase_order_items SET ${update} WHERE "orderId" = '${existingId}'`,
+      );
+      await expect(reconcile()).rejects.toThrow(existingId);
+      await runner.query('ROLLBACK');
+      expect(
+        await rows(
+          `SELECT * FROM purchase_order_items WHERE "orderId" = '${missingId}'`,
+        ),
+      ).toEqual([]);
+    },
+  );
+  it('R6: rejects Unicode whitespace that JavaScript trims in persisted descriptions', async () => {
+    await runner.query(
+      `UPDATE purchase_orders SET description = U&'\\FEFF' WHERE id = '${existingId}'`,
+    );
+    await runner.query(
+      `UPDATE purchase_order_items SET description = U&'\\FEFF' WHERE "orderId" = '${existingId}'`,
+    );
     await expect(reconcile()).rejects.toThrow(existingId);
-    await runner.query('ROLLBACK');
-    expect(await rows(`SELECT * FROM purchase_order_items WHERE "orderId" = '${missingId}'`)).toEqual([]);
+  });
+
+  it('R6: rejects Unicode whitespace in missing-line headers', async () => {
+    await runner.query(
+      `UPDATE purchase_orders SET unit = U&'\\FEFF' WHERE id = '${missingId}'`,
+    );
+    await expect(reconcile()).rejects.toThrow(missingId);
   });
 });

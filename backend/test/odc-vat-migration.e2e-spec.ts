@@ -115,11 +115,27 @@ describe('R6: VAT migration preserves historic ODCs or rolls back', () => {
     ['blank unit', "unit = '   '"],
     ['negative position', 'position = -1'],
     ['different first-line projection', "description = 'Otra'"],
-  ])('R6: rejects %s on stored lines without applying fiscal columns', async (_label, update) => {
-    await runner.query(`UPDATE purchase_order_items SET ${update} WHERE "orderId" = '${orderId}'`);
+  ])(
+    'R6: rejects %s on stored lines without applying fiscal columns',
+    async (_label, update) => {
+      await runner.query(
+        `UPDATE purchase_order_items SET ${update} WHERE "orderId" = '${orderId}'`,
+      );
+      await expect(migrate()).rejects.toThrow(orderId);
+      await runner.query('ROLLBACK');
+      const columns = await rows<{ count: string }>(
+        `SELECT count(*)::text AS count FROM information_schema.columns WHERE table_schema = '${schema}' AND table_name = 'purchase_orders' AND column_name = 'subtotalCents'`,
+      );
+      expect(columns[0].count).toBe('0');
+    },
+  );
+  it('R6: rejects Unicode whitespace that JavaScript trims in persisted descriptions', async () => {
+    await runner.query(
+      `UPDATE purchase_orders SET description = U&'\\FEFF' WHERE id = '${orderId}'`,
+    );
+    await runner.query(
+      `UPDATE purchase_order_items SET description = U&'\\FEFF' WHERE "orderId" = '${orderId}'`,
+    );
     await expect(migrate()).rejects.toThrow(orderId);
-    await runner.query('ROLLBACK');
-    const columns = await rows<{ count: string }>(`SELECT count(*)::text AS count FROM information_schema.columns WHERE table_schema = '${schema}' AND table_name = 'purchase_orders' AND column_name = 'subtotalCents'`);
-    expect(columns[0].count).toBe('0');
   });
 });
