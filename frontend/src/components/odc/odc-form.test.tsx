@@ -258,6 +258,14 @@ async function fillNewOrder() {
 }
 
 describe('R7: form reports unsafe amounts before submitting', () => {
+  it('reports a zero price as a positive-value error rather than a limit error', () => {
+    const persist = vi.fn()
+    render(<OdcForm user={user} suppliers={suppliers} initialOdc={draftOdc()} persist={persist} submit={vi.fn()} onSuccess={vi.fn()} />)
+    fireEvent.change(screen.getByLabelText(/precio unitario/i), { target: { value: '0' } })
+    fireEvent.click(screen.getByRole('button', { name: /guardar como borrador/i }))
+    expect(screen.getByRole('alert').textContent).toMatch(/mayor a cero/i)
+    expect(persist).not.toHaveBeenCalled()
+  })
   it.each([
     [/cantidad/i, '9007199254740992'],
     [/precio unitario/i, '90071992547409.92'],
