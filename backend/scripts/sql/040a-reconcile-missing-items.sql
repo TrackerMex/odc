@@ -28,6 +28,24 @@ BEGIN
       invalid_order.id, invalid_order.stored_total, invalid_order.expected_total
       USING ERRCODE = '23514';
   END IF;
+
+  SELECT po.id, po."totalCents" AS stored_total,
+         SUM(i.quantity::bigint * i."unitPriceCents"::bigint) AS expected_total
+  INTO invalid_order
+  FROM purchase_orders po
+  JOIN purchase_order_items i ON i."orderId" = po.id
+  GROUP BY po.id, po."totalCents"
+  HAVING po."totalCents" <= 0
+      OR BOOL_OR(i.quantity <= 0 OR i."unitPriceCents" <= 0)
+      OR SUM(i.quantity::bigint * i."unitPriceCents"::bigint) <> po."totalCents"
+  ORDER BY po.id
+  LIMIT 1;
+
+  IF FOUND THEN
+    RAISE EXCEPTION 'Cannot reconcile ODC %: inconsistent existing items (stored %, expected %)',
+      invalid_order.id, invalid_order.stored_total, invalid_order.expected_total
+      USING ERRCODE = '23514';
+  END IF;
 END $$;
 
 INSERT INTO purchase_order_items ("orderId", position, description, quantity, unit, "unitPriceCents")
