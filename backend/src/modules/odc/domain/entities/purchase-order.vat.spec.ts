@@ -136,6 +136,13 @@ describe('R7: VAT arithmetic and hydration respect storage limits', () => {
     ).toThrow();
   });
 
+  it('rejects a partially missing persisted fiscal breakdown', () => {
+    const order = createOrder([10000]);
+    expect(() => new PurchaseOrder({ ...order, subtotalCents: undefined })).toThrow();
+    expect(() => new PurchaseOrder({ ...order, vatCents: undefined })).toThrow();
+    expect(() => new PurchaseOrder({ ...order, vatRateBps: null as unknown as number })).toThrow();
+  });
+
   it('does not mutate any order fields if VAT makes an edit overflow', () => {
     const order = createOrder([10000]);
     const before = JSON.stringify(order);
