@@ -584,7 +584,10 @@ export class PurchaseOrder {
           },
           ...this.items.slice(1),
         ]);
-    const totalCents = PurchaseOrder.computeItemsTotalCents(items);
+    const amounts = PurchaseOrder.computeFiscalAmounts(
+      PurchaseOrder.computeItemsTotalCents(items),
+      this.vatRateBps,
+    );
     this.items = items;
     this.description = items[0].description;
     this.quantity = items[0].quantity;
@@ -592,6 +595,8 @@ export class PurchaseOrder {
     this.unitPriceCents = items[0].unitPriceCents;
     if (fields.supplier !== undefined) this.supplier = fields.supplier;
     if (fields.comments !== undefined) this.comments = fields.comments;
-    this.totalCents = totalCents;
+    this.subtotalCents = amounts.subtotalCents;
+    this.vatCents = amounts.vatCents;
+    this.totalCents = amounts.totalCents;
   }
 }
