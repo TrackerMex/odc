@@ -137,4 +137,16 @@ describe('R6: reconcile missing historical lines before VAT migration', () => {
       ),
     ).toEqual([]);
   });
+
+  it.each([
+    ['blank description', "description = '   '"],
+    ['blank unit', "unit = '   '"],
+    ['negative position', 'position = -1'],
+    ['different first-line projection', "description = 'Otra'"],
+  ])('R6: aborts reconciliation for %s in an existing line', async (_label, update) => {
+    await runner.query(`UPDATE purchase_order_items SET ${update} WHERE "orderId" = '${existingId}'`);
+    await expect(reconcile()).rejects.toThrow(existingId);
+    await runner.query('ROLLBACK');
+    expect(await rows(`SELECT * FROM purchase_order_items WHERE "orderId" = '${missingId}'`)).toEqual([]);
+  });
 });

@@ -29,14 +29,16 @@ describe('R6: VAT migration preserves historic ODCs or rolls back', () => {
     await runner.query(`SET search_path TO "${schema}"`);
     await runner.query(`
       CREATE TABLE purchase_orders (id uuid PRIMARY KEY, status text NOT NULL,
-        version integer NOT NULL, "totalCents" integer NOT NULL);
+        version integer NOT NULL, "totalCents" integer NOT NULL,
+        description text NOT NULL, quantity integer NOT NULL, unit text NOT NULL, "unitPriceCents" integer NOT NULL);
       CREATE TABLE purchase_order_items ("orderId" uuid NOT NULL,
-        position integer NOT NULL, quantity integer NOT NULL, "unitPriceCents" integer NOT NULL);
+        position integer NOT NULL, quantity integer NOT NULL, "unitPriceCents" integer NOT NULL,
+        description text NOT NULL, unit text NOT NULL);
       CREATE TABLE odc_status_history ("odcId" uuid NOT NULL, status text NOT NULL);
-      INSERT INTO purchase_orders VALUES ('${orderId}', 'BORRADOR', 3, 2500),
-        ('00000000-0000-4000-8000-000000000002', 'COMPLETADA', 7, 6000);
-      INSERT INTO purchase_order_items VALUES ('${orderId}', 0, 2, 1250),
-        ('00000000-0000-4000-8000-000000000002', 0, 3, 2000);
+      INSERT INTO purchase_orders VALUES ('${orderId}', 'BORRADOR', 3, 2500, 'Cemento', 2, 'bulto', 1250),
+        ('00000000-0000-4000-8000-000000000002', 'COMPLETADA', 7, 6000, 'Arena', 3, 'm3', 2000);
+      INSERT INTO purchase_order_items VALUES ('${orderId}', 0, 2, 1250, 'Cemento', 'bulto'),
+        ('00000000-0000-4000-8000-000000000002', 0, 3, 2000, 'Arena', 'm3');
       INSERT INTO odc_status_history VALUES ('${orderId}', 'BORRADOR');
     `);
   });
@@ -60,7 +62,7 @@ describe('R6: VAT migration preserves historic ODCs or rolls back', () => {
 
   it('R6: backfills zero VAT while preserving headers, items and history', async () => {
     const headers = await rows<Record<string, unknown>>(
-      'SELECT * FROM purchase_orders ORDER BY id',
+      'SELECT id, status, version, "totalCents" FROM purchase_orders ORDER BY id',
     );
     const items = await rows<Record<string, unknown>>(
       'SELECT * FROM purchase_order_items ORDER BY "orderId"',
@@ -107,4 +109,17 @@ describe('R6: VAT migration preserves historic ODCs or rolls back', () => {
       expect(columns[0].count).toBe('0');
     },
   );
+
+  it.each([
+    ['blank description', "description = '   '"],
+    ['blank unit', "unit = '   '"],
+    ['negative position', 'position = -1'],
+    ['different first-line projection', "description = 'Otra'"],
+  ])('R6: rejects %s on stored lines without applying fiscal columns', async (_label, update) => {
+    await runner.query(`UPDATE purchase_order_items SET ${update} WHERE "orderId" = '${orderId}'`);
+    await expect(migrate()).rejects.toThrow(orderId);
+    await runner.query('ROLLBACK');
+    const columns = await rows<{ count: string }>(`SELECT count(*)::text AS count FROM information_schema.columns WHERE table_schema = '${schema}' AND table_name = 'purchase_orders' AND column_name = 'subtotalCents'`);
+    expect(columns[0].count).toBe('0');
+  });
 });

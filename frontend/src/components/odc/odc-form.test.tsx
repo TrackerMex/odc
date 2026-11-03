@@ -257,6 +257,41 @@ async function fillNewOrder() {
   })
 }
 
+describe('R7: form reports unsafe amounts before submitting', () => {
+  it.each([
+    [/cantidad/i, '9007199254740992'],
+    [/precio unitario/i, '90071992547409.92'],
+  ])('rejects an unsafe field %s and keeps the entered value', (label, value) => {
+    const persist = vi.fn()
+    render(<OdcForm user={user} suppliers={suppliers} initialOdc={draftOdc()} persist={persist} submit={vi.fn()} onSuccess={vi.fn()} />)
+    fireEvent.change(screen.getByLabelText(label), { target: { value } })
+    fireEvent.click(screen.getByRole('button', { name: /guardar como borrador/i }))
+    expect(screen.getByRole('alert').textContent).toMatch(/límite/i)
+    expect(screen.getByLabelText<HTMLInputElement>(label).value).toBe(value)
+    expect(persist).not.toHaveBeenCalled()
+  })
+
+  it('rejects a subtotal whose IVA would overflow the final total', () => {
+    const persist = vi.fn()
+    render(<OdcForm user={user} suppliers={suppliers} initialOdc={draftOdc()} persist={persist} submit={vi.fn()} onSuccess={vi.fn()} />)
+    fireEvent.change(screen.getByLabelText(/cantidad/i), { target: { value: '1' } })
+    fireEvent.change(screen.getByLabelText(/precio unitario/i), { target: { value: '18512790.07' } })
+    fireEvent.click(screen.getByRole('button', { name: /guardar como borrador/i }))
+    expect(screen.getByRole('alert').textContent).toMatch(/límite/i)
+    expect(persist).not.toHaveBeenCalled()
+  })
+
+  it('allows a historical rejected order to use the zero-rate ceiling', async () => {
+    const historical = { ...rejectedOdc(), vatRateBps: 0, vatCents: 0, subtotalCents: 44970 }
+    const persist = vi.fn().mockResolvedValue(historical)
+    render(<OdcForm user={user} suppliers={suppliers} initialOdc={historical} persist={persist} submit={vi.fn()} onSuccess={vi.fn()} />)
+    fireEvent.change(screen.getByLabelText(/cantidad/i), { target: { value: '1' } })
+    fireEvent.change(screen.getByLabelText(/precio unitario/i), { target: { value: '21474836.47' } })
+    fireEvent.click(screen.getByRole('button', { name: /guardar como borrador/i }))
+    await vi.waitFor(() => expect(persist).toHaveBeenCalledTimes(1))
+  })
+})
+
 describe('workspace v2 R11,R12: reviewed creation and safe send recovery', () => {
   it('reviews the validated snapshot, cancels without writes and confirms a single draft with its real folio', async () => {
     let resolveSave!: (odc: Odc) => void
