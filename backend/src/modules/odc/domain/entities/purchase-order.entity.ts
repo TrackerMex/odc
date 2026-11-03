@@ -285,8 +285,13 @@ export class PurchaseOrder {
       PurchaseOrder.computeItemsTotalCents(items),
       vatRateBps,
     );
-    if (props.vatRateBps !== undefined && props.totalCents !== amounts.totalCents) {
-      throw new InvalidOdcInputError('El total de la ODC no coincide con su desglose fiscal.');
+    if (
+      props.vatRateBps !== undefined &&
+      props.totalCents !== amounts.totalCents
+    ) {
+      throw new InvalidOdcInputError(
+        'El total de la ODC no coincide con su desglose fiscal.',
+      );
     }
     if (props.items !== undefined && props.totalCents !== amounts.totalCents) {
       const scalarProjection = [
@@ -315,7 +320,9 @@ export class PurchaseOrder {
         props.subtotalCents !== amounts.subtotalCents) ||
       (props.vatCents !== undefined && props.vatCents !== amounts.vatCents)
     ) {
-      throw new InvalidOdcInputError('El desglose fiscal de la ODC no coincide con sus partidas.');
+      throw new InvalidOdcInputError(
+        'El desglose fiscal de la ODC no coincide con sus partidas.',
+      );
     }
     this.items = items;
     this.description = this.items[0].description;
@@ -370,10 +377,13 @@ export class PurchaseOrder {
     ) {
       throw new InvalidOdcInputError('Subtotal o tasa de IVA inválidos.');
     }
-    const vatCents = vatRateBps === 0 ? 0 : Math.floor((subtotalCents * 16 + 50) / 100);
+    const vatCents =
+      vatRateBps === 0 ? 0 : Math.floor((subtotalCents * 16 + 50) / 100);
     const totalCents = subtotalCents + vatCents;
     if (!Number.isSafeInteger(totalCents) || totalCents > MAX_ODC_INTEGER) {
-      throw new InvalidOdcInputError('El total con IVA excede el límite permitido.');
+      throw new InvalidOdcInputError(
+        'El total con IVA excede el límite permitido.',
+      );
     }
     return { subtotalCents, vatCents, totalCents };
   }
