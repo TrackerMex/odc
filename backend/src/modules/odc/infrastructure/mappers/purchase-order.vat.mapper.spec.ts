@@ -37,7 +37,15 @@ describe('R4: VAT amounts persist and appear in authenticated ODC responses', ()
       vatCents: 1600,
       totalCents: 11600,
     } as PurchaseOrderOrmEntity;
-    const item = { id: 'line', orderId: 'odc', position: 0, description: 'Material', quantity: 1, unit: 'pieza', unitPriceCents: 10000 } as PurchaseOrderLineItemOrmEntity;
+    const item = {
+      id: 'line',
+      orderId: 'odc',
+      position: 0,
+      description: 'Material',
+      quantity: 1,
+      unit: 'pieza',
+      unitPriceCents: 10000,
+    } as PurchaseOrderLineItemOrmEntity;
     expect(toDomain(row, [], [item])).toMatchObject({
       subtotalCents: 10000,
       vatRateBps: 1600,
