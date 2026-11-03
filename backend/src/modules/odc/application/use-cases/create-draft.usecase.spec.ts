@@ -75,7 +75,7 @@ describe('R7: create draft use-case persists a BORRADOR for its creator', () => 
     expect(order).toBeInstanceOf(PurchaseOrder);
     expect(order.status).toBe('BORRADOR');
     expect(order.createdById).toBe(OPS_ID);
-    expect(order.totalCents).toBe(185500);
+    expect(order.totalCents).toBe(215180);
     expect(order.odcNumber).toBeNull();
     expect(order.comments).toBe('Entrega en obra');
     expect(entry).toBeInstanceOf(OdcStatusHistoryEntry);
@@ -119,9 +119,9 @@ describe('R2: a totalCents smuggled into the create payload never reaches the OD
       role: 'DIRECTOR_OPS',
     });
 
-    expect(created.totalCents).toBe(185500);
+    expect(created.totalCents).toBe(215180);
     const [order] = repository.create.mock.calls[0] as [PurchaseOrder];
-    expect(order.totalCents).toBe(185500);
+    expect(order.totalCents).toBe(215180);
   });
 });
 

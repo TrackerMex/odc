@@ -46,7 +46,15 @@ describe('R1: positive int32 quantity, price and total in the domain (#37)', () 
     [1, 1],
     [2, 1_073_741_823],
   ])('accepts valid limits %i * %i', (quantity, price) => {
-    expect(draft(quantity, price).totalCents).toBe(quantity * price);
+    const subtotal = quantity * price;
+    expect(PurchaseOrder.computeTotalCents(quantity, price)).toBe(subtotal);
+    if (subtotal > 1_851_279_006) {
+      expect(() => draft(quantity, price)).toThrow(InvalidOdcInputError);
+    } else {
+      expect(draft(quantity, price).totalCents).toBe(
+        subtotal + Math.floor((subtotal * 16 + 50) / 100),
+      );
+    }
   });
   it.each([
     [50_000, 50_000],
@@ -83,9 +91,9 @@ describe('R1: positive int32 quantity, price and total in the domain (#37)', () 
   });
   it('recomputes an accepted partial edit at the inclusive ceiling', () => {
     const order = draft();
-    order.edit({ unitPriceCents: MAX });
+    order.edit({ unitPriceCents: 1_851_279_006 });
     expect(order.totalCents).toBe(MAX);
-    order.edit({ unitPriceCents: 1, quantity: MAX });
+    order.edit({ unitPriceCents: 1, quantity: 1_851_279_006 });
     expect(order.totalCents).toBe(MAX);
   });
 });

@@ -88,7 +88,7 @@ describe('R5: mappers hydrate and serialize ordered items with the legacy projec
     expect(response.items).toEqual([first, second]);
     expect(response).toMatchObject({
       description: 'Cemento',
-      totalCents: 8500,
+      totalCents: 9860,
     });
     expect(page.items[0].items).toEqual([first, second]);
     expect(response).not.toHaveProperty('paymentEvidenceFile');

@@ -36,7 +36,7 @@ describe('R2: create use-case persists normalized line items as a draft', () => 
     const [order, history] = repository.create.mock.calls[0];
 
     expect(order.items).toEqual(items);
-    expect(order.totalCents).toBe(8500);
+    expect(order.totalCents).toBe(9860);
     expect(order.description).toBe('Cemento');
     expect(order.supplier).toBe('Proveedor');
     expect(order.comments).toBe('Entregar temprano');

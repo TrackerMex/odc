@@ -12,7 +12,8 @@ describe('R6: VAT migration preserves historic ODCs or rolls back', () => {
   let schema: string;
 
   beforeAll(async () => {
-    if (!databaseUrl) throw new Error('An isolated ODC_TEST_DATABASE_URL is required.');
+    if (!databaseUrl)
+      throw new Error('An isolated ODC_TEST_DATABASE_URL is required.');
     source = new DataSource({ type: 'postgres', url: databaseUrl });
     await source.initialize();
     runner = source.createQueryRunner();
@@ -50,30 +51,60 @@ describe('R6: VAT migration preserves historic ODCs or rolls back', () => {
     return value as Row[];
   }
   async function migrate() {
-    const sql = readFileSync(resolve(__dirname, '../scripts/sql/041-odc-vat.sql'), 'utf8');
+    const sql = readFileSync(
+      resolve(__dirname, '../scripts/sql/041-odc-vat.sql'),
+      'utf8',
+    );
     await runner.query(sql);
   }
 
   it('R6: backfills zero VAT while preserving headers, items and history', async () => {
-    const headers = await rows<Record<string, unknown>>('SELECT * FROM purchase_orders ORDER BY id');
-    const items = await rows<Record<string, unknown>>('SELECT * FROM purchase_order_items ORDER BY "orderId"');
-    const history = await rows<Record<string, unknown>>('SELECT * FROM odc_status_history');
+    const headers = await rows<Record<string, unknown>>(
+      'SELECT * FROM purchase_orders ORDER BY id',
+    );
+    const items = await rows<Record<string, unknown>>(
+      'SELECT * FROM purchase_order_items ORDER BY "orderId"',
+    );
+    const history = await rows<Record<string, unknown>>(
+      'SELECT * FROM odc_status_history',
+    );
     await migrate();
-    expect(await rows('SELECT id, status, version, "totalCents" FROM purchase_orders ORDER BY id')).toEqual(headers);
-    expect(await rows('SELECT * FROM purchase_order_items ORDER BY "orderId"')).toEqual(items);
+    expect(
+      await rows(
+        'SELECT id, status, version, "totalCents" FROM purchase_orders ORDER BY id',
+      ),
+    ).toEqual(headers);
+    expect(
+      await rows('SELECT * FROM purchase_order_items ORDER BY "orderId"'),
+    ).toEqual(items);
     expect(await rows('SELECT * FROM odc_status_history')).toEqual(history);
-    expect(await rows('SELECT "subtotalCents", "vatRateBps", "vatCents", "totalCents" FROM purchase_orders ORDER BY id')).toEqual([
+    expect(
+      await rows(
+        'SELECT "subtotalCents", "vatRateBps", "vatCents", "totalCents" FROM purchase_orders ORDER BY id',
+      ),
+    ).toEqual([
       { subtotalCents: 2500, vatRateBps: 0, vatCents: 0, totalCents: 2500 },
       { subtotalCents: 6000, vatRateBps: 0, vatCents: 0, totalCents: 6000 },
     ]);
   });
 
-  it.each(['mismatch', 'missing'])('R6: rejects %s items and rolls back schema changes', async (problem) => {
-    if (problem === 'mismatch') await runner.query(`UPDATE purchase_order_items SET quantity = 1 WHERE "orderId" = '${orderId}'`);
-    else await runner.query(`DELETE FROM purchase_order_items WHERE "orderId" = '${orderId}'`);
-    await expect(migrate()).rejects.toThrow(orderId);
-    await runner.query('ROLLBACK');
-    const columns = await rows<{ count: string }>(`SELECT count(*)::text AS count FROM information_schema.columns WHERE table_schema = '${schema}' AND table_name = 'purchase_orders' AND column_name = 'subtotalCents'`);
-    expect(columns[0].count).toBe('0');
-  });
+  it.each(['mismatch', 'missing'])(
+    'R6: rejects %s items and rolls back schema changes',
+    async (problem) => {
+      if (problem === 'mismatch')
+        await runner.query(
+          `UPDATE purchase_order_items SET quantity = 1 WHERE "orderId" = '${orderId}'`,
+        );
+      else
+        await runner.query(
+          `DELETE FROM purchase_order_items WHERE "orderId" = '${orderId}'`,
+        );
+      await expect(migrate()).rejects.toThrow(orderId);
+      await runner.query('ROLLBACK');
+      const columns = await rows<{ count: string }>(
+        `SELECT count(*)::text AS count FROM information_schema.columns WHERE table_schema = '${schema}' AND table_name = 'purchase_orders' AND column_name = 'subtotalCents'`,
+      );
+      expect(columns[0].count).toBe('0');
+    },
+  );
 });

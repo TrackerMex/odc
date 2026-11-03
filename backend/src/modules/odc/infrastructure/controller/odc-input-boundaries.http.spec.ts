@@ -187,13 +187,37 @@ describe('R1,R2,R3,R4: real Nest input boundaries and zero side effects (#37)', 
       expect(repository.create).toHaveBeenCalledTimes(1);
       expect(response.body).toMatchObject({
         items: lines,
-        totalCents: 8500,
+        subtotalCents: 8500,
+        vatRateBps: 1600,
+        vatCents: 1360,
+        totalCents: 9860,
         description: 'Cemento',
         quantity: 2,
         unit: 'bulto',
         unitPriceCents: 1250,
         supplier: 'Test',
         status: 'BORRADOR',
+      });
+    });
+
+    it('R4: ignores client-supplied fiscal amounts and calculates VAT on the server', async () => {
+      const response = await request(server)
+        .post('/api/odcs')
+        .set('Cookie', cookie())
+        .send({
+          ...INPUT,
+          unitPriceCents: 10000,
+          subtotalCents: 1,
+          vatRateBps: 0,
+          vatCents: 0,
+          totalCents: 1,
+        })
+        .expect(201);
+      expect(response.body).toMatchObject({
+        subtotalCents: 10000,
+        vatRateBps: 1600,
+        vatCents: 1600,
+        totalCents: 11600,
       });
     });
 
@@ -244,7 +268,10 @@ describe('R1,R2,R3,R4: real Nest input boundaries and zero side effects (#37)', 
 
       expect(response.body).toMatchObject({
         items: replacement,
-        totalCents: 8500,
+        subtotalCents: 8500,
+        vatRateBps: 1600,
+        vatCents: 1360,
+        totalCents: 9860,
         description: 'Arena',
         status: 'BORRADOR',
       });
@@ -340,8 +367,8 @@ describe('R1,R2,R3,R4: real Nest input boundaries and zero side effects (#37)', 
       expect(JSON.stringify(order)).toBe(snapshot);
     });
     it.each([
-      { quantity: MAX, unitPriceCents: 1 },
-      { quantity: 1, unitPriceCents: MAX },
+      { quantity: 1_851_279_006, unitPriceCents: 1 },
+      { quantity: 1, unitPriceCents: 1_851_279_006 },
     ])('accepts inclusive limits %j', async (fields) => {
       const response = await send(fields).expect(
         operation === 'create' ? 201 : 200,
@@ -358,11 +385,18 @@ describe('R1,R2,R3,R4: real Nest input boundaries and zero side effects (#37)', 
   ])(
     'R1: checks partial PATCH against the stored operand %j',
     async (fields) => {
+      const { order: base } = PurchaseOrder.createDraft(
+        {
+          ...INPUT,
+          quantity: fields.quantity,
+          unitPriceCents: fields.unitPriceCents,
+        },
+        { userId: OWNER, role: 'DIRECTOR_OPS' },
+      );
       order = new PurchaseOrder({
-        ...order,
-        quantity: fields.quantity,
-        unitPriceCents: fields.unitPriceCents,
-        totalCents: fields.quantity * fields.unitPriceCents,
+        ...base,
+        id: ID,
+        odcNumber: 'ODC-2026-00037',
       });
       const snapshot = JSON.stringify(order);
       await request(server)

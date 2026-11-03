@@ -53,7 +53,7 @@ describe('R3: update use-case replaces items or applies legacy changes to the fi
       const updated = await useCase.execute(ODC_ID, input, actor);
 
       expect(updated.items).toEqual([second, first]);
-      expect(updated.totalCents).toBe(8500);
+      expect(updated.totalCents).toBe(9860);
       expect(updated.description).toBe('Arena');
       expect(updated.status).toBe(status);
       expect(repository.update).toHaveBeenCalledWith(updated);
@@ -67,7 +67,7 @@ describe('R3: update use-case replaces items or applies legacy changes to the fi
     const updated = await useCase.execute(ODC_ID, { quantity: 4 }, actor);
 
     expect(updated.items).toEqual([{ ...first, quantity: 4 }, second]);
-    expect(updated.totalCents).toBe(11000);
+    expect(updated.totalCents).toBe(12760);
     expect(updated.quantity).toBe(4);
   });
 });

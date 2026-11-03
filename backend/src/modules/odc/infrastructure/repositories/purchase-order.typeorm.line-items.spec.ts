@@ -114,7 +114,7 @@ describe('R5: line rows and ODC header share repository transactions', () => {
       expect.objectContaining({ odcId: ODC_ID, toStatus: 'BORRADOR' }),
     );
     expect(created.items).toEqual(lines);
-    expect(created.totalCents).toBe(8500);
+    expect(created.totalCents).toBe(9860);
     expect(persistedLines.map((line) => line.position)).toEqual([0, 1]);
   });
 
@@ -149,6 +149,6 @@ describe('R5: line rows and ODC header share repository transactions', () => {
       ]),
     );
     expect(updated.items).toEqual([lines[1], lines[0]]);
-    expect(updated.totalCents).toBe(8500);
+    expect(updated.totalCents).toBe(9860);
   });
 });

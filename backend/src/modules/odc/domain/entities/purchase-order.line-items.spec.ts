@@ -30,7 +30,7 @@ describe('R1: purchase orders calculate their total from ordered line items', ()
     );
 
     expect(lineItems(order)).toEqual([first, second]);
-    expect(order.totalCents).toBe(8500);
+    expect(order.totalCents).toBe(9860);
     expect(order.description).toBe('Cemento');
     expect(order.quantity).toBe(2);
     expect(order.unit).toBe('bulto');
@@ -49,7 +49,7 @@ describe('R1: purchase orders calculate their total from ordered line items', ()
     );
 
     expect(lineItems(order)).toEqual([first]);
-    expect(order.totalCents).toBe(2500);
+    expect(order.totalCents).toBe(2900);
   });
 
   it('replaces the line items on edit and recalculates the aggregate total', () => {
@@ -63,7 +63,7 @@ describe('R1: purchase orders calculate their total from ordered line items', ()
     });
 
     expect(lineItems(order)).toEqual([second, first]);
-    expect(order.totalCents).toBe(8500);
+    expect(order.totalCents).toBe(9860);
     expect(order.description).toBe('Arena');
     expect(order.quantity).toBe(3);
     expect(order.unit).toBe('m3');
@@ -101,7 +101,7 @@ describe('R1: purchase orders calculate their total from ordered line items', ()
     order.edit({ quantity: 4 });
 
     expect(lineItems(order)).toEqual([{ ...first, quantity: 4 }, second]);
-    expect(order.totalCents).toBe(11000);
+    expect(order.totalCents).toBe(12760);
     expect(order.quantity).toBe(4);
   });
 
@@ -113,6 +113,9 @@ describe('R1: purchase orders calculate their total from ordered line items', ()
 
     const clone = new PurchaseOrder({
       ...order,
+      subtotalCents: undefined,
+      vatRateBps: undefined,
+      vatCents: undefined,
       quantity: 4,
       totalCents: 11000,
     });

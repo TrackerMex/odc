@@ -125,11 +125,11 @@ describe('R1: pure PurchaseOrder domain entity with restricted status', () => {
 
 describe('R2: totalCents computed in the domain, never accepted from outside', () => {
   it.each([
-    [1, 100, 100],
-    [3, 4550, 13650],
-    [7, 999, 6993],
+    [1, 100, 116],
+    [3, 4550, 15834],
+    [7, 999, 8112],
   ])(
-    'createDraft computes totalCents = %i * %i = %i',
+    'createDraft computes total with VAT for %i * %i = %i',
     (quantity, unitPriceCents, expectedTotal) => {
       const { order } = PurchaseOrder.createDraft(
         {
@@ -151,7 +151,7 @@ describe('R2: totalCents computed in the domain, never accepted from outside', (
 
     order.edit({ quantity: 4, unitPriceCents: 2000 });
 
-    expect(order.totalCents).toBe(8000);
+    expect(order.totalCents).toBe(9280);
   });
 
   it('recomputes totalCents from the untouched fields when only one changes', () => {
@@ -161,7 +161,7 @@ describe('R2: totalCents computed in the domain, never accepted from outside', (
 
     order.edit({ quantity: 2 });
 
-    expect(order.totalCents).toBe(37100);
+    expect(order.totalCents).toBe(43036);
   });
 });
 
