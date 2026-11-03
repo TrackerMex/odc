@@ -277,6 +277,20 @@ describe('R1,R2,R3,R4: real Nest input boundaries and zero side effects (#37)', 
       });
     });
 
+    it('R4: ignores fiscal values supplied on PATCH', async () => {
+      const response = await request(server)
+        .patch(`/api/odcs/${ID}`)
+        .set('Cookie', cookie())
+        .send({ subtotalCents: 1, vatRateBps: 0, vatCents: 0, totalCents: 1 })
+        .expect(200);
+      expect(response.body).toMatchObject({
+        subtotalCents: 8500,
+        vatRateBps: 1600,
+        vatCents: 1360,
+        totalCents: 9860,
+      });
+    });
+
     it('rejects empty and mixed item payloads before persistence', async () => {
       await request(server)
         .patch(`/api/odcs/${ID}`)

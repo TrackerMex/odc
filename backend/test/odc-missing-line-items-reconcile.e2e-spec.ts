@@ -106,4 +106,22 @@ describe('R6: reconcile missing historical lines before VAT migration', () => {
       ),
     ).toEqual([]);
   });
+
+  it('R6: reconciles legacy lines before applying the fiscal migration', async () => {
+    await reconcile();
+    await runner.query(
+      readFileSync(
+        resolve(__dirname, '../scripts/sql/041-odc-vat.sql'),
+        'utf8',
+      ),
+    );
+    expect(
+      await rows(
+        'SELECT "subtotalCents", "vatRateBps", "vatCents", "totalCents" FROM purchase_orders ORDER BY id',
+      ),
+    ).toEqual([
+      { subtotalCents: 2500, vatRateBps: 0, vatCents: 0, totalCents: 2500 },
+      { subtotalCents: 6000, vatRateBps: 0, vatCents: 0, totalCents: 6000 },
+    ]);
+  });
 });
