@@ -356,7 +356,7 @@
   {
     "id": 43,
     "name": "odc-vat-16-percent",
-    "status": "spec_ready",
+    "status": "done",
     "priority": "P1",
     "description": "Agregar el desglose de IVA del 16% a las ODC nuevas conservando los importes históricos.",
     "acceptance_criteria": [

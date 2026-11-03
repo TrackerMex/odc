@@ -1072,3 +1072,13 @@ build/tests/init: investigación con escenario real y sincronización del runtim
 - En la rama `codex/odc-history-hydration-startup` se registró `odc-vat-16-percent` y se redactaron requisitos, diseño, tareas y trazabilidad. La feature queda en `spec_ready`; la casilla humana permanece vacía y no se implementó código.
 - La propuesta fija IVA del 16 % sobre el subtotal, redondeo por orden e importes históricos sin IVA. Un borrador histórico aplica IVA al guardar, con proyección y aviso en el formulario. Se solicita confirmar el tratamiento de rechazadas históricas y de transiciones sin guardado previo.
 - `init.sh` inicial y de cierre terminaron con exit 0: builds, 34 pruebas tooling, 84 suites/935 pruebas backend, 41 archivos/697 pruebas frontend y lint. Se usó una copia LF temporal por el shebang CRLF del checkout Windows, retirada al finalizar.
+
+
+---
+
+## 2026-11-03 — IVA 16 % en ODC (#43) — completada
+
+- Spec aprobada por el usuario y ejecutada en `codex/odc-history-hydration-startup`. Se calculan subtotal, IVA y total en centavos; las órdenes históricas conservan tasa cero, con la conversión de borradores y el tratamiento de rechazadas aprobados.
+- Trazabilidad R1–R7 completa; la revisión independiente aprobó tras corregir integridad de partidas, hidratación, límites de captura y espacios Unicode en las migraciones.
+- `init.sh` final: builds, 34 pruebas tooling, 954 backend, 707 frontend y lint verdes. PostgreSQL aislado: 18 pruebas SQL y 26 de persistencia/concurrencia; revisión visual de formulario y detalle en escritorio y móvil.
+- Se respaldó y restauró la base local, se ensayaron las migraciones y luego se aplicaron localmente: 8 partidas reconciliadas, 10 órdenes con importes históricos conservados y 56 eventos. No se migraron bases compartidas.
