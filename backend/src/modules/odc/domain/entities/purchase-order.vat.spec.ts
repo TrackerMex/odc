@@ -87,3 +87,23 @@ describe('R3: historic orders preserve amounts until an old draft is saved', () 
     expect(order).toMatchObject({ vatRateBps: 0, vatCents: 0, totalCents: 10000 });
   });
 });
+
+describe('R7: VAT arithmetic and hydration respect storage limits', () => {
+  it('accepts the largest subtotal whose total fits int and rejects the next cent', () => {
+    expect(createOrder([1851279006]).totalCents).toBe(2147483647);
+    expect(() => createOrder([1851279007])).toThrow();
+  });
+
+  it('rejects inconsistent persisted VAT and total including scalar-only hydration', () => {
+    const order = createOrder([10000]);
+    expect(() => new PurchaseOrder({ ...order, vatCents: 0 })).toThrow();
+    expect(() => new PurchaseOrder({ ...order, items: undefined, totalCents: 10000 })).toThrow();
+  });
+
+  it('does not mutate any order fields if VAT makes an edit overflow', () => {
+    const order = createOrder([10000]);
+    const before = JSON.stringify(order);
+    expect(() => order.edit({ unitPriceCents: 1851279007 })).toThrow();
+    expect(JSON.stringify(order)).toBe(before);
+  });
+});
