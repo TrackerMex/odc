@@ -1,6 +1,7 @@
 -- For databases where 040's table already exists but historical rows were not
 -- backfilled. Run with writes stopped, after reviewing the target and backup.
 -- Existing line items and all order headers/history remain untouched.
+-- ECMAScript String.trim() whitespace, independent of database locale.
 BEGIN;
 
 LOCK TABLE purchase_orders, purchase_order_items IN ACCESS EXCLUSIVE MODE;
@@ -18,8 +19,8 @@ BEGIN
       OR po."unitPriceCents" IS NULL OR po."unitPriceCents" < 1
       OR po."totalCents" IS NULL OR po."totalCents" < 1
       OR po.quantity::bigint * po."unitPriceCents"::bigint <> po."totalCents"
-      OR po.description IS NULL OR po.description !~ '[^[:space:]]'
-      OR po.unit IS NULL OR po.unit !~ '[^[:space:]]')
+      OR po.description IS NULL OR translate(po.description, U&'\0009\000A\000B\000C\000D\0020\00A0\1680\2000\2001\2002\2003\2004\2005\2006\2007\2008\2009\200A\2028\2029\202F\205F\3000\FEFF', '') = ''
+      OR po.unit IS NULL OR translate(po.unit, U&'\0009\000A\000B\000C\000D\0020\00A0\1680\2000\2001\2002\2003\2004\2005\2006\2007\2008\2009\200A\2028\2029\202F\205F\3000\FEFF', '') = '')
   ORDER BY po.id
   LIMIT 1;
 
@@ -39,8 +40,8 @@ BEGIN
       OR BOOL_OR(i.quantity IS NULL OR i.quantity <= 0
         OR i."unitPriceCents" IS NULL OR i."unitPriceCents" <= 0
         OR i.position IS NULL OR i.position < 0
-        OR i.description IS NULL OR i.description !~ '[^[:space:]]'
-        OR i.unit IS NULL OR i.unit !~ '[^[:space:]]')
+        OR i.description IS NULL OR translate(i.description, U&'\0009\000A\000B\000C\000D\0020\00A0\1680\2000\2001\2002\2003\2004\2005\2006\2007\2008\2009\200A\2028\2029\202F\205F\3000\FEFF', '') = ''
+        OR i.unit IS NULL OR translate(i.unit, U&'\0009\000A\000B\000C\000D\0020\00A0\1680\2000\2001\2002\2003\2004\2005\2006\2007\2008\2009\200A\2028\2029\202F\205F\3000\FEFF', '') = '')
       OR COUNT(i.position) <> COUNT(DISTINCT i.position)
       OR COUNT(i."orderId") FILTER (WHERE i.position = 0) <> 1
       OR BOOL_OR(i.position = 0 AND

@@ -1,5 +1,6 @@
 -- Run after 040 with application writes stopped. All preconditions and changes
 -- are transactional; existing order totals and histories are preserved.
+-- ECMAScript String.trim() whitespace, independent of database locale.
 BEGIN;
 
 LOCK TABLE purchase_orders, purchase_order_items IN ACCESS EXCLUSIVE MODE;
@@ -19,8 +20,8 @@ BEGIN
       OR BOOL_OR(item.quantity IS NULL OR item.quantity <= 0
         OR item."unitPriceCents" IS NULL OR item."unitPriceCents" <= 0
         OR item.position IS NULL OR item.position < 0
-        OR item.description IS NULL OR item.description !~ '[^[:space:]]'
-        OR item.unit IS NULL OR item.unit !~ '[^[:space:]]')
+        OR item.description IS NULL OR translate(item.description, U&'\0009\000A\000B\000C\000D\0020\00A0\1680\2000\2001\2002\2003\2004\2005\2006\2007\2008\2009\200A\2028\2029\202F\205F\3000\FEFF', '') = ''
+        OR item.unit IS NULL OR translate(item.unit, U&'\0009\000A\000B\000C\000D\0020\00A0\1680\2000\2001\2002\2003\2004\2005\2006\2007\2008\2009\200A\2028\2029\202F\205F\3000\FEFF', '') = '')
       OR COUNT(item.position) <> COUNT(DISTINCT item.position)
       OR COUNT(item."orderId") FILTER (WHERE item.position = 0) <> 1
       OR BOOL_OR(item.position = 0 AND
