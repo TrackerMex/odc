@@ -1,5 +1,6 @@
 import { OdcStatusHistoryEntry } from '../../domain/entities/odc-status-history-entry.entity';
 import { PurchaseOrder } from '../../domain/entities/purchase-order.entity';
+import { InvalidOdcInputError } from '../../domain/errors/invalid-odc-input.error';
 import { OdcStatusHistoryOrmEntity } from '../entities/odc-status-history.orm-entity';
 import { PurchaseOrderOrmEntity } from '../entities/purchase-order.orm-entity';
 import { PurchaseOrderLineItemOrmEntity } from '../entities/purchase-order-line-item.orm-entity';
@@ -25,6 +26,11 @@ export function toDomain(
         unit,
         unitPriceCents,
       }));
+  if (row.vatRateBps !== undefined && !storedItems?.length) {
+    throw new InvalidOdcInputError(
+      'La ODC fiscalizada no tiene partidas persistidas.',
+    );
+  }
   return new PurchaseOrder({
     id: row.id,
     version: row.version,

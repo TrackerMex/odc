@@ -16,7 +16,18 @@ BEGIN
   GROUP BY po.id, po."totalCents"
   HAVING COUNT(item."orderId") = 0
       OR po."totalCents" <= 0
-      OR BOOL_OR(item.quantity <= 0 OR item."unitPriceCents" <= 0)
+      OR BOOL_OR(item.quantity IS NULL OR item.quantity <= 0
+        OR item."unitPriceCents" IS NULL OR item."unitPriceCents" <= 0
+        OR item.position IS NULL OR item.position < 0
+        OR item.description IS NULL OR item.description !~ '[^[:space:]]'
+        OR item.unit IS NULL OR item.unit !~ '[^[:space:]]')
+      OR COUNT(item.position) <> COUNT(DISTINCT item.position)
+      OR COUNT(item."orderId") FILTER (WHERE item.position = 0) <> 1
+      OR BOOL_OR(item.position = 0 AND
+        (item.description IS DISTINCT FROM po.description
+         OR item.quantity IS DISTINCT FROM po.quantity
+         OR item.unit IS DISTINCT FROM po.unit
+         OR item."unitPriceCents" IS DISTINCT FROM po."unitPriceCents"))
       OR COALESCE(SUM(item.quantity::bigint * item."unitPriceCents"::bigint), 0) <> po."totalCents"
   ORDER BY po.id
   LIMIT 1;

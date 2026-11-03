@@ -14,6 +14,7 @@ import {
   formatCurrency,
   formatDate,
   formatUnitPriceInput,
+  MAX_ODC_INTEGER,
   odcItems,
   odcMultiFormSchema,
   odcPayloadItems,
@@ -299,8 +300,32 @@ export function OdcForm({
       if (nextErrors.supplier) supplierRef.current?.focus()
       return null
     }
+    const payload = buildOdcPayload(
+      result.data,
+      Boolean(initialOdc?.items?.length),
+    )
+    let subtotal = 0
+    for (const item of odcPayloadItems(payload)) {
+      const line = item.quantity * item.unitPriceCents
+      subtotal += line
+      if (
+        !Number.isSafeInteger(line) ||
+        line > MAX_ODC_INTEGER ||
+        !Number.isSafeInteger(subtotal) ||
+        subtotal > MAX_ODC_INTEGER
+      ) {
+        setOperationError('El total de la ODC supera el límite permitido.')
+        return null
+      }
+    }
+    const total = computeFiscalAmounts(subtotal, vatRateBps).totalCents
+    if (!Number.isSafeInteger(total) || total > MAX_ODC_INTEGER) {
+      setOperationError('El total de la ODC supera el límite permitido.')
+      return null
+    }
+    setOperationError(null)
     setFieldErrors({ items: [] })
-    return buildOdcPayload(result.data, Boolean(initialOdc?.items?.length))
+    return payload
   }
 
   function runAction(action: 'save' | 'send') {

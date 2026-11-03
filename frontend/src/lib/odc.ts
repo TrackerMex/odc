@@ -231,15 +231,26 @@ export interface OdcLineFormValues {
   unitPrice: string
 }
 
+export const MAX_ODC_INTEGER = 2_147_483_647
+
 const positiveIntegerString = z
   .string()
   .regex(/^\d+$/, 'Ingresa una cantidad entera.')
   .refine((value) => Number(value) > 0, 'La cantidad debe ser mayor a cero.')
+  .refine(
+    (value) =>
+      Number.isSafeInteger(Number(value)) && Number(value) <= MAX_ODC_INTEGER,
+    'La cantidad supera el límite permitido.',
+  )
 
 const positiveMoneyString = z
   .string()
   .regex(/^\d+(?:\.\d{1,2})?$/, 'Usa un importe con máximo dos decimales.')
   .refine((value) => Number(value) > 0, 'El precio debe ser mayor a cero.')
+  .refine((value) => {
+    const cents = parseUnitPriceCents(value)
+    return cents !== null && cents <= MAX_ODC_INTEGER
+  }, 'El precio supera el límite permitido.')
 
 export const odcFormSchema = z.object({
   description: z.string().trim().min(1, 'La descripción es obligatoria.'),
