@@ -1063,3 +1063,12 @@ build/tests/init: investigación con escenario real y sincronización del runtim
 - Verificación final del líder: `init.sh` exit 0 después de cerrar la feature; builds backend/frontend, 34 pruebas tooling, 84 suites/935 pruebas backend, 41 archivos/697 pruebas frontend y lint. Revisión independiente C2–C6 APROBADA en `progress/review_odc-multi-line-items.md`.
 - Playwright visual no se ejecutó: el puerto 5432 está ocupado por `pet-tracker-postgres`; el intento previo limpió únicamente los contenedores ODC que había creado. La limitación queda en los reportes de implementación.
 - IVA, documentos de cotización y el concentrado de jueves enviado a Administración y después a Dirección General permanecen como siguientes features, sujetas a sus specs y aprobación humana.
+
+
+---
+
+## 2026-11-03 — spec de IVA en ODC (#43) — pendiente de aprobación
+
+- En la rama `codex/odc-history-hydration-startup` se registró `odc-vat-16-percent` y se redactaron requisitos, diseño, tareas y trazabilidad. La feature queda en `spec_ready`; la casilla humana permanece vacía y no se implementó código.
+- La propuesta fija IVA del 16 % sobre el subtotal, redondeo por orden e importes históricos sin IVA. Un borrador histórico aplica IVA al guardar, con proyección y aviso en el formulario. Se solicita confirmar el tratamiento de rechazadas históricas y de transiciones sin guardado previo.
+- `init.sh` inicial y de cierre terminaron con exit 0: builds, 34 pruebas tooling, 84 suites/935 pruebas backend, 41 archivos/697 pruebas frontend y lint. Se usó una copia LF temporal por el shebang CRLF del checkout Windows, retirada al finalizar.

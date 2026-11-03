@@ -352,5 +352,18 @@
       "Una migración convierte cada ODC existente en una partida equivalente sin cambiar montos, estados ni historial; la API devuelve items y mantiene compatibilidad con el contrato de una sola partida.",
       "Pruebas de backend y frontend cubren creación, edición, formularios, validación, migración/backfill y regresiones; init.sh termina verde antes del cierre."
     ]
+  },
+  {
+    "id": 43,
+    "name": "odc-vat-16-percent",
+    "status": "spec_ready",
+    "priority": "P1",
+    "description": "Agregar el desglose de IVA del 16% a las ODC nuevas conservando los importes históricos.",
+    "acceptance_criteria": [
+      "Las ODC nuevas calculan subtotal, IVA fijo del 16% redondeado al centavo sobre el subtotal y total en centavos.",
+      "Los importes históricos se conservan; un borrador anterior recibe IVA cuando Operaciones lo edita y guarda.",
+      "La API, el detalle y las vistas de revisión muestran el desglose y preservan los contratos necesarios.",
+      "Una migración versionada preserva estados, importes e historial y se verifica en PostgreSQL aislado antes de aplicarse a una base compartida."
+    ]
   }
 ]
