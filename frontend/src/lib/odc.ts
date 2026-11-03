@@ -239,7 +239,9 @@ const positiveIntegerString = z
   .refine((value) => Number(value) > 0, 'La cantidad debe ser mayor a cero.')
   .refine(
     (value) =>
-      Number.isSafeInteger(Number(value)) && Number(value) <= MAX_ODC_INTEGER,
+      !/^\d+$/.test(value) ||
+      Number(value) <= 0 ||
+      (Number.isSafeInteger(Number(value)) && Number(value) <= MAX_ODC_INTEGER),
     'La cantidad supera el límite permitido.',
   )
 
@@ -248,6 +250,7 @@ const positiveMoneyString = z
   .regex(/^\d+(?:\.\d{1,2})?$/, 'Usa un importe con máximo dos decimales.')
   .refine((value) => Number(value) > 0, 'El precio debe ser mayor a cero.')
   .refine((value) => {
+    if (!/^\d+(?:\.\d{1,2})?$/.test(value) || Number(value) <= 0) return true
     const cents = parseUnitPriceCents(value)
     return cents !== null && cents <= MAX_ODC_INTEGER
   }, 'El precio supera el límite permitido.')
