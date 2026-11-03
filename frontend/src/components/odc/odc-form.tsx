@@ -155,9 +155,9 @@ export function OdcForm({
 
   const subtotalCents = computeItemsTotalCents(values.items)
   const historicalDraft =
-    initialOdc?.status === 'BORRADOR' && (initialOdc.vatRateBps ?? 0) === 0
+    persistedOdc?.status === 'BORRADOR' && (persistedOdc.vatRateBps ?? 0) === 0
   const vatRateBps =
-    initialOdc?.status === 'RECHAZADA' && (initialOdc.vatRateBps ?? 0) === 0
+    persistedOdc?.status === 'RECHAZADA' && (persistedOdc.vatRateBps ?? 0) === 0
       ? 0
       : 1600
   const { vatCents, totalCents } = computeFiscalAmounts(
