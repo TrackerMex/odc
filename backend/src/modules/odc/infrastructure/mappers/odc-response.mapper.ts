@@ -24,6 +24,9 @@ export interface OdcResponseDto {
   quantity: number;
   unit: string;
   unitPriceCents: number;
+  subtotalCents: number;
+  vatRateBps: number;
+  vatCents: number;
   totalCents: number;
   supplier: string;
   comments: string | null;

@@ -39,6 +39,15 @@ export class PurchaseOrderOrmEntity {
   unitPriceCents: number;
 
   @Column({ type: 'int' })
+  subtotalCents: number;
+
+  @Column({ type: 'int' })
+  vatRateBps: number;
+
+  @Column({ type: 'int' })
+  vatCents: number;
+
+  @Column({ type: 'int' })
   totalCents: number;
 
   @Column()
