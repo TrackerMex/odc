@@ -126,9 +126,15 @@ describe('R6: reconcile missing historical lines before VAT migration', () => {
   });
 
   it('R6: leaves missing lines untouched if an existing order has inconsistent items', async () => {
-    await runner.query(`UPDATE purchase_order_items SET quantity = 2 WHERE "orderId" = '${existingId}'`);
+    await runner.query(
+      `UPDATE purchase_order_items SET quantity = 2 WHERE "orderId" = '${existingId}'`,
+    );
     await expect(reconcile()).rejects.toThrow(existingId);
     await runner.query('ROLLBACK');
-    expect(await rows(`SELECT * FROM purchase_order_items WHERE "orderId" = '${missingId}'`)).toEqual([]);
+    expect(
+      await rows(
+        `SELECT * FROM purchase_order_items WHERE "orderId" = '${missingId}'`,
+      ),
+    ).toEqual([]);
   });
 });

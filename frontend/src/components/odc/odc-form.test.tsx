@@ -390,11 +390,9 @@ describe('workspace v2 R11,R12: reviewed creation and safe send recovery', () =>
     expect(onSuccess).not.toHaveBeenCalled()
     expect(screen.queryByRole('button', { name: /ver detalle/i })).toBeNull()
     expect(
-      (
-        screen.getByRole('button', {
-          name: /guardar como borrador/i,
-        }) as HTMLButtonElement
-      ).disabled,
+      screen.getByRole<HTMLButtonElement>('button', {
+        name: /guardar como borrador/i,
+      }).disabled,
     ).toBe(true)
   })
 

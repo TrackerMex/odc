@@ -33,6 +33,7 @@ import {
 import { PurchaseOrderRepository } from '../src/modules/odc/domain/repositories/purchase-order.repository';
 import { OdcStatusHistoryOrmEntity } from '../src/modules/odc/infrastructure/entities/odc-status-history.orm-entity';
 import { PurchaseOrderOrmEntity } from '../src/modules/odc/infrastructure/entities/purchase-order.orm-entity';
+import { PurchaseOrderLineItemOrmEntity } from '../src/modules/odc/infrastructure/entities/purchase-order-line-item.orm-entity';
 import { PurchaseOrderTypeOrmRepository } from '../src/modules/odc/infrastructure/repositories/purchase-order.typeorm.repository';
 import { UserOrmEntity } from '../src/modules/users/infrastructure/entities/user.orm-entity';
 
@@ -249,6 +250,7 @@ describe('R1,R2,R4,R5,R6: atomic mutations on two isolated PostgreSQL connection
           OdcFileUploadOrmEntity,
           UserOrmEntity,
           PurchaseOrderOrmEntity,
+          PurchaseOrderLineItemOrmEntity,
           OdcStatusHistoryOrmEntity,
         ],
         synchronize: false,
@@ -311,6 +313,74 @@ describe('R1,R2,R4,R5,R6: atomic mutations on two isolated PostgreSQL connection
         null,
       ),
     );
+  });
+
+  it('R2: persists and reloads a new VAT breakdown with its line items', async () => {
+    const loaded = (await repositories[1].findById(order.id!))!;
+    expect(loaded).toMatchObject({
+      subtotalCents: 100,
+      vatRateBps: 1600,
+      vatCents: 16,
+      totalCents: 116,
+    });
+    expect(loaded.items).toHaveLength(1);
+  });
+
+  it('R3: converts a historical draft on a successful save while retaining history', async () => {
+    await sources[0].manager.update(
+      PurchaseOrderOrmEntity,
+      { id: order.id! },
+      {
+        subtotalCents: 100,
+        vatRateBps: 0,
+        vatCents: 0,
+        totalCents: 100,
+      },
+    );
+    const prior = (await repositories[0].findById(order.id!))!;
+    const useCase = new UpdateDraftUseCase(repositories[0], {
+      findByName: jest.fn(),
+      findAll: jest.fn(),
+      create: jest.fn(),
+    });
+    await useCase.execute(order.id!, { comments: 'Nota' }, OPS);
+    const saved = (await repositories[1].findById(order.id!))!;
+    expect(saved).toMatchObject({
+      subtotalCents: 100,
+      vatRateBps: 1600,
+      vatCents: 16,
+      totalCents: 116,
+      status: 'BORRADOR',
+    });
+    expect(saved.history).toEqual(prior.history);
+  });
+
+  it('R3: keeps the historical zero rate for a rejected order after an edit', async () => {
+    await sources[0].manager.update(
+      PurchaseOrderOrmEntity,
+      { id: order.id! },
+      {
+        status: 'RECHAZADA',
+        subtotalCents: 100,
+        vatRateBps: 0,
+        vatCents: 0,
+        totalCents: 100,
+      },
+    );
+    const useCase = new UpdateDraftUseCase(repositories[0], {
+      findByName: jest.fn(),
+      findAll: jest.fn(),
+      create: jest.fn(),
+    });
+    await useCase.execute(order.id!, { unitPriceCents: 200 }, OPS);
+    const saved = (await repositories[1].findById(order.id!))!;
+    expect(saved).toMatchObject({
+      subtotalCents: 200,
+      vatRateBps: 0,
+      vatCents: 0,
+      totalCents: 200,
+      status: 'RECHAZADA',
+    });
   });
 
   it.each(races)('R1,R2,R4: one winner for $name', async (race) => {

@@ -349,7 +349,7 @@ describe('R1: definition rows and a single emphasized total', () => {
 
     const total = screen
       .getByText('Total')
-      .closest('[data-detail-row]') as HTMLElement | null
+      .closest<HTMLElement>('[data-detail-row]')
     expect(total?.className).toMatch(/col-span-full/)
     expect(total?.className).toMatch(/border-t-2/)
     expect(within(total!).getByText(/449[.,]70/).className).toMatch(
