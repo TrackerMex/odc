@@ -9,6 +9,7 @@ import type { SessionUser } from '@/lib/session'
 import { ApiError } from '@/lib/api'
 import {
   buildOdcPayload,
+  computeFiscalAmounts,
   computeItemsTotalCents,
   formatCurrency,
   formatDate,
@@ -152,7 +153,24 @@ export function OdcForm({
   >([])
   const supplierRef = useRef<HTMLButtonElement>(null)
 
-  const totalCents = computeItemsTotalCents(values.items)
+  const subtotalCents = computeItemsTotalCents(values.items)
+  const historicalDraft =
+    initialOdc?.status === 'BORRADOR' && (initialOdc.vatRateBps ?? 0) === 0
+  const vatRateBps =
+    initialOdc?.status === 'RECHAZADA' && (initialOdc.vatRateBps ?? 0) === 0
+      ? 0
+      : 1600
+  const { vatCents, totalCents } = computeFiscalAmounts(
+    subtotalCents,
+    vatRateBps,
+  )
+  const reviewSubtotal = review
+    ? odcPayloadItems(review.payload).reduce(
+        (total, item) => total + item.quantity * item.unitPriceCents,
+        0,
+      )
+    : 0
+  const reviewAmounts = computeFiscalAmounts(reviewSubtotal, 1600)
   const firstItem = values.items[0] ?? emptyItem
   const unitPriceCents = Number.isFinite(Number(firstItem.unitPrice))
     ? Math.round(Number(firstItem.unitPrice) * 100)
@@ -548,8 +566,8 @@ export function OdcForm({
                       >
                         <FieldLabel htmlFor={fieldId('unitPrice')}>
                           {itemNumber === 1
-                            ? 'Precio unitario (MXN) *'
-                            : `Precio unitario partida ${itemNumber} (MXN) *`}
+                            ? 'Precio unitario antes de IVA (MXN) *'
+                            : `Precio unitario partida ${itemNumber} antes de IVA (MXN) *`}
                         </FieldLabel>
                         <Input
                           ref={(element) => {
@@ -748,6 +766,23 @@ export function OdcForm({
                     : ''}
                 </span>
               </p>
+              <dl className="mt-3 space-y-1 text-sm tabular-nums">
+                <div className="flex justify-between gap-4">
+                  <dt>Subtotal</dt>
+                  <dd>{formatCurrency(subtotalCents)}</dd>
+                </div>
+                <div className="flex justify-between gap-4">
+                  <dt>
+                    {vatRateBps === 1600 ? 'IVA 16 %' : 'Sin IVA registrado'}
+                  </dt>
+                  <dd>{formatCurrency(vatCents)}</dd>
+                </div>
+              </dl>
+              {historicalDraft ? (
+                <p className="mt-2 text-sm text-muted-foreground">
+                  El IVA se aplicará al guardar este borrador.
+                </p>
+              ) : null}
               <p className="mt-3 text-xs font-medium tracking-[0.06em] text-muted-foreground uppercase">
                 Total estimado
               </p>
@@ -870,15 +905,13 @@ export function OdcForm({
                 </div>
               ) : null}
               <div className="border-t pt-4">
+                <dt>Subtotal (MXN)</dt>
+                <dd>{formatCurrency(reviewAmounts.subtotalCents)}</dd>
+                <dt className="mt-2">IVA 16 %</dt>
+                <dd>{formatCurrency(reviewAmounts.vatCents)}</dd>
                 <dt>Total estimado (MXN)</dt>
                 <dd className="text-2xl font-semibold tabular-nums">
-                  {formatCurrency(
-                    odcPayloadItems(review.payload).reduce(
-                      (total, item) =>
-                        total + item.quantity * item.unitPriceCents,
-                      0,
-                    ),
-                  )}
+                  {formatCurrency(reviewAmounts.totalCents)}
                 </dd>
               </div>
               <div>

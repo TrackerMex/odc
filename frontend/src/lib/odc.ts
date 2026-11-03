@@ -56,6 +56,9 @@ export interface Odc {
   quantity: number
   unit: string
   unitPriceCents: number
+  subtotalCents?: number
+  vatRateBps?: number
+  vatCents?: number
   totalCents: number
   supplier: string
   comments: string | null
@@ -298,6 +301,15 @@ export function computeItemsTotalCents(
     if (!Number.isSafeInteger(total)) return 0
   }
   return total
+}
+
+export function computeFiscalAmounts(
+  subtotalCents: number,
+  vatRateBps: number,
+) {
+  const vatCents =
+    vatRateBps === 1600 ? Math.floor((subtotalCents * 16 + 50) / 100) : 0
+  return { subtotalCents, vatCents, totalCents: subtotalCents + vatCents }
 }
 
 export function buildOdcPayload(

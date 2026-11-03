@@ -134,7 +134,8 @@ export function OdcDetail({
                     ))}
                   </ol>
                   <p className="mt-3 text-right text-sm font-semibold tabular-nums">
-                    Subtotal de partidas · {formatCurrency(odc.totalCents)}
+                    Subtotal de partidas ·{' '}
+                    {formatCurrency(odc.subtotalCents ?? odc.totalCents)}
                   </p>
                 </section>
               ) : (
@@ -167,6 +168,18 @@ export function OdcDetail({
                   section
                 />
               ) : null}
+              <DefinitionRow
+                label="Subtotal"
+                value={formatCurrency(odc.subtotalCents ?? odc.totalCents)}
+                numeric
+              />
+              <DefinitionRow
+                label={
+                  odc.vatRateBps === 1600 ? 'IVA 16 %' : 'Sin IVA registrado'
+                }
+                value={formatCurrency(odc.vatCents ?? 0)}
+                numeric
+              />
               <DefinitionRow
                 label="Total"
                 value={formatCurrency(odc.totalCents)}
