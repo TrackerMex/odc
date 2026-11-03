@@ -1,6 +1,6 @@
 ---
 feature: "odc-vat-16-percent"
-status: draft        # draft | approved
+status: approved     # draft | approved
 tags: [backend, frontend, odc, spec]
 ---
 
@@ -137,4 +137,4 @@ tags: [backend, frontend, odc, spec]
 
 ## Aprobación
 
-- [ ] Aprobado por humano (fecha: ____)
+- [X] Aprobado por humano (fecha: 2026-11-03)
