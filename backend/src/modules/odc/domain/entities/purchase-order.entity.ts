@@ -208,6 +208,9 @@ export interface PurchaseOrderProps {
   quantity: number;
   unit: string;
   unitPriceCents: number;
+  subtotalCents?: number;
+  vatRateBps?: number;
+  vatCents?: number;
   totalCents: number;
   supplier: string;
   comments: string | null;
@@ -239,6 +242,9 @@ export class PurchaseOrder {
   public quantity: number;
   public unit: string;
   public unitPriceCents: number;
+  public subtotalCents: number;
+  public vatRateBps: number;
+  public vatCents: number;
   public totalCents: number;
   public supplier: string;
   public comments: string | null;
@@ -274,8 +280,12 @@ export class PurchaseOrder {
         },
       ],
     );
-    let computedTotalCents = PurchaseOrder.computeItemsTotalCents(items);
-    if (props.items !== undefined && props.totalCents !== computedTotalCents) {
+    const vatRateBps = props.vatRateBps ?? 0;
+    let amounts = PurchaseOrder.computeFiscalAmounts(
+      PurchaseOrder.computeItemsTotalCents(items),
+      vatRateBps,
+    );
+    if (props.items !== undefined && props.totalCents !== amounts.totalCents) {
       const scalarProjection = [
         {
           description: props.description,
@@ -285,22 +295,34 @@ export class PurchaseOrder {
         },
         ...items.slice(1),
       ];
-      const scalarTotalCents =
-        PurchaseOrder.computeItemsTotalCents(scalarProjection);
-      if (props.totalCents !== scalarTotalCents) {
+      const scalarAmounts = PurchaseOrder.computeFiscalAmounts(
+        PurchaseOrder.computeItemsTotalCents(scalarProjection),
+        vatRateBps,
+      );
+      if (props.totalCents !== scalarAmounts.totalCents) {
         throw new InvalidOdcInputError(
           'El total de la ODC debe coincidir con la suma de sus partidas.',
         );
       }
       items = PurchaseOrder.copyAndValidateItems(scalarProjection);
-      computedTotalCents = scalarTotalCents;
+      amounts = scalarAmounts;
+    }
+    if (
+      (props.subtotalCents !== undefined &&
+        props.subtotalCents !== amounts.subtotalCents) ||
+      (props.vatCents !== undefined && props.vatCents !== amounts.vatCents)
+    ) {
+      throw new InvalidOdcInputError('El desglose fiscal de la ODC no coincide con sus partidas.');
     }
     this.items = items;
     this.description = this.items[0].description;
     this.quantity = this.items[0].quantity;
     this.unit = this.items[0].unit;
     this.unitPriceCents = this.items[0].unitPriceCents;
-    this.totalCents = computedTotalCents;
+    this.subtotalCents = amounts.subtotalCents;
+    this.vatRateBps = vatRateBps;
+    this.vatCents = amounts.vatCents;
+    this.totalCents = amounts.totalCents;
     this.supplier = props.supplier;
     this.comments = props.comments;
     this.createdById = props.createdById;
@@ -334,6 +356,23 @@ export class PurchaseOrder {
       );
     }
     return total;
+  }
+
+  static computeFiscalAmounts(subtotalCents: number, vatRateBps: number) {
+    if (
+      !Number.isSafeInteger(subtotalCents) ||
+      subtotalCents < 1 ||
+      subtotalCents > MAX_ODC_INTEGER ||
+      (vatRateBps !== 0 && vatRateBps !== 1600)
+    ) {
+      throw new InvalidOdcInputError('Subtotal o tasa de IVA inválidos.');
+    }
+    const vatCents = vatRateBps === 0 ? 0 : Math.floor((subtotalCents * 16 + 50) / 100);
+    const totalCents = subtotalCents + vatCents;
+    if (!Number.isSafeInteger(totalCents) || totalCents > MAX_ODC_INTEGER) {
+      throw new InvalidOdcInputError('El total con IVA excede el límite permitido.');
+    }
+    return { subtotalCents, vatCents, totalCents };
   }
 
   static computeItemsTotalCents(items: OdcLineItem[]): number {
@@ -410,6 +449,10 @@ export class PurchaseOrder {
       PurchaseOrder.normalizeCreateItems(input),
     );
     const firstItem = items[0];
+    const amounts = PurchaseOrder.computeFiscalAmounts(
+      PurchaseOrder.computeItemsTotalCents(items),
+      1600,
+    );
     const order = new PurchaseOrder({
       id: null,
       odcNumber: null,
@@ -419,7 +462,8 @@ export class PurchaseOrder {
       quantity: firstItem.quantity,
       unit: firstItem.unit,
       unitPriceCents: firstItem.unitPriceCents,
-      totalCents: PurchaseOrder.computeItemsTotalCents(items),
+      ...amounts,
+      vatRateBps: 1600,
       supplier: input.supplier,
       comments: input.comments ?? null,
       createdById: actor.userId,
