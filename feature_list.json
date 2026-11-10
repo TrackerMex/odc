@@ -365,5 +365,18 @@
       "La API, el detalle y las vistas de revisión muestran el desglose y preservan los contratos necesarios.",
       "Una migración versionada preserva estados, importes e historial y se verifica en PostgreSQL aislado antes de aplicarse a una base compartida."
     ]
+  },
+  {
+    "id": 44,
+    "name": "odc-quotation-attachments",
+    "status": "spec_ready",
+    "priority": "P1",
+    "description": "Permitir adjuntar y consultar varios documentos opcionales de cotización en ODC.",
+    "acceptance_criteria": [
+      "Operaciones puede anexar varios archivos opcionales a un borrador propio guardado; los documentos sobreviven al envío y se consultan conforme a la visibilidad de la ODC.",
+      "Las cargas aceptan PDF, JPG o PNG de 1 a 10485760 bytes por archivo, verifican la firma y reutilizan los controles de autenticación y recuperación existentes.",
+      "Administración y Dirección General pueden consultar las cotizaciones de las ODC visibles durante su revisión, sin acceder a borradores privados ajenos.",
+      "Una migración versionada preserva órdenes y documentos existentes; se verifican permisos, fallos, concurrencia y recuperación con pruebas backend y frontend."
+    ]
   }
 ]

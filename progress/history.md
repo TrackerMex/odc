@@ -1082,3 +1082,13 @@ build/tests/init: investigación con escenario real y sincronización del runtim
 - Trazabilidad R1–R7 completa; la revisión independiente aprobó tras corregir integridad de partidas, hidratación, límites de captura y espacios Unicode en las migraciones.
 - `init.sh` final: builds, 34 pruebas tooling, 954 backend, 707 frontend y lint verdes. PostgreSQL aislado: 18 pruebas SQL y 26 de persistencia/concurrencia; revisión visual de formulario y detalle en escritorio y móvil.
 - Se respaldó y restauró la base local, se ensayaron las migraciones y luego se aplicaron localmente: 8 partidas reconciliadas, 10 órdenes con importes históricos conservados y 56 eventos. No se migraron bases compartidas.
+
+
+---
+
+## 2026-11-10 — spec de cotizaciones en ODC (#44) — pendiente de aprobación
+
+- En la rama `codex/odc-history-hydration-startup` se prepararon requisitos R1–R7, diseño, tareas y trazabilidad para adjuntar cotizaciones; no se implementó código ni se aprobaron los requisitos.
+- Se propone cargar y retirar únicamente en borradores propios guardados; se consulta si también deben corregirse adjuntos de una ODC rechazada. Los archivos son opcionales, PDF/JPG/PNG de hasta 10 MiB cada uno, consultables por roles autorizados.
+- `init.sh` inicial y final: builds, 34 pruebas tooling, 954 pruebas backend, 707 frontend y lint verdes. Copias LF temporales retiradas.
+- El concentrado semanal permanece como siguiente feature después de las cotizaciones y requiere su propia spec y aprobación.
