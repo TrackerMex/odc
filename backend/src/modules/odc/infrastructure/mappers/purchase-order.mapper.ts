@@ -1,21 +1,49 @@
 import { OdcStatusHistoryEntry } from '../../domain/entities/odc-status-history-entry.entity';
 import { PurchaseOrder } from '../../domain/entities/purchase-order.entity';
+import { InvalidOdcInputError } from '../../domain/errors/invalid-odc-input.error';
 import { OdcStatusHistoryOrmEntity } from '../entities/odc-status-history.orm-entity';
 import { PurchaseOrderOrmEntity } from '../entities/purchase-order.orm-entity';
+import { PurchaseOrderLineItemOrmEntity } from '../entities/purchase-order-line-item.orm-entity';
 
 export function toDomain(
   row: PurchaseOrderOrmEntity,
   historyRows: OdcStatusHistoryOrmEntity[] = [],
+  itemRows: PurchaseOrderLineItemOrmEntity[] = [],
 ): PurchaseOrder {
+  const storedItems = itemRows.length
+    ? itemRows
+        .slice()
+        .sort((left, right) => left.position - right.position)
+        .map(({ description, quantity, unit, unitPriceCents }) => ({
+          description,
+          quantity,
+          unit,
+          unitPriceCents,
+        }))
+    : row.items?.map(({ description, quantity, unit, unitPriceCents }) => ({
+        description,
+        quantity,
+        unit,
+        unitPriceCents,
+      }));
+  if (row.vatRateBps !== undefined && !storedItems?.length) {
+    throw new InvalidOdcInputError(
+      'La ODC fiscalizada no tiene partidas persistidas.',
+    );
+  }
   return new PurchaseOrder({
     id: row.id,
     version: row.version,
     odcNumber: row.odcNumber,
     status: row.status,
+    ...(storedItems?.length ? { items: storedItems } : {}),
     description: row.description,
     quantity: row.quantity,
     unit: row.unit,
     unitPriceCents: row.unitPriceCents,
+    subtotalCents: row.subtotalCents,
+    vatRateBps: row.vatRateBps,
+    vatCents: row.vatCents,
     totalCents: row.totalCents,
     supplier: row.supplier,
     comments: row.comments ?? null,
@@ -50,6 +78,9 @@ export function toOrmValues(
     quantity: order.quantity,
     unit: order.unit,
     unitPriceCents: order.unitPriceCents,
+    subtotalCents: order.subtotalCents,
+    vatRateBps: order.vatRateBps,
+    vatCents: order.vatCents,
     totalCents: order.totalCents,
     supplier: order.supplier,
     comments: order.comments,

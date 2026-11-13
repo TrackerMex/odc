@@ -42,6 +42,7 @@ import {
   ODC_STATUSES,
   formatCurrency,
   formatDateOnly,
+  formatItemCount,
   formatMonth,
 } from '@/lib/odc'
 import type { MonthlyPurchaseSummary } from '@/lib/odc'
@@ -381,7 +382,8 @@ function SummaryContent({
                     <p>{purchase.description}</p>
                     <p className="text-xs text-muted-foreground">
                       {purchase.requesterName ?? 'Sin solicitante'} ·{' '}
-                      {purchase.quantity} {purchase.unit}
+                      {purchase.quantity} {purchase.unit} ·{' '}
+                      {formatItemCount(purchase.itemCount)}
                     </p>
                     {(purchase.observations ?? purchase.comments) ? (
                       <p className="mt-1 text-xs text-muted-foreground">

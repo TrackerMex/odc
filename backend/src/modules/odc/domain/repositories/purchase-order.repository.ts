@@ -40,6 +40,7 @@ export interface MonthlyPurchase {
   hasInvoice: boolean;
   comments: string | null;
   observations: string | null;
+  itemCount: number;
 }
 
 export interface ExecutiveDashboardOrder {
@@ -50,6 +51,7 @@ export interface ExecutiveDashboardOrder {
   supplier: string;
   totalCents: number;
   createdAt: Date;
+  itemCount: number;
 }
 
 export type ExecutiveTaskNextAction =

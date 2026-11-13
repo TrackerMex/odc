@@ -4,11 +4,13 @@ import {
   Entity,
   JoinColumn,
   ManyToOne,
+  OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
 import { UserOrmEntity } from '../../../users/infrastructure/entities/user.orm-entity';
 import type { OdcStatus } from '../../domain/entities/purchase-order.entity';
+import { PurchaseOrderLineItemOrmEntity } from './purchase-order-line-item.orm-entity';
 
 @Entity('purchase_orders')
 export class PurchaseOrderOrmEntity {
@@ -37,6 +39,15 @@ export class PurchaseOrderOrmEntity {
   unitPriceCents: number;
 
   @Column({ type: 'int' })
+  subtotalCents: number;
+
+  @Column({ type: 'int' })
+  vatRateBps: number;
+
+  @Column({ type: 'int' })
+  vatCents: number;
+
+  @Column({ type: 'int' })
   totalCents: number;
 
   @Column()
@@ -51,6 +62,9 @@ export class PurchaseOrderOrmEntity {
   @ManyToOne(() => UserOrmEntity)
   @JoinColumn({ name: 'createdById' })
   createdBy?: UserOrmEntity;
+
+  @OneToMany(() => PurchaseOrderLineItemOrmEntity, (item) => item.order)
+  items?: PurchaseOrderLineItemOrmEntity[];
 
   @Column({ type: 'varchar', nullable: true })
   rejectionReason: string | null;

@@ -105,12 +105,12 @@ describe('R11: PATCH edits T1 fields in BORRADOR/RECHAZADA recomputing the total
     expect(order.quantity).toBe(4);
     expect(order.unitPriceCents).toBe(2000);
     expect(order.supplier).toBe('Holcim');
-    expect(order.totalCents).toBe(8000);
+    expect(order.totalCents).toBe(9280);
     expect(order.status).toBe('BORRADOR');
     expect(order.description).toBe('Cemento gris 50kg');
     // Editing is not a transition: no history row is inserted.
     expect(entry).toBeUndefined();
-    expect(updated.totalCents).toBe(8000);
+    expect(updated.totalCents).toBe(9280);
   });
 
   it('applies the changed fields on a RECHAZADA without changing the status', async () => {

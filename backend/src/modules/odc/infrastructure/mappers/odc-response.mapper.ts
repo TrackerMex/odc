@@ -1,5 +1,6 @@
 import { OdcStatusHistoryEntry } from '../../domain/entities/odc-status-history-entry.entity';
 import {
+  OdcLineItem,
   OdcStatus,
   PurchaseOrder,
 } from '../../domain/entities/purchase-order.entity';
@@ -18,10 +19,14 @@ export interface OdcResponseDto {
   id: string | null;
   odcNumber: string | null;
   status: OdcStatus;
+  items: OdcLineItem[];
   description: string;
   quantity: number;
   unit: string;
   unitPriceCents: number;
+  subtotalCents: number;
+  vatRateBps: number;
+  vatCents: number;
   totalCents: number;
   supplier: string;
   comments: string | null;

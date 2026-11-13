@@ -25,7 +25,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { formatCurrency, statusLabel } from '@/lib/odc'
+import { formatCurrency, formatItemCount, statusLabel } from '@/lib/odc'
 import type {
   ExecutiveDashboardRole,
   ExecutiveTaskPage,
@@ -322,6 +322,9 @@ export function ExecutiveTaskTable({
                         </span>
                         <span className="mt-1 block font-normal text-muted-foreground">
                           {task.description}
+                        </span>
+                        <span className="mt-1 block font-normal text-muted-foreground">
+                          {formatItemCount(task.itemCount)}
                         </span>
                       </Link>
                     </TableCell>

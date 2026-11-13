@@ -905,3 +905,199 @@ usuario mediante delegación antes de code, ninguna prueba humana inventada.
 instrucción del usuario; proxy productivo no inspeccionado. Guía combinada,
 SQL036/038/039 y verificación del proveedor entregados. Sin merge/despliegue,
 ninguna DB compartida tocada. Otros hallazgos plan002 no registrados siguen fuera.
+
+## 2026-10-08 — Diagnóstico Cloudinary live desde Docker activo
+
+Usuario solicita validar Cloudinary con las credenciales del .env y autoriza
+pruebas desde el contenedor activo. Rama actual audit/odc-hardening-20261001,
+odc-backend-1 montando C:/sites/odc/backend, SDK Cloudinary2.10.0.
+
+- CLOUDINARY_CLOUD_NAME/API_KEY/API_SECRET presentes dentro del contenedor, sin
+  espacios externos; no se imprimen valores, errores con secretos ni URLs firmadas.
+- Cloudinary Admin API ping devuelve status:ok: autenticación real correcta.
+- Probe mediante CloudinaryFileStorageService: PNG propio nuevo, authenticated,
+  recurso image, formato png, metadata/context de propiedad correcto.
+- Descarga firmada PNG HTTP200,90bytes,TTL300s. Limpieza con token incorrecto
+  devuelve not_owned; token correcto elimina por assetId; repetición missing.
+  El único archivo de este probe fue eliminado; exit0.
+- Probe existente ejecutado mediante docker exec -e ODC_CLOUDINARY_TEST=1
+  odc-backend-1 node scripts/verify-temporary-file-delivery.cjs.
+  PASS para PDF/JPG/PNG: acceso inicial, rechazo de expiry manipulado, espera
+  real300s, rechazo de URL original caducada y acceso con nueva URL autorizada.
+  PASS R5 real; ejecución310.87s. Cleanup del script completado sin errores.
+- Backend activo /api/health HTTP200,status:ok.
+
+No se modifican .env, credenciales, permisos/políticas de cuenta, órdenes ni DB.
+No se reinicia ni detiene Docker. Únicamente se crean/eliminan archivos propios
+en rutas odc-test con UUID/overwrite:false. No se ejecutan barridos.
+Opt-in del probe solo se establece para ese proceso, no para el backend.
+
+El NOT RUN anterior pertenecía al entorno aislado sin las credenciales del
+usuario; no era evidencia de credenciales inválidas. En este contenedor las
+operaciones probadas autentican y tienen permisos funcionales.
+Esto verifica proveedor y adaptador, no constituye prueba manual completa de
+roles/UI con órdenes existentes, ni de todos los fallos DB/conciliación live #38.
+No hay cambio de implementación, build/tests/init adicionales ni despliegue:
+la evidencia de esta investigación son las llamadas reales al proveedor.
+
+
+## 2026-10-08 — Flujo de negocio con Cloudinary real y Docker sincronizado
+
+Usuario solicita repetir el flujo pendiente tras validar credenciales. Rama
+audit/odc-hardening-20261001. Contenedores ODC estaban detenidos y se arrancan
+sin recrearlos; no se tocan contenedores de otros proyectos.
+
+Preparación: tres usuarios nuevos exclusivamente de prueba con nonce044f959d
+(Ops/Admin/DG), contraseña aleatoria no publicada, mediante UserTypeOrmRepository
+y bcrypt. No se cambian usuarios ni órdenes previos. Se conservan estas cuentas
+y las órdenes de prueba para inspección; no se simulan compras/pagos reales.
+
+Primera ejecución UI: creación/envío, aprobación presupuesto, aprobación compra,
+registro pago, comprobantes y facturas con PDF/JPG/PNG. Órdenes00002–00004 llegan
+a COMPLETADA con referencia de comprobante omitida y facturas mínimas/parciales.
+Comprobante con referencia y factura con cuatro metadatos válidos devolvían400
+Too many parts; ningún ticket extra ni transición se persistía por ese rechazo.
+
+Causa de entorno encontrada: node_modules del volumen Docker tenía Multer2.2.0
+directo y transitivo de Nest, mientras package.json/lockfile exigen2.4.0.
+Se ejecuta docker exec odc-backend-1 pnpm install --frozen-lockfile
+--config.confirmModulesPurge=false. Primera llamada supera180s; repetición
+confirma Already up to date/exit0. Se reinicia SOLO odc-backend-1. Verificación
+runtime: Multer directo2.4.0 y Nest2.4.0; /api/health200.
+No se editan package.json, lockfile, .env ni código de aplicación.
+
+Regresión live con instalación correcta: nuevas órdenes00005–00007 preparadas
+por API con los roles propios, comprobantes con referencia y facturas con TODOS
+los metadatos enviados desde UI, respectivamente PDF/JPG/PNG. Las seis subidas
+devuelven200 y conservan referencia, número/fecha factura, fecha almacén y
+observaciones. Las tres nuevas órdenes quedan COMPLETADA. Too many parts ya no
+ocurre con2.4.0: no se atribuye como fallo vigente al código de la rama.
+
+Órdenes conservadas como PRUEBA/no compra real:
+- ODC-2026-00002 PDF: 2cba2dee-0072-4689-8c65-24b5a894eb04.
+- ODC-2026-00003 JPG: cefede7b-8800-49c7-80b7-5cfc7536814b.
+- ODC-2026-00004 PNG: 3d36b8d1-a09a-43c9-84f0-280e09435ff7.
+- ODC-2026-00005 PDF completo: 106c9d85-7d9b-45cf-9f8b-f5b1185cf258.
+- ODC-2026-00006 JPG completo: 2f6cfe53-4dd9-46ff-ac40-c7a160cb2eb2.
+- ODC-2026-00007 PNG completo: 3a7175a6-25b8-43a1-9e53-05e281a3f940.
+
+Evidencia real: seis órdenes/version6/siete eventos cada una en secuencia completa;
+doce tickets associated, uploadConfirmed:true, attempts0, sin retry/protected
+entre estos tickets. Doce documentos descargados en los tres roles (36 descargas
+HTTP200); SHA256 coincide con originales PDF440bytes/JPG759bytes/PNG90bytes.
+Backend redirige302 a Cloudinary, TTL300s; sin sesión401 y rol incorrecto para
+subida403. Visor PDF real en navegador funciona. La caducidad física300s ya se
+verificó en el diagnóstico live anterior; no se repite esa espera aquí.
+
+Notificaciones Docker/UTC: eventos completados visibles en los tres roles;
+feed limitado20. Marcar leídas Ops desde UI:25→0, Admin22/DG22 permanecen; reload
+mantiene lectura. El fallo previo de backend Windows/local frente a DBUTC no
+está corregido por código y no se extrapola el éxito Docker a ese entorno.
+
+Defectos aún observados:
+- Historial se vacía en pantalla inmediatamente tras subidas; GET/API/DB conservan
+  seis/siete eventos y reload restaura el historial. Sigue ocurriendo con2.4.0.
+- React Hydration failed en fechas: SSR UTC21:40/22:38 y navegador local15:40/16:38.
+  Durante carga puede perderse la interacción inicial; una factura se envió
+  como form HTML antes de hidratar, navegó a ? y borró captura sin persistir.
+  Para completar la prueba se espera a que el form tenga handler React antes
+  de interactuar; no se suprime el error ni se cambia zona para ocultarlo.
+
+No se inyectan fallos DB ni limpieza destructiva sobre esta DB compartida.
+Solo asociación durable exitosa de #38 comprobada live; compensación/commit
+ambiguo/concurrencia mantienen la evidencia PostgreSQL aislada previa, no se
+afirma nueva verificación live de esos fallos.
+
+Navegadores de prueba cerrados. Docker queda activo para inspección del usuario.
+No hay scripts temporales añadidos, merge, cambios de implementación ni nuevo
+build/tests/init: investigación con escenario real y sincronización del runtime.
+
+
+## 2026-10-17 — #40 historial e hidratación del detalle de ODC
+
+- Solicitud: corregir el historial que desaparecía tras subir comprobantes/facturas y el error de hidratación por zonas horarias. Una sola feature: odc-detail-history-hydration.
+- Spec aprobada explícitamente por el usuario antes de código (caf5249). Se completó init inicial verde tras corregir la selección de pnpm y usar workers threads en Windows; una suspensión del equipo afectó una pasada anterior.
+- Historial: create/update retornaban toDomain(saved) sin historyRows. Ahora cargan los eventos persistidos dentro de la misma transacción, tras guardar evento y ticket, conservando versión/estado, locks, atomicidad y compensación.
+- Fechas: formatDate fija es-MX/America/Mexico_City. El calendario conserva su anclaje UTC. El formulario nuevo muestra Pendiente hasta recibir la creación real, sin reloj durante render.
+- TDD: backend 3384374 → def6983 (refinamiento de tipos b374475); instantes/SSR 6b80cdc → 2784804; formulario nuevo 0460cba → 60bb73b. Contratos ya correctos preservados con ea4f4c2 y fd84581, sin fabricar fallos.
+- Verificación final: builds backend/frontend, 73 suites/885 pruebas backend, 41 archivos/691 pruebas frontend y lint backend verdes. Init propio del reviewer y de cierre del líder terminaron exit0. PostgreSQL aislado 38/38, repetido independientemente; sus contenedores fueron eliminados.
+- Revisión independiente APROBADA: progress/review_odc-detail-history-hydration.md. Reportes de implementación y guía de comprobación conservados. Trazabilidad R1–R7 completa; feature #40 done, 40/40 registradas done.
+- El typecheck adicional de frontend conserva 18 errores previos, sin nuevos. La hidratación usa React real en jsdom y simula únicamente el default de zona de Intl. Prueba manual del stack completo y Cloudinary live no ejecutadas en esta entrega; no se tocaron datos de negocio ni se desplegó.
+- Se preservaron las modificaciones previas del usuario en routeTree/current/history y las configuraciones locales de pnpm. El commit de historial incorpora únicamente este resumen, sin absorber la evidencia previa no confirmada del usuario.
+
+
+---
+
+## 2026-10-17 — dev-startup-dependency-reuse (#41) — done
+
+- Spec aprobada explícitamente por el usuario antes de implementar (ac58a0a). Una sola feature; requisitos R1-R7 completos y revisión independiente APROBADA.
+- pnpm10.34.6 exacto en ambos manifiestos, imágenes y comandos Corepack. El arranque diario comprueba entradas/metadatos conocidos sin instalación, descargas ni recorrido de node_modules; las entradas obsoletas muestran setup explícito.
+- Preparación congelada separada, marcas locales publicadas solo tras éxito estable; instala únicamente por petición explícita. Init conserva builds, todas las pruebas y lint sin reinstalar, con concurrencia limitada.
+- Docker preserva volúmenes, instala durante build y reutiliza snapshots/paquetes al arrancar. Ensayos aislados: fresh/warm/restart, marca ausente, sync offline y bind real con YAML local divergente; Vite inició y reinició sin red/install. Se retiraron exclusivamente recursos de prueba propios.
+- TDD: 2bc1258→10ba366 (Docker), 385601a/fbd69ee→e015495 (helper), 0657a35→6ec5694 (init). Traceability completa y 34 pruebas de tooling.
+- Baseline verde; init final del líder y repetición independiente del reviewer exit0: ambos builds, 73 suites/885 pruebas backend, 41 archivos/691 frontend, 34 tooling (1,610 total) y lint. Comprobación caliente host preserva mtimes; medición de dos checks 18.79ms, sin garantía de tiempo total del servidor.
+- Host preparado una vez, Already up to date. Guía docs/development.md cubre preparación/arranque/sync/verificación; Docker con volúmenes antiguos o configuración local distinta requiere preparación explícita inicial.
+- Se preservaron bytes de configuraciones YAML locales y lockfiles, tiendas existentes y datos PostgreSQL. Las modificaciones previas del usuario en routeTree/current/history y YAML sin seguimiento no se absorben en commits. Este historial se agrega selectivamente sin incluir las 107 líneas previas ajenas sin confirmar.
+- Observación adicional: procesos auxiliares Node de Hostinger consumen memoria fuera del proyecto; solo diagnóstico de lectura, sin cerrarlos ni cambiar configuración externa.
+- Evidencia: progress/impl_dev-startup-dependency-reuse.md, informes tooling/Docker y progress/review_dev-startup-dependency-reuse.md. Estado final de registro: 41/41 done.
+
+
+---
+
+## 2026-10-18 — Documentación pendiente y limpieza local de la rama
+
+- Solicitud del usuario: guardar la documentación pendiente y conservar la configuración local de pnpm fuera de Git. Rama codex/odc-history-hydration-startup.
+- Se guardan las 107 líneas históricas de verificación Cloudinary/Docker del 8 de octubre sin alterar su evidencia. progress/current.md conserva la plantilla base sin sesión activa.
+- backend/pnpm-workspace.yaml y frontend/pnpm-workspace.yaml permanecen físicamente y con SHA256 idénticos; se excluyen únicamente mediante .git/info/exclude, sin versionar sus políticas ni cambiar .gitignore compartido.
+- routeTree.gen.ts coincide con el blob versionado; se refrescó su entrada del índice sin introducir cambios de contenido ni ocultar el seguimiento del archivo.
+- Verificación ./init.sh exit0: ambos builds, 34 pruebas tooling, 73 suites/885 pruebas backend, 41 archivos/691 pruebas frontend (1,610 total) y lint. Sin instalaciones de dependencias ni cambios de implementación.
+
+
+---
+
+## 2026-10-20 — odc-multi-line-items (#42) — done
+
+- El usuario aprobó `specs/odc-multi-line-items/requirements.md` antes de implementar. Se trabajó en la rama activa `codex/odc-history-hydration-startup`, sin publicar commits.
+- ODC ahora conserva partidas ordenadas, calcula el total agregado, admite el formato legacy de una partida y ofrece agregar/quitar partidas en creación, borradores y rechazadas. Listas y detalle muestran las partidas; una migración versionada hace backfill preservando cabeceras, importes, estados e historial.
+- TDD R1–R7 trazado; los mensajes de implementación usan el scope `odc-multi-line-items` y R-ids. La primera revisión encontró una expectativa obsoleta del dashboard y un mensaje fuera de convención; ambos quedaron corregidos antes de la segunda revisión.
+- Verificación final del líder: `init.sh` exit 0 después de cerrar la feature; builds backend/frontend, 34 pruebas tooling, 84 suites/935 pruebas backend, 41 archivos/697 pruebas frontend y lint. Revisión independiente C2–C6 APROBADA en `progress/review_odc-multi-line-items.md`.
+- Playwright visual no se ejecutó: el puerto 5432 está ocupado por `pet-tracker-postgres`; el intento previo limpió únicamente los contenedores ODC que había creado. La limitación queda en los reportes de implementación.
+- IVA, documentos de cotización y el concentrado de jueves enviado a Administración y después a Dirección General permanecen como siguientes features, sujetas a sus specs y aprobación humana.
+
+
+---
+
+## 2026-11-03 — spec de IVA en ODC (#43) — pendiente de aprobación
+
+- En la rama `codex/odc-history-hydration-startup` se registró `odc-vat-16-percent` y se redactaron requisitos, diseño, tareas y trazabilidad. La feature queda en `spec_ready`; la casilla humana permanece vacía y no se implementó código.
+- La propuesta fija IVA del 16 % sobre el subtotal, redondeo por orden e importes históricos sin IVA. Un borrador histórico aplica IVA al guardar, con proyección y aviso en el formulario. Se solicita confirmar el tratamiento de rechazadas históricas y de transiciones sin guardado previo.
+- `init.sh` inicial y de cierre terminaron con exit 0: builds, 34 pruebas tooling, 84 suites/935 pruebas backend, 41 archivos/697 pruebas frontend y lint. Se usó una copia LF temporal por el shebang CRLF del checkout Windows, retirada al finalizar.
+
+
+---
+
+## 2026-11-03 — IVA 16 % en ODC (#43) — completada
+
+- Spec aprobada por el usuario y ejecutada en `codex/odc-history-hydration-startup`. Se calculan subtotal, IVA y total en centavos; las órdenes históricas conservan tasa cero, con la conversión de borradores y el tratamiento de rechazadas aprobados.
+- Trazabilidad R1–R7 completa; la revisión independiente aprobó tras corregir integridad de partidas, hidratación, límites de captura y espacios Unicode en las migraciones.
+- `init.sh` final: builds, 34 pruebas tooling, 954 backend, 707 frontend y lint verdes. PostgreSQL aislado: 18 pruebas SQL y 26 de persistencia/concurrencia; revisión visual de formulario y detalle en escritorio y móvil.
+- Se respaldó y restauró la base local, se ensayaron las migraciones y luego se aplicaron localmente: 8 partidas reconciliadas, 10 órdenes con importes históricos conservados y 56 eventos. No se migraron bases compartidas.
+
+
+---
+
+## 2026-11-10 — spec de cotizaciones en ODC (#44) — pendiente de aprobación
+
+- En la rama `codex/odc-history-hydration-startup` se prepararon requisitos R1–R7, diseño, tareas y trazabilidad para adjuntar cotizaciones; no se implementó código ni se aprobaron los requisitos.
+- Se propone cargar y retirar únicamente en borradores propios guardados; se consulta si también deben corregirse adjuntos de una ODC rechazada. Los archivos son opcionales, PDF/JPG/PNG de hasta 10 MiB cada uno, consultables por roles autorizados.
+- `init.sh` inicial y final: builds, 34 pruebas tooling, 954 pruebas backend, 707 frontend y lint verdes. Copias LF temporales retiradas.
+- El concentrado semanal permanece como siguiente feature después de las cotizaciones y requiere su propia spec y aprobación.
+
+
+---
+
+## 2026-11-13 — ajuste de spec de cotizaciones (#44)
+
+- El usuario aprobó por chat agregar y retirar cotizaciones en ODC rechazadas antes de reenviarlas. Se ajustaron requisitos, diseño, tareas y criterios para borradores y rechazadas propias.
+- La casilla de aprobación en requirements permanece sin marcar: el gate de `AGENTS.md` exige marca humana antes de implementar. No se inició código ni se cambió el estado a in_progress.
+- `init.sh` inicial y de cierre terminaron verdes: builds, 34 pruebas tooling, 954 backend, 707 frontend y lint. Docker Desktop no estaba activo; no se realizaron migraciones ni pruebas PostgreSQL aisladas.

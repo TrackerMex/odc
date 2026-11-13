@@ -52,6 +52,89 @@ const user: SessionUser = {
   role: 'DIRECTOR_OPS',
 }
 
+describe('R5: VAT preview for a historical draft', () => {
+  it('shows the projected IVA and warns it applies when saved', () => {
+    const historical = {
+      ...draftOdc(),
+      subtotalCents: 44970,
+      vatRateBps: 0,
+      vatCents: 0,
+    }
+    render(
+      <OdcForm
+        user={user}
+        suppliers={suppliers}
+        initialOdc={historical}
+        persist={vi.fn()}
+        submit={vi.fn()}
+        onSuccess={vi.fn()}
+      />,
+    )
+    expect(screen.getByText(/IVA 16 %/i)).toBeTruthy()
+    expect(screen.getByText(/se aplicará al guardar/i)).toBeTruthy()
+    expect(screen.getByTestId('odc-total').textContent).toMatch(/521[.,]65/)
+  })
+
+  it('keeps a rejected historical order without VAT while editing', () => {
+    const historical = {
+      ...rejectedOdc(),
+      subtotalCents: 44970,
+      vatRateBps: 0,
+      vatCents: 0,
+    }
+    render(
+      <OdcForm
+        user={user}
+        suppliers={suppliers}
+        initialOdc={historical}
+        persist={vi.fn()}
+        submit={vi.fn()}
+        onSuccess={vi.fn()}
+      />,
+    )
+    expect(screen.getByText(/sin IVA registrado/i)).toBeTruthy()
+    expect(screen.getByTestId('odc-total').textContent).toMatch(/449[.,]70/)
+  })
+})
+
+describe('R3: historical draft save and send recovery', () => {
+  it('shows the saved fiscal state when sending fails after a successful save', async () => {
+    const historical = {
+      ...draftOdc(),
+      subtotalCents: 44970,
+      vatRateBps: 0,
+      vatCents: 0,
+    }
+    const saved = {
+      ...historical,
+      vatRateBps: 1600,
+      vatCents: 7195,
+      totalCents: 52165,
+    }
+    const persist = vi.fn().mockResolvedValue(saved)
+    const submit = vi.fn().mockRejectedValue(new ApiError(409, 'Conflict'))
+    render(
+      <OdcForm
+        user={user}
+        suppliers={suppliers}
+        initialOdc={historical}
+        persist={persist}
+        submit={submit}
+        onSuccess={vi.fn()}
+      />,
+    )
+    expect(screen.getByText(/se aplicará al guardar/i)).toBeTruthy()
+    fireEvent.click(
+      screen.getByRole('button', { name: /enviar a administración/i }),
+    )
+    await screen.findByRole('button', { name: /reintentar envío/i })
+    expect(screen.queryByText(/se aplicará al guardar/i)).toBeNull()
+    expect(screen.getByTestId('odc-total').textContent).toMatch(/521[.,]65/)
+    expect(persist).toHaveBeenCalledTimes(1)
+    expect(submit).toHaveBeenCalledWith('o1')
+  })
+})
+
 describe('R2,R3,R4,R5,R6: ODC form metadata, fields and live total', () => {
   it('shows the server-assigned number hint, accessible labels and live MXN total', () => {
     render(
@@ -81,7 +164,7 @@ describe('R2,R3,R4,R5,R6: ODC form metadata, fields and live total', () => {
       target: { value: '149.90' },
     })
 
-    expect(screen.getByTestId('odc-total').textContent).toMatch(/449[.,]70/)
+    expect(screen.getByTestId('odc-total').textContent).toMatch(/521[.,]65/)
   })
 
   it('selects a catalog supplier and creates before submitting a new ODC', async () => {
@@ -173,6 +256,49 @@ async function fillNewOrder() {
     target: { value: 'Entrega urgente' },
   })
 }
+
+describe('R7: form reports unsafe amounts before submitting', () => {
+  it('reports a zero price as a positive-value error rather than a limit error', () => {
+    const persist = vi.fn()
+    render(<OdcForm user={user} suppliers={suppliers} initialOdc={draftOdc()} persist={persist} submit={vi.fn()} onSuccess={vi.fn()} />)
+    fireEvent.change(screen.getByLabelText(/precio unitario/i), { target: { value: '0' } })
+    fireEvent.click(screen.getByRole('button', { name: /guardar como borrador/i }))
+    expect(screen.getByRole('alert').textContent).toMatch(/mayor a cero/i)
+    expect(persist).not.toHaveBeenCalled()
+  })
+  it.each([
+    [/cantidad/i, '9007199254740992'],
+    [/precio unitario/i, '90071992547409.92'],
+  ])('rejects an unsafe field %s and keeps the entered value', (label, value) => {
+    const persist = vi.fn()
+    render(<OdcForm user={user} suppliers={suppliers} initialOdc={draftOdc()} persist={persist} submit={vi.fn()} onSuccess={vi.fn()} />)
+    fireEvent.change(screen.getByLabelText(label), { target: { value } })
+    fireEvent.click(screen.getByRole('button', { name: /guardar como borrador/i }))
+    expect(screen.getByRole('alert').textContent).toMatch(/límite/i)
+    expect(screen.getByLabelText<HTMLInputElement>(label).value).toBe(value)
+    expect(persist).not.toHaveBeenCalled()
+  })
+
+  it('rejects a subtotal whose IVA would overflow the final total', () => {
+    const persist = vi.fn()
+    render(<OdcForm user={user} suppliers={suppliers} initialOdc={draftOdc()} persist={persist} submit={vi.fn()} onSuccess={vi.fn()} />)
+    fireEvent.change(screen.getByLabelText(/cantidad/i), { target: { value: '1' } })
+    fireEvent.change(screen.getByLabelText(/precio unitario/i), { target: { value: '18512790.07' } })
+    fireEvent.click(screen.getByRole('button', { name: /guardar como borrador/i }))
+    expect(screen.getByRole('alert').textContent).toMatch(/límite/i)
+    expect(persist).not.toHaveBeenCalled()
+  })
+
+  it('allows a historical rejected order to use the zero-rate ceiling', async () => {
+    const historical = { ...rejectedOdc(), vatRateBps: 0, vatCents: 0, subtotalCents: 44970 }
+    const persist = vi.fn().mockResolvedValue(historical)
+    render(<OdcForm user={user} suppliers={suppliers} initialOdc={historical} persist={persist} submit={vi.fn()} onSuccess={vi.fn()} />)
+    fireEvent.change(screen.getByLabelText(/cantidad/i), { target: { value: '1' } })
+    fireEvent.change(screen.getByLabelText(/precio unitario/i), { target: { value: '21474836.47' } })
+    fireEvent.click(screen.getByRole('button', { name: /guardar como borrador/i }))
+    await vi.waitFor(() => expect(persist).toHaveBeenCalledTimes(1))
+  })
+})
 
 describe('workspace v2 R11,R12: reviewed creation and safe send recovery', () => {
   it('reviews the validated snapshot, cancels without writes and confirms a single draft with its real folio', async () => {
@@ -345,7 +471,7 @@ describe('workspace v2 R11,R12: reviewed creation and safe send recovery', () =>
     expect(onSuccess).not.toHaveBeenCalled()
     expect(screen.queryByRole('button', { name: /ver detalle/i })).toBeNull()
     expect(
-      screen.getByRole('button', {
+      screen.getByRole<HTMLButtonElement>('button', {
         name: /guardar como borrador/i,
       }).disabled,
     ).toBe(true)
@@ -489,6 +615,187 @@ describe('R8,R9,R10,R11: rejected ODC editing, resend and failures', () => {
     expect(within(alert).getByText(/estado de la odc cambió/i)).toBeTruthy()
     expect(screen.getByDisplayValue('Valor que debe conservarse')).toBeTruthy()
     expect(submit).not.toHaveBeenCalled()
+  })
+})
+
+describe('R5,R7: ODC multi-line item form', () => {
+  it('R5: reviews every line item and the updated total before creating an ODC', async () => {
+    render(
+      <OdcForm
+        user={user}
+        suppliers={suppliers}
+        persist={vi.fn()}
+        submit={vi.fn()}
+        onSuccess={vi.fn()}
+      />,
+    )
+    await fillNewOrder()
+    fireEvent.click(screen.getByRole('button', { name: /agregar partida/i }))
+    fireEvent.change(screen.getByLabelText(/descripción partida 2/i), {
+      target: { value: 'Instalación y pruebas' },
+    })
+    fireEvent.change(screen.getByLabelText(/cantidad partida 2/i), {
+      target: { value: '1' },
+    })
+    fireEvent.change(screen.getByLabelText(/unidad partida 2/i), {
+      target: { value: 'servicio' },
+    })
+    fireEvent.change(screen.getByLabelText(/precio unitario partida 2/i), {
+      target: { value: '50.00' },
+    })
+    fireEvent.click(
+      screen.getByRole('button', { name: /enviar a administración/i }),
+    )
+
+    const review = await screen.findByRole('dialog')
+    expect(within(review).getByText('Sensores GPS')).toBeTruthy()
+    expect(within(review).getByText('Instalación y pruebas')).toBeTruthy()
+    expect(review.textContent).toMatch(/499[.,]70/)
+    expect(review.textContent).toMatch(/79[.,]95/)
+    expect(review.textContent).toMatch(/579[.,]65/)
+  })
+
+  it('R7: adds and removes line items, keeps one line, and sends the ordered collection', async () => {
+    const initialOdc = {
+      ...draftOdc(),
+      items: [
+        {
+          description: 'Sensores GPS',
+          quantity: 3,
+          unit: 'pieza',
+          unitPriceCents: 14_990,
+        },
+        {
+          description: 'Instalación',
+          quantity: 1,
+          unit: 'servicio',
+          unitPriceCents: 5_000,
+        },
+      ],
+    }
+    const updated = {
+      ...initialOdc,
+      items: [
+        initialOdc.items[0],
+        {
+          description: 'Licencias',
+          quantity: 2,
+          unit: 'licencia',
+          unitPriceCents: 2_500,
+        },
+      ],
+    }
+    const persist = vi.fn().mockResolvedValue(updated)
+    const onSuccess = vi.fn()
+    render(
+      <OdcForm
+        user={user}
+        suppliers={suppliers}
+        initialOdc={initialOdc}
+        persist={persist}
+        submit={vi.fn()}
+        onSuccess={onSuccess}
+      />,
+    )
+
+    expect(screen.getByDisplayValue('Sensores GPS')).toBeTruthy()
+    expect(screen.getByDisplayValue('Instalación')).toBeTruthy()
+    fireEvent.click(screen.getByRole('button', { name: /quitar partida 2/i }))
+    expect(screen.queryByDisplayValue('Instalación')).toBeNull()
+    expect(
+      screen
+        .getByRole('button', { name: /quitar partida 1/i })
+        .hasAttribute('disabled'),
+    ).toBe(true)
+
+    fireEvent.click(screen.getByRole('button', { name: /agregar partida/i }))
+    fireEvent.change(screen.getByLabelText(/descripción partida 2/i), {
+      target: { value: 'Licencias' },
+    })
+    fireEvent.change(screen.getByLabelText(/cantidad partida 2/i), {
+      target: { value: '2' },
+    })
+    fireEvent.change(screen.getByLabelText(/unidad partida 2/i), {
+      target: { value: 'licencia' },
+    })
+    fireEvent.change(screen.getByLabelText(/precio unitario partida 2/i), {
+      target: { value: '25.00' },
+    })
+    fireEvent.click(
+      screen.getByRole('button', { name: /guardar como borrador/i }),
+    )
+
+    await vi.waitFor(() => expect(persist).toHaveBeenCalled())
+    expect(persist.mock.calls[0][0]).toMatchObject({
+      items: [
+        {
+          description: 'Sensores GPS',
+          quantity: 3,
+          unit: 'pieza',
+          unitPriceCents: 14_990,
+        },
+        {
+          description: 'Licencias',
+          quantity: 2,
+          unit: 'licencia',
+          unitPriceCents: 2_500,
+        },
+      ],
+      supplier: 'Suntech',
+    })
+    expect(persist.mock.calls[0][0]).not.toHaveProperty('description')
+    expect(onSuccess).toHaveBeenCalledWith(updated)
+  })
+
+  it('R7: preserves every line after a save failure so the user can correct and retry', async () => {
+    const persist = vi
+      .fn()
+      .mockRejectedValueOnce(new ApiError(409, 'Conflict'))
+      .mockResolvedValue(draftOdc())
+    const initialOdc = {
+      ...draftOdc(),
+      items: [
+        {
+          description: 'Sensores GPS',
+          quantity: 3,
+          unit: 'pieza',
+          unitPriceCents: 14_990,
+        },
+        {
+          description: 'Cableado',
+          quantity: 2,
+          unit: 'rollo',
+          unitPriceCents: 1_250,
+        },
+      ],
+    }
+    render(
+      <OdcForm
+        user={user}
+        suppliers={suppliers}
+        initialOdc={initialOdc}
+        persist={persist}
+        submit={vi.fn()}
+        onSuccess={vi.fn()}
+      />,
+    )
+
+    fireEvent.change(screen.getByLabelText(/descripción partida 2/i), {
+      target: { value: 'Cableado corregido' },
+    })
+    fireEvent.click(
+      screen.getByRole('button', { name: /guardar como borrador/i }),
+    )
+    expect(await screen.findByRole('alert')).toBeTruthy()
+    expect(screen.getByDisplayValue('Sensores GPS')).toBeTruthy()
+    expect(screen.getByDisplayValue('Cableado corregido')).toBeTruthy()
+    fireEvent.click(
+      screen.getByRole('button', { name: /guardar como borrador/i }),
+    )
+    await vi.waitFor(() => expect(persist).toHaveBeenCalledTimes(2))
+    expect(persist.mock.calls[1][0].items[1].description).toBe(
+      'Cableado corregido',
+    )
   })
 })
 

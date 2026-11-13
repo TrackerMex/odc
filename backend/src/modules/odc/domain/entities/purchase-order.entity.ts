@@ -24,11 +24,19 @@ export interface OdcActor {
   role: UserRole;
 }
 
-export interface CreateDraftInput {
+export interface OdcLineItem {
   description: string;
   quantity: number;
   unit: string;
   unitPriceCents: number;
+}
+
+export interface CreateDraftInput {
+  items?: OdcLineItem[];
+  description?: string;
+  quantity?: number;
+  unit?: string;
+  unitPriceCents?: number;
   supplier: string;
   comments?: string;
 }
@@ -195,10 +203,14 @@ export interface PurchaseOrderProps {
   version?: number;
   odcNumber: string | null;
   status: OdcStatus;
+  items?: OdcLineItem[];
   description: string;
   quantity: number;
   unit: string;
   unitPriceCents: number;
+  subtotalCents?: number;
+  vatRateBps?: number;
+  vatCents?: number;
   totalCents: number;
   supplier: string;
   comments: string | null;
@@ -225,10 +237,14 @@ export class PurchaseOrder {
   public readonly version: number;
   public odcNumber: string | null;
   public status: OdcStatus;
+  public items: OdcLineItem[];
   public description: string;
   public quantity: number;
   public unit: string;
   public unitPriceCents: number;
+  public subtotalCents: number;
+  public vatRateBps: number;
+  public vatCents: number;
   public totalCents: number;
   public supplier: string;
   public comments: string | null;
@@ -254,11 +270,82 @@ export class PurchaseOrder {
     this.version = props.version ?? 0;
     this.odcNumber = props.odcNumber;
     this.status = props.status;
-    this.description = props.description;
-    this.quantity = props.quantity;
-    this.unit = props.unit;
-    this.unitPriceCents = props.unitPriceCents;
-    this.totalCents = props.totalCents;
+    let items = PurchaseOrder.copyAndValidateItems(
+      props.items ?? [
+        {
+          description: props.description,
+          quantity: props.quantity,
+          unit: props.unit,
+          unitPriceCents: props.unitPriceCents,
+        },
+      ],
+    );
+    const fiscalFields = [
+      props.subtotalCents,
+      props.vatRateBps,
+      props.vatCents,
+    ];
+    if (
+      fiscalFields.some((value) => value !== undefined) &&
+      fiscalFields.some((value) => !Number.isSafeInteger(value))
+    ) {
+      throw new InvalidOdcInputError(
+        'El desglose fiscal de la ODC está incompleto.',
+      );
+    }
+    const vatRateBps = props.vatRateBps ?? 0;
+    let amounts = PurchaseOrder.computeFiscalAmounts(
+      PurchaseOrder.computeItemsTotalCents(items),
+      vatRateBps,
+    );
+    if (
+      props.vatRateBps !== undefined &&
+      props.totalCents !== amounts.totalCents
+    ) {
+      throw new InvalidOdcInputError(
+        'El total de la ODC no coincide con su desglose fiscal.',
+      );
+    }
+    if (props.items !== undefined && props.totalCents !== amounts.totalCents) {
+      const scalarProjection = [
+        {
+          description: props.description,
+          quantity: props.quantity,
+          unit: props.unit,
+          unitPriceCents: props.unitPriceCents,
+        },
+        ...items.slice(1),
+      ];
+      const scalarAmounts = PurchaseOrder.computeFiscalAmounts(
+        PurchaseOrder.computeItemsTotalCents(scalarProjection),
+        vatRateBps,
+      );
+      if (props.totalCents !== scalarAmounts.totalCents) {
+        throw new InvalidOdcInputError(
+          'El total de la ODC debe coincidir con la suma de sus partidas.',
+        );
+      }
+      items = PurchaseOrder.copyAndValidateItems(scalarProjection);
+      amounts = scalarAmounts;
+    }
+    if (
+      (props.subtotalCents !== undefined &&
+        props.subtotalCents !== amounts.subtotalCents) ||
+      (props.vatCents !== undefined && props.vatCents !== amounts.vatCents)
+    ) {
+      throw new InvalidOdcInputError(
+        'El desglose fiscal de la ODC no coincide con sus partidas.',
+      );
+    }
+    this.items = items;
+    this.description = this.items[0].description;
+    this.quantity = this.items[0].quantity;
+    this.unit = this.items[0].unit;
+    this.unitPriceCents = this.items[0].unitPriceCents;
+    this.subtotalCents = amounts.subtotalCents;
+    this.vatRateBps = vatRateBps;
+    this.vatCents = amounts.vatCents;
+    this.totalCents = amounts.totalCents;
     this.supplier = props.supplier;
     this.comments = props.comments;
     this.createdById = props.createdById;
@@ -294,6 +381,89 @@ export class PurchaseOrder {
     return total;
   }
 
+  static computeFiscalAmounts(subtotalCents: number, vatRateBps: number) {
+    if (
+      !Number.isSafeInteger(subtotalCents) ||
+      subtotalCents < 1 ||
+      subtotalCents > MAX_ODC_INTEGER ||
+      (vatRateBps !== 0 && vatRateBps !== 1600)
+    ) {
+      throw new InvalidOdcInputError('Subtotal o tasa de IVA inválidos.');
+    }
+    const vatCents =
+      vatRateBps === 0 ? 0 : Math.floor((subtotalCents * 16 + 50) / 100);
+    const totalCents = subtotalCents + vatCents;
+    if (!Number.isSafeInteger(totalCents) || totalCents > MAX_ODC_INTEGER) {
+      throw new InvalidOdcInputError(
+        'El total con IVA excede el límite permitido.',
+      );
+    }
+    return { subtotalCents, vatCents, totalCents };
+  }
+
+  static computeItemsTotalCents(items: OdcLineItem[]): number {
+    if (!Array.isArray(items) || items.length === 0) {
+      throw new InvalidOdcInputError(
+        'La ODC debe incluir al menos una partida.',
+      );
+    }
+    return items.reduce((sum, item) => {
+      PurchaseOrder.validateLineItem(item);
+      const total =
+        sum +
+        PurchaseOrder.computeTotalCents(item.quantity, item.unitPriceCents);
+      if (!Number.isSafeInteger(total) || total > MAX_ODC_INTEGER) {
+        throw new InvalidOdcInputError(
+          `La suma de partidas debe ser un entero positivo hasta ${MAX_ODC_INTEGER}.`,
+        );
+      }
+      return total;
+    }, 0);
+  }
+
+  private static validateLineItem(item: OdcLineItem): void {
+    if (
+      item === null ||
+      typeof item !== 'object' ||
+      typeof item.description !== 'string' ||
+      item.description.trim() === '' ||
+      typeof item.unit !== 'string' ||
+      item.unit.trim() === ''
+    ) {
+      throw new InvalidOdcInputError(
+        'Cada partida debe incluir una descripción y unidad no vacías.',
+      );
+    }
+  }
+
+  private static copyAndValidateItems(items: OdcLineItem[]): OdcLineItem[] {
+    PurchaseOrder.computeItemsTotalCents(items);
+    return items.map((item) => ({ ...item }));
+  }
+
+  private static normalizeCreateItems(input: CreateDraftInput): OdcLineItem[] {
+    const hasItems = input.items !== undefined;
+    const hasLegacyLine =
+      input.description !== undefined ||
+      input.quantity !== undefined ||
+      input.unit !== undefined ||
+      input.unitPriceCents !== undefined;
+    if (hasItems && hasLegacyLine) {
+      throw new InvalidOdcInputError(
+        'Envía items o los campos escalares, pero no ambos.',
+      );
+    }
+    if (hasItems) return input.items!;
+    return [
+      {
+        description: input.description!,
+        quantity: input.quantity!,
+        unit: input.unit!,
+        unitPriceCents: input.unitPriceCents!,
+      },
+    ];
+  }
+
   static createDraft(
     input: CreateDraftInput,
     actor: OdcActor,
@@ -301,18 +471,25 @@ export class PurchaseOrder {
     if (actor.role !== CREATE_RULE.role) {
       throw new InvalidRoleTransitionError(CREATE_RULE.action, actor.role);
     }
+    const items = PurchaseOrder.copyAndValidateItems(
+      PurchaseOrder.normalizeCreateItems(input),
+    );
+    const firstItem = items[0];
+    const amounts = PurchaseOrder.computeFiscalAmounts(
+      PurchaseOrder.computeItemsTotalCents(items),
+      1600,
+    );
     const order = new PurchaseOrder({
       id: null,
       odcNumber: null,
       status: 'BORRADOR',
-      description: input.description,
-      quantity: input.quantity,
-      unit: input.unit,
-      unitPriceCents: input.unitPriceCents,
-      totalCents: PurchaseOrder.computeTotalCents(
-        input.quantity,
-        input.unitPriceCents,
-      ),
+      items,
+      description: firstItem.description,
+      quantity: firstItem.quantity,
+      unit: firstItem.unit,
+      unitPriceCents: firstItem.unitPriceCents,
+      ...amounts,
+      vatRateBps: 1600,
       supplier: input.supplier,
       comments: input.comments ?? null,
       createdById: actor.userId,
@@ -404,19 +581,53 @@ export class PurchaseOrder {
     if (this.status !== 'BORRADOR' && this.status !== 'RECHAZADA') {
       throw new InvalidStatusTransitionError('edit', this.status);
     }
-    const totalCents = PurchaseOrder.computeTotalCents(
-      fields.quantity !== undefined ? fields.quantity : this.quantity,
-      fields.unitPriceCents !== undefined
-        ? fields.unitPriceCents
-        : this.unitPriceCents,
+    const hasItems = fields.items !== undefined;
+    const hasLegacyLine =
+      fields.description !== undefined ||
+      fields.quantity !== undefined ||
+      fields.unit !== undefined ||
+      fields.unitPriceCents !== undefined;
+    if (hasItems && hasLegacyLine) {
+      throw new InvalidOdcInputError(
+        'Envía items o los campos escalares, pero no ambos.',
+      );
+    }
+    const items = hasItems
+      ? PurchaseOrder.copyAndValidateItems(fields.items!)
+      : PurchaseOrder.copyAndValidateItems([
+          {
+            ...this.items[0],
+            ...(fields.description !== undefined
+              ? { description: fields.description }
+              : {}),
+            ...(fields.quantity !== undefined
+              ? { quantity: fields.quantity }
+              : {}),
+            ...(fields.unit !== undefined ? { unit: fields.unit } : {}),
+            ...(fields.unitPriceCents !== undefined
+              ? { unitPriceCents: fields.unitPriceCents }
+              : {}),
+          },
+          ...this.items.slice(1),
+        ]);
+    const nextVatRateBps =
+      this.status === 'BORRADOR' && this.vatRateBps === 0
+        ? 1600
+        : this.vatRateBps;
+    const amounts = PurchaseOrder.computeFiscalAmounts(
+      PurchaseOrder.computeItemsTotalCents(items),
+      nextVatRateBps,
     );
-    if (fields.description !== undefined) this.description = fields.description;
-    if (fields.quantity !== undefined) this.quantity = fields.quantity;
-    if (fields.unit !== undefined) this.unit = fields.unit;
-    if (fields.unitPriceCents !== undefined)
-      this.unitPriceCents = fields.unitPriceCents;
+    this.items = items;
+    this.description = items[0].description;
+    this.quantity = items[0].quantity;
+    this.unit = items[0].unit;
+    this.unitPriceCents = items[0].unitPriceCents;
     if (fields.supplier !== undefined) this.supplier = fields.supplier;
     if (fields.comments !== undefined) this.comments = fields.comments;
-    this.totalCents = totalCents;
+    this.subtotalCents = amounts.subtotalCents;
+    this.vatRateBps = nextVatRateBps;
+    this.vatCents = amounts.vatCents;
+    this.totalCents = amounts.totalCents;
   }
 }

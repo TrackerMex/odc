@@ -6,6 +6,7 @@ import {
 } from '../../domain/entities/purchase-order.entity';
 import { OdcStatusHistoryOrmEntity } from '../entities/odc-status-history.orm-entity';
 import { PurchaseOrderOrmEntity } from '../entities/purchase-order.orm-entity';
+import { PurchaseOrderLineItemOrmEntity } from '../entities/purchase-order-line-item.orm-entity';
 import { PurchaseOrderTypeOrmRepository } from './purchase-order.typeorm.repository';
 
 const OPS_ID = 'a3d1c9a2-0000-4000-8000-000000000001';
@@ -44,8 +45,21 @@ function buildOrder(
   });
 }
 
+const itemRows = [
+  {
+    orderId: ODC_ID,
+    position: 0,
+    description: 'Cemento gris 50kg',
+    quantity: 10,
+    unit: 'bulto',
+    unitPriceCents: 18550,
+  },
+];
+
 interface ManagerMock {
   save: jest.Mock;
+  insert: jest.Mock;
+  delete: jest.Mock;
   update: jest.Mock;
   findOneOrFail: jest.Mock;
   find: jest.Mock;
@@ -66,7 +80,15 @@ function createManagerMock(): ManagerMock {
         },
       ),
     save: jest.fn(),
-    find: jest.fn(),
+    insert: jest.fn().mockResolvedValue({ identifiers: [] }),
+    delete: jest.fn().mockResolvedValue({ affected: 0 }),
+    find: jest
+      .fn()
+      .mockImplementation((target: unknown) =>
+        Promise.resolve(
+          target === PurchaseOrderLineItemOrmEntity ? itemRows : [],
+        ),
+      ),
     findOne: jest.fn(),
     findAndCount: jest.fn(),
   };
@@ -235,7 +257,15 @@ describe('R6: create assigns the next yearly number and retries on UNIQUE collis
 
   it('assigns the next correlative of the current year inside the create transaction', async () => {
     const manager = createManagerMock();
-    manager.find.mockResolvedValue([{ odcNumber: `ODC-${year}-00041` }]);
+    manager.find.mockImplementation((target: unknown) =>
+      Promise.resolve(
+        target === PurchaseOrderOrmEntity
+          ? [{ odcNumber: `ODC-${year}-00041` }]
+          : target === PurchaseOrderLineItemOrmEntity
+            ? itemRows
+            : [],
+      ),
+    );
     manager.save.mockImplementation((_entity: unknown, row: object) =>
       Promise.resolve({ id: ODC_ID, ...row }),
     );
@@ -266,7 +296,11 @@ describe('R6: create assigns the next yearly number and retries on UNIQUE collis
 
   it('starts at 00001 when the year has no ODCs yet', async () => {
     const manager = createManagerMock();
-    manager.find.mockResolvedValue([]);
+    manager.find.mockImplementation((target: unknown) =>
+      Promise.resolve(
+        target === PurchaseOrderLineItemOrmEntity ? itemRows : [],
+      ),
+    );
     manager.save.mockImplementation((_entity: unknown, row: object) =>
       Promise.resolve({ id: ODC_ID, ...row }),
     );
@@ -284,7 +318,12 @@ describe('R6: create assigns the next yearly number and retries on UNIQUE collis
     const manager = createManagerMock();
     manager.find
       .mockResolvedValueOnce([{ odcNumber: `ODC-${year}-00041` }])
-      .mockResolvedValueOnce([{ odcNumber: `ODC-${year}-00042` }]);
+      .mockResolvedValueOnce([{ odcNumber: `ODC-${year}-00042` }])
+      .mockImplementation((target: unknown) =>
+        Promise.resolve(
+          target === PurchaseOrderLineItemOrmEntity ? itemRows : [],
+        ),
+      );
     manager.save
       .mockRejectedValueOnce(uniqueViolation())
       .mockImplementation((_entity: unknown, row: object) =>
@@ -303,7 +342,11 @@ describe('R6: create assigns the next yearly number and retries on UNIQUE collis
 
   it('propagates non-UNIQUE errors without retrying', async () => {
     const manager = createManagerMock();
-    manager.find.mockResolvedValue([]);
+    manager.find.mockImplementation((target: unknown) =>
+      Promise.resolve(
+        target === PurchaseOrderLineItemOrmEntity ? itemRows : [],
+      ),
+    );
     manager.save.mockRejectedValue(new Error('connection lost'));
     const { repository, dataSource } = createRepository(manager);
 
@@ -315,4 +358,148 @@ describe('R6: create assigns the next yearly number and retries on UNIQUE collis
     ).rejects.toThrow('connection lost');
     expect(dataSource.transaction).toHaveBeenCalledTimes(1);
   });
+});
+
+describe('R1,R3: persisted mutation history is read inside its transaction (#40)', () => {
+  const openingRow = {
+    id: 'opening-id',
+    odcId: ODC_ID,
+    fromStatus: null,
+    toStatus: 'BORRADOR',
+    userId: OPS_ID,
+    note: 'Persisted opening',
+    createdAt: new Date('2026-10-01T00:00:00Z'),
+  };
+  const transitionRow = {
+    id: 'transition-id',
+    odcId: ODC_ID,
+    fromStatus: 'BORRADOR',
+    toStatus: 'PENDIENTE_ADMIN',
+    userId: OPS_ID,
+    note: 'Persisted transition',
+    createdAt: new Date('2026-10-02T00:00:00Z'),
+  };
+
+  function managerWithHistory(rows: object[]) {
+    const manager = createManagerMock();
+    manager.save.mockImplementation((_entity: unknown, row: object) =>
+      Promise.resolve({ id: ODC_ID, ...row }),
+    );
+    manager.find.mockImplementation((target: unknown) =>
+      Promise.resolve(
+        target === OdcStatusHistoryOrmEntity
+          ? rows
+          : target === PurchaseOrderLineItemOrmEntity
+            ? itemRows
+            : [],
+      ),
+    );
+    return manager;
+  }
+
+  it('R1: create returns persisted opening metadata rather than the unsaved input', async () => {
+    const manager = managerWithHistory([openingRow]);
+    const { repository } = createRepository(manager);
+    const created = await repository.create(
+      buildOrder({ id: null, odcNumber: null }),
+      new OdcStatusHistoryEntry(
+        null,
+        null,
+        null,
+        'BORRADOR',
+        OPS_ID,
+        null,
+        null,
+      ),
+    );
+    expect(created.history).toEqual([
+      new OdcStatusHistoryEntry(
+        openingRow.id,
+        ODC_ID,
+        null,
+        'BORRADOR',
+        OPS_ID,
+        openingRow.note,
+        openingRow.createdAt,
+      ),
+    ]);
+    expect(manager.find).toHaveBeenLastCalledWith(OdcStatusHistoryOrmEntity, {
+      where: { odcId: ODC_ID },
+      order: { createdAt: 'ASC' },
+    });
+    expect(manager.find.mock.invocationCallOrder.at(-1)).toBeGreaterThan(
+      manager.save.mock.invocationCallOrder.at(-1)!,
+    );
+  });
+
+  it('R1: transition returns every persisted event with its stored metadata in chronological order', async () => {
+    const manager = managerWithHistory([openingRow, transitionRow]);
+    const { repository } = createRepository(manager);
+    const saved = await repository.update(
+      buildOrder({ status: 'PENDIENTE_ADMIN' }),
+      new OdcStatusHistoryEntry(
+        null,
+        ODC_ID,
+        'BORRADOR',
+        'PENDIENTE_ADMIN',
+        OPS_ID,
+        null,
+        null,
+      ),
+    );
+    expect(saved.history.map((entry) => ({ ...entry }))).toEqual([
+      openingRow,
+      transitionRow,
+    ]);
+    expect(manager.find).toHaveBeenCalledWith(OdcStatusHistoryOrmEntity, {
+      where: { odcId: ODC_ID },
+      order: { createdAt: 'ASC' },
+    });
+    expect(manager.find.mock.invocationCallOrder[0]).toBeGreaterThan(
+      manager.save.mock.invocationCallOrder[0],
+    );
+  });
+
+  it('R1: an edit returns unchanged persisted history without inserting or duplicating events', async () => {
+    const manager = managerWithHistory([openingRow]);
+    const { repository } = createRepository(manager);
+    const saved = await repository.update(
+      buildOrder({ description: 'Edited' }),
+    );
+    expect(saved.history.map((entry) => ({ ...entry }))).toEqual([openingRow]);
+    expect(manager.save).not.toHaveBeenCalled();
+    expect(manager.find).toHaveBeenCalledWith(OdcStatusHistoryOrmEntity, {
+      where: { odcId: ODC_ID },
+      order: { createdAt: 'ASC' },
+    });
+  });
+
+  it.each(['create', 'update'] as const)(
+    'R3: %s rejects if transactional response history cannot be read',
+    async (operation) => {
+      const manager = managerWithHistory([]);
+      const error = new Error('history read failed');
+      manager.find.mockImplementation((target: unknown) =>
+        target === OdcStatusHistoryOrmEntity
+          ? Promise.reject(error)
+          : Promise.resolve([]),
+      );
+      const { repository, dataSource } = createRepository(manager);
+      const entry = new OdcStatusHistoryEntry(
+        null,
+        null,
+        null,
+        'BORRADOR',
+        OPS_ID,
+        null,
+        null,
+      );
+      const pending =
+        operation === 'create'
+          ? repository.create(buildOrder({ id: null, odcNumber: null }), entry)
+          : repository.update(buildOrder());
+      await expect(pending).rejects.toBe(error);
+      expect(dataSource.transaction).toHaveBeenCalledTimes(1);
+    },
+  );
 });

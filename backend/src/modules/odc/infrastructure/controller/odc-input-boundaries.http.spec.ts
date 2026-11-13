@@ -166,6 +166,188 @@ describe('R1,R2,R3,R4: real Nest input boundaries and zero side effects (#37)', 
     expect(repository.update).not.toHaveBeenCalled();
     expect(storage.upload).not.toHaveBeenCalled();
   }
+  describe('R2: POST accepts one line-item format and rejects mixed formats', () => {
+    const lines = [
+      {
+        description: 'Cemento',
+        quantity: 2,
+        unit: 'bulto',
+        unitPriceCents: 1250,
+      },
+      { description: 'Arena', quantity: 3, unit: 'm3', unitPriceCents: 2000 },
+    ];
+
+    it('accepts items[] and returns the calculated total and legacy projection', async () => {
+      const response = await request(server)
+        .post('/api/odcs')
+        .set('Cookie', cookie())
+        .send({ items: lines, supplier: 'Test', comments: 'Entregar temprano' })
+        .expect(201);
+
+      expect(repository.create).toHaveBeenCalledTimes(1);
+      expect(response.body).toMatchObject({
+        items: lines,
+        subtotalCents: 8500,
+        vatRateBps: 1600,
+        vatCents: 1360,
+        totalCents: 9860,
+        description: 'Cemento',
+        quantity: 2,
+        unit: 'bulto',
+        unitPriceCents: 1250,
+        supplier: 'Test',
+        status: 'BORRADOR',
+      });
+    });
+
+    it('R4: ignores client-supplied fiscal amounts and calculates VAT on the server', async () => {
+      const response = await request(server)
+        .post('/api/odcs')
+        .set('Cookie', cookie())
+        .send({
+          ...INPUT,
+          unitPriceCents: 10000,
+          subtotalCents: 1,
+          vatRateBps: 0,
+          vatCents: 0,
+          totalCents: 1,
+        })
+        .expect(201);
+      expect(response.body).toMatchObject({
+        subtotalCents: 10000,
+        vatRateBps: 1600,
+        vatCents: 1600,
+        totalCents: 11600,
+      });
+    });
+
+    it('rejects items combined with legacy line fields before persistence', async () => {
+      await request(server)
+        .post('/api/odcs')
+        .set('Cookie', cookie())
+        .send({
+          items: lines,
+          ...INPUT,
+        })
+        .expect(400);
+
+      expect(repository.create).not.toHaveBeenCalled();
+    });
+  });
+  describe('R3: PATCH replaces the collection or applies scalar changes to its first line', () => {
+    const lines = [
+      {
+        description: 'Cemento',
+        quantity: 2,
+        unit: 'bulto',
+        unitPriceCents: 1250,
+      },
+      { description: 'Arena', quantity: 3, unit: 'm3', unitPriceCents: 2000 },
+    ];
+
+    beforeEach(() => {
+      const { order: draft } = PurchaseOrder.createDraft(
+        { items: lines, supplier: 'Test' },
+        { userId: OWNER, role: 'DIRECTOR_OPS' },
+      );
+      order = new PurchaseOrder({
+        ...draft,
+        id: ID,
+        odcNumber: 'ODC-2026-00037',
+      });
+      repository.findById.mockResolvedValue(order);
+    });
+
+    it('returns all replacement items and the updated total', async () => {
+      const replacement = [...lines].reverse();
+      const response = await request(server)
+        .patch(`/api/odcs/${ID}`)
+        .set('Cookie', cookie())
+        .send({ items: replacement })
+        .expect(200);
+
+      expect(response.body).toMatchObject({
+        items: replacement,
+        subtotalCents: 8500,
+        vatRateBps: 1600,
+        vatCents: 1360,
+        totalCents: 9860,
+        description: 'Arena',
+        status: 'BORRADOR',
+      });
+    });
+
+    it('R4: ignores fiscal values supplied on PATCH', async () => {
+      const response = await request(server)
+        .patch(`/api/odcs/${ID}`)
+        .set('Cookie', cookie())
+        .send({ subtotalCents: 1, vatRateBps: 0, vatCents: 0, totalCents: 1 })
+        .expect(200);
+      expect(response.body).toMatchObject({
+        subtotalCents: 8500,
+        vatRateBps: 1600,
+        vatCents: 1360,
+        totalCents: 9860,
+      });
+    });
+
+    it('rejects empty and mixed item payloads before persistence', async () => {
+      await request(server)
+        .patch(`/api/odcs/${ID}`)
+        .set('Cookie', cookie())
+        .send({ items: [] })
+        .expect(400);
+      await request(server)
+        .patch(`/api/odcs/${ID}`)
+        .set('Cookie', cookie())
+        .send({ items: lines, quantity: 4 })
+        .expect(400);
+
+      expect(repository.update).not.toHaveBeenCalled();
+    });
+  });
+  describe('R4: item bounds fail before any database write', () => {
+    it('rejects product and aggregate overflow on item payloads', async () => {
+      await request(server)
+        .post('/api/odcs')
+        .set('Cookie', cookie())
+        .send({
+          supplier: 'Test',
+          items: [
+            {
+              description: 'Cemento',
+              quantity: 50_000,
+              unit: 'bulto',
+              unitPriceCents: 50_000,
+            },
+          ],
+        })
+        .expect(400);
+      await request(server)
+        .post('/api/odcs')
+        .set('Cookie', cookie())
+        .send({
+          supplier: 'Test',
+          items: [
+            {
+              description: 'Cemento',
+              quantity: MAX,
+              unit: 'bulto',
+              unitPriceCents: 1,
+            },
+            {
+              description: 'Arena',
+              quantity: 1,
+              unit: 'm3',
+              unitPriceCents: 1,
+            },
+          ],
+        })
+        .expect(400);
+
+      expect(repository.create).not.toHaveBeenCalled();
+    });
+  });
   describe.each(['create', 'patch'])('R1: %s', (operation) => {
     function send(input: object) {
       return operation === 'create'
@@ -199,8 +381,8 @@ describe('R1,R2,R3,R4: real Nest input boundaries and zero side effects (#37)', 
       expect(JSON.stringify(order)).toBe(snapshot);
     });
     it.each([
-      { quantity: MAX, unitPriceCents: 1 },
-      { quantity: 1, unitPriceCents: MAX },
+      { quantity: 1_851_279_006, unitPriceCents: 1 },
+      { quantity: 1, unitPriceCents: 1_851_279_006 },
     ])('accepts inclusive limits %j', async (fields) => {
       const response = await send(fields).expect(
         operation === 'create' ? 201 : 200,
@@ -217,11 +399,18 @@ describe('R1,R2,R3,R4: real Nest input boundaries and zero side effects (#37)', 
   ])(
     'R1: checks partial PATCH against the stored operand %j',
     async (fields) => {
+      const { order: base } = PurchaseOrder.createDraft(
+        {
+          ...INPUT,
+          quantity: fields.quantity,
+          unitPriceCents: fields.unitPriceCents,
+        },
+        { userId: OWNER, role: 'DIRECTOR_OPS' },
+      );
       order = new PurchaseOrder({
-        ...order,
-        quantity: fields.quantity,
-        unitPriceCents: fields.unitPriceCents,
-        totalCents: fields.quantity * fields.unitPriceCents,
+        ...base,
+        id: ID,
+        odcNumber: 'ODC-2026-00037',
       });
       const snapshot = JSON.stringify(order);
       await request(server)

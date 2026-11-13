@@ -1,8 +1,10 @@
-import { describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import {
   buildOdcPayload,
   computeTotalCents,
   formatCurrency,
+  formatDate,
+  formatDateOnly,
   formatUnitPriceInput,
   odcFileUrl,
   odcFormSchema,
@@ -83,4 +85,60 @@ describe('R10: file download route builder', () => {
     expect(odcFileUrl('o1', 'evidence')).toBe('/api/odcs/o1/files/evidence')
     expect(odcFileUrl('o1', 'invoice')).toBe('/api/odcs/o1/files/invoice')
   })
+})
+
+const NativeDateTimeFormat = Intl.DateTimeFormat
+
+describe('odc-detail-history-hydration R4: explicit Mexico instant formatting', () => {
+  afterEach(() => vi.restoreAllMocks())
+
+  it.each(['UTC', 'Asia/Tokyo', 'America/Mexico_City'])(
+    'formats the same midnight-boundary instant in Mexico with default zone %s',
+    (defaultTimeZone) => {
+      vi.spyOn(Intl, 'DateTimeFormat').mockImplementation(
+        function (locales, options) {
+          return new NativeDateTimeFormat(locales, {
+            ...options,
+            timeZone: options?.timeZone ?? defaultTimeZone,
+          })
+        },
+      )
+      const instant = '2026-01-01T05:30:00.000Z'
+      const expected = new NativeDateTimeFormat('es-MX', {
+        dateStyle: 'medium',
+        timeStyle: 'short',
+        timeZone: 'America/Mexico_City',
+      }).format(new Date(instant))
+
+      expect(formatDate(instant)).toBe(expected)
+      expect(formatDate(instant)).toMatch(/31 dic 2025/)
+      expect(formatDate(null)).toBe('Pendiente')
+    },
+  )
+})
+
+describe('odc-detail-history-hydration R5: calendar dates retain their received day', () => {
+  afterEach(() => vi.restoreAllMocks())
+
+  it.each(['UTC', 'Asia/Tokyo', 'America/Mexico_City'])(
+    'preserves leap day and month/year boundaries with default zone %s',
+    (defaultTimeZone) => {
+      vi.spyOn(Intl, 'DateTimeFormat').mockImplementation(
+        function (locales, options) {
+          return new NativeDateTimeFormat(locales, {
+            ...options,
+            timeZone: options?.timeZone ?? defaultTimeZone,
+          })
+        },
+      )
+      for (const [date, text] of [
+        ['2024-02-29', '29 feb 2024'],
+        ['2026-12-31', '31 dic 2026'],
+        ['2027-01-01', '1 ene 2027'],
+      ]) {
+        expect(formatDateOnly(date)).toBe(text)
+      }
+      expect(formatDateOnly(null)).toBe('Pendiente')
+    },
+  )
 })

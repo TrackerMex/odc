@@ -313,5 +313,70 @@
       "Cubrir cuentas existentes/inexistentes sin revelar existencia, claves acotadas y concurrencia.",
       "Protección requerida antes de exposición; infraestructura externa no inspeccionada, validación de proxy real a cargo del operador; cierre técnico con delegación expresa (2026-10-05), prueba humana NOT RUN."
     ]
+  },
+  {
+    "id": 40,
+    "name": "odc-detail-history-hydration",
+    "status": "done",
+    "priority": "P1",
+    "description": "Corregir la pérdida visual del historial tras subir comprobantes/facturas y la hidratación de fechas entre servidor y navegador con zonas horarias distintas.",
+    "acceptance_criteria": [
+      "Las respuestas de mutación conservan el historial persistido completo, incluida la transición recién confirmada, sin eventos inventados ni recarga manual.",
+      "Las fechas de eventos se muestran de forma determinista en America/Mexico_City durante SSR e hidratación; las fechas de calendario conservan su día.",
+      "Pruebas de regresión primero para ambas subidas, preservación transaccional y SSR/hidratación con zonas distintas; init verde antes de cierre."
+    ]
+  },
+  {
+    "id": 41,
+    "name": "dev-startup-dependency-reuse",
+    "status": "done",
+    "priority": "P1",
+    "description": "Arranque diario ligero con pnpm fijado, instalación explícita, dependencias reutilizadas y cachés excluidas de Git/Docker.",
+    "acceptance_criteria": [
+      "pnpm10.34.6 exacto y coherente para host, backend, frontend e imágenes de desarrollo, sin cambiar dependencias del negocio.",
+      "Arranques y reinicios reutilizan node_modules sin pnpm install, builds ni tests automáticos; faltantes/desactualizados muestran instrucción explícita de sincronización.",
+      "Instalación/sincronización explícita y congelada; Docker conserva volúmenes y funciona con instalaciones nuevas y volúmenes existentes tras sincronización.",
+      "init conserva builds, pruebas completas y lint pero deja de instalar; cachés y metadatos locales se excluyen de Git y contexto Docker, sin borrar datos o archivos existentes."
+    ]
+  },
+  {
+    "id": 42,
+    "name": "odc-multi-line-items",
+    "status": "done",
+    "priority": "P1",
+    "description": "Permitir que una ODC contenga varias partidas y conservar una migración compatible de las ODC existentes.",
+    "acceptance_criteria": [
+      "Crear y editar ODCs acepta una o más partidas con descripción, cantidad, unidad y precio unitario; proveedor y comentarios permanecen a nivel de ODC.",
+      "El dominio calcula el total como la suma de cantidad × precio unitario de cada partida, en centavos, y rechaza datos inválidos o desbordamientos antes de persistir.",
+      "El formulario permite agregar y quitar partidas en BORRADOR y RECHAZADA; el guardado y envío conservan los permisos y transiciones actuales.",
+      "Una migración convierte cada ODC existente en una partida equivalente sin cambiar montos, estados ni historial; la API devuelve items y mantiene compatibilidad con el contrato de una sola partida.",
+      "Pruebas de backend y frontend cubren creación, edición, formularios, validación, migración/backfill y regresiones; init.sh termina verde antes del cierre."
+    ]
+  },
+  {
+    "id": 43,
+    "name": "odc-vat-16-percent",
+    "status": "done",
+    "priority": "P1",
+    "description": "Agregar el desglose de IVA del 16% a las ODC nuevas conservando los importes históricos.",
+    "acceptance_criteria": [
+      "Las ODC nuevas calculan subtotal, IVA fijo del 16% redondeado al centavo sobre el subtotal y total en centavos.",
+      "Los importes históricos se conservan; un borrador anterior recibe IVA cuando Operaciones lo edita y guarda.",
+      "La API, el detalle y las vistas de revisión muestran el desglose y preservan los contratos necesarios.",
+      "Una migración versionada preserva estados, importes e historial y se verifica en PostgreSQL aislado antes de aplicarse a una base compartida."
+    ]
+  },
+  {
+    "id": 44,
+    "name": "odc-quotation-attachments",
+    "status": "spec_ready",
+    "priority": "P1",
+    "description": "Permitir adjuntar y consultar varios documentos opcionales de cotización en ODC.",
+    "acceptance_criteria": [
+      "Operaciones puede añadir y retirar varios archivos opcionales en una ODC propia guardada en BORRADOR o RECHAZADA; los documentos sobreviven al envío y se consultan conforme a la visibilidad de la ODC.",
+      "Las cargas aceptan PDF, JPG o PNG de 1 a 10485760 bytes por archivo, verifican la firma y reutilizan los controles de autenticación y recuperación existentes.",
+      "Administración y Dirección General pueden consultar las cotizaciones de las ODC visibles durante su revisión, sin acceder a borradores privados ajenos.",
+      "Una migración versionada preserva órdenes y documentos existentes; se verifican permisos, fallos, concurrencia y recuperación con pruebas backend y frontend."
+    ]
   }
 ]

@@ -28,6 +28,7 @@ const items = Array.from({ length: 10 }, (_, index) => ({
   description: `Material ${index}`,
   supplier: 'ACME',
   totalCents: 10000,
+  itemCount: index === 0 ? 3 : 1,
   createdAt: '2026-09-15T12:00:00Z',
   ageDays: 3,
   nextAction: 'VALIDAR_PRESUPUESTO' as const,
@@ -84,6 +85,14 @@ describe('executive-workspace-v2 R3,R4,R6,R7,R8,R9,R10: working analytical dashb
     expect(
       screen.getByRole('region', { name: /Estado actual de las ODC creadas/ }),
     ).toBeTruthy()
+  })
+
+  it('R5: shows the item count beside the first-line summary in compact tasks', () => {
+    render(<ExecutiveDashboard userName="Ana" dashboard={dashboard} />)
+
+    const firstTask = screen.getByRole('link', { name: /ODC-2026-0.*Material 0/i })
+    expect(firstTask.textContent).toContain('3 partidas')
+    expect(firstTask.textContent).toContain('Material 0')
   })
 
   it('searches automatically after 300 ms and Enter submits once immediately', () => {

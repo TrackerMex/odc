@@ -22,6 +22,7 @@ function dashboard(
           description: 'Old',
           supplier: 'Zeta',
           totalCents: 100,
+          itemCount: 1,
           createdAt: new Date('2026-07-01T00:00:00.000Z'),
         },
         {
@@ -31,6 +32,7 @@ function dashboard(
           description: 'New',
           supplier: 'Alpha',
           totalCents: 200,
+          itemCount: 1,
           createdAt: new Date('2026-07-20T00:00:00.000Z'),
         },
       ],

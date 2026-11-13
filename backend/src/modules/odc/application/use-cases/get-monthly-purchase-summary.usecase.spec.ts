@@ -15,6 +15,7 @@ function purchase(overrides: Partial<MonthlyPurchase> = {}): MonthlyPurchase {
     quantity: 2,
     unit: 'pieza',
     totalCents: 12_500,
+    itemCount: 1,
     paymentDate: '2026-07-10',
     warehouseEntryDate: '2026-07-13',
     hasInvoice: true,
@@ -76,5 +77,37 @@ describe('R1,R2,R6: monthly paid purchase summary', () => {
       averageWarehouseDays: null,
       purchases: [],
     });
+  });
+
+  it('R5: preserves the line count in each returned purchase row', async () => {
+    const repository = {
+      findMonthlyPurchases: jest
+        .fn()
+        .mockResolvedValue([purchase({ itemCount: 3 })]),
+    } as unknown as PurchaseOrderRepository;
+    const result = await new GetMonthlyPurchaseSummaryUseCase(
+      repository,
+    ).execute('2026-07');
+
+    expect(result.purchases[0].itemCount).toBe(3);
+  });
+
+  it('R5: aggregates historical amounts and taxable gross totals once', async () => {
+    const repository = {
+      findMonthlyPurchases: jest
+        .fn()
+        .mockResolvedValue([
+          purchase({ id: 'historical', totalCents: 10000 }),
+          purchase({ id: 'taxable', totalCents: 11600 }),
+        ]),
+    } as unknown as PurchaseOrderRepository;
+    const result = await new GetMonthlyPurchaseSummaryUseCase(
+      repository,
+    ).execute('2026-07');
+    expect(result.totalCents).toBe(21600);
+    expect(result.averageTicketCents).toBe(10800);
+    expect(result.purchases.map((row) => row.totalCents)).toEqual([
+      10000, 11600,
+    ]);
   });
 });

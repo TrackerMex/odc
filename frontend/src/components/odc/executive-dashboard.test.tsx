@@ -105,6 +105,7 @@ const dashboard: ExecutiveDashboardResponse = {
       totalCents: 30_000,
       createdAt: '2026-07-05T00:00:00.000Z',
       ageDays: 22,
+      itemCount: 2,
     },
   ],
   topSuppliers: [
@@ -425,7 +426,7 @@ describe('frontend-dashboard-template R2: financial panel, priority and operatin
     ).toBeTruthy()
   })
 
-  it('reuses the R6 ageing orders data verbatim as the alerts section, without a new data source', () => {
+  it('R5: shows the line count in R6 ageing alerts', () => {
     render(<ExecutiveDashboard userName="Ana Pérez" dashboard={dashboard} />)
 
     expect(
@@ -434,6 +435,8 @@ describe('frontend-dashboard-template R2: financial panel, priority and operatin
         .getAttribute('href'),
     ).toBe('/odcs/active-1')
     expect(screen.getByText(/Software MX/i)).toBeTruthy()
+    expect(screen.getByText('Licencias')).toBeTruthy()
+    expect(screen.getByText('2 partidas')).toBeTruthy()
   })
 })
 

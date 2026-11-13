@@ -9,6 +9,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type * as RouterModule from '@tanstack/react-router'
 import { formatCurrency } from '@/lib/odc'
 import { MonthlySummary } from './monthly-summary'
+import { MonthlySummarySlide } from './monthly-summary-slide'
 
 const { getMonthlyPurchaseSummary, exportMonthlySummarySlide } = vi.hoisted(
   () => ({
@@ -97,6 +98,24 @@ describe('R3,R5,R6,R7,R8,R9: monthly operations summary', () => {
     expect(screen.getByText(/Rodrigo Espinosa/)).toBeTruthy()
     expect(document.querySelector('[data-slot="table"]')).toBeTruthy()
     expect(screen.getByText('Ingreso a almacén')).toBeTruthy()
+  })
+
+  it('R5: shows the line-item count in the monthly purchase table and export slide', async () => {
+    const multiLineSummary = {
+      ...summary,
+      purchases: [{ ...summary.purchases[0], itemCount: 3 }],
+    }
+    getMonthlyPurchaseSummary.mockResolvedValue(multiLineSummary)
+    const { container } = render(
+      <MonthlySummary initialSummary={multiLineSummary} />,
+    )
+
+    const table = await screen.findByTestId('monthly-summary-detail')
+    expect(within(table).getByText(/3 partidas/i)).toBeTruthy()
+    expect(container.textContent).toContain('3 partidas')
+
+    const slide = render(<MonthlySummarySlide summary={multiLineSummary} />)
+    expect(slide.container.textContent).toContain('3 partidas')
   })
 
   it('R5: links a completed ODC to its detail without changing the export slide', async () => {

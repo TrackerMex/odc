@@ -1,4 +1,9 @@
-import { formatCurrency, formatMonth, formatDateOnly } from '@/lib/odc'
+import {
+  formatCurrency,
+  formatItemCount,
+  formatMonth,
+  formatDateOnly,
+} from '@/lib/odc'
 import type { MonthlyPurchaseSummary } from '@/lib/odc'
 
 // The PDF is rendered by html-to-image in a fixed light theme. These literal
@@ -63,7 +68,10 @@ export function MonthlySummarySlide({
               <td className="py-3">{formatDateOnly(purchase.paymentDate)}</td>
               <td className="py-3">
                 <p>{purchase.description}</p>
-                <p className="text-xs text-slate-500">{purchase.supplier}</p>
+                <p className="text-xs text-slate-500">
+                  <span>{purchase.supplier}</span> ·{' '}
+                  <span>{formatItemCount(purchase.itemCount)}</span>
+                </p>
               </td>
               <td className="py-3">
                 {formatDateOnly(purchase.warehouseEntryDate)}

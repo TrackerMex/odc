@@ -1,4 +1,5 @@
 import { DataSource } from 'typeorm';
+import { PurchaseOrderLineItemOrmEntity } from '../entities/purchase-order-line-item.orm-entity';
 import { PurchaseOrderOrmEntity } from '../entities/purchase-order.orm-entity';
 import { PurchaseOrderTypeOrmRepository } from './purchase-order.typeorm.repository';
 
@@ -31,7 +32,7 @@ function rawQuery(rows: unknown[]) {
 }
 
 describe('R2,R5,R6,R7,R11: executive dashboard TypeORM snapshot', () => {
-  it('uses bounded queries, keeps private drafts/rejections scoped to their creator, and aggregates monthly data', async () => {
+  it('R5: includes line-count reads with bounded queries and aggregates monthly data', async () => {
     const metricsQuery = rawQuery([
       { month: '2026-06', purchaseCount: '2', totalCents: '1500' },
       { month: '2026-07', purchaseCount: '3', totalCents: '3000' },
@@ -42,7 +43,19 @@ describe('R2,R5,R6,R7,R11: executive dashboard TypeORM snapshot', () => {
     const manager = {
       count: jest.fn().mockResolvedValue(7),
       findAndCount: jest.fn().mockResolvedValue([[order()], 7]),
-      find: jest.fn().mockResolvedValue([order({ id: 'oldest' })]),
+      find: jest.fn().mockImplementation((target: unknown) =>
+        Promise.resolve(
+          target === PurchaseOrderOrmEntity
+            ? [order({ id: 'oldest' })]
+            : target === PurchaseOrderLineItemOrmEntity
+              ? [
+                  { orderId: 'odc-1', position: 0 },
+                  { orderId: 'odc-1', position: 1 },
+                  { orderId: 'oldest', position: 0 },
+                ]
+              : [],
+        ),
+      ),
       createQueryBuilder: jest
         .fn()
         .mockReturnValueOnce(metricsQuery)
@@ -60,7 +73,18 @@ describe('R2,R5,R6,R7,R11: executive dashboard TypeORM snapshot', () => {
     );
 
     expect(manager.findAndCount).toHaveBeenCalledTimes(1);
-    expect(manager.find).toHaveBeenCalledTimes(1);
+    expect(manager.find).toHaveBeenCalledTimes(3);
+    const findCalls = manager.find.mock.calls as unknown as [
+      unknown,
+      unknown,
+    ][];
+    const findTargets = findCalls.map(([target]) => target);
+    expect(
+      findTargets.filter((target) => target === PurchaseOrderOrmEntity),
+    ).toHaveLength(1);
+    expect(
+      findTargets.filter((target) => target === PurchaseOrderLineItemOrmEntity),
+    ).toHaveLength(2);
     expect(manager.createQueryBuilder).toHaveBeenCalledTimes(3);
     const priorityCall = manager.findAndCount.mock.calls.at(0) as unknown;
     const [, priorityOptions] = priorityCall as [
@@ -86,13 +110,27 @@ describe('R2,R5,R6,R7,R11: executive dashboard TypeORM snapshot', () => {
         order: { createdAt: 'ASC', id: 'ASC' },
       }),
     );
+    const lineItemFindCalls = findCalls.filter(
+      ([target]) => target === PurchaseOrderLineItemOrmEntity,
+    );
+    for (const [, options] of lineItemFindCalls) {
+      const queryOptions = options as {
+        where?: { orderId?: unknown };
+        order?: { orderId?: string; position?: string };
+      };
+      expect(queryOptions.where?.orderId).toBeDefined();
+      expect(queryOptions.order).toEqual({
+        orderId: 'ASC',
+        position: 'ASC',
+      });
+    }
     expect(result).toMatchObject({
-      priority: { total: 7, items: [{ id: 'odc-1' }] },
+      priority: { total: 7, items: [{ id: 'odc-1', itemCount: 2 }] },
       pulse: {
         previous: { purchaseCount: 2, totalCents: 1500 },
         current: { purchaseCount: 3, totalCents: 3000 },
       },
-      oldestActiveOrders: [{ id: 'oldest' }],
+      oldestActiveOrders: [{ id: 'oldest', itemCount: 1 }],
       topSuppliers: [
         { supplier: 'Proveedor A', purchaseCount: 2, totalCents: 2000 },
       ],

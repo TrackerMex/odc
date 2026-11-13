@@ -28,6 +28,7 @@ export class CreateDraftUseCase {
     // computed by the domain (R2).
     const { order, record } = PurchaseOrder.createDraft(
       {
+        items: input.items,
         description: input.description,
         quantity: input.quantity,
         unit: input.unit,
