@@ -11,7 +11,7 @@ No comenzar hasta la aprobación humana de [[requirements]].
 
 ## R1 — Asociación múltiple
 - [ ] (1) Probar cero, una y varias cotizaciones, persistencia e IVA histórico.
-- [ ] (2) Implementar asociación individual a borrador propio guardado.
+- [ ] (2) Implementar asociación individual a ODC propia en borrador o rechazada.
 - [ ] (3) Refactorizar sin alterar estados, historial ni importes.
 
 ## R2 — Validación multipart
@@ -35,7 +35,7 @@ No comenzar hasta la aprobación humana de [[requirements]].
 - [ ] (3) Refactorizar preservando el comportamiento anterior de archivos.
 
 ## R6 — Formulario y revisión
-- [ ] (1) Probar selección múltiple, resultados, detalle y consulta por rol.
+- [ ] (1) Probar selección múltiple, resultados, edición en rechazada, detalle y consulta por rol.
 - [ ] (2) Integrar API y UI accesible.
 - [ ] (3) Verificar visualmente en escritorio y móvil y refactorizar.
 

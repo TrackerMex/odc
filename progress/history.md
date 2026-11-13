@@ -1092,3 +1092,12 @@ build/tests/init: investigación con escenario real y sincronización del runtim
 - Se propone cargar y retirar únicamente en borradores propios guardados; se consulta si también deben corregirse adjuntos de una ODC rechazada. Los archivos son opcionales, PDF/JPG/PNG de hasta 10 MiB cada uno, consultables por roles autorizados.
 - `init.sh` inicial y final: builds, 34 pruebas tooling, 954 pruebas backend, 707 frontend y lint verdes. Copias LF temporales retiradas.
 - El concentrado semanal permanece como siguiente feature después de las cotizaciones y requiere su propia spec y aprobación.
+
+
+---
+
+## 2026-11-13 — ajuste de spec de cotizaciones (#44)
+
+- El usuario aprobó por chat agregar y retirar cotizaciones en ODC rechazadas antes de reenviarlas. Se ajustaron requisitos, diseño, tareas y criterios para borradores y rechazadas propias.
+- La casilla de aprobación en requirements permanece sin marcar: el gate de `AGENTS.md` exige marca humana antes de implementar. No se inició código ni se cambió el estado a in_progress.
+- `init.sh` inicial y de cierre terminaron verdes: builds, 34 pruebas tooling, 954 backend, 707 frontend y lint. Docker Desktop no estaba activo; no se realizaron migraciones ni pruebas PostgreSQL aisladas.

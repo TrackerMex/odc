@@ -11,7 +11,7 @@ tags: [backend, frontend, odc, spec]
 ## Requisitos funcionales
 
 - **R1 — Adjuntar varias cotizaciones**: WHEN el Director de Operaciones
-  creador de una ODC guardada en `BORRADOR` adjunta un documento válido THE
+  creador de una ODC guardada en `BORRADOR` o `RECHAZADA` adjunta un documento válido THE
   SYSTEM SHALL asociarlo a esa ODC, conservar los demás documentos y devolver
   su identificador y nombre legible. Los adjuntos son opcionales; se permiten
   varios por ODC y un archivo por solicitud. La UI podrá seleccionar varios
@@ -32,13 +32,15 @@ tags: [backend, frontend, odc, spec]
   por solicitud. *Verificación*: parser HTTP real, límite exacto y +1, tres
   formatos, archivo vacío, MIME o firma falsos y parámetros excesivos.
 
-- **R3 — Autorización y consulta**: WHILE la ODC esté en `BORRADOR`, solo su
-  creador con rol `DIRECTOR_OPS` SHALL poder añadir o retirar cotizaciones;
-  los demás usuarios no SHALL ver ni descargar los documentos de un borrador
-  ajeno. WHEN una ODC deja de ser borrador THE SYSTEM SHALL permitir consultar
-  sus cotizaciones a los roles autenticados con acceso a esa ODC, incluidos
-  Administración y Dirección General durante su revisión, y SHALL impedir su
-  adición o retirada. Rechazar o completar la ODC no elimina los adjuntos.
+- **R3 — Autorización y consulta**: WHILE la ODC esté en `BORRADOR` o
+  `RECHAZADA`, solo su creador con rol `DIRECTOR_OPS` SHALL poder añadir o
+  retirar cotizaciones; los demás usuarios no SHALL ver ni descargar los
+  documentos de un borrador ajeno. WHEN una ODC es visible a otros roles THE
+  SYSTEM SHALL permitirles consultar sus cotizaciones, incluidos Administración
+  y Dirección General durante su revisión. En cualquier otro estado distinto de
+  `BORRADOR` y `RECHAZADA` SHALL impedir la adición o retirada. Rechazar o
+  completar la ODC no elimina los adjuntos. La ODC rechazada mantiene las
+  reglas actuales de visibilidad para los roles autorizados.
   Toda descarga SHALL verificar la visibilidad de la ODC y que el documento
   pertenece a ella, incluso si se conoce su identificador. Sin sesión se
   responde 401; los demás errores de acceso y de recurso inexistente seguirán
@@ -46,7 +48,7 @@ tags: [backend, frontend, odc, spec]
   estados y documento cruzado entre ODC.
 
 - **R4 — Retirar una cotización**: WHEN el creador autorizado retira un
-  adjunto de su `BORRADOR` THE SYSTEM SHALL dejar de mostrarlo y rechazar nuevas
+  adjunto de su `BORRADOR` o `RECHAZADA` THE SYSTEM SHALL dejar de mostrarlo y rechazar nuevas
   solicitudes de descarga al confirmarse la operación, sin afectar otras
   cotizaciones o archivos de factura/comprobante. Un enlace temporal entregado
   antes de retirar el archivo puede seguir funcionando hasta su vencimiento o
@@ -62,7 +64,7 @@ tags: [backend, frontend, odc, spec]
   confirmados y no registrar uno incompleto. SHALL registrar trabajo de
   recuperación durable antes de contactar al proveedor y nunca borrar un
   recurso que ya quedó asociado, aunque falle la respuesta o se reinicie el
-  proceso. WHEN una carga o retirada compite con otra edición o con el envío
+  proceso. WHEN una carga o retirada compite con otra edición o con el envío o reenvío
   de la ODC THE SYSTEM SHALL verificar estado y versión en la transacción y
   rechazar conflictos sin sobrescribir cambios; un archivo no asociado queda
   sujeto a recuperación. Un reintento tras respuesta incierta SHALL permitir
@@ -74,8 +76,9 @@ tags: [backend, frontend, odc, spec]
 - **R6 — API y presentación**: WHEN una ODC visible se abre o revisa THE
   SYSTEM SHALL presentar su lista de cotizaciones, con nombre y acción de
   consulta, o indicar que no tiene documentos; una carga fallida SHALL mostrar
-  un error comprensible. El formulario de borrador guardado SHALL permitir
-  añadir varios y retirar los ya asociados antes de enviar. Las acciones de
+  un error comprensible. El formulario de `BORRADOR` guardado o `RECHAZADA`
+  SHALL permitir añadir varios y retirar los ya asociados antes de enviar o
+  reenviar. Las acciones de
   revisión y detalle SHALL mostrar los documentos persistidos, sin requerir
   cotización para enviar o aprobar. La API SHALL usar identificadores opacos
   asociados a la ODC y entrega temporal autenticada conforme al mecanismo
@@ -94,15 +97,12 @@ tags: [backend, frontend, odc, spec]
   existentes SHALL seguir funcionando. *Verificación*: migración y rollback,
   datos históricos, y regresiones HTTP y de recuperación de ambos archivos.
 
-## Decisiones propuestas para revisión
+## Decisiones acordadas
 
-- La carga y retirada se habilitan únicamente en `BORRADOR` propio guardado,
-  como indica la hoja de ruta. Una ODC `RECHAZADA` conserva y permite consultar
-  sus archivos, pero no añadir ni retirar; confirmar si también debe poder
-  corregirse la cotización en ese estado antes de reenviar.
-- Se propone permitir retirar documentos mientras el borrador sigue editable,
-  para corregir una selección equivocada. Después del envío quedan disponibles
-  para revisión y ya no se modifican mediante esta función.
+- El 13 de noviembre de 2026 el usuario aprobó que su creador pueda añadir y
+  retirar cotizaciones en ODC `BORRADOR` y `RECHAZADA` antes de enviar o
+  reenviar. En los demás estados quedan disponibles para consulta y no se
+  modifican mediante esta función.
 - No se fija un número máximo de cotizaciones por ODC; el límite de 10 MiB se
   aplica por archivo y cada carga se realiza individualmente.
 
@@ -114,5 +114,9 @@ tags: [backend, frontend, odc, spec]
   estados de ODC o al tratamiento aprobado de IVA histórico.
 
 ## Aprobación
+
+El usuario expresó su aprobación en el chat el 13 de noviembre de 2026 con
+el cambio anterior. La casilla siguiente registra la marca humana requerida
+por `AGENTS.md`.
 
 - [ ] Aprobado por humano (fecha: ____)

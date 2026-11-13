@@ -21,7 +21,8 @@ Este diseño implementa [[requirements]] después del gate humano y respeta
   y UUID de cotización. La entrega verifica pertenencia y `GetOdcUseCase`, y
   reutiliza URL temporal/autorizada conforme al mecanismo de archivos actual.
   Validar rol, creador y estado en servidor; no confiar en la visibilidad de
-  botones del frontend (R2–R4, R6).
+  botones del frontend. La carga y retirada se autorizan al creador con rol
+  `DIRECTOR_OPS` tanto en `BORRADOR` como en `RECHAZADA` (R2–R4, R6).
 - Reutilizar `OdcUploadInterceptor` y `createOdcFilePipe` para una carga por
   solicitud. Una selección múltiple se procesa individualmente, con resultado
   por archivo y posibilidad de reintentar. Usar un identificador de operación
@@ -37,9 +38,9 @@ Este diseño implementa [[requirements]] después del gate humano y respeta
   objetos asociados y permitir reintentos seguros (R4, R5).
 - Los cambios de archivo no son una edición de importes ni una transición de
   estado. Una ODC nueva se guarda explícitamente antes de adjuntar; una carga
-  sobre un borrador histórico ya guardado no invoca el guardado del formulario
-  ni cambia el régimen de IVA. La concurrencia usa las garantías y versión de
-  la ODC existentes sin introducir cambios parciales (R1, R5).
+  sobre un borrador histórico o una ODC rechazada no invoca el guardado del
+  formulario ni cambia el régimen de IVA. La concurrencia usa las garantías
+  y versión de la ODC existentes sin introducir cambios parciales (R1, R5).
 - En frontend, integrar componentes y patrones existentes del formulario y
   detalle; consultar el catálogo shadcn conforme a `docs/conventions.md` antes
   de crear componentes. Presentar progreso/errores por archivo, datos
@@ -54,7 +55,7 @@ Este diseño implementa [[requirements]] después del gate humano y respeta
   worker de recuperación. Ensayar secuencia y rollback en PostgreSQL aislado;
   documentar precondiciones y compatibilidad de despliegue antes de una base
   compartida.
-- Frontend: tipos/API, formulario de borrador y detalle/revisión; reutilizar
+- Frontend: tipos/API, formularios de borrador y rechazada y detalle/revisión; reutilizar
   controles accesibles del proyecto. Pruebas con nombres R1–R7, parser HTTP
   real, recuperación ante caídas, concurrencia en PostgreSQL y validación
   visual en escritorio y móvil, además de `./init.sh`.
